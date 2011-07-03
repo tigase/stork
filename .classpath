@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry kind="lib" path="lib/jaxmpp-core-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/jaxmpp-j2se-2.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/tigase-xmltools-3.3.6-SNAPSHOT.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

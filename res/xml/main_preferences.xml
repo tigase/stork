@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:key="tigase_messenger_preferences" android:title="@string/preferencesTitle">
+    
+    
+    <EditTextPreference android:key="user_jid" android:dialogTitle="User JID" android:summary="Enter your Jabber ID" android:title="Jabber ID" />
+    <EditTextPreference android:key="user_password" android:dialogTitle="Password"  android:summary="Enter your password" android:title="Password" android:password="true"></EditTextPreference>
+    <EditTextPreference android:summary="Enter XMPP server name" android:title="Hostname" android:key="hostname" android:dialogTitle="Hostname"></EditTextPreference>
+</PreferenceScreen>
