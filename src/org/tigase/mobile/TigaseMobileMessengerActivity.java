@@ -14,13 +14,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 public class TigaseMobileMessengerActivity extends Activity {
 
@@ -74,8 +72,12 @@ public class TigaseMobileMessengerActivity extends Activity {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
 			break;
+		case R.id.disconnectButton:
+			stopService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
+			break;
 		case R.id.connectButton:
-			Toast.makeText(getApplicationContext(), "Connecting...", Toast.LENGTH_LONG).show();
+			// Toast.makeText(getApplicationContext(), "Connecting...",
+			// Toast.LENGTH_LONG).show();
 
 			SharedPreferences prefs = getSharedPreferences("org.tigase.mobile_preferences", 0);
 			JID jid = JID.jidInstance(prefs.getString("user_jid", null));
@@ -86,12 +88,15 @@ public class TigaseMobileMessengerActivity extends Activity {
 			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);
 			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
-			try {
-				XmppService.jaxmpp().login(false);
-			} catch (JaxmppException e) {
-				Log.e("messenger", "Can't connect", e);
-				Toast.makeText(getApplicationContext(), "Connection error!", Toast.LENGTH_LONG).show();
-			}
+			startService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
+
+			// try {
+			// XmppService.jaxmpp().login(false);
+			// } catch (JaxmppException e) {
+			// Log.e("messenger", "Can't connect", e);
+			// Toast.makeText(getApplicationContext(), "Connection error!",
+			// Toast.LENGTH_LONG).show();
+			// }
 		default:
 			break;
 		}
