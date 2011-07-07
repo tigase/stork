@@ -3,6 +3,8 @@ package org.tigase.mobile;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tigase.mobile.db.RosterTableMetaData;
+
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -13,12 +15,14 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 public class TigaseMobileMessengerActivity extends Activity {
 
@@ -34,8 +38,15 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 		this.rosterList = (ListView) findViewById(R.id.rosterList);
 
-		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
-		adapter.setNotifyOnChange(true);
+		Cursor c = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
+		startManagingCursor(c);
+		String[] cols = new String[] { RosterTableMetaData.FIELD_JID };
+		int[] names = new int[] { R.id.roster_item_jid };
+		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item, c, cols, names);
+
+		// final ArrayAdapter<String> adapter = new
+		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
+		// adapter.setNotifyOnChange(true);
 		rosterList.setAdapter(adapter);
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
@@ -43,14 +54,14 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 					@Override
 					public synchronized void handleEvent(final RosterEvent be) throws JaxmppException {
-						System.out.println(" +++++++ " + be.getItem().getJid().toString());
+						System.out.println(" ++++++ " + be.getItem().getJid().toString());
 						// item.add(be.getItem().getJid().toString());
 
 						rosterList.post(new Runnable() {
 
 							@Override
 							public void run() {
-								adapter.add(be.getItem().getJid().toString());
+								// adapter.add(be.getItem().getJid().toString());
 							}
 						});
 

@@ -18,6 +18,7 @@
 			</intent-filter>
 		</activity>
 	<service android:name=".JaxmppService"></service>
+	<provider android:authorities="org.tigase.mobile.RosterProvider" android:name="RosterProvider"></provider>
 	</application>
 	<uses-permission android:name="android.permission.INTERNET" />
 <!-- 	<uses-permission android:name="android.permission.VIBRATE" /> -->
