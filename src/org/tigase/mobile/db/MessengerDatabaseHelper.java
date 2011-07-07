@@ -3,7 +3,7 @@ package org.tigase.mobile.db;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.tigase.mobile.RosterProvider;
+import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -42,7 +42,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		SQLiteDatabase db = getWritableDatabase();
 		db.execSQL("DELETE FROM " + RosterTableMetaData.TABLE_NAME);
 
-		context.getContentResolver().notifyChange(Uri.parse(RosterProvider.CONTENT_URI), null);
+		context.getContentResolver().notifyChange(Uri.parse(AbstractRosterProvider.CONTENT_URI), null);
 	}
 
 	public long getRosterItemId(final BareJID jid) {
@@ -80,7 +80,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		long rowId = db.insert(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_JID, values);
 
-		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), rowId);
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 
 		return insertedItem;
@@ -114,7 +114,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		int removed = db.delete(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 		System.out.println("REMOVED ROWS=" + removed);
 
-		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), rowId);
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 	}
 
@@ -131,7 +131,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 		System.out.println("CHANGED ROWS=" + changed);
 
-		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), rowId);
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 
 	}

@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView android:id="@+id/roster_item_jid"
-	xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" android:layout_height="fill_parent"
-	android:padding="10dp" android:textSize="16sp">
-</TextView>
+	android:padding="5px">
+	
+
+	
+	<TextView android:id="@+id/roster_item_jid"
+		android:layout_width="fill_parent" android:layout_height="36px"
+		android:text="Tytuł kanału" android:textSize="16sp"
+		android:layout_marginRight="70px" />
+	<TextView android:id="@+id/roster_item_precence"
+		android:layout_width="70px" android:layout_height="36px" android:text="-"
+		android:textSize="16sp" android:gravity="center"
+		android:layout_alignParentRight="true" />
+</RelativeLayout>

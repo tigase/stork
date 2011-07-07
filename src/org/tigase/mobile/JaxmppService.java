@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
+import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -13,13 +14,17 @@ import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Service;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -28,6 +33,8 @@ public class JaxmppService extends Service {
 	private MessengerDatabaseHelper dbHelper;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
+
+	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
@@ -56,6 +63,18 @@ public class JaxmppService extends Service {
 		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
 		display("creating");
+
+		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
+
+			@Override
+			public void handleEvent(PresenceEvent be) throws JaxmppException {
+				long rowId = dbHelper.getRosterItemId(be.getJid().getBareJid());
+				if (rowId >= 0) {
+					Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
+					getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+				}
+			}
+		};
 
 		this.rosterListener = new Listener<RosterModule.RosterEvent>() {
 
@@ -94,6 +113,13 @@ public class JaxmppService extends Service {
 				this.rosterListener);
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemUpdated,
 				this.rosterListener);
+
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
+				this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
 	}
 
 	@Override
@@ -111,6 +137,13 @@ public class JaxmppService extends Service {
 				this.rosterListener);
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemUpdated,
 				this.rosterListener);
+
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactAvailable, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
 
 		super.onDestroy();
 	}

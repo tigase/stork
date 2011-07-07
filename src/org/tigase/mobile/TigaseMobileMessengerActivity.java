@@ -3,7 +3,7 @@ package org.tigase.mobile;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -22,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 
 public class TigaseMobileMessengerActivity extends Activity {
 
@@ -38,11 +37,9 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 		this.rosterList = (ListView) findViewById(R.id.rosterList);
 
-		Cursor c = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
+		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
 		startManagingCursor(c);
-		String[] cols = new String[] { RosterTableMetaData.FIELD_JID };
-		int[] names = new int[] { R.id.roster_item_jid };
-		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item, c, cols, names);
+		RosterAdapter adapter = new RosterAdapter(this, R.layout.item, c);
 
 		// final ArrayAdapter<String> adapter = new
 		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
