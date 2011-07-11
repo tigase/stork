@@ -37,8 +37,9 @@ public class RosterAdapter extends SimpleCursorAdapter {
 		String jid = cursor.getString(mFrom[0]);
 		itemJid.setText(jid);
 
-		String p = cursor.getString(mFrom[2]);
-		itemPresence.setText(p);
+		Integer p = cursor.getInt(mFrom[2]);
+		CPresence cp = CPresence.valueOf(p);
+		itemPresence.setText(cp == null ? "?" : cp.name());
 
 	}
 
