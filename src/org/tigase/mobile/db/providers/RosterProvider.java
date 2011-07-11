@@ -44,7 +44,8 @@ public class RosterProvider extends AbstractRosterProvider {
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, RosterTableMetaData.FIELD_JID + " ASC");
+		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, RosterTableMetaData.FIELD_PRESENCE
+				+ " DESC, " + RosterTableMetaData.FIELD_JID + " ASC");
 
 		int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);

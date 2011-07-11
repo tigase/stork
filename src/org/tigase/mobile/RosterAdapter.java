@@ -2,9 +2,6 @@ package org.tigase.mobile;
 
 import org.tigase.mobile.db.RosterTableMetaData;
 
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
@@ -13,7 +10,8 @@ import android.widget.TextView;
 
 public class RosterAdapter extends SimpleCursorAdapter {
 
-	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_NAME };
+	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_NAME,
+			RosterTableMetaData.FIELD_PRESENCE };
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
 	private final Context context;
@@ -39,12 +37,8 @@ public class RosterAdapter extends SimpleCursorAdapter {
 		String jid = cursor.getString(mFrom[0]);
 		itemJid.setText(jid);
 
-		try {
-			Presence presence = XmppService.jaxmpp().getPresence().getBestPresence(BareJID.bareJIDInstance(jid));
-			itemPresence.setText(presence == null ? "-" : presence.getShow().name());
-		} catch (XMLException e) {
-			e.printStackTrace();
-		}
+		String p = cursor.getString(mFrom[2]);
+		itemPresence.setText(p);
 
 	}
 

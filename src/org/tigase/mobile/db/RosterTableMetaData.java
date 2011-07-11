@@ -16,6 +16,8 @@ public class RosterTableMetaData implements BaseColumns {
 
 	public static final String FIELD_NAME = "name";
 
+	public static final String FIELD_PRESENCE = "presence";
+
 	public static final String FIELD_SUBSCRIPTION = "subscription";
 
 	public static final String TABLE_NAME = "roster";

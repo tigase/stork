@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
-import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -21,10 +20,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Service;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -68,11 +65,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
-				long rowId = dbHelper.getRosterItemId(be.getJid().getBareJid());
-				if (rowId >= 0) {
-					Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
-					getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
-				}
+				dbHelper.updateRosterItem(be.getPresence());
 			}
 		};
 
