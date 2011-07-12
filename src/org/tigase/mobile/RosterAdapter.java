@@ -4,7 +4,9 @@ import org.tigase.mobile.db.RosterTableMetaData;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.text.method.SingleLineTransformationMethod;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
@@ -32,14 +34,40 @@ public class RosterAdapter extends SimpleCursorAdapter {
 		// super.bindView(view, context, cursor);
 
 		TextView itemJid = (TextView) view.findViewById(R.id.roster_item_jid);
-		TextView itemPresence = (TextView) view.findViewById(R.id.roster_item_precence);
+		TextView itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
+		itemJid.setTransformationMethod(SingleLineTransformationMethod.getInstance());
+
+		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
 
 		String jid = cursor.getString(mFrom[0]);
 		itemJid.setText(jid);
 
 		Integer p = cursor.getInt(mFrom[2]);
 		CPresence cp = CPresence.valueOf(p);
-		itemPresence.setText(cp == null ? "?" : cp.name());
+
+		itemDescription.setText(cp == null ? CPresence.offline.name() : cp.name());
+
+		if (cp == null)
+			itemPresence.setImageResource(R.drawable.user_offline);
+		else
+			switch (cp) {
+			case chat:
+			case online:
+				itemPresence.setImageResource(R.drawable.user_available);
+				break;
+			case away:
+				itemPresence.setImageResource(R.drawable.user_away);
+				break;
+			case xa:
+				itemPresence.setImageResource(R.drawable.user_extended_away);
+				break;
+			case dnd:
+				itemPresence.setImageResource(R.drawable.user_busy);
+				break;
+			default:
+				itemPresence.setImageResource(R.drawable.user_offline);
+				break;
+			}
 
 	}
 
