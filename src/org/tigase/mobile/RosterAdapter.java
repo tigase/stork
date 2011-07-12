@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 public class RosterAdapter extends SimpleCursorAdapter {
 
-	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_NAME,
+	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
 			RosterTableMetaData.FIELD_PRESENCE };
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
@@ -39,7 +39,7 @@ public class RosterAdapter extends SimpleCursorAdapter {
 
 		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
 
-		String jid = cursor.getString(mFrom[0]);
+		String jid = cursor.getString(mFrom[1]);
 		itemJid.setText(jid);
 
 		Integer p = cursor.getInt(mFrom[2]);

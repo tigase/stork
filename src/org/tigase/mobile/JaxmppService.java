@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -28,6 +30,8 @@ import android.util.Log;
 public class JaxmppService extends Service {
 
 	private MessengerDatabaseHelper dbHelper;
+
+	private final Listener<JaxmppEvent> disconnectListener;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
@@ -82,6 +86,14 @@ public class JaxmppService extends Service {
 			}
 		};
 
+		this.disconnectListener = new Listener<JaxmppEvent>() {
+
+			@Override
+			public void handleEvent(JaxmppEvent be) throws JaxmppException {
+
+			}
+		};
+
 	}
 
 	private final void display(String message) {
@@ -113,6 +125,8 @@ public class JaxmppService extends Service {
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
+
+		XmppService.jaxmpp().addListener(JaxmppCore.Disconnected, this.disconnectListener);
 	}
 
 	@Override
@@ -123,6 +137,8 @@ public class JaxmppService extends Service {
 		} catch (JaxmppException e) {
 			Log.e("messenger", "Can't disconnect", e);
 		}
+
+		dbHelper.makeAllOffline();
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
 				this.rosterListener);
@@ -137,6 +153,8 @@ public class JaxmppService extends Service {
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
+
+		XmppService.jaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
 
 		super.onDestroy();
 	}

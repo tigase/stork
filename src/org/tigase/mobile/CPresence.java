@@ -15,11 +15,13 @@ public enum CPresence {
 	dnd(97),
 	error(50),
 	invisible(1),
+
 	notinroster(0),
-	offline(10),
-	offline_nonauth(11),
+	offline(80),
+	offline_nonauth(70),
+
 	online(100),
-	requested(51),
+	requested(75),
 	xa(98);
 
 	private static Map<Integer, CPresence> cache = null;

@@ -3,14 +3,13 @@ package org.tigase.mobile;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
 import android.content.Intent;
@@ -33,37 +32,23 @@ public class TigaseMobileMessengerActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+		setContentView(R.layout.roster);
 
 		this.rosterList = (ListView) findViewById(R.id.rosterList);
 
 		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
 		startManagingCursor(c);
-		RosterAdapter adapter = new RosterAdapter(this, R.layout.item, c);
+		RosterAdapter adapter = new RosterAdapter(this, R.layout.roster_item, c);
 
 		// final ArrayAdapter<String> adapter = new
 		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
 		// adapter.setNotifyOnChange(true);
 		rosterList.setAdapter(adapter);
 
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
-				new Listener<RosterModule.RosterEvent>() {
+		if (!XmppService.jaxmpp().isConnected()) {
+			(new MessengerDatabaseHelper(getApplicationContext())).makeAllOffline();
+		}
 
-					@Override
-					public synchronized void handleEvent(final RosterEvent be) throws JaxmppException {
-						System.out.println(" ++++++ " + be.getItem().getJid().toString());
-						// item.add(be.getItem().getJid().toString());
-
-						rosterList.post(new Runnable() {
-
-							@Override
-							public void run() {
-								// adapter.add(be.getItem().getJid().toString());
-							}
-						});
-
-					}
-				});
 	}
 
 	@Override
@@ -71,6 +56,20 @@ public class TigaseMobileMessengerActivity extends Activity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
+	}
+
+	@Override
+	public boolean onMenuOpened(int featureId, Menu menu) {
+		MenuItem con = menu.findItem(R.id.connectButton);
+		MenuItem dcon = menu.findItem(R.id.disconnectButton);
+
+		Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
+				: XmppService.jaxmpp().getConnector().getState();
+
+		con.setEnabled(st == State.disconnected);
+		dcon.setEnabled(st == State.connected || st == State.connecting);
+
+		return super.onMenuOpened(featureId, menu);
 	}
 
 	@Override

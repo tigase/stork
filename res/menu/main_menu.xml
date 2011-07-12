@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-	<item android:icon="@android:drawable/ic_menu_view"
-		android:title="@string/connectButton" android:id="@+id/connectButton"></item>
-	<item android:icon="@android:drawable/ic_menu_view"
-		android:title="@string/connectButton" android:id="@+id/disconnectButton"></item>
+	<item android:title="@string/loginButton" android:id="@+id/connectButton"  android:icon="@drawable/login"></item>
+	<item android:icon="@drawable/logout"
+		android:title="@string/logoutButton" android:id="@+id/disconnectButton"></item>
 	<item android:icon="@android:drawable/ic_menu_preferences"
 		android:id="@+id/propertiesButton" android:title="@string/propertiesButton"></item>
 

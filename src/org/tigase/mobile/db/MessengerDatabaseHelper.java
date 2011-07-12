@@ -31,6 +31,14 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final Integer DATABASE_VERSION = 1;
 
+	private static String getDisplayName(final RosterItem item) {
+		if (item.getName() != null && item.getName().length() != 0) {
+			return item.getName();
+		} else {
+			return item.getJid().toString();
+		}
+	}
+
 	public static CPresence getShowOf(final BareJID jid) {
 		try {
 			tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
@@ -78,12 +86,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_SUBSCRIPTION, RosterTableMetaData.FIELD_SUBSCRIPTION);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_ASK);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_PRESENCE);
+		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_DISPLAY_NAME);
 	}
 
 	public void clearRoster() {
 		SQLiteDatabase db = getWritableDatabase();
 		db.execSQL("DELETE FROM " + RosterTableMetaData.TABLE_NAME);
-
+		db.close();
 		context.getContentResolver().notifyChange(Uri.parse(AbstractRosterProvider.CONTENT_URI), null);
 	}
 
@@ -94,17 +103,21 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		qb.setProjectionMap(rosterProjectionMap);
 		qb.appendWhere(RosterTableMetaData.FIELD_JID + "='" + jid.toString() + "'");
 
-		Cursor c = qb.query(db, null, null, null, null, null, null);
-		final int column = c.getColumnIndex("_id");
-		int i = c.getCount();
-		if (i > 0) {
-			c.moveToFirst();
-			long result = c.getLong(column);
-			c.close();
-			return result;
-		} else
-			return -1;
-
+		Cursor c = null;
+		try {
+			c = qb.query(db, null, null, null, null, null, null);
+			final int column = c.getColumnIndex("_id");
+			int i = c.getCount();
+			if (i > 0) {
+				c.moveToFirst();
+				long result = c.getLong(column);
+				return result;
+			} else
+				return -1;
+		} finally {
+			if (c != null)
+				c.close();
+		}
 	}
 
 	public Map<String, String> getRosterProjectionMap() {
@@ -120,13 +133,31 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
 		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
 		values.put(RosterTableMetaData.FIELD_PRESENCE, getShowOf(item.getJid()).getId());
+		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, getDisplayName(item));
 
 		long rowId = db.insert(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_JID, values);
+		db.close();
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 
 		return insertedItem;
+	}
+
+	public void makeAllOffline() {
+		SQLiteDatabase db = getWritableDatabase();
+		ContentValues values = new ContentValues();
+
+		values.put(RosterTableMetaData.FIELD_PRESENCE, CPresence.offline.getId());
+
+		int i = db.update(RosterTableMetaData.TABLE_NAME, values,
+				RosterTableMetaData.FIELD_PRESENCE + '>' + CPresence.offline.getId(), null);
+
+		Log.d("x", "Update presence to offline of " + i + " buddies");
+
+		db.close();
+
+		context.getContentResolver().notifyChange(Uri.parse(AbstractRosterProvider.CONTENT_URI), null);
 	}
 
 	@Override
@@ -135,6 +166,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += RosterTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
 		sql += RosterTableMetaData.FIELD_JID + " TEXT, ";
 		sql += RosterTableMetaData.FIELD_NAME + " TEXT, ";
+		sql += RosterTableMetaData.FIELD_DISPLAY_NAME + " TEXT, ";
 		sql += RosterTableMetaData.FIELD_SUBSCRIPTION + " TEXT, ";
 		sql += RosterTableMetaData.FIELD_ASK + " INTEGER, ";
 		sql += RosterTableMetaData.FIELD_PRESENCE + " INTEGER";
@@ -154,6 +186,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		SQLiteDatabase db = getWritableDatabase();
 		int removed = db.delete(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
+		db.close();
 		System.out.println("REMOVED ROWS=" + removed);
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
@@ -173,6 +206,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 			int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 			System.out.println("CHANGED ROWS=" + changed);
+			db.close();
 
 			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 			context.getContentResolver().notifyChange(insertedItem, null);
@@ -191,9 +225,11 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
 		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
 		values.put(RosterTableMetaData.FIELD_PRESENCE, getShowOf(item.getJid()).getId());
+		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, getDisplayName(item));
 
 		int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 		System.out.println("CHANGED ROWS=" + changed);
+		db.close();
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);

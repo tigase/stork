@@ -45,7 +45,7 @@ public class RosterProvider extends AbstractRosterProvider {
 		}
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, RosterTableMetaData.FIELD_PRESENCE
-				+ " DESC, " + RosterTableMetaData.FIELD_JID + " ASC");
+				+ " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME + " ASC");
 
 		int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);
