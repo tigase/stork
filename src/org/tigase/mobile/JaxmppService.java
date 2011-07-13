@@ -111,6 +111,7 @@ public class JaxmppService extends Service {
 	public void onCreate() {
 		display("onCreate()");
 		this.dbHelper = new MessengerDatabaseHelper(getApplicationContext());
+		this.dbHelper.open();
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
 				this.rosterListener);
@@ -156,6 +157,7 @@ public class JaxmppService extends Service {
 
 		XmppService.jaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
 
+		this.dbHelper.close();
 		super.onDestroy();
 	}
 

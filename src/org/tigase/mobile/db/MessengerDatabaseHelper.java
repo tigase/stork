@@ -74,6 +74,8 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	private final Context context;
 
+	private SQLiteDatabase db;
+
 	private final Map<String, String> rosterProjectionMap = new HashMap<String, String>();
 
 	public MessengerDatabaseHelper(Context context) {
@@ -90,14 +92,24 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public void clearRoster() {
-		SQLiteDatabase db = getWritableDatabase();
 		db.execSQL("DELETE FROM " + RosterTableMetaData.TABLE_NAME);
-		db.close();
+		// db.close();
 		context.getContentResolver().notifyChange(Uri.parse(AbstractRosterProvider.CONTENT_URI), null);
 	}
 
-	public long getRosterItemId(final BareJID jid) {
-		final SQLiteDatabase db = getReadableDatabase();
+	@Override
+	public void close() {
+		if (this.db != null) {
+			db.close();
+			db = null;
+		}
+	}
+
+	public SQLiteDatabase getDatabase() {
+		return this.db;
+	}
+
+	private long getRosterItemId(final BareJID jid) {
 		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 		qb.setTables(RosterTableMetaData.TABLE_NAME);
 		qb.setProjectionMap(rosterProjectionMap);
@@ -115,8 +127,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			} else
 				return -1;
 		} finally {
-			if (c != null)
-				c.close();
+			c.close();
 		}
 	}
 
@@ -125,7 +136,6 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public Uri insertRosterItem(final RosterItem item) {
-		SQLiteDatabase db = getWritableDatabase();
 
 		ContentValues values = new ContentValues();
 		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
@@ -136,7 +146,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, getDisplayName(item));
 
 		long rowId = db.insert(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_JID, values);
-		db.close();
+		// db.close();
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
@@ -145,7 +155,6 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public void makeAllOffline() {
-		SQLiteDatabase db = getWritableDatabase();
 		ContentValues values = new ContentValues();
 
 		values.put(RosterTableMetaData.FIELD_PRESENCE, CPresence.offline.getId());
@@ -155,7 +164,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		Log.d("x", "Update presence to offline of " + i + " buddies");
 
-		db.close();
+		// db.close();
 
 		context.getContentResolver().notifyChange(Uri.parse(AbstractRosterProvider.CONTENT_URI), null);
 	}
@@ -181,12 +190,15 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		onCreate(db);
 	}
 
+	public void open() {
+		this.db = getWritableDatabase();
+	}
+
 	public void removeRosterItem(final RosterItem item) {
 		long rowId = getRosterItemId(item.getJid());
 
-		SQLiteDatabase db = getWritableDatabase();
 		int removed = db.delete(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
-		db.close();
+		// db.close();
 		System.out.println("REMOVED ROWS=" + removed);
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
@@ -199,14 +211,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			if (rowId == -1)
 				return;
 
-			SQLiteDatabase db = getWritableDatabase();
 			ContentValues values = new ContentValues();
 
 			values.put(RosterTableMetaData.FIELD_PRESENCE, getShowOf(presence.getFrom().getBareJid()).getId());
 
 			int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 			System.out.println("CHANGED ROWS=" + changed);
-			db.close();
+			// db.close();
 
 			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 			context.getContentResolver().notifyChange(insertedItem, null);
@@ -218,7 +229,6 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	public void updateRosterItem(final RosterItem item) {
 		long rowId = getRosterItemId(item.getJid());
 
-		SQLiteDatabase db = getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
 		values.put(RosterTableMetaData.FIELD_NAME, item.getName());
@@ -229,7 +239,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + rowId, null);
 		System.out.println("CHANGED ROWS=" + changed);
-		db.close();
+		// db.close();
 
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);

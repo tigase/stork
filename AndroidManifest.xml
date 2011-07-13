@@ -5,23 +5,26 @@
 
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".TigaseMobileMessengerActivity"
+			android:theme="@android:style/Theme.NoTitleBar" 
 			android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:label="@string/preferencesTitle" android:name=".MessengerPreferenceActivity">
+		<activity android:label="@string/preferencesTitle"
+			android:name=".MessengerPreferenceActivity">
 			<intent-filter>
 				<action android:name="org.tigase.mobile.MessengerPreferenceActivity" />
 				<category android:name="android.intent.category.PREFERENCE" />
 			</intent-filter>
 		</activity>
-	<service android:name=".JaxmppService"></service>
-	<provider android:authorities="org.tigase.mobile.db.providers.RosterProvider" android:name=".db.providers.RosterProvider"></provider>
+		<service android:name=".JaxmppService"></service>
+		<provider android:authorities="org.tigase.mobile.db.providers.RosterProvider"
+			android:name=".db.providers.RosterProvider"></provider>
 	</application>
 	<uses-permission android:name="android.permission.INTERNET" />
-<!-- 	<uses-permission android:name="android.permission.VIBRATE" /> -->
+	<!-- <uses-permission android:name="android.permission.VIBRATE" /> -->
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 </manifest>

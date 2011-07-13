@@ -1,15 +1,15 @@
 package org.tigase.mobile;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
 
 import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
 import android.content.Intent;
@@ -20,11 +20,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends Activity {
-
-	private List<String> item = new ArrayList<String>();
 
 	private ListView rosterList;
 
@@ -36,6 +35,8 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 		this.rosterList = (ListView) findViewById(R.id.rosterList);
 
+		updateConnectionStatus();
+
 		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
 		startManagingCursor(c);
 		RosterAdapter adapter = new RosterAdapter(this, R.layout.roster_item, c);
@@ -46,8 +47,19 @@ public class TigaseMobileMessengerActivity extends Activity {
 		rosterList.setAdapter(adapter);
 
 		if (!XmppService.jaxmpp().isConnected()) {
-			(new MessengerDatabaseHelper(getApplicationContext())).makeAllOffline();
+			MessengerDatabaseHelper h = new MessengerDatabaseHelper(getApplicationContext());
+			h.open();
+			h.makeAllOffline();
+			h.close();
 		}
+
+		XmppService.jaxmpp().addListener(Connector.StateChanged, new Listener<ConnectorEvent>() {
+
+			@Override
+			public void handleEvent(ConnectorEvent be) throws JaxmppException {
+				updateConnectionStatus();
+			}
+		});
 
 	}
 
@@ -108,5 +120,27 @@ public class TigaseMobileMessengerActivity extends Activity {
 			break;
 		}
 		return true;
+	}
+
+	private void updateConnectionStatus() {
+		final ImageView connectionStatus = (ImageView) findViewById(R.id.connection_status);
+
+		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
+				: XmppService.jaxmpp().getConnector().getState();
+
+		connectionStatus.post(new Runnable() {
+
+			@Override
+			public void run() {
+				if (st == State.connected) {
+					connectionStatus.setImageResource(R.drawable.user_available);
+				} else if (st == State.disconnected) {
+					connectionStatus.setImageResource(R.drawable.user_offline);
+				} else {
+					connectionStatus.setImageResource(R.drawable.user_extended_away);
+				}
+			}
+		});
+
 	}
 }

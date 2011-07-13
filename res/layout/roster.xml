@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-<ListView android:id="@+id/rosterList" android:divider="#e5e4e5" android:dividerHeight="1px" android:layout_height="wrap_content" android:layout_width="fill_parent"></ListView>
-    
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<RelativeLayout android:layout_width="fill_parent"
+		android:background="@android:drawable/title_bar_tall" android:padding="0dp"
+		android:layout_height="26dp">
+
+		<TextView android:textColor="#ffffff" android:layout_width="fill_parent"
+			android:paddingLeft="5dp" android:layout_height="wrap_content"
+			android:text="@string/app_name" android:id="@+id/textView1"
+			android:textSize="14dp" android:layout_centerVertical="true"
+			android:layout_toLeftOf="@+id/connection_status" android:textStyle="bold" />
+		<ImageView android:layout_height="wrap_content" android:id="@+id/connection_status"
+			android:scaleType="center" android:layout_width="wrap_content"
+			android:cropToPadding="true" android:src="@drawable/user_offline"
+			android:adjustViewBounds="true" android:layout_centerVertical="true"
+			android:layout_alignParentRight="true" android:paddingRight="5dp"></ImageView>
+	</RelativeLayout>
+
+	<ListView android:id="@+id/rosterList" android:divider="#e5e4e5"
+		android:dividerHeight="1px" android:layout_height="wrap_content"
+		android:layout_width="fill_parent"></ListView>
+
 </LinearLayout>

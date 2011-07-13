@@ -28,6 +28,7 @@ public class RosterProvider extends AbstractRosterProvider {
 	@Override
 	public boolean onCreate() {
 		dbHelper = new MessengerDatabaseHelper(getContext());
+		dbHelper.open();
 		return true;
 	}
 
@@ -43,7 +44,7 @@ public class RosterProvider extends AbstractRosterProvider {
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		SQLiteDatabase db = dbHelper.getDatabase();
 		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, RosterTableMetaData.FIELD_PRESENCE
 				+ " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME + " ASC");
 
