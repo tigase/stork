@@ -5,11 +5,14 @@
 
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".TigaseMobileMessengerActivity"
-			android:theme="@android:style/Theme.NoTitleBar" 
-			android:label="@string/app_name">
+			android:theme="@android:style/Theme.NoTitleBar" android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".ChatActivity" android:label="Chat With">
+			<intent-filter>
 			</intent-filter>
 		</activity>
 		<activity android:label="@string/preferencesTitle"

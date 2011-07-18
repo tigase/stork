@@ -12,6 +12,8 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -20,10 +22,15 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends Activity {
+
+	private NotificationManager notificationManager;
 
 	private ListView rosterList;
 
@@ -33,7 +40,21 @@ public class TigaseMobileMessengerActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.roster);
 
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
 		this.rosterList = (ListView) findViewById(R.id.rosterList);
+		this.rosterList.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+				// TODO Auto-generated method stub
+
+				System.out.println(position + "     " + id);
+
+				Intent i = new Intent(TigaseMobileMessengerActivity.this, ChatActivity.class);
+				startActivity(i);
+			}
+		});
 
 		updateConnectionStatus();
 

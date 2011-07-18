@@ -110,6 +110,7 @@ public class JaxmppService extends Service {
 	@Override
 	public void onCreate() {
 		display("onCreate()");
+
 		this.dbHelper = new MessengerDatabaseHelper(getApplicationContext());
 		this.dbHelper.open();
 
@@ -128,6 +129,7 @@ public class JaxmppService extends Service {
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 
 		XmppService.jaxmpp().addListener(JaxmppCore.Disconnected, this.disconnectListener);
+
 	}
 
 	@Override
