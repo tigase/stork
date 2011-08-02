@@ -1,7 +1,11 @@
 package org.tigase.mobile;
 
+import java.util.ArrayList;
+
+import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
+import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
@@ -12,7 +16,6 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +24,11 @@ import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,44 +44,46 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ViewFlipper;
+import android.widget.SimpleCursorAdapter;
 
-public class TigaseMobileMessengerActivity extends Activity {
+public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private NotificationManager notificationManager;
 
-	private ListView rosterList;
+	// private ListView rosterList;
 
 	private float oldTouchValue;
 
-	@Override
-	public boolean onTouchEvent(MotionEvent touchevent) {
-		switch (touchevent.getAction()) {
-		case MotionEvent.ACTION_DOWN: {
-			oldTouchValue = touchevent.getX();
-			break;
-		}
+	// @Override
+	// public boolean onTouchEvent(MotionEvent touchevent) {
+	// switch (touchevent.getAction()) {
+	// case MotionEvent.ACTION_DOWN: {
+	// oldTouchValue = touchevent.getX();
+	// break;
+	// }
+	//
+	// case MotionEvent.ACTION_UP: {
+	//
+	// float currentX = touchevent.getX();
+	// if (oldTouchValue < currentX) {
+	// // viewSwitcher.setInAnimation(inFromLeftAnimation());
+	// // viewSwitcher.setOutAnimation(outToRightAnimation());
+	// // viewSwitcher.showNext();
+	// }
+	// if (oldTouchValue > currentX) {
+	// // viewSwitcher.setInAnimation(inFromRightAnimation());
+	// // viewSwitcher.setOutAnimation(outToLeftAnimation());
+	// // viewSwitcher.showPrevious();
+	// }
+	// break;
+	// }
+	// }
+	// return false;
+	// }
 
-		case MotionEvent.ACTION_UP: {
+	private ViewPager viewSwitcher;
 
-			float currentX = touchevent.getX();
-			if (oldTouchValue < currentX) {
-				viewSwitcher.setInAnimation(inFromLeftAnimation());
-				viewSwitcher.setOutAnimation(outToRightAnimation());
-				viewSwitcher.showNext();
-			}
-			if (oldTouchValue > currentX) {
-				viewSwitcher.setInAnimation(inFromRightAnimation());
-				viewSwitcher.setOutAnimation(outToLeftAnimation());
-				viewSwitcher.showPrevious();
-			}
-			break;
-		}
-		}
-		return false;
-	}
-
-	private ViewFlipper viewSwitcher;
+	private View l;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -81,8 +91,13 @@ public class TigaseMobileMessengerActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.roster);
 
-		this.viewSwitcher = (ViewFlipper) findViewById(R.id.viewSwitcher);
-
+		try {
+			this.viewSwitcher = (ViewPager) findViewById(R.id.viewSwitcher);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.e("x", e.getMessage(), e);
+			throw new RuntimeException(e);
+		}
 		Button bPrev = (Button) findViewById(R.id.prevButton);
 		bPrev.setOnClickListener(new OnClickListener() {
 
@@ -102,11 +117,15 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-		this.rosterList = (ListView) findViewById(R.id.rosterList);
-		this.rosterList.setOnItemClickListener(new OnItemClickListener() {
+		// this.rosterList = (ListView) l.findViewById(R.id.rosterList);
+		//
+		final OnItemClickListener listener = new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+
+				ListView rosterList = (ListView) parent.findViewById(R.id.rosterList);
+
 				CursorWrapper cw = (CursorWrapper) rosterList.getItemAtPosition(position);
 
 				JID jid = JID.jidInstance(cw.getString(1));
@@ -117,18 +136,46 @@ public class TigaseMobileMessengerActivity extends Activity {
 				// ChatActivity.class);
 				// startActivity(i);
 			}
+		};
+
+		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
+		startManagingCursor(c);
+		final RosterAdapter adapter = new RosterAdapter(this, R.layout.roster_item, c);
+
+		viewSwitcher.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+
+			@Override
+			public Fragment getItem(int i) {
+				if (i == 0)
+					return RosterFragment.newInstance(adapter, listener);
+				else {
+					final Chat chat = chats.get(i - 1);
+					final Cursor c = getContentResolver().query(
+							Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+
+					startManagingCursor(c);
+
+					SimpleCursorAdapter ad = new SimpleCursorAdapter(TigaseMobileMessengerActivity.this, R.layout.chat_item, c,
+							new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY }, new int[] {
+									R.id.chat_item_timestamp, R.id.chat_item_body });
+
+					return ChatFragment.newInstance(chat, ad);
+				}
+			}
+
+			@Override
+			public int getCount() {
+				// TODO Auto-generated method stub
+				return 1 + chats.size();
+			}
 		});
 
 		updateConnectionStatus();
 
-		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
-		startManagingCursor(c);
-		RosterAdapter adapter = new RosterAdapter(this, R.layout.roster_item, c);
-
 		// final ArrayAdapter<String> adapter = new
 		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
 		// adapter.setNotifyOnChange(true);
-		rosterList.setAdapter(adapter);
+		// rosterList.setAdapter(adapter);
 
 		if (!XmppService.jaxmpp().isConnected()) {
 			MessengerDatabaseHelper h = new MessengerDatabaseHelper(getApplicationContext());
@@ -169,23 +216,18 @@ public class TigaseMobileMessengerActivity extends Activity {
 
 	protected void openChatWith(final JID jid) {
 		try {
-			ChatView l = findChatView(jid);
-			if (l == null) {
-				final Chat cc = XmppService.jaxmpp().createChat(jid);
-				LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				l = (ChatView) inflater.inflate(R.layout.chat, null);
-				l.setChat(cc);
-				viewSwitcher.addView(l);
-			}
+			final Chat cc = XmppService.jaxmpp().createChat(jid);
 
-			int idx = getViewIndex(l);
-			viewSwitcher.setInAnimation(inFromRightAnimation());
-			viewSwitcher.setOutAnimation(outToLeftAnimation());
-			viewSwitcher.setDisplayedChild(idx);
+			chats.add(cc);
+
+			viewSwitcher.setCurrentItem(chats.size());
+
 		} catch (JaxmppException e) {
 			throw new RuntimeException(e);
 		}
 	}
+
+	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	protected Animation inFromRightAnimation() {
 
@@ -221,16 +263,16 @@ public class TigaseMobileMessengerActivity extends Activity {
 	}
 
 	protected void onClickNext() {
-		viewSwitcher.setInAnimation(inFromRightAnimation());
-		viewSwitcher.setOutAnimation(outToLeftAnimation());
-		viewSwitcher.showNext();
+		// viewSwitcher.setInAnimation(inFromRightAnimation());
+		// viewSwitcher.setOutAnimation(outToLeftAnimation());
+		// viewSwitcher.showNext();
 	}
 
 	protected void onClickPrev() {
 		// TODO Auto-generated method stub
-		viewSwitcher.setInAnimation(inFromLeftAnimation());
-		viewSwitcher.setOutAnimation(outToRightAnimation());
-		viewSwitcher.showPrevious();
+		// viewSwitcher.setInAnimation(inFromLeftAnimation());
+		// viewSwitcher.setOutAnimation(outToRightAnimation());
+		// viewSwitcher.showPrevious();
 	}
 
 	@Override

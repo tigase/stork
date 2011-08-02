@@ -78,9 +78,18 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	private final Map<String, String> rosterProjectionMap = new HashMap<String, String>();
 
+	private final Map<String, String> chatHistoryProjectionMap = new HashMap<String, String>();
+
 	public MessengerDatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		this.context = context;
+
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_BODY, ChatTableMetaData.FIELD_BODY);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_ID, ChatTableMetaData.FIELD_ID);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_JID, ChatTableMetaData.FIELD_JID);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_STATE);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.FIELD_THREAD_ID);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_TIMESTAMP);
 
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_ID);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_JID);
@@ -181,6 +190,17 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += RosterTableMetaData.FIELD_PRESENCE + " INTEGER";
 		sql += ");";
 		db.execSQL(sql);
+
+		sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
+		sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
+		sql += ChatTableMetaData.FIELD_THREAD_ID + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_BODY + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_STATE + " INTEGER";
+		sql += ");";
+
+		db.execSQL(sql);
 	}
 
 	@Override
@@ -244,5 +264,9 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 
+	}
+
+	public Map<String, String> getChatHistoryProjectionMap() {
+		return this.chatHistoryProjectionMap;
 	}
 }

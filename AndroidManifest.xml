@@ -25,6 +25,9 @@
 		<service android:name=".JaxmppService"></service>
 		<provider android:authorities="org.tigase.mobile.db.providers.RosterProvider"
 			android:name=".db.providers.RosterProvider"></provider>
+		<provider android:authorities="org.tigase.mobile.db.providers.ChatHistoryProvider"
+			android:name=".db.providers.ChatHistoryProvider"></provider>
+
 	</application>
 	<uses-permission android:name="android.permission.INTERNET" />
 	<!-- <uses-permission android:name="android.permission.VIBRATE" /> -->
