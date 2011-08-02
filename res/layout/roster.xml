@@ -17,9 +17,19 @@
 			android:adjustViewBounds="true" android:layout_centerVertical="true"
 			android:layout_alignParentRight="true" android:paddingRight="5dp"></ImageView>
 	</RelativeLayout>
+	<LinearLayout android:layout_width="wrap_content" android:layout_marginRight="37dp" android:layout_height="wrap_content" android:id="@+id/linearLayout1" android:orientation="horizontal">
+		<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Prev" android:id="@+id/prevButton"></Button>
+		<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Next" android:id="@+id/nextButton"></Button>
+	</LinearLayout>
 
-	<ListView android:id="@+id/rosterList" android:divider="#e5e4e5"
+
+
+	<ViewFlipper android:layout_height="wrap_content" android:layout_width="fill_parent" android:id="@+id/viewSwitcher">
+	
+		<ListView android:id="@+id/rosterList" android:divider="#e5e4e5"
 		android:dividerHeight="1px" android:layout_height="wrap_content"
 		android:layout_width="fill_parent"></ListView>
+	
+	</ViewFlipper>
 
 </LinearLayout>
