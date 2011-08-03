@@ -11,7 +11,8 @@
 		android:layout_height="wrap_content" android:layout_alignParentRight="true"
 		android:text="TextView" android:layout_width="wrap_content"
 		android:layout_alignRight="@+id/chat_item_body"
-		 android:layout_alignTop="@+id/chat_item_body"></TextView>
+		 	android:layout_alignParentTop="true" 
+></TextView>
 
 <!-- 
 		android:layout_alignParentTop="true" 
@@ -19,13 +20,21 @@
 
  -->
 		
-	<TextView android:id="@+id/chat_item_body"
+	<TextView android:id="@+id/chat_item_body" 
 		android:layout_height="wrap_content" 
 		android:layout_width="fill_parent"
 		android:layout_toRightOf="@+id/imageView1"
+			android:layout_below="@+id/textView1"
 		>
 		</TextView>
-	<TextView android:id="@+id/textView1" android:layout_height="wrap_content" android:text="TextView" android:layout_width="wrap_content" android:layout_alignBottom="@+id/chat_item_body" android:layout_alignParentLeft="true"></TextView>
+	
+	<TextView android:id="@+id/textView1" 
+	android:layout_height="wrap_content" 
+	android:text="TextView" 
+	android:layout_width="wrap_content" 
+	android:layout_alignParentTop="true" 
+	android:layout_toRightOf="@+id/imageView1"
+	></TextView>
 
 
 </RelativeLayout>

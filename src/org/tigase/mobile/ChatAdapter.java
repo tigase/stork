@@ -5,8 +5,6 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
-import android.webkit.WebView;
-import android.widget.RelativeLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
@@ -21,6 +19,21 @@ public class ChatAdapter extends SimpleCursorAdapter {
 	public ChatAdapter(Context context, int layout, Cursor c) {
 		super(context, layout, c, cols, names);
 		findColumns(cols, c);
+	}
+
+	@Override
+	public void bindView(View view, Context context, Cursor cursor) {
+
+		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
+		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
+
+		final String txt = cursor.getString(mFrom[1]);
+
+		webview.setText(txt);
+		// webview.setMinimumHeight(webview.getMeasuredHeight());
+
+		timestamp.setText(cursor.getString(mFrom[0]));
+
 	}
 
 	private String buildHtmlCode(int type, String articleDescription) {
@@ -39,22 +52,6 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		html += "<html>" + "<head>" + style + "</head>" + "<body>" + articleDescription + "</body>" + "</html>";
 
 		return html;
-	}
-
-	@Override
-	public void bindView(View view, Context context, Cursor cursor) {
-
-		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
-		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
-
-		final String txt = cursor.getString(mFrom[1]);
-
-		webview.setText(txt);
-		//webview.setMinimumHeight(webview.getMeasuredHeight());
-		
-
-		timestamp.setText(cursor.getString(mFrom[0]));
-
 	}
 
 	private void findColumns(String[] from, Cursor mCursor) {
