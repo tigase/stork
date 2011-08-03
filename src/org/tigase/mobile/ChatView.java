@@ -1,5 +1,7 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.db.MessengerDatabaseHelper;
+
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import android.content.Context;
 import android.util.AttributeSet;
@@ -10,14 +12,23 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 public class ChatView extends LinearLayout {
 
 	private Chat chat;
+	private MessengerDatabaseHelper dbHelper;
+
+	public ChatView(Context context) {
+		super(context);
+	}
 
 	public ChatView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+	}
+
+	public Chat getChat() {
+		return chat;
 	}
 
 	void init() {
@@ -41,27 +52,30 @@ public class ChatView extends LinearLayout {
 
 	}
 
-	public ChatView(Context context) {
-		super(context);
-	}
-
 	protected void sendMessage(String t) {
 		Log.d("", "Send: " + t);
-		// chat.sendMessage(t);
-
-	}
-
-	public Chat getChat() {
-		return chat;
+		try {
+			chat.sendMessage(t);
+		} catch (Exception e) {
+			Log.e("", e.getMessage(), e);
+		}
+		dbHelper.addChatHistory(1, chat, t);
 	}
 
 	public void setChat(Chat chat) {
 		this.chat = chat;
+
+		TextView t = (TextView) findViewById(R.id.textView1);
+		t.setText("Chat with " + chat.getJid());
 	}
 
 	public void setCursorAdapter(ListAdapter adapter) {
 		ListView lv = (ListView) findViewById(R.id.chat_conversation_history);
 		lv.setAdapter(adapter);
+	}
+
+	public void setDbHelper(MessengerDatabaseHelper dbHelper) {
+		this.dbHelper = dbHelper;
 	}
 
 }

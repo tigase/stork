@@ -2,7 +2,6 @@ package org.tigase.mobile;
 
 import java.util.ArrayList;
 
-import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
@@ -28,12 +27,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -42,17 +40,15 @@ import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
-	private NotificationManager notificationManager;
+	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	// private ListView rosterList;
 
-	private float oldTouchValue;
+	private int currentPage;
 
 	// @Override
 	// public boolean onTouchEvent(MotionEvent touchevent) {
@@ -81,9 +77,50 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// return false;
 	// }
 
+	private View l;
+
+	private NotificationManager notificationManager;
+
+	private float oldTouchValue;
+
 	private ViewPager viewSwitcher;
 
-	private View l;
+	protected ChatView findChatView(final JID jid) {
+		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
+			View v = viewSwitcher.getChildAt(i);
+			if (v instanceof ChatView) {
+				if (((ChatView) v).getChat().getJid().getBareJid().equals(jid.getBareJid())) {
+					return (ChatView) v;
+				}
+			}
+		}
+		return null;
+	}
+
+	protected int getViewIndex(final View view) {
+		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
+			if (view == viewSwitcher.getChildAt(i))
+				return i;
+		}
+		return -1;
+	}
+
+	protected Animation inFromLeftAnimation() {
+		Animation inFromLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, -1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+		inFromLeft.setDuration(500);
+		inFromLeft.setInterpolator(new AccelerateDecelerateInterpolator());
+		return inFromLeft;
+	}
+
+	protected Animation inFromRightAnimation() {
+
+		Animation inFromRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, +1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+		inFromRight.setDuration(500);
+		inFromRight.setInterpolator(new AccelerateDecelerateInterpolator());
+		return inFromRight;
+	}
 
 	/** Called when the activity is first created. */
 	@Override
@@ -91,27 +128,24 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.roster);
 
-		try {
-			this.viewSwitcher = (ViewPager) findViewById(R.id.viewSwitcher);
-		} catch (Exception e) {
-			e.printStackTrace();
-			Log.e("x", e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		Button bPrev = (Button) findViewById(R.id.prevButton);
-		bPrev.setOnClickListener(new OnClickListener() {
+		this.viewSwitcher = (ViewPager) findViewById(R.id.viewSwitcher);
+		this.viewSwitcher.setOnPageChangeListener(new OnPageChangeListener() {
 
 			@Override
-			public void onClick(View v) {
-				onClickPrev();
+			public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+				// Log.i("X", "PageScrolled: " + position + ", " +
+				// positionOffset + ", " + positionOffsetPixels);
 			}
-		});
-		Button bNext = (Button) findViewById(R.id.nextButton);
-		bNext.setOnClickListener(new OnClickListener() {
 
 			@Override
-			public void onClick(View v) {
-				onClickNext();
+			public void onPageScrollStateChanged(int state) {
+				Log.i("X", "PageScrollStateChanged: " + state);
+			}
+
+			@Override
+			public void onPageSelected(int position) {
+				Log.i("X", "PageSelected: " + position);
+				currentPage = position;
 			}
 		});
 
@@ -145,6 +179,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewSwitcher.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
 
 			@Override
+			public int getCount() {
+				// TODO Auto-generated method stub
+				return 1 + chats.size();
+			}
+
+			@Override
 			public Fragment getItem(int i) {
 				if (i == 0)
 					return RosterFragment.newInstance(adapter, listener);
@@ -155,18 +195,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 					startManagingCursor(c);
 
-					SimpleCursorAdapter ad = new SimpleCursorAdapter(TigaseMobileMessengerActivity.this, R.layout.chat_item, c,
-							new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY }, new int[] {
-									R.id.chat_item_timestamp, R.id.chat_item_body });
+					ChatAdapter ad = new ChatAdapter(TigaseMobileMessengerActivity.this, R.layout.chat_item, c);
 
-					return ChatFragment.newInstance(chat, ad);
+					MessengerDatabaseHelper db = new MessengerDatabaseHelper(getApplicationContext());
+					db.open();
+					return ChatFragment.newInstance(chat, ad, db);
 				}
-			}
-
-			@Override
-			public int getCount() {
-				// TODO Auto-generated method stub
-				return 1 + chats.size();
 			}
 		});
 
@@ -192,87 +226,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
-	}
-
-	protected ChatView findChatView(final JID jid) {
-		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
-			View v = viewSwitcher.getChildAt(i);
-			if (v instanceof ChatView) {
-				if (((ChatView) v).getChat().getJid().getBareJid().equals(jid.getBareJid())) {
-					return (ChatView) v;
-				}
-			}
-		}
-		return null;
-	}
-
-	protected int getViewIndex(final View view) {
-		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
-			if (view == viewSwitcher.getChildAt(i))
-				return i;
-		}
-		return -1;
-	}
-
-	protected void openChatWith(final JID jid) {
-		try {
-			final Chat cc = XmppService.jaxmpp().createChat(jid);
-
-			chats.add(cc);
-
-			viewSwitcher.setCurrentItem(chats.size());
-
-		} catch (JaxmppException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private final ArrayList<Chat> chats = new ArrayList<Chat>();
-
-	protected Animation inFromRightAnimation() {
-
-		Animation inFromRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, +1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		inFromRight.setDuration(500);
-		inFromRight.setInterpolator(new AccelerateDecelerateInterpolator());
-		return inFromRight;
-	}
-
-	protected Animation outToLeftAnimation() {
-		Animation outtoLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, -1.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		outtoLeft.setDuration(500);
-		outtoLeft.setInterpolator(new AccelerateDecelerateInterpolator());
-		return outtoLeft;
-	}
-
-	protected Animation inFromLeftAnimation() {
-		Animation inFromLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, -1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		inFromLeft.setDuration(500);
-		inFromLeft.setInterpolator(new AccelerateDecelerateInterpolator());
-		return inFromLeft;
-	}
-
-	protected Animation outToRightAnimation() {
-		Animation outtoRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, +1.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		outtoRight.setDuration(500);
-		outtoRight.setInterpolator(new AccelerateDecelerateInterpolator());
-		return outtoRight;
-	}
-
-	protected void onClickNext() {
-		// viewSwitcher.setInAnimation(inFromRightAnimation());
-		// viewSwitcher.setOutAnimation(outToLeftAnimation());
-		// viewSwitcher.showNext();
-	}
-
-	protected void onClickPrev() {
-		// TODO Auto-generated method stub
-		// viewSwitcher.setInAnimation(inFromLeftAnimation());
-		// viewSwitcher.setOutAnimation(outToRightAnimation());
-		// viewSwitcher.showPrevious();
 	}
 
 	@Override
@@ -334,25 +287,56 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return true;
 	}
 
+	protected void openChatWith(final JID jid) {
+		try {
+			final Chat cc = XmppService.jaxmpp().createChat(jid);
+
+			chats.add(cc);
+
+			viewSwitcher.setCurrentItem(chats.size());
+
+		} catch (JaxmppException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Animation outToLeftAnimation() {
+		Animation outtoLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, -1.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+		outtoLeft.setDuration(500);
+		outtoLeft.setInterpolator(new AccelerateDecelerateInterpolator());
+		return outtoLeft;
+	}
+
+	protected Animation outToRightAnimation() {
+		Animation outtoRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, +1.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+		outtoRight.setDuration(500);
+		outtoRight.setInterpolator(new AccelerateDecelerateInterpolator());
+		return outtoRight;
+	}
+
 	private void updateConnectionStatus() {
-		final ImageView connectionStatus = (ImageView) findViewById(R.id.connection_status);
-
-		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
-				: XmppService.jaxmpp().getConnector().getState();
-
-		connectionStatus.post(new Runnable() {
-
-			@Override
-			public void run() {
-				if (st == State.connected) {
-					connectionStatus.setImageResource(R.drawable.user_available);
-				} else if (st == State.disconnected) {
-					connectionStatus.setImageResource(R.drawable.user_offline);
-				} else {
-					connectionStatus.setImageResource(R.drawable.user_extended_away);
-				}
-			}
-		});
+		// final ImageView connectionStatus = (ImageView)
+		// findViewById(R.id.connection_status);
+		//
+		// final Connector.State st = XmppService.jaxmpp().getConnector() ==
+		// null ? State.disconnected
+		// : XmppService.jaxmpp().getConnector().getState();
+		//
+		// connectionStatus.post(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// if (st == State.connected) {
+		// connectionStatus.setImageResource(R.drawable.user_available);
+		// } else if (st == State.disconnected) {
+		// connectionStatus.setImageResource(R.drawable.user_offline);
+		// } else {
+		// connectionStatus.setImageResource(R.drawable.user_extended_away);
+		// }
+		// }
+		// });
 
 	}
 }

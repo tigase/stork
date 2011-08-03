@@ -10,9 +10,6 @@ import android.widget.ListView;
 
 public class RosterFragment extends Fragment {
 
-	private RosterAdapter adapter;
-	private OnItemClickListener clickListener;
-
 	public static RosterFragment newInstance(RosterAdapter adapter, OnItemClickListener listener) {
 		RosterFragment f = new RosterFragment();
 		f.adapter = adapter;
@@ -20,9 +17,13 @@ public class RosterFragment extends Fragment {
 		return f;
 	}
 
+	private RosterAdapter adapter;
+
+	private OnItemClickListener clickListener;
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View layout = (View) inflater.inflate(R.layout.roster_list, null);
+		View layout = inflater.inflate(R.layout.roster_list, null);
 
 		ListView lv = (ListView) layout.findViewById(R.id.rosterList);
 		lv.setAdapter(adapter);

@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:id="@+id/linearLayout1"
-	android:layout_width="wrap_content" android:orientation="horizontal" 
-	android:layout_height="wrap_content"
-	xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView android:text="TextView" android:id="@+id/chat_item_timestamp" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-    <TextView android:text="TextView" android:id="@+id/chat_item_body" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-</LinearLayout>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:padding="5px" android:layout_width="wrap_content"
+	android:layout_height="wrap_content">
+
+	<ImageView android:id="@+id/imageView1" android:src="@drawable/user_avatar"
+		android:layout_width="50sp" android:layout_height="50sp"></ImageView>
+
+
+	<TextView android:id="@+id/chat_item_timestamp"
+		android:layout_height="wrap_content" android:layout_alignParentRight="true"
+		android:text="TextView" android:layout_width="wrap_content"
+		android:layout_alignRight="@+id/chat_item_body"
+		 android:layout_alignTop="@+id/chat_item_body"></TextView>
+
+<!-- 
+		android:layout_alignParentTop="true" 
+		android:layout_alignBottom="@+id/imageView1"
+
+ -->
+		
+	<TextView android:id="@+id/chat_item_body"
+		android:layout_height="wrap_content" 
+		android:layout_width="fill_parent"
+		android:layout_toRightOf="@+id/imageView1"
+		>
+		</TextView>
+	<TextView android:id="@+id/textView1" android:layout_height="wrap_content" android:text="TextView" android:layout_width="wrap_content" android:layout_alignBottom="@+id/chat_item_body" android:layout_alignParentLeft="true"></TextView>
+
+
+</RelativeLayout>

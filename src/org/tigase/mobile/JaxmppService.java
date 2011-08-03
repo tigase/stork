@@ -14,6 +14,8 @@ import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
@@ -34,6 +36,8 @@ public class JaxmppService extends Service {
 	private final Listener<JaxmppEvent> disconnectListener;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
+
+	private final Listener<MessageModule.MessageEvent> messageListener;
 
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
@@ -64,6 +68,17 @@ public class JaxmppService extends Service {
 		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
 		display("creating");
+
+		this.messageListener = new Listener<MessageModule.MessageEvent>() {
+
+			@Override
+			public void handleEvent(MessageEvent be) throws JaxmppException {
+				if (be.getChat() != null) {
+					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
+				}
+
+			}
+		};
 
 		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
 
@@ -130,6 +145,9 @@ public class JaxmppService extends Service {
 
 		XmppService.jaxmpp().addListener(JaxmppCore.Disconnected, this.disconnectListener);
 
+		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
+				this.messageListener);
+
 	}
 
 	@Override
@@ -158,6 +176,9 @@ public class JaxmppService extends Service {
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 
 		XmppService.jaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
+
+		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(MessageModule.MessageReceived,
+				this.messageListener);
 
 		this.dbHelper.close();
 		super.onDestroy();

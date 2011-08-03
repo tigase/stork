@@ -1,13 +1,16 @@
 package org.tigase.mobile.db;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.tigase.mobile.CPresence;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
+import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -72,13 +75,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 
+	private final Map<String, String> chatHistoryProjectionMap = new HashMap<String, String>();
+
 	private final Context context;
 
 	private SQLiteDatabase db;
 
 	private final Map<String, String> rosterProjectionMap = new HashMap<String, String>();
-
-	private final Map<String, String> chatHistoryProjectionMap = new HashMap<String, String>();
 
 	public MessengerDatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -90,6 +93,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_STATE);
 		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.FIELD_THREAD_ID);
 		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_TIMESTAMP);
+		this.chatHistoryProjectionMap.put(ChatTableMetaData.FIELD_TYPE, ChatTableMetaData.FIELD_TYPE);
 
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_ID);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_JID);
@@ -98,6 +102,26 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_ASK);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_PRESENCE);
 		this.rosterProjectionMap.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_DISPLAY_NAME);
+	}
+
+	public void addChatHistory(int type, Chat chat, String message) {
+		try {
+			ContentValues values = new ContentValues();
+			values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+			values.put(ChatTableMetaData.FIELD_BODY, message);
+			values.put(ChatTableMetaData.FIELD_TYPE, type);
+			// values.put(ChatTableMetaData.FIELD_THREAD_ID, chat.ge);
+			values.put(ChatTableMetaData.FIELD_STATE, 0);
+
+			long rowId = db.insert(ChatTableMetaData.TABLE_NAME, ChatTableMetaData.FIELD_JID, values);
+			Uri insertedItem = ContentUris.withAppendedId(
+					Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString()), rowId);
+			context.getContentResolver().notifyChange(insertedItem, null);
+		} catch (Exception e) {
+			Log.e("", e.getMessage(), e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void clearRoster() {
@@ -112,6 +136,10 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			db.close();
 			db = null;
 		}
+	}
+
+	public Map<String, String> getChatHistoryProjectionMap() {
+		return this.chatHistoryProjectionMap;
 	}
 
 	public SQLiteDatabase getDatabase() {
@@ -193,6 +221,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
 		sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += ChatTableMetaData.FIELD_TYPE + " INTEGER, ";
 		sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
 		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
 		sql += ChatTableMetaData.FIELD_THREAD_ID + " TEXT, ";
@@ -264,9 +293,5 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 		context.getContentResolver().notifyChange(insertedItem, null);
 
-	}
-
-	public Map<String, String> getChatHistoryProjectionMap() {
-		return this.chatHistoryProjectionMap;
 	}
 }
