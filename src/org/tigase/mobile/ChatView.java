@@ -80,6 +80,7 @@ public class ChatView extends LinearLayout {
 			public void onChanged() {
 				super.onChanged();
 				// lv.sc(1, lv.getMeasuredHeight());
+				lv.setSelection(12000);
 			}
 		});
 
