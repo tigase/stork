@@ -34,8 +34,10 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final Integer DATABASE_VERSION = 1;
 
-	private static String getDisplayName(final RosterItem item) {
-		if (item.getName() != null && item.getName().length() != 0) {
+	public static String getDisplayName(final RosterItem item) {
+		if (item == null)
+			return null;
+		else if (item.getName() != null && item.getName().length() != 0) {
 			return item.getName();
 		} else {
 			return item.getJid().toString();

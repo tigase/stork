@@ -1,9 +1,15 @@
 package org.tigase.mobile;
 
-import org.tigase.mobile.db.ChatTableMetaData;
+import java.sql.Date;
 
+import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.MessengerDatabaseHelper;
+
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import android.content.Context;
 import android.database.Cursor;
+import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -11,7 +17,7 @@ import android.widget.TextView;
 public class ChatAdapter extends SimpleCursorAdapter {
 
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE };
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_TYPE, ChatTableMetaData.FIELD_JID };
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
 	protected int[] mFrom;
@@ -24,15 +30,31 @@ public class ChatAdapter extends SimpleCursorAdapter {
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 
+		TextView nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
 		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
 		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
+
+		final int type = cursor.getInt(mFrom[3]);
+
+		if (type == 0) {
+			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(mFrom[4]));
+			RosterItem ri = XmppService.jaxmpp().getRoster().get(jid);
+			nickname.setText(MessengerDatabaseHelper.getDisplayName(ri));
+		} else if (type == 1) {
+			nickname.setText("Ja");
+		} else {
+			nickname.setText("?");
+		}
+
+		java.text.DateFormat df = DateFormat.getTimeFormat(context);
 
 		final String txt = cursor.getString(mFrom[1]);
 
 		webview.setText(txt);
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
-		timestamp.setText(cursor.getString(mFrom[0]));
+		Date t = new Date(cursor.getLong(mFrom[0]));
+		timestamp.setText(df.format(t));
 
 	}
 

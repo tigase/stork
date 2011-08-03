@@ -3,7 +3,9 @@ package org.tigase.mobile;
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -64,14 +66,23 @@ public class ChatView extends LinearLayout {
 
 	public void setChat(Chat chat) {
 		this.chat = chat;
-
 		TextView t = (TextView) findViewById(R.id.textView1);
-		t.setText("Chat with " + chat.getJid());
+		RosterItem ri = XmppService.jaxmpp().getRoster().get(chat.getJid().getBareJid());
+		t.setText("Chat with " + MessengerDatabaseHelper.getDisplayName(ri));
 	}
 
 	public void setCursorAdapter(ListAdapter adapter) {
-		ListView lv = (ListView) findViewById(R.id.chat_conversation_history);
+		final ListView lv = (ListView) findViewById(R.id.chat_conversation_history);
 		lv.setAdapter(adapter);
+		adapter.registerDataSetObserver(new DataSetObserver() {
+
+			@Override
+			public void onChanged() {
+				super.onChanged();
+				// lv.sc(1, lv.getMeasuredHeight());
+			}
+		});
+
 	}
 
 	public void setDbHelper(MessengerDatabaseHelper dbHelper) {

@@ -23,18 +23,17 @@
 	<TextView android:id="@+id/chat_item_body" 
 		android:layout_height="wrap_content" 
 		android:layout_width="fill_parent"
-		android:layout_toRightOf="@+id/imageView1"
-			android:layout_below="@+id/textView1"
-		>
+		android:layout_toRightOf="@+id/imageView1" 
+			android:layout_below="@+id/chat_item_nickname"
+		android:text="body">
 		</TextView>
 	
-	<TextView android:id="@+id/textView1" 
-	android:layout_height="wrap_content" 
-	android:text="TextView" 
+	<TextView android:layout_height="wrap_content" 
+	android:text="TextView" android:textStyle="bold"
 	android:layout_width="wrap_content" 
 	android:layout_alignParentTop="true" 
 	android:layout_toRightOf="@+id/imageView1"
-	></TextView>
+	android:id="@+id/chat_item_nickname"></TextView>
 
 
 </RelativeLayout>
