@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -52,6 +53,14 @@ public class ChatView extends LinearLayout {
 			}
 		});
 
+		final ListView lv = (ListView) findViewById(R.id.chat_conversation_history);
+		lv.post(new Runnable() {
+
+			@Override
+			public void run() {
+				lv.setSelection(Integer.MAX_VALUE);
+			}
+		});
 	}
 
 	protected void sendMessage(String t) {
@@ -66,6 +75,8 @@ public class ChatView extends LinearLayout {
 
 	public void setChat(Chat chat) {
 		this.chat = chat;
+		if (chat == null)
+			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
 		RosterItem ri = XmppService.jaxmpp().getRoster().get(chat.getJid().getBareJid());
 		t.setText("Chat with " + MessengerDatabaseHelper.getDisplayName(ri));
@@ -80,7 +91,7 @@ public class ChatView extends LinearLayout {
 			public void onChanged() {
 				super.onChanged();
 				// lv.sc(1, lv.getMeasuredHeight());
-				lv.setSelection(12000);
+				lv.setSelection(Integer.MAX_VALUE);
 			}
 		});
 
@@ -88,6 +99,40 @@ public class ChatView extends LinearLayout {
 
 	public void setDbHelper(MessengerDatabaseHelper dbHelper) {
 		this.dbHelper = dbHelper;
+	}
+
+	public void setImagePresence(final CPresence cp) {
+
+		final ImageView itemPresence = (ImageView) findViewById(R.id.user_presence);
+
+		itemPresence.post(new Runnable() {
+
+			@Override
+			public void run() {
+				if (cp == null)
+					itemPresence.setImageResource(R.drawable.user_offline);
+				else
+					switch (cp) {
+					case chat:
+					case online:
+						itemPresence.setImageResource(R.drawable.user_available);
+						break;
+					case away:
+						itemPresence.setImageResource(R.drawable.user_away);
+						break;
+					case xa:
+						itemPresence.setImageResource(R.drawable.user_extended_away);
+						break;
+					case dnd:
+						itemPresence.setImageResource(R.drawable.user_busy);
+						break;
+					default:
+						itemPresence.setImageResource(R.drawable.user_offline);
+						break;
+					}
+			}
+		});
+
 	}
 
 }

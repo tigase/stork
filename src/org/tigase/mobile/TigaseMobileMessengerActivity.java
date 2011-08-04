@@ -1,18 +1,17 @@
 package org.tigase.mobile;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.Connector;
-import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.NotificationManager;
@@ -41,8 +40,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
-
-	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	// private ListView rosterList;
 
@@ -83,24 +80,18 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private ViewPager viewSwitcher;
 
-	protected ChatView findChatView(final JID jid) {
-		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
-			View v = viewSwitcher.getChildAt(i);
-			if (v instanceof ChatView) {
-				if (((ChatView) v).getChat().getJid().getBareJid().equals(jid.getBareJid())) {
-					return (ChatView) v;
-				}
-			}
+	protected Integer findChat(final JID jid) {
+		List<Chat> l = getChatList();
+		for (int i = 0; i < l.size(); i++) {
+			Chat c = l.get(i);
+			if (c.getJid().getBareJid().equals(jid.getBareJid()))
+				return i;
 		}
 		return null;
 	}
 
-	protected int getViewIndex(final View view) {
-		for (int i = 0; i < viewSwitcher.getChildCount(); i++) {
-			if (view == viewSwitcher.getChildAt(i))
-				return i;
-		}
-		return -1;
+	protected List<Chat> getChatList() {
+		return XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
 	}
 
 	protected Animation inFromLeftAnimation() {
@@ -179,7 +170,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			@Override
 			public int getCount() {
 				// TODO Auto-generated method stub
-				return 1 + chats.size();
+				return 1 + getChatList().size();
 			}
 
 			@Override
@@ -187,7 +178,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (i == 0)
 					return RosterFragment.newInstance(adapter, listener);
 				else {
-					final Chat chat = chats.get(i - 1);
+					final Chat chat = getChatList().get(i - 1);
 					final Cursor c = getContentResolver().query(
 							Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
 
@@ -202,8 +193,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
-		updateConnectionStatus();
-
 		// final ArrayAdapter<String> adapter = new
 		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
 		// adapter.setNotifyOnChange(true);
@@ -215,14 +204,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			h.makeAllOffline();
 			h.close();
 		}
-
-		XmppService.jaxmpp().addListener(Connector.StateChanged, new Listener<ConnectorEvent>() {
-
-			@Override
-			public void handleEvent(ConnectorEvent be) throws JaxmppException {
-				updateConnectionStatus();
-			}
-		});
 
 	}
 
@@ -287,11 +268,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	protected void openChatWith(final JID jid) {
 		try {
-			final Chat cc = XmppService.jaxmpp().createChat(jid);
+			Integer idx = findChat(jid);
 
-			chats.add(cc);
-
-			viewSwitcher.setCurrentItem(chats.size());
+			if (idx == null) {
+				XmppService.jaxmpp().createChat(jid);
+				viewSwitcher.setCurrentItem(getChatList().size());
+			} else {
+				viewSwitcher.setCurrentItem(idx + 1);
+			}
 
 		} catch (JaxmppException e) {
 			throw new RuntimeException(e);
@@ -314,27 +298,4 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return outtoRight;
 	}
 
-	private void updateConnectionStatus() {
-		// final ImageView connectionStatus = (ImageView)
-		// findViewById(R.id.connection_status);
-		//
-		// final Connector.State st = XmppService.jaxmpp().getConnector() ==
-		// null ? State.disconnected
-		// : XmppService.jaxmpp().getConnector().getState();
-		//
-		// connectionStatus.post(new Runnable() {
-		//
-		// @Override
-		// public void run() {
-		// if (st == State.connected) {
-		// connectionStatus.setImageResource(R.drawable.user_available);
-		// } else if (st == State.disconnected) {
-		// connectionStatus.setImageResource(R.drawable.user_offline);
-		// } else {
-		// connectionStatus.setImageResource(R.drawable.user_extended_away);
-		// }
-		// }
-		// });
-
-	}
 }

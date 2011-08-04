@@ -2,7 +2,11 @@ package org.tigase.mobile;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -25,10 +29,24 @@ public class ChatFragment extends Fragment {
 	private Chat chat;
 
 	private MessengerDatabaseHelper dbHelper;
+	private ChatView layout;
+	private final Listener<PresenceEvent> presenceListener;
+
+	public ChatFragment() {
+		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
+
+			@Override
+			public void handleEvent(PresenceEvent be) throws JaxmppException {
+				Log.d("pR", "Received presence " + be.getJid() + " :: " + be.getPresence());
+				if (chat != null && chat.getJid().getBareJid().equals(be.getJid().getBareJid()))
+					updatePresence();
+			}
+		};
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		ChatView layout = (ChatView) inflater.inflate(R.layout.chat, null);
+		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
 		layout.init();
 		layout.setChat(chat);
 		layout.setDbHelper(dbHelper);
@@ -39,18 +57,32 @@ public class ChatFragment extends Fragment {
 
 	@Override
 	public void onStart() {
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
+				this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
+				this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStart();
 
-		Log.i("CHAT Fragment", "Started");
-
+		updatePresence();
 	}
 
 	@Override
 	public void onStop() {
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactAvailable, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactUnavailable, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStop();
+	}
 
-		Log.i("CHAT Fragment", "Stopped");
-
+	protected void updatePresence() {
+		CPresence cp = MessengerDatabaseHelper.getShowOf(chat.getJid().getBareJid());
+		System.out.println("Updating presence to " + cp);
+		layout.setImagePresence(cp);
 	}
 
 }

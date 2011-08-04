@@ -5,4 +5,5 @@
     <string name="logoutButton">Disconnect</string>
     <string name="propertiesButton">Settings</string>
     <string name="preferencesTitle">Settings</string>
+    <string name="app_version">0.0.1a</string>
 </resources>

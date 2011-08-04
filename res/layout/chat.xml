@@ -11,8 +11,8 @@
 			android:paddingLeft="5dp" android:layout_height="wrap_content"
 			 android:id="@+id/textView1"
 			android:textSize="14dp" android:layout_centerVertical="true"
-			android:layout_toLeftOf="@+id/connection_status" android:textStyle="bold" />
-		<ImageView android:layout_height="wrap_content" android:id="@+id/connection_status"
+			android:layout_toLeftOf="@+id/user_presence" android:textStyle="bold" />
+		<ImageView android:layout_height="wrap_content" android:id="@+id/user_presence"
 			android:scaleType="center" android:layout_width="wrap_content"
 			android:cropToPadding="true" android:src="@drawable/user_offline"
 			android:adjustViewBounds="true" android:layout_centerVertical="true"
