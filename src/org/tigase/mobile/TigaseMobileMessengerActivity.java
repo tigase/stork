@@ -12,6 +12,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.NotificationManager;
@@ -246,6 +247,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			JID jid = JID.jidInstance(prefs.getString("user_jid", null));
 			String password = prefs.getString("user_password", null);
 			String hostname = prefs.getString("hostname", null);
+
+			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
+			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
+					getResources().getString(R.string.app_version));
+			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY,
+					"Android " + android.os.Build.VERSION.RELEASE);
 
 			XmppService.jaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
 			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);

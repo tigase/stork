@@ -23,13 +23,19 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
 public class JaxmppService extends Service {
+
+	public static final int NOTIFICATION_ID = 5398777;
 
 	private MessengerDatabaseHelper dbHelper;
 
@@ -38,6 +44,10 @@ public class JaxmppService extends Service {
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
+
+	private Notification notification;
+
+	private NotificationManager notificationManager;
 
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
@@ -75,6 +85,9 @@ public class JaxmppService extends Service {
 			public void handleEvent(MessageEvent be) throws JaxmppException {
 				if (be.getChat() != null) {
 					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
+
+					notifyA();
+
 				}
 
 			}
@@ -105,7 +118,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(JaxmppEvent be) throws JaxmppException {
-
+				notifyA();
 			}
 		};
 
@@ -113,6 +126,29 @@ public class JaxmppService extends Service {
 
 	private final void display(String message) {
 		Log.i("service", message);
+
+	}
+
+	protected void notifyA() {
+
+		// Stwórz powiadomienie
+		int ico = R.drawable.icon;
+		String notiticationTitle = "Powiadomienie";
+		long whenNotify = System.currentTimeMillis();
+
+		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
+
+		Context context = getApplicationContext();
+		String expandedNotificationTitle = "xxxx";
+		String expandedNotificationText = "yyy";
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		System.out.println("pokazalo???");
+
+		// notificationManager.notify(1, notification);
 
 	}
 
@@ -148,10 +184,51 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
 				this.messageListener);
 
+		int ico = R.drawable.icon;
+		String notiticationTitle = "Connecting";
+		long whenNotify = System.currentTimeMillis();
+
+		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+		this.notification = new Notification(ico, notiticationTitle, whenNotify);
+		// notification.flags = Notification.FLAG_AUTO_CANCEL;
+		notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		Context context = getApplicationContext();
+		String expandedNotificationTitle = "Tigase Messenger";
+		String expandedNotificationText = "online";
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify(NOTIFICATION_ID, notification);
+
 	}
 
 	@Override
 	public void onDestroy() {
+		if (notification != null && notificationManager != null) {
+			int ico = R.drawable.icon;
+			String notiticationTitle = "Disconnected";
+			long whenNotify = System.currentTimeMillis();
+
+			this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+			this.notification = new Notification(ico, notiticationTitle, whenNotify);
+			notification.flags = Notification.FLAG_AUTO_CANCEL;
+			// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+			Context context = getApplicationContext();
+			String expandedNotificationTitle = "Tigase Messenger";
+			String expandedNotificationText = "offline";
+			Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+			PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+			notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+			// notificationManager.notify(NOTIFICATION_ID, notification);
+			notificationManager.cancel(NOTIFICATION_ID);
+		}
+
 		display("onDestroy()");
 		try {
 			jaxmpp.disconnect();
