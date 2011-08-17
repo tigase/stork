@@ -7,9 +7,10 @@ import java.util.logging.Logger;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -27,19 +28,43 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.util.Log;
 
 public class JaxmppService extends Service {
 
+	private class ConnReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+			String info;
+			if (netInfo.isConnected())
+				info = "Nawiˆzano po¸ˆczenie z: " + netInfo.getTypeName();
+			else
+				info = "Zerwano po¸ˆczenie z: " + netInfo.getTypeName();
+
+			Log.i(TigaseMobileMessengerActivity.LOG_TAG, info);
+
+			refreshInfos();
+
+		}
+
+	}
+
 	public static final int NOTIFICATION_ID = 5398777;
+
+	private ConnectivityManager connManager;
 
 	private MessengerDatabaseHelper dbHelper;
 
-	private final Listener<JaxmppEvent> disconnectListener;
+	private final Listener<Connector.ConnectorEvent> disconnectListener;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
@@ -83,7 +108,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(MessageEvent be) throws JaxmppException {
-				if (be.getChat() != null) {
+				if (be.getChat() != null && be.getMessage().getBody() != null) {
 					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
 
 					notifyA();
@@ -114,18 +139,22 @@ public class JaxmppService extends Service {
 			}
 		};
 
-		this.disconnectListener = new Listener<JaxmppEvent>() {
+		this.disconnectListener = new Listener<Connector.ConnectorEvent>() {
 
 			@Override
-			public void handleEvent(JaxmppEvent be) throws JaxmppException {
-				notifyA();
+			public void handleEvent(Connector.ConnectorEvent be) throws JaxmppException {
+				State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+				if (state == State.disconnected) {
+					notifyA();
+					stopSelf();
+				}
 			}
 		};
 
 	}
 
 	private final void display(String message) {
-		Log.i("service", message);
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, message);
 
 	}
 
@@ -162,6 +191,12 @@ public class JaxmppService extends Service {
 	public void onCreate() {
 		display("onCreate()");
 
+		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+		ConnReceiver myConnReceiver = new ConnReceiver();
+		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+		registerReceiver(myConnReceiver, filter);
+
 		this.dbHelper = new MessengerDatabaseHelper(getApplicationContext());
 		this.dbHelper.open();
 
@@ -179,7 +214,7 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 
-		XmppService.jaxmpp().addListener(JaxmppCore.Disconnected, this.disconnectListener);
+		XmppService.jaxmpp().addListener(Connector.StateChanged, this.disconnectListener);
 
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
 				this.messageListener);
@@ -233,7 +268,7 @@ public class JaxmppService extends Service {
 		try {
 			jaxmpp.disconnect();
 		} catch (JaxmppException e) {
-			Log.e("messenger", "Can't disconnect", e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't disconnect", e);
 		}
 
 		dbHelper.makeAllOffline();
@@ -282,8 +317,15 @@ public class JaxmppService extends Service {
 		try {
 			jaxmpp.login(false);
 		} catch (JaxmppException e) {
-			Log.e("messenger", "Can't connect", e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
 		}
 	}
 
+	public void refreshInfos() {
+		if (!connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
+				&& !connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
+			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network disconnected!");
+			stopSelf();
+		}
+	}
 }

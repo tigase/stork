@@ -35,7 +35,7 @@ public class ChatView extends LinearLayout {
 	}
 
 	void init() {
-		Log.i("s", "Zrobione");
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Zrobione");
 
 		final EditText ed = (EditText) findViewById(R.id.chat_message_entry);
 
@@ -44,7 +44,7 @@ public class ChatView extends LinearLayout {
 
 			@Override
 			public void onClick(View v) {
-				Log.i("s", "Klikniete");
+				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Klikniete");
 				String t = ed.getText().toString();
 				ed.setText("");
 
@@ -64,11 +64,11 @@ public class ChatView extends LinearLayout {
 	}
 
 	protected void sendMessage(String t) {
-		Log.d("", "Send: " + t);
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Send: " + t);
 		try {
 			chat.sendMessage(t);
 		} catch (Exception e) {
-			Log.e("", e.getMessage(), e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, e.getMessage(), e);
 		}
 		dbHelper.addChatHistory(1, chat, t);
 	}

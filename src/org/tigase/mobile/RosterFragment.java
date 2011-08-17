@@ -7,6 +7,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,6 +71,7 @@ public class RosterFragment extends Fragment {
 	private void updateConnectionStatus() {
 		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
 				: XmppService.jaxmpp().getConnector().getState();
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "State changed to " + st);
 
 		connectionStatus.post(new Runnable() {
 

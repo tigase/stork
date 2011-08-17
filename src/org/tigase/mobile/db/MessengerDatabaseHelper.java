@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.tigase.mobile.CPresence;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
@@ -72,7 +73,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			}
 			return r;
 		} catch (Exception e) {
-			Log.e("messenger", "Can't calculate presence", e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't calculate presence", e);
 			return CPresence.error;
 		}
 	}
@@ -121,7 +122,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 					Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString()), rowId);
 			context.getContentResolver().notifyChange(insertedItem, null);
 		} catch (Exception e) {
-			Log.e("", e.getMessage(), e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -201,7 +202,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		int i = db.update(RosterTableMetaData.TABLE_NAME, values,
 				RosterTableMetaData.FIELD_PRESENCE + '>' + CPresence.offline.getId(), null);
 
-		Log.d("x", "Update presence to offline of " + i + " buddies");
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Update presence to offline of " + i + " buddies");
 
 		// db.close();
 
@@ -236,7 +237,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		Log.w("z", "Database upgrade from version " + oldVersion + " to " + newVersion);
+		Log.w(TigaseMobileMessengerActivity.LOG_TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
 		db.execSQL("DROP TABLE IF EXISTS " + RosterTableMetaData.TABLE_NAME);
 		onCreate(db);
 	}
@@ -273,7 +274,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(AbstractRosterProvider.CONTENT_URI), rowId);
 			context.getContentResolver().notifyChange(insertedItem, null);
 		} catch (Exception e) {
-			Log.e("messenger", "Can't update presence", e);
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't update presence", e);
 		}
 	}
 

@@ -42,6 +42,8 @@ import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
+	public static final String LOG_TAG = "tigase";
+
 	// private ListView rosterList;
 
 	private int currentPage;
@@ -112,6 +114,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return inFromRight;
 	}
 
+	@Override
+	public void onBackPressed() {
+		if (currentPage > 0) {
+			viewSwitcher.setCurrentItem(0);
+		} else
+			super.onBackPressed();
+	}
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -123,18 +133,19 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-				// Log.i("X", "PageScrolled: " + position + ", " +
+				// Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageScrolled: "
+				// + position + ", " +
 				// positionOffset + ", " + positionOffsetPixels);
 			}
 
 			@Override
 			public void onPageScrollStateChanged(int state) {
-				Log.i("X", "PageScrollStateChanged: " + state);
+				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageScrollStateChanged: " + state);
 			}
 
 			@Override
 			public void onPageSelected(int position) {
-				Log.i("X", "PageSelected: " + position);
+				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageSelected: " + position);
 				currentPage = position;
 			}
 		});
@@ -263,7 +274,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// try {
 			// XmppService.jaxmpp().login(false);
 			// } catch (JaxmppException e) {
-			// Log.e("messenger", "Can't connect", e);
+			// Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
 			// Toast.makeText(getApplicationContext(), "Connection error!",
 			// Toast.LENGTH_LONG).show();
 			// }

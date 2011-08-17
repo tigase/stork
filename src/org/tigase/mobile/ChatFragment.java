@@ -37,7 +37,7 @@ public class ChatFragment extends Fragment {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
-				Log.d("pR", "Received presence " + be.getJid() + " :: " + be.getPresence());
+				Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Received presence " + be.getJid() + " :: " + be.getPresence());
 				if (chat != null && chat.getJid().getBareJid().equals(be.getJid().getBareJid()))
 					updatePresence();
 			}
