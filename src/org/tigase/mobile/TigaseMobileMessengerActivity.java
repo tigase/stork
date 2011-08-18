@@ -19,6 +19,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.net.Uri;
@@ -120,6 +121,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			viewSwitcher.setCurrentItem(0);
 		} else
 			super.onBackPressed();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Configuration 2  changed!!!!");
+
+		super.onConfigurationChanged(newConfig);
+
 	}
 
 	/** Called when the activity is first created. */
@@ -234,7 +244,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
 				: XmppService.jaxmpp().getConnector().getState();
 
-		con.setEnabled(st == State.disconnected);
+		con.setEnabled(st == null || st == State.disconnected);
 		dcon.setEnabled(st == State.connected || st == State.connecting);
 
 		return super.onMenuOpened(featureId, menu);

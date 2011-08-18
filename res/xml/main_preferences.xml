@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:key="tigase_messenger_preferences" android:title="@string/preferencesTitle">
-    
-    
-    <EditTextPreference android:key="user_jid" android:dialogTitle="User JID" android:summary="Enter your Jabber ID" android:title="Jabber ID" />
-    <EditTextPreference android:key="user_password" android:dialogTitle="Password"  android:summary="Enter your password" android:title="Password" android:password="true"></EditTextPreference>
-    <EditTextPreference android:summary="Enter XMPP server name" android:title="Hostname" android:key="hostname" android:dialogTitle="Hostname"></EditTextPreference>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+	android:key="tigase_messenger_preferences" android:title="@string/preferencesTitle">
+
+	<PreferenceCategory xmlns:android="http://schemas.android.com/apk/res/android"
+		android:key="login_data" android:title="Login data"
+		android:summary="Data needed to login to XMPP server">
+		<EditTextPreference android:key="user_jid"
+			android:dialogTitle="User JID" android:summary="Enter your Jabber ID"
+			android:title="Jabber ID" />
+		<EditTextPreference android:key="user_password"
+			android:dialogTitle="Password" android:summary="Enter your password"
+			android:title="Password" android:password="true"></EditTextPreference>
+		<EditTextPreference android:summary="Enter XMPP server name"
+			android:title="Hostname" android:key="hostname" android:dialogTitle="Hostname"></EditTextPreference>
+	</PreferenceCategory>
+
+	<PreferenceCategory android:key="gui_details"
+		android:title="GUI details" xmlns:android="http://schemas.android.com/apk/res/android">
+
+		<ListPreference android:key="notification_type"
+			android:defaultValue="always" android:title="Icon visibility"
+			android:entries="@array/app_icon_options" android:entryValues="@array/app_icon_options_values" />
+
+	</PreferenceCategory>
+
 </PreferenceScreen>

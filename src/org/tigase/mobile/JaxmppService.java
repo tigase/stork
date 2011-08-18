@@ -33,6 +33,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
@@ -58,6 +59,13 @@ public class JaxmppService extends Service {
 
 	}
 
+	private static enum NotificationVariant {
+		always,
+		none,
+		only_connected,
+		only_disconnected
+	}
+
 	public static final int NOTIFICATION_ID = 5398777;
 
 	private ConnectivityManager connManager;
@@ -70,11 +78,19 @@ public class JaxmppService extends Service {
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
-	private Notification notification;
+	private ConnReceiver myConnReceiver;
 
 	private NotificationManager notificationManager;
 
+	private NotificationVariant notificationVariant = NotificationVariant.always;
+
+	private OnSharedPreferenceChangeListener prefChangeListener;
+
+	private SharedPreferences prefs;
+
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
+
+	private boolean reconnect = true;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
@@ -102,7 +118,7 @@ public class JaxmppService extends Service {
 
 		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
-		display("creating");
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "creating");
 
 		this.messageListener = new Listener<MessageModule.MessageEvent>() {
 
@@ -111,7 +127,7 @@ public class JaxmppService extends Service {
 				if (be.getChat() != null && be.getMessage().getBody() != null) {
 					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
 
-					notifyA();
+					// TODO chat notification? notifyA();
 
 				}
 
@@ -143,42 +159,83 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(Connector.ConnectorEvent be) throws JaxmppException {
-				State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-				if (state == State.disconnected) {
-					notifyA();
-					stopSelf();
+				notificationUpdate();
+				if (getState() == State.disconnected) {
+					reconnect();
 				}
 			}
 		};
 
 	}
 
-	private final void display(String message) {
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, message);
-
+	protected final State getState() {
+		State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		return state;
 	}
 
-	protected void notifyA() {
+	private void notificationCancel() {
+		notificationManager.cancel(NOTIFICATION_ID);
+	}
 
-		// Stwórz powiadomienie
-		int ico = R.drawable.icon;
-		String notiticationTitle = "Powiadomienie";
+	private void notificationUpdate() {
+		final State state = getState();
+
+		if (this.notificationVariant == NotificationVariant.none) {
+			notificationCancel();
+			return;
+		}
+
+		int ico = R.drawable.sb_offline;
+		String notiticationTitle = null;
+		String expandedNotificationText = null;
+
+		if (state == State.connecting) {
+			ico = R.drawable.sb_online;
+			notiticationTitle = "Connecting";
+			expandedNotificationText = "Connecting...";
+			if (this.notificationVariant != NotificationVariant.always) {
+				notificationCancel();
+				return;
+			}
+		} else if (state == State.connected) {
+			ico = R.drawable.sb_online;
+			notiticationTitle = "Connected";
+			expandedNotificationText = "Online";
+			if (this.notificationVariant == NotificationVariant.only_disconnected) {
+				notificationCancel();
+				return;
+			}
+		} else if (state == State.disconnecting) {
+			ico = R.drawable.sb_offline;
+			notiticationTitle = "Disconnecting";
+			expandedNotificationText = "Disconnecting...";
+			if (this.notificationVariant != NotificationVariant.always) {
+				notificationCancel();
+				return;
+			}
+		} else if (state == State.disconnected) {
+			ico = R.drawable.sb_offline;
+			notiticationTitle = "Disconnected";
+			expandedNotificationText = "Offline";
+			if (this.notificationVariant == NotificationVariant.only_connected) {
+				notificationCancel();
+				return;
+			}
+		}
+
 		long whenNotify = System.currentTimeMillis();
-
 		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
 
+		// notification.flags = Notification.FLAG_AUTO_CANCEL;
+		notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		Context context = getApplicationContext();
-		String expandedNotificationTitle = "xxxx";
-		String expandedNotificationText = "yyy";
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
-		System.out.println("pokazalo???");
-
-		// notificationManager.notify(1, notification);
-
+		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
 	@Override
@@ -189,11 +246,26 @@ public class JaxmppService extends Service {
 
 	@Override
 	public void onCreate() {
-		display("onCreate()");
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "onCreate()");
+
+		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
+
+			@Override
+			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+				if ("notification_type".equals(key)) {
+					notificationVariant = NotificationVariant.valueOf(sharedPreferences.getString(key, "always"));
+					notificationUpdate();
+				}
+			}
+		};
+
+		this.prefs = getSharedPreferences("org.tigase.mobile_preferences", 0);
+		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
+		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-		ConnReceiver myConnReceiver = new ConnReceiver();
+		this.myConnReceiver = new ConnReceiver();
 		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		registerReceiver(myConnReceiver, filter);
 
@@ -219,52 +291,21 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
 				this.messageListener);
 
-		int ico = R.drawable.icon;
-		String notiticationTitle = "Connecting";
-		long whenNotify = System.currentTimeMillis();
-
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-		this.notification = new Notification(ico, notiticationTitle, whenNotify);
-		// notification.flags = Notification.FLAG_AUTO_CANCEL;
-		notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		Context context = getApplicationContext();
-		String expandedNotificationTitle = "Tigase Messenger";
-		String expandedNotificationText = "online";
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
-		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
-
-		notificationManager.notify(NOTIFICATION_ID, notification);
-
+		XmppService.jaxmpp().getSessionObject().setProperty(Connector.CONNECTOR_STAGE_KEY, null);
+		notificationUpdate();
 	}
 
 	@Override
 	public void onDestroy() {
-		if (notification != null && notificationManager != null) {
-			int ico = R.drawable.icon;
-			String notiticationTitle = "Disconnected";
-			long whenNotify = System.currentTimeMillis();
+		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
-			this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		if (myConnReceiver != null)
+			unregisterReceiver(myConnReceiver);
 
-			this.notification = new Notification(ico, notiticationTitle, whenNotify);
-			notification.flags = Notification.FLAG_AUTO_CANCEL;
-			// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-			Context context = getApplicationContext();
-			String expandedNotificationTitle = "Tigase Messenger";
-			String expandedNotificationText = "offline";
-			Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-			PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
-			notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
-
-			// notificationManager.notify(NOTIFICATION_ID, notification);
-			notificationManager.cancel(NOTIFICATION_ID);
-		}
-
-		display("onDestroy()");
+		this.reconnect = false;
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Stopping service");
 		try {
 			jaxmpp.disconnect();
 		} catch (JaxmppException e) {
@@ -293,39 +334,60 @@ public class JaxmppService extends Service {
 				this.messageListener);
 
 		this.dbHelper.close();
+
+		notificationCancel();
+
 		super.onDestroy();
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
-		display("onStart()");
+		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "onStart()");
+		this.reconnect = true;
 		super.onStart(intent, startId);
-		SharedPreferences prefs = getSharedPreferences("org.tigase.mobile_preferences", 0);
 
 		JID jid = JID.jidInstance(prefs.getString("user_jid", null));
 		String password = prefs.getString("user_password", null);
 		String hostname = prefs.getString("hostname", null);
 
+		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
+
 		jaxmpp.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
 		jaxmpp.getProperties().setUserProperty(SessionObject.USER_JID, jid);
 		jaxmpp.getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
-		super.onCreate();
+		reconnect();
+	}
 
-		dbHelper.clearRoster();
-
-		try {
-			jaxmpp.login(false);
-		} catch (JaxmppException e) {
-			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
+	private void reconnect() {
+		if (connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
+				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
+			try {
+				if (reconnect) {
+					dbHelper.clearRoster();
+					jaxmpp.login(false);
+				}
+			} catch (JaxmppException e) {
+				Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
+			}
 		}
 	}
 
 	public void refreshInfos() {
-		if (!connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
-				&& !connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
+		final State state = getState();
+		final boolean networkAvailable = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
+				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
+		if (!networkAvailable && (state == State.connected || state == State.connecting)) {
 			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network disconnected!");
-			stopSelf();
+			try {
+				jaxmpp.disconnect();
+			} catch (JaxmppException e) {
+				Log.w(TigaseMobileMessengerActivity.LOG_TAG, "Can't disconnect", e);
+			}
+		} else if (networkAvailable && (state == State.disconnected)) {
+			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network available! Reconnecting!");
+			reconnect();
 		}
+
 	}
 }
