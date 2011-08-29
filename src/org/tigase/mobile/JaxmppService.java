@@ -15,9 +15,10 @@ import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
@@ -65,6 +66,8 @@ public class JaxmppService extends Service {
 		only_connected,
 		only_disconnected
 	}
+
+	public static final int CHAT_NOTIFICATION_ID = 132008;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -126,9 +129,7 @@ public class JaxmppService extends Service {
 			public void handleEvent(MessageEvent be) throws JaxmppException {
 				if (be.getChat() != null && be.getMessage().getBody() != null) {
 					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
-
-					// TODO chat notification? notifyA();
-
+					showChatNotification(be);
 				}
 
 			}
@@ -388,6 +389,33 @@ public class JaxmppService extends Service {
 			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network available! Reconnecting!");
 			reconnect();
 		}
+
+	}
+
+	protected void showChatNotification(final MessageEvent event) throws XMLException {
+		int ico = R.drawable.new_message;
+		String notiticationTitle = "Message from " + event.getMessage().getFrom();
+		String expandedNotificationText = notiticationTitle;
+
+		long whenNotify = System.currentTimeMillis();
+		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+
+		final Context context = getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		intent.setAction("messageFrom-" + event.getMessage().getFrom());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("jid", "" + event.getMessage().getFrom());
+		if (event.getChat() != null)
+			intent.putExtra("chatId", event.getChat().getId());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("" + event.getMessage().getFrom(), CHAT_NOTIFICATION_ID, notification);
 
 	}
 }

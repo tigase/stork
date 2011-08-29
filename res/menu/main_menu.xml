@@ -5,5 +5,7 @@
 		android:title="@string/logoutButton" android:id="@+id/disconnectButton"></item>
 	<item android:icon="@android:drawable/ic_menu_preferences"
 		android:id="@+id/propertiesButton" android:title="@string/propertiesButton"></item>
+	<item android:icon="@android:drawable/ic_menu_close_clear_cancel"
+		android:title="@string/closeChatButton" android:id="@+id/closeChatButton"></item>
 
 </menu>

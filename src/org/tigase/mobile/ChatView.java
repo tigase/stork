@@ -64,6 +64,8 @@ public class ChatView extends LinearLayout {
 	}
 
 	protected void sendMessage(String t) {
+		if (t == null || t.length() == 0)
+			return;
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Send: " + t);
 		try {
 			chat.sendMessage(t);

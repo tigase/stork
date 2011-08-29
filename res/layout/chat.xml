@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.tigase.mobile.ChatView class="org.tigase.mobile.ChatView"
-   xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 	<RelativeLayout android:layout_width="fill_parent"
@@ -9,16 +9,16 @@
 
 		<TextView android:textColor="#ffffff" android:layout_width="fill_parent"
 			android:paddingLeft="5dp" android:layout_height="wrap_content"
-			 android:id="@+id/textView1"
-			android:textSize="14dp" android:layout_centerVertical="true"
-			android:layout_toLeftOf="@+id/user_presence" android:textStyle="bold" />
+			android:id="@+id/textView1" android:textSize="14dp"
+			android:layout_centerVertical="true" android:layout_toLeftOf="@+id/user_presence"
+			android:textStyle="bold" />
 		<ImageView android:layout_height="wrap_content" android:id="@+id/user_presence"
 			android:scaleType="center" android:layout_width="wrap_content"
 			android:cropToPadding="true" android:src="@drawable/user_offline"
 			android:adjustViewBounds="true" android:layout_centerVertical="true"
 			android:layout_alignParentRight="true" android:paddingRight="5dp"></ImageView>
 	</RelativeLayout>
-	
+
 	<ListView android:id="@+id/chat_conversation_history"
 		android:layout_width="fill_parent" android:layout_weight="1"
 		android:layout_height="wrap_content"></ListView>
@@ -26,8 +26,7 @@
 		android:layout_width="fill_parent" android:layout_height="wrap_content">
 		<EditText android:layout_width="wrap_content"
 			android:layout_weight="1" android:id="@+id/chat_message_entry"
-			android:layout_height="wrap_content" android:inputType="textMultiLine">
-			<requestFocus></requestFocus>
+			android:layout_height="wrap_content" android:inputType="textMultiLine" android:imeOptions="actionDone|flagNoEnterAction">
 		</EditText>
 		<Button android:text="Button" android:id="@+id/chat_send_button"
 			android:layout_height="fill_parent" android:layout_width="wrap_content"></Button>
