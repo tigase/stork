@@ -7,5 +7,26 @@
 	<string name="preferencesTitle">Settings</string>
 	<string name="app_version">0.0.1a</string>
 	<string name="closeChatButton">Close chat</string>
+	<string name="chatSendButton">Send</string>
+
+	<string name="pref_login_section_title">Login data</string>
+	<string name="pref_login_section_summary">Data needed to login to XMPP server</string>
+	
+	<string name="pref_login_jid_dialog">Jabber ID</string>
+	<string name="pref_login_jid_title">User JID</string>
+	<string name="pref_login_jid_summary">Enter your Jabber ID</string>
+	
+	<string name="pref_login_password_dialog">Password</string>
+	<string name="pref_login_password_title">Password</string>
+	<string name="pref_login_password_summary">Enter your password</string>
+
+	<string name="pref_login_hostname_dialog">Hostname</string>
+	<string name="pref_login_hostname_title">Hostname</string>
+	<string name="pref_login_hostname_summary">Enter XMPP server name</string>
+
+	<string name="pref_login_ui_section_title">User Interface</string>
+	
+	<string name="pref_login_ui_notification_title">Application icon</string>
+
 
 </resources>
