@@ -46,11 +46,15 @@ import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
+	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
+
 	public static final String LOG_TAG = "tigase";
+
+	private final Listener<MessageEvent> chatListener;
 
 	// private ListView rosterList;
 
-	private final Listener<MessageEvent> chatListener;
+	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	// @Override
 	// public boolean onTouchEvent(MotionEvent touchevent) {
@@ -78,8 +82,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// }
 	// return false;
 	// }
-
-	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	private int currentPage;
 
@@ -142,6 +144,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return inFromRight;
 	}
 
+	private void notifyPageChange(int msg) {
+		Intent intent = new Intent();
+		intent.setAction(CLIENT_FOCUS_MSG);
+		intent.putExtra("page", msg);
+
+		if (msg > 0) {
+			final Chat chat = this.chats.get(msg - 1);
+			if (chat != null)
+				intent.putExtra("chatId", chat.getId());
+		}
+
+		sendBroadcast(intent);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -183,6 +199,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public void onPageSelected(int position) {
 				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageSelected: " + position);
 				currentPage = position;
+				notifyPageChange(position);
 			}
 		});
 
@@ -394,7 +411,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onPause() {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
-
+		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
 	}
@@ -417,16 +434,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			if (s_jid != null && chatId != -1) {
 				final Integer idx = findChat(chatId);
 				if (idx != null) {
-					viewSwitcher.post(new Runnable() {
-
-						@Override
-						public void run() {
-							viewSwitcher.setCurrentItem(idx + 1);
-						}
-					});
+					currentPage = idx + 1;
+					Log.d(LOG_TAG, "Set current page " + currentPage);
 				}
 			}
 		}
+		viewSwitcher.post(new Runnable() {
+
+			@Override
+			public void run() {
+				Log.d(LOG_TAG, "Focus on page " + currentPage);
+				viewSwitcher.setCurrentItem(currentPage);
+			}
+		});
+
 	}
 
 	protected void openChatWith(final JID jid) {

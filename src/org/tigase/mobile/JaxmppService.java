@@ -35,12 +35,26 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.util.Log;
 
 public class JaxmppService extends Service {
+
+	private class ClientFocusReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			final int page = intent.getIntExtra("page", -1);
+			final long chatId = intent.getLongExtra("chatId", -1);
+
+			currentChatIdFocus = chatId;
+
+			notificationManager.cancel("chatId-" + chatId, CHAT_NOTIFICATION_ID);
+		}
+	}
 
 	private class ConnReceiver extends BroadcastReceiver {
 		@Override
@@ -73,9 +87,13 @@ public class JaxmppService extends Service {
 
 	private ConnectivityManager connManager;
 
+	private long currentChatIdFocus = -1;
+
 	private MessengerDatabaseHelper dbHelper;
 
 	private final Listener<Connector.ConnectorEvent> disconnectListener;
+
+	private ClientFocusReceiver focusChangeReceiver;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
@@ -270,6 +288,10 @@ public class JaxmppService extends Service {
 		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		registerReceiver(myConnReceiver, filter);
 
+		this.focusChangeReceiver = new ClientFocusReceiver();
+		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
+		registerReceiver(focusChangeReceiver, filter);
+
 		this.dbHelper = new MessengerDatabaseHelper(getApplicationContext());
 		this.dbHelper.open();
 
@@ -304,6 +326,9 @@ public class JaxmppService extends Service {
 
 		if (myConnReceiver != null)
 			unregisterReceiver(myConnReceiver);
+
+		if (focusChangeReceiver != null)
+			unregisterReceiver(focusChangeReceiver);
 
 		this.reconnect = false;
 		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Stopping service");
@@ -401,6 +426,12 @@ public class JaxmppService extends Service {
 		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
 
 		final Context context = getApplicationContext();
 
@@ -415,7 +446,8 @@ public class JaxmppService extends Service {
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
-		notificationManager.notify("" + event.getMessage().getFrom(), CHAT_NOTIFICATION_ID, notification);
+		if (currentChatIdFocus != event.getChat().getId())
+			notificationManager.notify("chatId-" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 
 	}
 }
