@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.tigase.mobile.ChatView class="org.tigase.mobile.ChatView"
-	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:android="http://schemas.android.com/apk/res/android" android:background="@color/message_panel_background"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 	<RelativeLayout android:layout_width="fill_parent"

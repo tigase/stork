@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<color name="message_mine_text">#000000</color>
+	<color name="message_his_text">#000000</color>
+
+	<color name="message_panel_background">#808080</color>
+
+
+	<color name="message_mine_background">#ffffff</color>
+	<color name="message_his_background">#effbff</color>
+<!-- 
+	<color name="message_mine_text">#ebebeb</color>
+	<color name="message_his_text">#ebebeb</color>
+
+	<color name="message_panel_background">#000000</color>
+
+
+	<color name="message_mine_background">#000000</color>
+	<color name="message_his_background">#330066</color>
+	 -->
+</resources>

@@ -40,8 +40,20 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(mFrom[4]));
 			RosterItem ri = XmppService.jaxmpp().getRoster().get(jid);
 			nickname.setText(MessengerDatabaseHelper.getDisplayName(ri));
+
+			nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
+			webview.setTextColor(context.getResources().getColor(R.color.message_his_text));
+			timestamp.setTextColor(context.getResources().getColor(R.color.message_his_text));
+
+			view.setBackgroundColor(context.getResources().getColor(R.color.message_his_background));
 		} else if (type == 1) {
 			nickname.setText("Ja");
+
+			nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+			webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+			timestamp.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+
+			view.setBackgroundColor(context.getResources().getColor(R.color.message_mine_background));
 		} else {
 			nickname.setText("?");
 		}
