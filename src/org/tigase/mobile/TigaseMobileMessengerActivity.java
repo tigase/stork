@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.AbstractRosterProvider;
-import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
@@ -175,8 +174,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 		Log.d(LOG_TAG, "onCreate()");
+		super.onCreate(savedInstanceState);
+		if (savedInstanceState != null) {
+			currentPage = savedInstanceState.getInt("currentPage", 0);
+		}
 
 		setContentView(R.layout.roster);
 
@@ -244,16 +246,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					return RosterFragment.newInstance(adapter, listener);
 				else {
 					final Chat chat = getChatList().get(i - 1);
-					final Cursor c = getContentResolver().query(
-							Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
-
-					startManagingCursor(c);
-
-					ChatAdapter ad = new ChatAdapter(TigaseMobileMessengerActivity.this, R.layout.chat_item, c);
-
-					MessengerDatabaseHelper db = new MessengerDatabaseHelper(getApplicationContext());
-					db.open();
-					return ChatFragment.newInstance(chat, ad, db);
+					return ChatFragment.newInstance(chat.getId());
 				}
 			}
 		});
@@ -374,6 +367,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return true;
 	}
 
+	@Override
+	protected void onPause() {
+		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
+		notifyPageChange(-1);
+		// TODO Auto-generated method stub
+		super.onPause();
+	}
+
 	// @Override
 	// protected void onActivityResult(int requestCode, int resultCode, Intent
 	// data) {
@@ -409,14 +410,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// }
 
 	@Override
-	protected void onPause() {
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
-		notifyPageChange(-1);
-		// TODO Auto-generated method stub
-		super.onPause();
-	}
-
-	@Override
 	protected void onResume() {
 		super.onResume();
 		Log.d(LOG_TAG, "onResume()");
@@ -448,6 +441,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		outState.putInt("currentPage", currentPage);
+		super.onSaveInstanceState(outState);
 	}
 
 	protected void openChatWith(final JID jid) {
