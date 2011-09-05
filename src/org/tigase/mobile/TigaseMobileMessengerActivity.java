@@ -18,8 +18,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -36,9 +34,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -55,38 +50,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
-	// @Override
-	// public boolean onTouchEvent(MotionEvent touchevent) {
-	// switch (touchevent.getAction()) {
-	// case MotionEvent.ACTION_DOWN: {
-	// oldTouchValue = touchevent.getX();
-	// break;
-	// }
-	//
-	// case MotionEvent.ACTION_UP: {
-	//
-	// float currentX = touchevent.getX();
-	// if (oldTouchValue < currentX) {
-	// // viewSwitcher.setInAnimation(inFromLeftAnimation());
-	// // viewSwitcher.setOutAnimation(outToRightAnimation());
-	// // viewSwitcher.showNext();
-	// }
-	// if (oldTouchValue > currentX) {
-	// // viewSwitcher.setInAnimation(inFromRightAnimation());
-	// // viewSwitcher.setOutAnimation(outToLeftAnimation());
-	// // viewSwitcher.showPrevious();
-	// }
-	// break;
-	// }
-	// }
-	// return false;
-	// }
-
 	private int currentPage;
 
 	private Bundle incomingExtras;
-
-	private NotificationManager notificationManager;
 
 	private ViewPager viewSwitcher;
 
@@ -124,23 +90,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return chats;
 		// return
 		// XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
-	}
-
-	protected Animation inFromLeftAnimation() {
-		Animation inFromLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, -1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		inFromLeft.setDuration(500);
-		inFromLeft.setInterpolator(new AccelerateDecelerateInterpolator());
-		return inFromLeft;
-	}
-
-	protected Animation inFromRightAnimation() {
-
-		Animation inFromRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, +1.0f, Animation.RELATIVE_TO_PARENT, 0.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		inFromRight.setDuration(500);
-		inFromRight.setInterpolator(new AccelerateDecelerateInterpolator());
-		return inFromRight;
 	}
 
 	private void notifyPageChange(int msg) {
@@ -205,10 +154,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
-		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// this.rosterList = (ListView) l.findViewById(R.id.rosterList);
-		//
 		final OnItemClickListener listener = new OnItemClickListener() {
 
 			@Override
@@ -463,22 +408,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		} catch (JaxmppException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	protected Animation outToLeftAnimation() {
-		Animation outtoLeft = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, -1.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		outtoLeft.setDuration(500);
-		outtoLeft.setInterpolator(new AccelerateDecelerateInterpolator());
-		return outtoLeft;
-	}
-
-	protected Animation outToRightAnimation() {
-		Animation outtoRight = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, +1.0f,
-				Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
-		outtoRight.setDuration(500);
-		outtoRight.setInterpolator(new AccelerateDecelerateInterpolator());
-		return outtoRight;
 	}
 
 }
