@@ -1,11 +1,16 @@
 package org.tigase.mobile;
 
-import org.tigase.mobile.db.MessengerDatabaseHelper;
+import java.util.Date;
+
+import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import android.content.ContentValues;
 import android.content.Context;
-import android.database.DataSetObserver;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -13,14 +18,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class ChatView extends LinearLayout {
 
 	private Chat chat;
-	private MessengerDatabaseHelper dbHelper;
+
+	// private MessengerDatabaseHelper dbHelper;
 
 	public ChatView(Context context) {
 		super(context);
@@ -72,7 +77,18 @@ public class ChatView extends LinearLayout {
 		} catch (Exception e) {
 			Log.e(TigaseMobileMessengerActivity.LOG_TAG, e.getMessage(), e);
 		}
-		dbHelper.addChatHistory(1, chat, t);
+
+		Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
+
+		ContentValues values = new ContentValues();
+		values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
+		values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+		values.put(ChatTableMetaData.FIELD_BODY, t);
+		values.put(ChatTableMetaData.FIELD_TYPE, 1);
+		values.put(ChatTableMetaData.FIELD_STATE, 0);
+
+		getContext().getContentResolver().insert(uri, values);
+
 	}
 
 	public void setChat(Chat chat) {
@@ -81,26 +97,7 @@ public class ChatView extends LinearLayout {
 			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
 		RosterItem ri = XmppService.jaxmpp().getRoster().get(chat.getJid().getBareJid());
-		t.setText("Chat with " + MessengerDatabaseHelper.getDisplayName(ri));
-	}
-
-	public void setCursorAdapter(ListAdapter adapter) {
-		final ListView lv = (ListView) findViewById(R.id.chat_conversation_history);
-		lv.setAdapter(adapter);
-		adapter.registerDataSetObserver(new DataSetObserver() {
-
-			@Override
-			public void onChanged() {
-				super.onChanged();
-				// lv.sc(1, lv.getMeasuredHeight());
-				lv.setSelection(Integer.MAX_VALUE);
-			}
-		});
-
-	}
-
-	public void setDbHelper(MessengerDatabaseHelper dbHelper) {
-		this.dbHelper = dbHelper;
+		t.setText("Chat with " + RosterProvider.getDisplayName(ri));
 	}
 
 	public void setImagePresence(final CPresence cp) {

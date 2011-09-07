@@ -1,11 +1,15 @@
 package org.tigase.mobile;
 
+import java.util.Date;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.tigase.mobile.db.MessengerDatabaseHelper;
+import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
@@ -21,8 +25,10 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Notification;
@@ -30,6 +36,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -38,6 +45,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -89,7 +97,7 @@ public class JaxmppService extends Service {
 
 	private long currentChatIdFocus = -1;
 
-	private MessengerDatabaseHelper dbHelper;
+	// private MessengerDatabaseHelper dbHelper;
 
 	private final Listener<Connector.ConnectorEvent> disconnectListener;
 
@@ -146,7 +154,18 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(MessageEvent be) throws JaxmppException {
 				if (be.getChat() != null && be.getMessage().getBody() != null) {
-					dbHelper.addChatHistory(0, be.getChat(), be.getMessage().getBody());
+
+					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getChat().getJid().getBareJid().toString());
+
+					ContentValues values = new ContentValues();
+					values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
+					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
+					values.put(ChatTableMetaData.FIELD_TYPE, 0);
+					values.put(ChatTableMetaData.FIELD_STATE, 0);
+
+					getContentResolver().insert(uri, values);
+
 					showChatNotification(be);
 				}
 
@@ -157,7 +176,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
-				dbHelper.updateRosterItem(be.getPresence());
+				updateRosterItem(be.getPresence());
 			}
 		};
 
@@ -166,11 +185,11 @@ public class JaxmppService extends Service {
 			@Override
 			public synchronized void handleEvent(final RosterEvent be) throws JaxmppException {
 				if (be.getType() == RosterModule.ItemAdded)
-					dbHelper.insertRosterItem(be.getItem());
+					insertRosterItem(be.getItem());
 				else if (be.getType() == RosterModule.ItemUpdated)
-					dbHelper.updateRosterItem(be.getItem());
+					updateRosterItem(be.getItem());
 				else if (be.getType() == RosterModule.ItemRemoved)
-					dbHelper.removeRosterItem(be.getItem());
+					removeRosterItem(be.getItem());
 			}
 		};
 
@@ -190,6 +209,18 @@ public class JaxmppService extends Service {
 	protected final State getState() {
 		State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state;
+	}
+
+	protected void insertRosterItem(RosterItem item) {
+		ContentValues values = new ContentValues();
+		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
+		values.put(RosterTableMetaData.FIELD_NAME, item.getName());
+		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
+		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
+		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(item.getJid()).getId());
+		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterProvider.getDisplayName(item));
+
+		getContentResolver().insert(Uri.parse(RosterProvider.CONTENT_URI), values);
 	}
 
 	private void notificationCancel() {
@@ -259,7 +290,6 @@ public class JaxmppService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -291,9 +321,6 @@ public class JaxmppService extends Service {
 		this.focusChangeReceiver = new ClientFocusReceiver();
 		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
 		registerReceiver(focusChangeReceiver, filter);
-
-		this.dbHelper = new MessengerDatabaseHelper(getApplicationContext());
-		this.dbHelper.open();
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
 				this.rosterListener);
@@ -338,7 +365,7 @@ public class JaxmppService extends Service {
 			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't disconnect", e);
 		}
 
-		dbHelper.makeAllOffline();
+		getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
 				this.rosterListener);
@@ -358,8 +385,6 @@ public class JaxmppService extends Service {
 
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(MessageModule.MessageReceived,
 				this.messageListener);
-
-		this.dbHelper.close();
 
 		notificationCancel();
 
@@ -390,7 +415,7 @@ public class JaxmppService extends Service {
 				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
 			try {
 				if (reconnect) {
-					dbHelper.clearRoster();
+					getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI), null, null);
 					jaxmpp.login(false);
 				}
 			} catch (JaxmppException e) {
@@ -415,6 +440,10 @@ public class JaxmppService extends Service {
 			reconnect();
 		}
 
+	}
+
+	protected void removeRosterItem(RosterItem item) {
+		getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI + "/" + item.getJid()), null, null);
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
@@ -449,5 +478,24 @@ public class JaxmppService extends Service {
 		if (currentChatIdFocus != event.getChat().getId())
 			notificationManager.notify("chatId-" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 
+	}
+
+	protected void updateRosterItem(final Presence presence) throws XMLException {
+		ContentValues values = new ContentValues();
+		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(presence.getFrom().getBareJid()).getId());
+		getContentResolver().update(Uri.parse(RosterProvider.CONTENT_URI + "/" + presence.getFrom().getBareJid()), values,
+				null, null);
+	}
+
+	protected void updateRosterItem(RosterItem item) {
+		ContentValues values = new ContentValues();
+		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
+		values.put(RosterTableMetaData.FIELD_NAME, item.getName());
+		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
+		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
+		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(item.getJid()).getId());
+		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterProvider.getDisplayName(item));
+
+		getContentResolver().update(Uri.parse(RosterProvider.CONTENT_URI + "/" + item.getJid()), values, null, null);
 	}
 }

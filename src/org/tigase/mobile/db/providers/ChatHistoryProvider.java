@@ -1,11 +1,13 @@
 package org.tigase.mobile.db.providers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.MessengerDatabaseHelper;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,6 +23,20 @@ public class ChatHistoryProvider extends ContentProvider {
 	public static final String CHAT_URI = "content://" + AUTHORITY + "/chat";
 
 	protected static final int CHAT_URI_INDICATOR = 1;
+
+	private final static Map<String, String> chatHistoryProjectionMap = new HashMap<String, String>() {
+
+		private static final long serialVersionUID = 1L;
+		{
+			put(ChatTableMetaData.FIELD_BODY, ChatTableMetaData.FIELD_BODY);
+			put(ChatTableMetaData.FIELD_ID, ChatTableMetaData.FIELD_ID);
+			put(ChatTableMetaData.FIELD_JID, ChatTableMetaData.FIELD_JID);
+			put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_STATE);
+			put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.FIELD_THREAD_ID);
+			put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_TIMESTAMP);
+			put(ChatTableMetaData.FIELD_TYPE, ChatTableMetaData.FIELD_TYPE);
+		}
+	};
 
 	private MessengerDatabaseHelper dbHelper;
 
@@ -47,7 +63,23 @@ public class ChatHistoryProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		// TODO Auto-generated method stub
+		switch (match(uri)) {
+		case CHAT_URI_INDICATOR:
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			long rowId = db.insert(ChatTableMetaData.TABLE_NAME, ChatTableMetaData.FIELD_JID, values);
+			if (rowId > 0) {
+				Uri insertedItem = ContentUris.withAppendedId(
+						Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + values.getAsString(ChatTableMetaData.FIELD_JID)), rowId);
+				getContext().getContentResolver().notifyChange(insertedItem, null);
+				return insertedItem;
+			}
+			break;
+		case CHAT_ITEM_URI_INDICATOR:
+			throw new IllegalArgumentException("Inserting not supported for URI " + uri);
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+
 		return null;
 	}
 
@@ -71,7 +103,6 @@ public class ChatHistoryProvider extends ContentProvider {
 	@Override
 	public boolean onCreate() {
 		dbHelper = new MessengerDatabaseHelper(getContext());
-		dbHelper.open();
 		return true;
 	}
 
@@ -81,24 +112,24 @@ public class ChatHistoryProvider extends ContentProvider {
 		switch (match(uri)) {
 		case CHAT_URI_INDICATOR:
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
-			qb.setProjectionMap(dbHelper.getChatHistoryProjectionMap());
+			qb.setProjectionMap(chatHistoryProjectionMap);
 			String jid = uri.getPathSegments().get(1);
 			qb.appendWhere(ChatTableMetaData.FIELD_JID + "='" + jid + "'");
 			break;
 		case CHAT_ITEM_URI_INDICATOR:
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
-			qb.setProjectionMap(dbHelper.getChatHistoryProjectionMap());
+			qb.setProjectionMap(chatHistoryProjectionMap);
 			String id = uri.getPathSegments().get(1);
 			qb.appendWhere(ChatTableMetaData.FIELD_ID + "=" + id + "");
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
-		SQLiteDatabase db = dbHelper.getDatabase();
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, ChatTableMetaData.FIELD_TIMESTAMP + " ASC, "
 				+ ChatTableMetaData.FIELD_ID + " ASC");
 
-		int i = c.getCount();
+		// int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);
 		return c;
 	}

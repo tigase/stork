@@ -2,8 +2,8 @@ package org.tigase.mobile;
 
 import java.util.List;
 
-import org.tigase.mobile.db.MessengerDatabaseHelper;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -12,6 +12,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import android.database.Cursor;
+import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -20,11 +21,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class ChatFragment extends Fragment {
+public class ChatHistoryFragment extends MyListFragment {
 
-	public static ChatFragment newInstance(long chatId) {
-		ChatFragment f = new ChatFragment();
-		f.setChatId(chatId);
+	public static Fragment newInstance(long chatId) {
+		ChatHistoryFragment f = new ChatHistoryFragment();
+
+		Bundle args = new Bundle();
+		args.putLong("chatId", chatId);
+		f.setArguments(args);
 
 		return f;
 	}
@@ -34,24 +38,30 @@ public class ChatFragment extends Fragment {
 	private Chat chat;
 
 	private ChatView layout;
+
 	private final Listener<PresenceEvent> presenceListener;
 
-	public ChatFragment() {
+	public ChatHistoryFragment() {
+		super(R.id.chat_conversation_history);
 		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
 				Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Received presence " + be.getJid() + " :: " + be.getPresence());
-				if (ChatFragment.this.chat != null
-						&& ChatFragment.this.chat.getJid().getBareJid().equals(be.getJid().getBareJid()))
+				if (ChatHistoryFragment.this.chat != null
+						&& ChatHistoryFragment.this.chat.getJid().getBareJid().equals(be.getJid().getBareJid()))
 					updatePresence();
 			}
 		};
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "onCreateView ChatFragment");
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "onActivityCreated ChatFragment " + savedInstanceState);
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Arguments: " + getArguments());
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Activity: " + getActivity());
 
 		if (savedInstanceState != null) {
 			long ci = savedInstanceState.getLong("chatId", -1);
@@ -64,30 +74,52 @@ public class ChatFragment extends Fragment {
 			throw new RuntimeException("Chat not specified!");
 		}
 
-		this.c = inflater.getContext().getContentResolver().query(
+		this.c = getActivity().getApplicationContext().getContentResolver().query(
 				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
 
-		// XXX inflater.get startManagingCursor(c);
+		ChatAdapter ad = new ChatAdapter(getActivity().getApplicationContext(), R.layout.chat_item, c);
+		setListAdapter(ad);
+		ad.registerDataSetObserver(new DataSetObserver() {
 
-		ChatAdapter ad = new ChatAdapter(inflater.getContext(), R.layout.chat_item, c);
+			@Override
+			public void onChanged() {
+				super.onChanged();
+				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Changed!");
+				getListView().post(new Runnable() {
 
-		MessengerDatabaseHelper db = new MessengerDatabaseHelper(inflater.getContext());
-		db.open();
+					@Override
+					public void run() {
+						getListView().setSelection(Integer.MAX_VALUE);
+					}
+				});
+			}
+		});
+	}
 
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		if (getArguments() != null) {
+			setChatId(getArguments().getLong("chatId"));
+		}
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
 		layout.init();
 		layout.setChat(chat);
-		layout.setDbHelper(db);
-		layout.setCursorAdapter(ad);
 
 		return layout;
+
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Save state of ChatFragment");
-
-		outState.putLong("chatId", chat.getId());
+		if (outState != null)
+			outState.putLong("chatId", chat.getId());
 		super.onSaveInstanceState(outState);
 	}
 
@@ -108,6 +140,11 @@ public class ChatFragment extends Fragment {
 	@Override
 	public void onStop() {
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Stop ChatFragment");
+
+		if (c != null) {
+			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
+			c.close();
+		}
 
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactAvailable, this.presenceListener);
@@ -131,9 +168,9 @@ public class ChatFragment extends Fragment {
 	}
 
 	protected void updatePresence() {
-		CPresence cp = MessengerDatabaseHelper.getShowOf(chat.getJid().getBareJid());
+		CPresence cp = RosterProvider.getShowOf(chat.getJid().getBareJid());
 		System.out.println("Updating presence to " + cp);
-		layout.setImagePresence(cp);
+		// layout.setImagePresence(cp);
 	}
 
 }

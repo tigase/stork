@@ -3,7 +3,7 @@ package org.tigase.mobile;
 import java.sql.Date;
 
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.MessengerDatabaseHelper;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -39,7 +39,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		if (type == 0) {
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(mFrom[4]));
 			RosterItem ri = XmppService.jaxmpp().getRoster().get(jid);
-			nickname.setText(MessengerDatabaseHelper.getDisplayName(ri));
+			nickname.setText(RosterProvider.getDisplayName(ri));
 
 			nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
 			webview.setTextColor(context.getResources().getColor(R.color.message_his_text));

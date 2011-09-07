@@ -3,8 +3,7 @@ package org.tigase.mobile;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tigase.mobile.db.MessengerDatabaseHelper;
-import org.tigase.mobile.db.providers.AbstractRosterProvider;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
@@ -18,10 +17,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,26 +33,35 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
+
+	private class RosterClickReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			JID jid = JID.jidInstance(intent.getStringExtra("jid"));
+			openChatWith(jid);
+		}
+	}
 
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
 	public static final String LOG_TAG = "tigase";
 
-	private final Listener<MessageEvent> chatListener;
+	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
 
 	// private ListView rosterList;
+
+	private final Listener<MessageEvent> chatListener;
 
 	private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
 	private int currentPage;
 
 	private Bundle incomingExtras;
+
+	private RosterClickReceiver rosterClickReceiver;
 
 	private ViewPager viewSwitcher;
 
@@ -154,28 +163,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
-		final OnItemClickListener listener = new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-
-				ListView rosterList = (ListView) parent.findViewById(R.id.rosterList);
-
-				CursorWrapper cw = (CursorWrapper) rosterList.getItemAtPosition(position);
-
-				JID jid = JID.jidInstance(cw.getString(1));
-
-				openChatWith(jid);
-
-				// Intent i = new Intent(TigaseMobileMessengerActivity.this,
-				// ChatActivity.class);
-				// startActivity(i);
-			}
-		};
-
-		Cursor c = getContentResolver().query(Uri.parse(AbstractRosterProvider.CONTENT_URI), null, null, null, null);
-		startManagingCursor(c);
-		final RosterAdapter adapter = new RosterAdapter(this, R.layout.roster_item, c);
+		this.rosterClickReceiver = new RosterClickReceiver();
+		IntentFilter filter = new IntentFilter(ROSTER_CLICK_MSG);
+		registerReceiver(rosterClickReceiver, filter);
 
 		viewSwitcher.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
 
@@ -188,10 +178,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			@Override
 			public Fragment getItem(int i) {
 				if (i == 0)
-					return RosterFragment.newInstance(adapter, listener);
+					return RosterFragment.newInstance();
 				else {
 					final Chat chat = getChatList().get(i - 1);
-					return ChatFragment.newInstance(chat.getId());
+					return ChatHistoryFragment.newInstance(chat.getId());
 				}
 			}
 		});
@@ -202,10 +192,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		// rosterList.setAdapter(adapter);
 
 		if (!XmppService.jaxmpp().isConnected()) {
-			MessengerDatabaseHelper h = new MessengerDatabaseHelper(getApplicationContext());
-			h.open();
-			h.makeAllOffline();
-			h.close();
+			getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
 		}
 
 		final Bundle extras = getIntent().getExtras();
@@ -219,6 +206,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (rosterClickReceiver != null)
+			unregisterReceiver(rosterClickReceiver);
+		super.onDestroy();
 	}
 
 	@Override
