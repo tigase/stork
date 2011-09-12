@@ -13,8 +13,6 @@ import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,27 +54,6 @@ public class RosterFragment extends Fragment {
 		View layout = inflater.inflate(R.layout.roster_list, null);
 		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
 		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), R.layout.roster_item, c);
-
-		getLoaderManager().initLoader(0, null, new LoaderCallbacks<Cursor>() {
-
-			@Override
-			public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public void onLoaderReset(Loader<Cursor> loader) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-				// TODO Auto-generated method stub
-
-			}
-		});
 
 		final ListView lv = (ListView) layout.findViewById(R.id.rosterList);
 		lv.setAdapter(adapter);

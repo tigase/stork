@@ -20,6 +20,8 @@ import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
@@ -28,7 +30,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEv
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Notification;
@@ -42,6 +46,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -120,6 +125,8 @@ public class JaxmppService extends Service {
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
 	private boolean reconnect = true;
+
+	private final Listener<ResourceBindEvent> resourceBindListener;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
@@ -201,6 +208,14 @@ public class JaxmppService extends Service {
 				if (getState() == State.disconnected) {
 					reconnect();
 				}
+			}
+		};
+
+		this.resourceBindListener = new Listener<ResourceBinderModule.ResourceBindEvent>() {
+
+			@Override
+			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
+				sendUnsentMessages();
 			}
 		};
 
@@ -322,6 +337,9 @@ public class JaxmppService extends Service {
 		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
 		registerReceiver(focusChangeReceiver, filter);
 
+		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).addListener(
+				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
+
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
 				this.rosterListener);
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemRemoved,
@@ -366,6 +384,9 @@ public class JaxmppService extends Service {
 		}
 
 		getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
+
+		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).removeListener(
+				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
 				this.rosterListener);
@@ -444,6 +465,54 @@ public class JaxmppService extends Service {
 
 	protected void removeRosterItem(RosterItem item) {
 		getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI + "/" + item.getJid()), null, null);
+	}
+
+	protected void sendUnsentMessages() {
+		final Cursor c = getApplication().getContentResolver().query(Uri.parse(ChatHistoryProvider.UNSENT_MESSAGES_URI), null,
+				null, null, null);
+		try {
+			final int columnId = c.getColumnIndex(ChatTableMetaData.FIELD_ID);
+			final int columnJid = c.getColumnIndex(ChatTableMetaData.FIELD_JID);
+			final int columnMsg = c.getColumnIndex(ChatTableMetaData.FIELD_BODY);
+			final int columnThd = c.getColumnIndex(ChatTableMetaData.FIELD_THREAD_ID);
+
+			c.moveToFirst();
+			if (c.isAfterLast())
+				return;
+			do {
+				long id = c.getLong(columnId);
+				String jid = c.getString(columnJid);
+				String body = c.getString(columnMsg);
+				String threadId = c.getString(columnThd);
+
+				Message msg = Message.create();
+				msg.setType(StanzaType.chat);
+				msg.setTo(JID.jidInstance(jid));
+				msg.setBody(body);
+				if (threadId != null && threadId.length() > 0)
+					msg.setThread(threadId);
+				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Found unsetn message: " + jid + " :: " + body);
+
+				try {
+					jaxmpp.send(msg);
+
+					ContentValues values = new ContentValues();
+					values.put(ChatTableMetaData.FIELD_ID, id);
+					values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_OUT_SENT);
+
+					getContentResolver().update(Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + jid + "/" + id), values, null,
+							null);
+				} catch (JaxmppException e) {
+					Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Can't send message");
+				}
+
+				c.moveToNext();
+			} while (!c.isAfterLast());
+		} catch (XMLException e) {
+			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "WTF??", e);
+		} finally {
+			c.close();
+		}
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {

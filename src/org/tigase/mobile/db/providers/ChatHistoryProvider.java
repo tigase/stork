@@ -38,6 +38,10 @@ public class ChatHistoryProvider extends ContentProvider {
 		}
 	};
 
+	public static final String UNSENT_MESSAGES_URI = "content://" + AUTHORITY + "/unsent";
+
+	protected static final int UNSENT_MESSAGES_URI_INDICATOR = 3;
+
 	private MessengerDatabaseHelper dbHelper;
 
 	public ChatHistoryProvider() {
@@ -89,10 +93,13 @@ public class ChatHistoryProvider extends ContentProvider {
 
 		List<String> l = uri.getPathSegments();
 
+		if (l.get(0).equals("unsent"))
+			return UNSENT_MESSAGES_URI_INDICATOR;
+
 		if (!l.get(0).equals("chat"))
 			return 0;
 
-		if (l.size() == 2)
+		else if (l.size() == 2)
 			return CHAT_URI_INDICATOR;
 		else if (l.size() == 3)
 			return CHAT_ITEM_URI_INDICATOR;
@@ -110,6 +117,11 @@ public class ChatHistoryProvider extends ContentProvider {
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 		switch (match(uri)) {
+		case UNSENT_MESSAGES_URI_INDICATOR:
+			qb.setTables(ChatTableMetaData.TABLE_NAME);
+			qb.setProjectionMap(chatHistoryProjectionMap);
+			qb.appendWhere(ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_OUT_NOT_SENT);
+			break;
 		case CHAT_URI_INDICATOR:
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
 			qb.setProjectionMap(chatHistoryProjectionMap);
@@ -123,7 +135,7 @@ public class ChatHistoryProvider extends ContentProvider {
 			qb.appendWhere(ChatTableMetaData.FIELD_ID + "=" + id + "");
 			break;
 		default:
-			throw new IllegalArgumentException("Unknown URI " + uri);
+			throw new IllegalArgumentException("Unknown URI ");
 		}
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, ChatTableMetaData.FIELD_TIMESTAMP + " ASC, "
@@ -134,10 +146,24 @@ public class ChatHistoryProvider extends ContentProvider {
 		return c;
 	}
 
+	private void sentUnsentMessages() {
+
+	}
+
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		// TODO Auto-generated method stub
-		return 0;
+		if (match(uri) != CHAT_ITEM_URI_INDICATOR)
+			throw new IllegalArgumentException("Unknown URI ");
+
+		final SQLiteDatabase db = dbHelper.getWritableDatabase();
+		long pk = Long.parseLong(uri.getLastPathSegment());
+		int changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_ID + '=' + pk, null);
+
+		if (changed > 0) {
+			getContext().getContentResolver().notifyChange(uri, null);
+		}
+
+		return changed;
 	}
 
 }
