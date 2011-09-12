@@ -25,8 +25,6 @@ public class ChatView extends LinearLayout {
 
 	private Chat chat;
 
-	// private MessengerDatabaseHelper dbHelper;
-
 	public ChatView(Context context) {
 		super(context);
 	}
@@ -72,9 +70,12 @@ public class ChatView extends LinearLayout {
 		if (t == null || t.length() == 0)
 			return;
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Send: " + t);
+		int state;
 		try {
 			chat.sendMessage(t);
+			state = ChatTableMetaData.STATE_OUT_SENT;
 		} catch (Exception e) {
+			state = ChatTableMetaData.STATE_OUT_NOT_SENT;
 			Log.e(TigaseMobileMessengerActivity.LOG_TAG, e.getMessage(), e);
 		}
 
@@ -85,7 +86,7 @@ public class ChatView extends LinearLayout {
 		values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 		values.put(ChatTableMetaData.FIELD_BODY, t);
 		values.put(ChatTableMetaData.FIELD_TYPE, 1);
-		values.put(ChatTableMetaData.FIELD_STATE, 0);
+		values.put(ChatTableMetaData.FIELD_STATE, state);
 
 		getContext().getContentResolver().insert(uri, values);
 
@@ -97,7 +98,7 @@ public class ChatView extends LinearLayout {
 			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
 		RosterItem ri = XmppService.jaxmpp().getRoster().get(chat.getJid().getBareJid());
-		t.setText("Chat with " + RosterProvider.getDisplayName(ri));
+		t.setText("Chat with " + (ri == null ? chat.getJid().getBareJid().toString() : RosterProvider.getDisplayName(ri)));
 	}
 
 	public void setImagePresence(final CPresence cp) {

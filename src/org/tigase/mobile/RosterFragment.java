@@ -12,6 +12,9 @@ import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,21 +24,23 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-public class RosterFragment extends MyListFragment {
+public class RosterFragment extends Fragment {
 
 	public static RosterFragment newInstance() {
 		RosterFragment f = new RosterFragment();
 		return f;
 	}
 
+	private Cursor c;
+
 	private ImageView connectionStatus;
 
 	private final Listener<ConnectorEvent> connectorListener;
 
-	private Cursor c;
-
 	public RosterFragment() {
-		super(R.id.rosterList);
+		super();
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "RosterFragment()");
+
 		this.connectorListener = new Listener<ConnectorEvent>() {
 
 			@Override
@@ -46,12 +51,35 @@ public class RosterFragment extends MyListFragment {
 	}
 
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		this.c = getActivity().getApplicationContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null,
-				null, null, null);
-		final RosterAdapter adapter = new RosterAdapter(getActivity().getApplicationContext(), R.layout.roster_item, c);
-		final ListView lv = getListView();
+	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onCreateView()");
+		View layout = inflater.inflate(R.layout.roster_list, null);
+		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
+		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), R.layout.roster_item, c);
+
+		getLoaderManager().initLoader(0, null, new LoaderCallbacks<Cursor>() {
+
+			@Override
+			public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public void onLoaderReset(Loader<Cursor> loader) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		final ListView lv = (ListView) layout.findViewById(R.id.rosterList);
+		lv.setAdapter(adapter);
 		lv.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -67,18 +95,28 @@ public class RosterFragment extends MyListFragment {
 				getActivity().getApplicationContext().sendBroadcast(intent);
 			}
 		});
-		setListAdapter(adapter);
-
-	}
-
-	@Override
-	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-		View layout = inflater.inflate(R.layout.roster_list, null);
 
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
 
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "layout created");
+
 		return layout;
+	}
+
+	@Override
+	public void onDestroyView() {
+		if (c != null) {
+			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
+			c.close();
+		}
+		super.onDestroyView();
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onDestroyView()");
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onResume()");
 	}
 
 	@Override
@@ -86,17 +124,21 @@ public class RosterFragment extends MyListFragment {
 		XmppService.jaxmpp().addListener(Connector.StateChanged, this.connectorListener);
 		super.onStart();
 		updateConnectionStatus();
+
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onStart() " + getView());
 	}
 
 	@Override
 	public void onStop() {
-		if (c != null) {
-			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
-			c.close();
-		}
-
 		XmppService.jaxmpp().removeListener(Connector.StateChanged, this.connectorListener);
 		super.onStop();
+
+	}
+
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onViewCreated()");
 	}
 
 	private void updateConnectionStatus() {

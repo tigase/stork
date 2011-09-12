@@ -213,6 +213,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (rosterClickReceiver != null)
 			unregisterReceiver(rosterClickReceiver);
 		super.onDestroy();
+		Log.d(LOG_TAG, "onDestroy()");
+	}
+
+	@Override
+	public void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		Log.d(LOG_TAG, "onDetachedFromWindow()");
 	}
 
 	@Override
@@ -306,14 +313,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return true;
 	}
 
-	@Override
-	protected void onPause() {
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
-		notifyPageChange(-1);
-		// TODO Auto-generated method stub
-		super.onPause();
-	}
-
 	// @Override
 	// protected void onActivityResult(int requestCode, int resultCode, Intent
 	// data) {
@@ -347,6 +346,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	//
 	// }
 	// }
+
+	@Override
+	protected void onPause() {
+		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
+		notifyPageChange(-1);
+		// TODO Auto-generated method stub
+		super.onPause();
+		Log.d(LOG_TAG, "onPause()");
+
+	}
 
 	@Override
 	protected void onResume() {
@@ -388,9 +397,17 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		super.onSaveInstanceState(outState);
 	}
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		Log.d(LOG_TAG, "onStop()");
+	}
+
 	protected void openChatWith(final JID jid) {
 		try {
 			Integer idx = findChat(jid);
+
+			Log.i(LOG_TAG, "Opening new chat with " + jid + ". idx=" + idx);
 
 			if (idx == null) {
 				XmppService.jaxmpp().createChat(jid);

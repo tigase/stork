@@ -34,5 +34,11 @@
 	android:layout_alignParentTop="true" 
 	android:layout_toRightOf="@+id/imageView1"
 	android:id="@+id/chat_item_nickname"></TextView>
+	<ImageView android:layout_width="48px" android:layout_height="48px" 
+	android:src="@drawable/message_not_sent" android:id="@+id/msgStatus" 
+	android:layout_alignTop="@+id/chat_item_body"
+	android:layout_alignRight="@+id/chat_item_timestamp" 
+	 
+	></ImageView>
 
 </RelativeLayout>

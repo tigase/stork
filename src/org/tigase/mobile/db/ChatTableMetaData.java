@@ -14,10 +14,15 @@ public class ChatTableMetaData implements BaseColumns {
 
 	public static final String FIELD_JID = "jid";
 
+	/**
+	 * <ul>
+	 * <li><code>0</code> - incoming message</li>
+	 * <li><code>1</code> - outgoing, not sent</li>
+	 * <li><code>2</code> - outgoing, sent</li>
+	 * </ul>
+	 */
 	public static final String FIELD_STATE = "state";
-
 	public static final String FIELD_THREAD_ID = "thread_id";
-
 	public static final String FIELD_TIMESTAMP = "timestamp";
 
 	/**
@@ -26,7 +31,14 @@ public class ChatTableMetaData implements BaseColumns {
 	 * <li><code>1</code> - outgoing</li>
 	 * </ul>
 	 */
+	@Deprecated
 	public static final String FIELD_TYPE = "type";
+
+	public final static int STATE_INCOMING = 0;
+
+	public final static int STATE_OUT_NOT_SENT = 1;
+
+	public final static int STATE_OUT_SENT = 2;
 
 	public static final String TABLE_NAME = "chat_history";
 

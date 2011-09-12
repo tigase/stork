@@ -116,6 +116,15 @@ public class ChatHistoryFragment extends MyListFragment {
 	}
 
 	@Override
+	public void onDestroyView() {
+		if (c != null) {
+			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
+			c.close();
+		}
+		super.onDestroyView();
+	}
+
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Save state of ChatFragment");
 		if (outState != null)
@@ -140,11 +149,6 @@ public class ChatHistoryFragment extends MyListFragment {
 	@Override
 	public void onStop() {
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Stop ChatFragment");
-
-		if (c != null) {
-			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
-			c.close();
-		}
 
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactAvailable, this.presenceListener);

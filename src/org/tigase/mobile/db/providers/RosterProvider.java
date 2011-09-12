@@ -189,8 +189,15 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		// TODO Auto-generated method stub
-		return null;
+		if (uriMatcher.match(uri) != ROSTER_URI_INDICATOR)
+			throw new IllegalArgumentException("Unsupported URI " + uri);
+
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+		long rowId = db.insert(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_JID, values);
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(CONTENT_URI), rowId);
+		getContext().getContentResolver().notifyChange(insertedItem, null);
+		return insertedItem;
 	}
 
 	@Override
