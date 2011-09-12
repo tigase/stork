@@ -20,8 +20,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 
-public class ChatHistoryFragment extends MyListFragment {
+public class ChatHistoryFragment extends Fragment {
 
 	public static Fragment newInstance(long chatId) {
 		ChatHistoryFragment f = new ChatHistoryFragment();
@@ -42,7 +43,7 @@ public class ChatHistoryFragment extends MyListFragment {
 	private final Listener<PresenceEvent> presenceListener;
 
 	public ChatHistoryFragment() {
-		super(R.id.chat_conversation_history);
+		super();
 		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
 
 			@Override
@@ -56,8 +57,19 @@ public class ChatHistoryFragment extends MyListFragment {
 	}
 
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		if (getArguments() != null) {
+			setChatId(getArguments().getLong("chatId"));
+		}
+	}
+
+	@Override
+	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
+		layout.init();
+		layout.setChat(chat);
 
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "onActivityCreated ChatFragment " + savedInstanceState);
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Arguments: " + getArguments());
@@ -77,42 +89,26 @@ public class ChatHistoryFragment extends MyListFragment {
 		this.c = getActivity().getApplicationContext().getContentResolver().query(
 				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
 
+		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
+
 		ChatAdapter ad = new ChatAdapter(getActivity().getApplicationContext(), R.layout.chat_item, c);
-		setListAdapter(ad);
+		lv.setAdapter(ad);
 		ad.registerDataSetObserver(new DataSetObserver() {
 
 			@Override
 			public void onChanged() {
 				super.onChanged();
 				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Changed!");
-				getListView().post(new Runnable() {
+				lv.post(new Runnable() {
 
 					@Override
 					public void run() {
-						getListView().setSelection(Integer.MAX_VALUE);
+						lv.setSelection(Integer.MAX_VALUE);
 					}
 				});
 			}
 		});
-	}
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		if (getArguments() != null) {
-			setChatId(getArguments().getLong("chatId"));
-		}
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
-		layout.init();
-		layout.setChat(chat);
-
 		return layout;
-
 	}
 
 	@Override
