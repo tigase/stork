@@ -449,7 +449,10 @@ public class JaxmppService extends Service {
 		final State state = getState();
 		final boolean networkAvailable = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
 				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
-		if (!networkAvailable && (state == State.connected || state == State.connecting)) {
+
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "State=" + state + "; network=" + networkAvailable);
+
+		if (!networkAvailable && (state == State.connected || state == State.connecting || state == State.disconnecting)) {
 			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network disconnected!");
 			try {
 				jaxmpp.disconnect();
