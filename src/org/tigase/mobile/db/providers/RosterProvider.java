@@ -58,6 +58,11 @@ public class RosterProvider extends ContentProvider {
 
 	private static final String TAG = "tigase";
 
+	public static String getDisplayName(final BareJID jid) {
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
+		return getDisplayName(item);
+	}
+
 	public static String getDisplayName(final RosterItem item) {
 		if (item == null)
 			return null;

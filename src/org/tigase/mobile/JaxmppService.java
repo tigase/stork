@@ -65,7 +65,7 @@ public class JaxmppService extends Service {
 
 			currentChatIdFocus = chatId;
 
-			notificationManager.cancel("chatId-" + chatId, CHAT_NOTIFICATION_ID);
+			notificationManager.cancel("chatId:" + chatId, CHAT_NOTIFICATION_ID);
 		}
 	}
 
@@ -533,7 +533,12 @@ public class JaxmppService extends Service {
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
 		int ico = R.drawable.new_message;
-		String notiticationTitle = "Message from " + event.getMessage().getFrom();
+
+		String n = RosterProvider.getDisplayName(event.getMessage().getFrom().getBareJid());
+		if (n == null)
+			n = event.getMessage().getFrom().toString();
+
+		String notiticationTitle = "Message from " + n;
 		String expandedNotificationText = notiticationTitle;
 
 		long whenNotify = System.currentTimeMillis();
@@ -561,7 +566,7 @@ public class JaxmppService extends Service {
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		if (currentChatIdFocus != event.getChat().getId())
-			notificationManager.notify("chatId-" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
+			notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 
 	}
 
