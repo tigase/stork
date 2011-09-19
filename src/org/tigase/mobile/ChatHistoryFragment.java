@@ -31,6 +31,8 @@ public class ChatHistoryFragment extends Fragment {
 		args.putLong("chatId", chatId);
 		f.setArguments(args);
 
+		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Creating ChatFragment id=" + chatId);
+
 		return f;
 	}
 
@@ -56,6 +58,10 @@ public class ChatHistoryFragment extends Fragment {
 		};
 	}
 
+	public Chat getChat() {
+		return chat;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -75,12 +81,12 @@ public class ChatHistoryFragment extends Fragment {
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Arguments: " + getArguments());
 		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Activity: " + getActivity());
 
-		if (savedInstanceState != null) {
-			long ci = savedInstanceState.getLong("chatId", -1);
-			if (ci != -1) {
-				setChatId(ci);
-			}
-		}
+		// if (savedInstanceState != null) {
+		// long ci = savedInstanceState.getLong("chatId", -1);
+		// if (ci != -1) {
+		// setChatId(ci);
+		// }
+		// }
 
 		if (chat == null) {
 			throw new RuntimeException("Chat not specified!");
@@ -118,6 +124,12 @@ public class ChatHistoryFragment extends Fragment {
 			c.close();
 		}
 		super.onDestroyView();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		this.layout.setImagePresence(RosterProvider.getShowOf(this.chat.getJid().getBareJid()));
 	}
 
 	@Override
@@ -161,6 +173,8 @@ public class ChatHistoryFragment extends Fragment {
 			Chat c = l.get(i);
 			if (c.getId() == chatId) {
 				this.chat = c;
+				Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Found chat with " + c.getJid() + " (id=" + chatId + ")");
+
 				return;
 			}
 		}
