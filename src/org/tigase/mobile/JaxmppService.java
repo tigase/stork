@@ -79,7 +79,8 @@ public class JaxmppService extends Service {
 			else
 				info = "Zerwano po¸ˆczenie z: " + netInfo.getTypeName();
 
-			Log.i(TigaseMobileMessengerActivity.LOG_TAG, info);
+			if (DEBUG)
+				Log.i(TAG, info);
 
 			refreshInfos();
 
@@ -96,7 +97,11 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
+	private static final boolean DEBUG = false;
+
 	public static final int NOTIFICATION_ID = 5398777;
+
+	private static final String TAG = "tigase";
 
 	private ConnectivityManager connManager;
 
@@ -154,7 +159,8 @@ public class JaxmppService extends Service {
 
 		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "creating");
+		if (DEBUG)
+			Log.i(TAG, "creating");
 
 		this.messageListener = new Listener<MessageModule.MessageEvent>() {
 
@@ -310,7 +316,8 @@ public class JaxmppService extends Service {
 
 	@Override
 	public void onCreate() {
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "onCreate()");
+		if (DEBUG)
+			Log.i(TAG, "onCreate()");
 
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
 
@@ -376,11 +383,11 @@ public class JaxmppService extends Service {
 			unregisterReceiver(focusChangeReceiver);
 
 		this.reconnect = false;
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Stopping service");
+		Log.i(TAG, "Stopping service");
 		try {
 			jaxmpp.disconnect();
 		} catch (JaxmppException e) {
-			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't disconnect", e);
+			Log.e(TAG, "Can't disconnect", e);
 		}
 
 		getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
@@ -414,7 +421,8 @@ public class JaxmppService extends Service {
 
 	@Override
 	public void onStart(Intent intent, int startId) {
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "onStart()");
+		if (DEBUG)
+			Log.i(TAG, "onStart()");
 		this.reconnect = true;
 		super.onStart(intent, startId);
 
@@ -440,7 +448,7 @@ public class JaxmppService extends Service {
 					jaxmpp.login(false);
 				}
 			} catch (JaxmppException e) {
-				Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
+				Log.e(TAG, "Can't connect", e);
 			}
 		}
 	}
@@ -450,17 +458,20 @@ public class JaxmppService extends Service {
 		final boolean networkAvailable = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
 				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
 
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "State=" + state + "; network=" + networkAvailable);
+		if (DEBUG)
+			Log.d(TAG, "State=" + state + "; network=" + networkAvailable);
 
 		if (!networkAvailable && (state == State.connected || state == State.connecting || state == State.disconnecting)) {
-			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network disconnected!");
+			if (DEBUG)
+				Log.i(TAG, "Network disconnected!");
 			try {
 				jaxmpp.disconnect();
 			} catch (JaxmppException e) {
-				Log.w(TigaseMobileMessengerActivity.LOG_TAG, "Can't disconnect", e);
+				Log.w(TAG, "Can't disconnect", e);
 			}
 		} else if (networkAvailable && (state == State.disconnected)) {
-			Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Network available! Reconnecting!");
+			if (DEBUG)
+				Log.i(TAG, "Network available! Reconnecting!");
 			reconnect();
 		}
 
@@ -494,7 +505,8 @@ public class JaxmppService extends Service {
 				msg.setBody(body);
 				if (threadId != null && threadId.length() > 0)
 					msg.setThread(threadId);
-				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Found unsetn message: " + jid + " :: " + body);
+				if (DEBUG)
+					Log.i(TAG, "Found unsetn message: " + jid + " :: " + body);
 
 				try {
 					jaxmpp.send(msg);
@@ -506,13 +518,14 @@ public class JaxmppService extends Service {
 					getContentResolver().update(Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + jid + "/" + id), values, null,
 							null);
 				} catch (JaxmppException e) {
-					Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Can't send message");
+					if (DEBUG)
+						Log.d(TAG, "Can't send message");
 				}
 
 				c.moveToNext();
 			} while (!c.isAfterLast());
 		} catch (XMLException e) {
-			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "WTF??", e);
+			Log.e(TAG, "WTF??", e);
 		} finally {
 			c.close();
 		}

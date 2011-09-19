@@ -24,6 +24,10 @@ import android.widget.ListView;
 
 public class RosterFragment extends Fragment {
 
+	private static final boolean DEBUG = false;
+
+	private static final String TAG = "tigase";
+
 	public static RosterFragment newInstance() {
 		RosterFragment f = new RosterFragment();
 		return f;
@@ -37,7 +41,8 @@ public class RosterFragment extends Fragment {
 
 	public RosterFragment() {
 		super();
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "RosterFragment()");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "RosterFragment()");
 
 		this.connectorListener = new Listener<ConnectorEvent>() {
 
@@ -50,7 +55,8 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onCreateView()");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "onCreateView()");
 		View layout = inflater.inflate(R.layout.roster_list, null);
 		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
 		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), R.layout.roster_item, c);
@@ -75,7 +81,8 @@ public class RosterFragment extends Fragment {
 
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
 
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "layout created");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "layout created");
 
 		return layout;
 	}
@@ -83,17 +90,20 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onDestroyView() {
 		if (c != null) {
-			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Closing cursor");
+			if (DEBUG)
+				Log.d(TAG, "Closing cursor");
 			c.close();
 		}
 		super.onDestroyView();
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onDestroyView()");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "onDestroyView()");
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onResume()");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "onResume()");
 	}
 
 	@Override
@@ -102,7 +112,8 @@ public class RosterFragment extends Fragment {
 		super.onStart();
 		updateConnectionStatus();
 
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onStart() " + getView());
+		if (DEBUG)
+			Log.d(TAG + "_rf", "onStart() " + getView());
 	}
 
 	@Override
@@ -115,13 +126,15 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG + "_rf", "onViewCreated()");
+		if (DEBUG)
+			Log.d(TAG + "_rf", "onViewCreated()");
 	}
 
 	private void updateConnectionStatus() {
 		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
 				: XmppService.jaxmpp().getConnector().getState();
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "State changed to " + st);
+		if (DEBUG)
+			Log.i(TAG, "State changed to " + st);
 
 		connectionStatus.post(new Runnable() {
 

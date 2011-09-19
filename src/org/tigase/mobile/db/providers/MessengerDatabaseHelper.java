@@ -1,6 +1,5 @@
 package org.tigase.mobile.db.providers;
 
-import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 
@@ -14,6 +13,10 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
 	public static final Integer DATABASE_VERSION = 1;
+
+	private static final boolean DEBUG = false;
+
+	private static final String TAG = "tigase";
 
 	public MessengerDatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -47,7 +50,7 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		Log.w(TigaseMobileMessengerActivity.LOG_TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
+		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
 		db.execSQL("DROP TABLE IF EXISTS " + RosterTableMetaData.TABLE_NAME);
 		onCreate(db);
 	}

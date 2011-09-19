@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.tigase.mobile.CPresence;
-import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
@@ -32,6 +31,8 @@ public class RosterProvider extends ContentProvider {
 
 	public static final String CONTENT_URI = "content://" + AUTHORITY + "/roster";
 
+	private static final boolean DEBUG = false;
+
 	public static final String PRESENCE_URI = "content://" + AUTHORITY + "/presence";
 
 	protected static final int PRESENCE_URI_INDICATOR = 3;
@@ -54,6 +55,8 @@ public class RosterProvider extends ContentProvider {
 			put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_DISPLAY_NAME);
 		}
 	};
+
+	private static final String TAG = "tigase";
 
 	public static String getDisplayName(final RosterItem item) {
 		if (item == null)
@@ -93,7 +96,7 @@ public class RosterProvider extends ContentProvider {
 			}
 			return r;
 		} catch (Exception e) {
-			Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't calculate presence", e);
+			Log.e(TAG, "Can't calculate presence", e);
 			return CPresence.error;
 		}
 	}
@@ -135,7 +138,8 @@ public class RosterProvider extends ContentProvider {
 			int i = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_PRESENCE + '>'
 					+ CPresence.offline.getId(), null);
 
-			Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Update presence to offline of " + i + " buddies");
+			if (DEBUG)
+				Log.d(TAG, "Update presence to offline of " + i + " buddies");
 			getContext().getContentResolver().notifyChange(Uri.parse(RosterProvider.CONTENT_URI), null);
 			return i;
 		}

@@ -23,6 +23,10 @@ import android.widget.TextView;
 
 public class ChatView extends LinearLayout {
 
+	private static final boolean DEBUG = false;
+
+	private static final String TAG = "tigase";
+
 	private Chat chat;
 
 	public ChatView(Context context) {
@@ -38,7 +42,8 @@ public class ChatView extends LinearLayout {
 	}
 
 	void init() {
-		Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Zrobione");
+		if (DEBUG)
+			Log.i(TAG, "Zrobione");
 
 		final EditText ed = (EditText) findViewById(R.id.chat_message_entry);
 
@@ -47,7 +52,8 @@ public class ChatView extends LinearLayout {
 
 			@Override
 			public void onClick(View v) {
-				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "Klikniete");
+				if (DEBUG)
+					Log.i(TAG, "Klikniete");
 				String t = ed.getText().toString();
 				ed.setText("");
 
@@ -69,14 +75,15 @@ public class ChatView extends LinearLayout {
 	protected void sendMessage(String t) {
 		if (t == null || t.length() == 0)
 			return;
-		Log.d(TigaseMobileMessengerActivity.LOG_TAG, "Send: " + t);
+		if (DEBUG)
+			Log.d(TAG, "Send: " + t);
 		int state;
 		try {
 			chat.sendMessage(t);
 			state = ChatTableMetaData.STATE_OUT_SENT;
 		} catch (Exception e) {
 			state = ChatTableMetaData.STATE_OUT_NOT_SENT;
-			Log.e(TigaseMobileMessengerActivity.LOG_TAG, e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
 
 		Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());

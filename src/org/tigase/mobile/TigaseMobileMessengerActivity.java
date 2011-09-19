@@ -40,7 +40,6 @@ import android.view.View;
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public abstract class MyFragmentPagerAdapter<T> extends PagerAdapter {
-		private static final boolean DEBUG = false;
 
 		private FragmentTransaction mCurTransaction = null;
 
@@ -56,9 +55,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				mCurTransaction = mFragmentManager.beginTransaction();
 			}
 
-			if (DEBUG) {
-				Log.v(LOG_TAG, "Detaching item #" + position + ": f=" + object + " v=" + ((Fragment) object).getView());
-			}
+			if (DEBUG)
+				Log.v(TAG, "Detaching item #" + position + ": f=" + object + " v=" + ((Fragment) object).getView());
 
 			mCurTransaction.detach((Fragment) object);
 		}
@@ -104,17 +102,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Fragment fragment = mFragmentManager.findFragmentByTag(name);
 
 			if (fragment != null) {
-				if (DEBUG) {
-					Log.v(LOG_TAG, "Attaching item #" + position + ": f=" + fragment);
-				}
+				if (DEBUG)
+					Log.v(TAG, "Attaching item #" + position + ": f=" + fragment);
 
 				mCurTransaction.attach(fragment);
 			} else {
 				fragment = getItem(position);
 
-				if (DEBUG) {
-					Log.v(LOG_TAG, "Adding item #" + position + ": f=" + fragment);
-				}
+				if (DEBUG)
+					Log.v(TAG, "Adding item #" + position + ": f=" + fragment);
 
 				mCurTransaction.add(container.getId(), fragment, makeFragmentName(container.getId(), position));
 			}
@@ -156,9 +152,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
-	public static final String LOG_TAG = "tigase";
+	private static final boolean DEBUG = false;
 
 	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
+
+	private static final String TAG = "tigase";
 
 	// private ListView rosterList;
 
@@ -233,7 +231,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.d(LOG_TAG, "onCreate()");
+		if (DEBUG)
+			Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		if (savedInstanceState != null) {
 			currentPage = savedInstanceState.getInt("currentPage", 0);
@@ -246,19 +245,22 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-				// Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageScrolled: "
+				// if(DEBUG)Log.i(TigaseMobileMessengerActivity.TAG,
+				// "PageScrolled: "
 				// + position + ", " +
 				// positionOffset + ", " + positionOffsetPixels);
 			}
 
 			@Override
 			public void onPageScrollStateChanged(int state) {
-				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageScrollStateChanged: " + state);
+				if (DEBUG)
+					Log.i(TigaseMobileMessengerActivity.TAG, "PageScrollStateChanged: " + state);
 			}
 
 			@Override
 			public void onPageSelected(int position) {
-				Log.i(TigaseMobileMessengerActivity.LOG_TAG, "PageSelected: " + position);
+				if (DEBUG)
+					Log.i(TigaseMobileMessengerActivity.TAG, "PageSelected: " + position);
 				currentPage = position;
 				notifyPageChange(position);
 			}
@@ -273,14 +275,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			@Override
 			public int getCount() {
 				int n = 1 + getChatList().size();
-				Log.i(LOG_TAG, "FragmentPagerAdapter.getCount() :: " + n);
+				if (DEBUG)
+					Log.i(TAG, "FragmentPagerAdapter.getCount() :: " + n);
 				// TODO Auto-generated method stub
 				return n;
 			}
 
 			@Override
 			public Fragment getItem(int i) {
-				Log.i(LOG_TAG, "FragmentPagerAdapter.getItem(" + i + ")");
+				if (DEBUG)
+					Log.i(TAG, "FragmentPagerAdapter.getItem(" + i + ")");
 				if (i == 0)
 					return RosterFragment.newInstance();
 				else {
@@ -291,7 +295,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public int getItemPosition(Object object) {
-				Log.i(LOG_TAG, "FragmentPagerAdapter.getItemPosition()");
+				if (DEBUG)
+					Log.i(TAG, "FragmentPagerAdapter.getItemPosition()");
 				return -1000;
 			}
 
@@ -323,7 +328,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
-			Log.i(LOG_TAG, "Jest extras! " + extras.getString("jid"));
+			if (DEBUG)
+				Log.i(TAG, "Jest extras! " + extras.getString("jid"));
 		}
 	}
 
@@ -339,13 +345,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (rosterClickReceiver != null)
 			unregisterReceiver(rosterClickReceiver);
 		super.onDestroy();
-		Log.d(LOG_TAG, "onDestroy()");
+		if (DEBUG)
+			Log.d(TAG, "onDestroy()");
 	}
 
 	@Override
 	public void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
-		Log.d(LOG_TAG, "onDetachedFromWindow()");
+		if (DEBUG)
+			Log.d(TAG, "onDetachedFromWindow()");
 	}
 
 	@Override
@@ -389,7 +397,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
-		Log.d(LOG_TAG, "onNewIntent()");
+		if (DEBUG)
+			Log.d(TAG, "onNewIntent()");
 		this.incomingExtras = intent.getExtras();
 	}
 
@@ -402,9 +411,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Chat chat = cm.getChats().get(p - 1);
 			try {
 				cm.close(chat);
-				Log.i(LOG_TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
+				if (DEBUG)
+					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
 			} catch (JaxmppException e) {
-				Log.w(LOG_TAG, "Chat close problem!", e);
+				Log.w(TAG, "Chat close problem!", e);
 			}
 			viewPager.setCurrentItem(0);
 			break;
@@ -435,14 +445,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
 			startService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
-
-			// try {
-			// XmppService.jaxmpp().login(false);
-			// } catch (JaxmppException e) {
-			// Log.e(TigaseMobileMessengerActivity.LOG_TAG, "Can't connect", e);
-			// Toast.makeText(getApplicationContext(), "Connection error!",
-			// Toast.LENGTH_LONG).show();
-			// }
 		default:
 			break;
 		}
@@ -454,9 +456,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// data) {
 	// super.onActivityResult(requestCode, resultCode, data);
 	//
-	// Log.i(LOG_TAG, "Sprawdzamy extrasy...");
+	// if(DEBUG)Log.i(TAG, "Sprawdzamy extrasy...");
 	// if (getIntent() != null && getIntent().getExtras() != null) {
-	// Log.i(LOG_TAG, "Mamy extrasy");
+	// if(DEBUG)Log.i(TAG, "Mamy extrasy");
 	// if (getIntent().getExtras().containsKey("chatId")) {
 	// long chatId = getIntent().getLongExtra("chatId", -1);
 	// getIntent().removeExtra("chatId");
@@ -470,7 +472,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	//
 	// @Override
 	// public void run() {
-	// Log.i(LOG_TAG, "Switch chats to " + x);
+	// if(DEBUG)Log.i(TAG, "Switch chats to " + x);
 	//
 	// viewSwitcher.setCurrentItem(x);
 	// }
@@ -489,14 +491,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
-		Log.d(LOG_TAG, "onPause()");
+		if (DEBUG)
+			Log.d(TAG, "onPause()");
 
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.d(LOG_TAG, "onResume()");
+		if (DEBUG)
+			Log.d(TAG, "onResume()");
 
 		// chats.clear();
 		// chats.addAll(XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().getChats());
@@ -508,12 +512,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			String s_jid = incomingExtras.getString("jid");
 			long chatId = incomingExtras.getLong("chatId", -1);
 			incomingExtras = null;
-			Log.d(LOG_TAG, "Intent with data? chatId=" + chatId);
+			if (DEBUG)
+				Log.d(TAG, "Intent with data? chatId=" + chatId);
 			if (s_jid != null && chatId != -1) {
 				final Integer idx = findChat(chatId);
 				if (idx != null) {
 					currentPage = idx + 1;
-					Log.d(LOG_TAG, "Set current page " + currentPage);
+					if (DEBUG)
+						Log.d(TAG, "Set current page " + currentPage);
 				}
 			}
 		}
@@ -521,7 +527,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void run() {
-				Log.d(LOG_TAG, "Focus on page " + currentPage);
+				if (DEBUG)
+					Log.d(TAG, "Focus on page " + currentPage);
 				viewPager.setCurrentItem(currentPage);
 			}
 		});
@@ -537,14 +544,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		Log.d(LOG_TAG, "onStop()");
+		if (DEBUG)
+			Log.d(TAG, "onStop()");
 	}
 
 	protected void openChatWith(final JID jid) {
 		try {
 			Integer idx = findChat(jid);
 
-			Log.i(LOG_TAG, "Opening new chat with " + jid + ". idx=" + idx);
+			if (DEBUG)
+				Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
 
 			if (idx == null) {
 				XmppService.jaxmpp().createChat(jid);
