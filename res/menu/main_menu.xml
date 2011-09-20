@@ -7,5 +7,7 @@
 		android:id="@+id/propertiesButton" android:title="@string/propertiesButton"></item>
 	<item android:icon="@android:drawable/ic_menu_close_clear_cancel"
 		android:title="@string/closeChatButton" android:id="@+id/closeChatButton"></item>
+	<item 
+		android:title="@string/showChatsButton" android:id="@+id/showChatsButton"></item>
 
 </menu>

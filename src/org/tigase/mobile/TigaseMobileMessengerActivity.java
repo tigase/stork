@@ -16,6 +16,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -152,13 +153,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
+
+	public static final int REQUEST_CHAT = 1;
 
 	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
 
-	private static final String TAG = "tigase";
-
 	// private ListView rosterList;
+
+	private static final String TAG = "tigase";
 
 	private PagerAdapter adapter;
 
@@ -218,6 +221,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 
 		sendBroadcast(intent);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (DEBUG)
+			Log.d(TAG, "onActivityResult()");
+		if (requestCode == REQUEST_CHAT && resultCode == Activity.RESULT_OK) {
+			this.incomingExtras = data.getExtras();
+		}
 	}
 
 	@Override
@@ -405,6 +417,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.showChatsButton:
+			Intent chatListActivity = new Intent(this, ChatListActivity.class);
+			this.startActivityForResult(chatListActivity, REQUEST_CHAT);
+			break;
 		case R.id.closeChatButton:
 			final int p = this.currentPage;
 			final ChatManager cm = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager();

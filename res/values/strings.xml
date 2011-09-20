@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<string name="showChatsButton">Show chats</string>
+	<string name="chat_list_title">Active chats</string>
 	<string name="app_name">Tigase Messenger</string>
 	<string name="loginButton">Connect</string>
 	<string name="logoutButton">Disconnect</string>
