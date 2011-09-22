@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -24,9 +25,12 @@ public class ChatListActivity extends Activity {
 
 		private Context mContext;
 
+		private LayoutInflater mInflater;
+
 		public ImageAdapter(Context c) {
 			this.chats.addAll(XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChats());
 			mContext = c;
+			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		}
 
 		@Override
@@ -46,19 +50,22 @@ public class ChatListActivity extends Activity {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			TextView imageView;
+
+			View imageView;
 			if (convertView == null) {
-				imageView = new TextView(mContext);
-				imageView.setLayoutParams(new GridView.LayoutParams(45, 45));
+				imageView = mInflater.inflate(R.layout.chat_list_item, parent, false);
+				// imageView.setLayoutParams(new GridView.LayoutParams(45, 45));
 				// imageView.setAdjustViewBounds(false);
 				// imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 				imageView.setPadding(8, 8, 8, 8);
 			} else {
-				imageView = (TextView) convertView;
+				imageView = convertView;
 			}
 
-			// imageView.setImageResource(mThumbIds[position]);
-			imageView.setText(this.chats.get(position).getJid().toString());
+			Chat chat = this.chats.get(position);
+
+			TextView tv = (TextView) imageView.findViewById(R.id.chat_list_item_name);
+			tv.setText(chat.getJid().toString());
 
 			return imageView;
 		}

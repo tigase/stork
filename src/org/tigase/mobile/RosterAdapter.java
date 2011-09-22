@@ -2,6 +2,8 @@ package org.tigase.mobile;
 
 import org.tigase.mobile.db.RosterTableMetaData;
 
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.method.SingleLineTransformationMethod;
@@ -37,10 +39,16 @@ public class RosterAdapter extends SimpleCursorAdapter {
 		TextView itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
 		itemJid.setTransformationMethod(SingleLineTransformationMethod.getInstance());
 
+		View openChatNotifier = view.findViewById(R.id.openChatNotifier);
+
 		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
 
-		String jid = cursor.getString(mFrom[1]);
-		itemJid.setText(jid);
+		String name = cursor.getString(mFrom[1]);
+		itemJid.setText(name);
+
+		boolean co = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
+				BareJID.bareJIDInstance(cursor.getString(mFrom[0])));
+		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
 		Integer p = cursor.getInt(mFrom[2]);
 		CPresence cp = CPresence.valueOf(p);

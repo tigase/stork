@@ -1,6 +1,7 @@
 package org.tigase.mobile.db.providers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.tigase.mobile.CPresence;
@@ -8,6 +9,8 @@ import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -20,6 +23,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -217,20 +221,53 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+		String sql = "SELECT * FROM " + RosterTableMetaData.TABLE_NAME;
+		Cursor c;
 		switch (uriMatcher.match(uri)) {
 		case ROSTER_URI_INDICATOR:
-			qb.setTables(RosterTableMetaData.TABLE_NAME);
-			qb.setProjectionMap(rosterProjectionMap);
+			final List<Chat> chats = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChats();
+			String cj = null;
+			if (!chats.isEmpty()) {
+				cj = "(";
+				for (Chat chat : chats) {
+					cj += "'" + chat.getJid().getBareJid() + "',";
+				}
+				cj = cj.substring(0, cj.length() - 1) + ")";
+			}
+
+			if (cj != null)
+				sql += " WHERE " + RosterTableMetaData.FIELD_JID + " IN " + cj;
+
+			sql += " ORDER BY " + RosterTableMetaData.FIELD_PRESENCE + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME
+					+ " ASC";
+
+			String sql2 = "";
+			if (cj != null) {
+				sql2 = "SELECT * FROM " + RosterTableMetaData.TABLE_NAME;
+				sql2 += " WHERE " + RosterTableMetaData.FIELD_JID + " NOT IN " + cj;
+				sql2 += " ORDER BY " + RosterTableMetaData.FIELD_PRESENCE + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME
+						+ " ASC";
+			}
+
+			SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+			if (cj != null) {
+				Cursor c1 = db.rawQuery(sql, null);
+				Cursor c2 = db.rawQuery(sql2, null);
+				c = new MergeCursor(new Cursor[] { c1, c2 });
+			} else {
+				c = db.rawQuery(sql, null);
+			}
+
 			break;
 		case ROSTER_ITEM_URI_INDICATOR:
 
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, RosterTableMetaData.FIELD_PRESENCE
-				+ " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME + " ASC");
+		// Cursor c = qb.query(db, projection, selection, selectionArgs, null,
+		// null, RosterTableMetaData.FIELD_PRESENCE
+		// + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME + " ASC");
 
 		int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);
