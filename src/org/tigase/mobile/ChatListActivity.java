@@ -54,10 +54,12 @@ public class ChatListActivity extends Activity {
 			View imageView;
 			if (convertView == null) {
 				imageView = mInflater.inflate(R.layout.chat_list_item, parent, false);
-				// imageView.setLayoutParams(new GridView.LayoutParams(45, 45));
+				// imageView.setLayoutParams(new GridView.LayoutParams(128,
+				// 128));
+				imageView.setMinimumWidth(300);
 				// imageView.setAdjustViewBounds(false);
 				// imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-				imageView.setPadding(8, 8, 8, 8);
+				imageView.setPadding(4, 4, 4, 4);
 			} else {
 				imageView = convertView;
 			}
