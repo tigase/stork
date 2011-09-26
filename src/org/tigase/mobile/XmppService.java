@@ -24,17 +24,6 @@ public class XmppService {
 
 	private Jaxmpp jaxmpp;
 
-	private final AsyncTask<Runnable, Void, String> x = new AsyncTask<Runnable, Void, String>() {
-
-		@Override
-		protected String doInBackground(Runnable... params) {
-			for (Runnable x : params) {
-				x.run();
-			}
-			return null;
-		}
-	};
-
 	private XmppService() {
 		jaxmpp = new Jaxmpp();
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -44,13 +33,8 @@ public class XmppService {
 		logger.addHandler(handler);
 		logger.setLevel(Level.ALL);
 
-		// for BOSH connector
-		jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, "http://xmpp.tigase.org");
-		// jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL,
-		// "http://messenger.tigase.org:80/bosh");
-
 		// for Socket connector
-		jaxmpp.getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.TRUE);
+		jaxmpp.getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.FALSE);
 
 		// port value is not necessary. Default is 5222
 		jaxmpp.getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
