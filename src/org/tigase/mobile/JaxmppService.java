@@ -32,6 +32,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
@@ -62,6 +63,8 @@ public class JaxmppService extends Service {
 		public void onReceive(Context context, Intent intent) {
 			final int page = intent.getIntExtra("page", -1);
 			final long chatId = intent.getLongExtra("chatId", -1);
+
+			onPageChanged(page);
 
 			currentChatIdFocus = chatId;
 
@@ -107,13 +110,15 @@ public class JaxmppService extends Service {
 
 	private long currentChatIdFocus = -1;
 
-	// private MessengerDatabaseHelper dbHelper;
-
 	private final Listener<Connector.ConnectorEvent> disconnectListener;
 
 	private ClientFocusReceiver focusChangeReceiver;
 
+	private boolean focused;
+
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
+
+	// private MessengerDatabaseHelper dbHelper;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
@@ -129,11 +134,17 @@ public class JaxmppService extends Service {
 
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
+	private final Listener<PresenceEvent> presenceSendListener;
+
 	private boolean reconnect = true;
 
 	private final Listener<ResourceBindEvent> resourceBindListener;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
+
+	private String userStatusMessage = null;
+
+	private Show userStatusShow = Show.online;
 
 	public JaxmppService() {
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -161,6 +172,16 @@ public class JaxmppService extends Service {
 
 		if (DEBUG)
 			Log.i(TAG, "creating");
+
+		this.presenceSendListener = new Listener<PresenceModule.PresenceEvent>() {
+
+			@Override
+			public void handleEvent(PresenceEvent be) throws JaxmppException {
+				be.setShow(userStatusShow);
+				be.setStatus(userStatusMessage);
+				be.setPriority(prefs.getInt("default_priority", 5));
+			}
+		};
 
 		this.messageListener = new Listener<MessageModule.MessageEvent>() {
 
@@ -366,6 +387,9 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
 				this.messageListener);
 
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.BeforeInitialPresence, this.presenceSendListener);
+
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		XmppService.jaxmpp().getSessionObject().setProperty(Connector.CONNECTOR_STAGE_KEY, null);
@@ -395,6 +419,8 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).removeListener(
 				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+				PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
 				this.rosterListener);
 		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemRemoved,
@@ -417,6 +443,36 @@ public class JaxmppService extends Service {
 		notificationCancel();
 
 		super.onDestroy();
+	}
+
+	protected void onPageChanged(int pageIndex) {
+		try {
+			boolean connected = getState() == State.connected
+					&& XmppService.jaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
+			Log.d(TAG, "onPageChanged(): " + focused + ", " + pageIndex);
+
+			if (!connected) {
+				Log.d(TAG, "onPageChanged(): Not connected!");
+				return;
+			}
+
+			if (!focused && pageIndex >= 0) {
+				Log.d(TAG, "Focused. Sending online presence.");
+				focused = true;
+				int pr = prefs.getInt("default_priority", 5);
+
+				XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow,
+						userStatusMessage, pr);
+			} else if (focused && pageIndex == -1) {
+				Log.d(TAG, "Sending auto-away presence");
+				focused = false;
+				int pr = prefs.getInt("auto_away_priority", 1);
+
+				XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
+			}
+		} catch (JaxmppException e) {
+			Log.e(TAG, "Can't update priority!");
+		}
 	}
 
 	@Override

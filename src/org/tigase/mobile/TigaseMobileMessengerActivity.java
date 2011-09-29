@@ -157,7 +157,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -509,7 +509,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onPause() {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
-		// notifyPageChange(-1);
+		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
 		if (DEBUG)
@@ -549,6 +549,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (DEBUG)
 					Log.d(TAG, "Focus on page " + currentPage);
 				viewPager.setCurrentItem(currentPage);
+				notifyPageChange(currentPage);
 			}
 		});
 

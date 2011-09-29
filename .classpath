@@ -6,6 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-j2se"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tigase-xmltools"/>
-	<classpathentry kind="lib" path="/Users/bmalkow/programs/android-sdk-mac_86/extras/android/compatibility/v13/android-support-v13.jar"/>
+	<classpathentry kind="lib" path="/Users/bmalkow/programs/android-sdk-mac_86/extras/android/compatibility/v4/android-support-v4.jar" sourcepath="/Users/bmalkow/programs/android-sdk-mac_86/extras/android/compatibility/v4/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -6,11 +6,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-import android.os.AsyncTask;
 
 public class XmppService {
 
