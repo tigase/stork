@@ -150,6 +150,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			// if (!active)
+			// return;
 			JID jid = JID.jidInstance(intent.getStringExtra("jid"));
 			openChatWith(jid);
 		}
@@ -175,7 +177,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private Bundle incomingExtras;
 
-	private RosterClickReceiver rosterClickReceiver;
+	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
 
 	private ViewPager viewPager;
 
@@ -282,10 +284,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		});
 
-		this.rosterClickReceiver = new RosterClickReceiver();
-		IntentFilter filter = new IntentFilter(ROSTER_CLICK_MSG);
-		registerReceiver(rosterClickReceiver, filter);
-
 		this.adapter = new MyFragmentPagerAdapter<Chat>(getSupportFragmentManager()) {
 
 			@Override
@@ -355,15 +353,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
-	}
-
-	@Override
-	protected void onDestroy() {
-		if (rosterClickReceiver != null)
-			unregisterReceiver(rosterClickReceiver);
-		super.onDestroy();
-		if (DEBUG)
-			Log.d(TAG, "onDestroy()");
 	}
 
 	@Override
@@ -508,6 +497,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	protected void onPause() {
+		unregisterReceiver(rosterClickReceiver);
+
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
 		notifyPageChange(-1);
 		// TODO Auto-generated method stub
@@ -522,6 +513,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		super.onResume();
 		if (DEBUG)
 			Log.d(TAG, "onResume()");
+
+		registerReceiver(rosterClickReceiver, new IntentFilter(ROSTER_CLICK_MSG));
 
 		viewPager.getAdapter().notifyDataSetChanged();
 
