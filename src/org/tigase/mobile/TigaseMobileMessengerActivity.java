@@ -64,10 +64,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		@Override
 		public void finishUpdate(View container) {
-			if (mCurTransaction != null) {
-				mCurTransaction.commit();
+			try {
+				if (mCurTransaction != null) {
+					mCurTransaction.commit();
+					mCurTransaction = null;
+					mFragmentManager.executePendingTransactions();
+				}
+			} catch (IllegalStateException e) {
+				Log.e(TAG, "Again?", e);
 				mCurTransaction = null;
-				mFragmentManager.executePendingTransactions();
 			}
 		}
 
@@ -109,7 +114,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				mCurTransaction.attach(fragment);
 			} else {
 				fragment = getItem(position);
-
 				if (DEBUG)
 					Log.v(TAG, "Adding item #" + position + ": f=" + fragment);
 
@@ -287,9 +291,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			@Override
 			public int getCount() {
 				int n = 1 + getChatList().size();
-				if (DEBUG)
-					Log.i(TAG, "FragmentPagerAdapter.getCount() :: " + n);
-				// TODO Auto-generated method stub
 				return n;
 			}
 
@@ -297,9 +298,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public Fragment getItem(int i) {
 				if (DEBUG)
 					Log.i(TAG, "FragmentPagerAdapter.getItem(" + i + ")");
-				if (i == 0)
-					return RosterFragment.newInstance();
-				else {
+				if (i == 0) {
+					Fragment f = RosterFragment.newInstance();
+					if (DEBUG)
+						Log.d(TAG, "Created roster with FragmentManager " + f.getFragmentManager());
+					return f;
+
+				} else {
 					final Chat chat = getChatList().get(i - 1);
 					return ChatHistoryFragment.newInstance(chat.getId());
 				}
@@ -504,7 +509,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onPause() {
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
-		notifyPageChange(-1);
+		// notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
 		if (DEBUG)
@@ -518,8 +523,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onResume()");
 
-		// chats.clear();
-		// chats.addAll(XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().getChats());
 		viewPager.getAdapter().notifyDataSetChanged();
 
 		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
@@ -565,22 +568,31 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected void openChatWith(final JID jid) {
-		try {
-			Integer idx = findChat(jid);
+		Runnable r = new Runnable() {
 
-			if (DEBUG)
-				Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
+			@Override
+			public void run() {
 
-			if (idx == null) {
-				XmppService.jaxmpp().createChat(jid);
-				viewPager.setCurrentItem(getChatList().size());
-			} else {
-				viewPager.setCurrentItem(idx + 1);
+				try {
+					Integer idx = findChat(jid);
+
+					if (DEBUG)
+						Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
+
+					if (idx == null) {
+						XmppService.jaxmpp().createChat(jid);
+						viewPager.setCurrentItem(getChatList().size());
+					} else {
+						viewPager.setCurrentItem(idx + 1);
+					}
+
+				} catch (JaxmppException e) {
+					throw new RuntimeException(e);
+				}
+
 			}
-
-		} catch (JaxmppException e) {
-			throw new RuntimeException(e);
-		}
+		};
+		viewPager.postDelayed(r, 750);
 	}
 
 }

@@ -108,8 +108,8 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public void onStart() {
-		XmppService.jaxmpp().addListener(Connector.StateChanged, this.connectorListener);
 		super.onStart();
+		XmppService.jaxmpp().addListener(Connector.StateChanged, this.connectorListener);
 		updateConnectionStatus();
 
 		if (DEBUG)
