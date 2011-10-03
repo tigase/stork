@@ -1,6 +1,7 @@
 package org.tigase.mobile;
 
 import java.util.Date;
+import java.util.Timer;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -54,6 +55,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 public class JaxmppService extends Service {
 
@@ -100,11 +102,13 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
 	private static final String TAG = "tigase";
+
+	private int connectionErrorCounter = 0;
 
 	private ConnectivityManager connManager;
 
@@ -116,9 +120,9 @@ public class JaxmppService extends Service {
 
 	private boolean focused;
 
-	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
-
 	// private MessengerDatabaseHelper dbHelper;
+
+	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
@@ -141,6 +145,8 @@ public class JaxmppService extends Service {
 	private final Listener<ResourceBindEvent> resourceBindListener;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
+
+	private final Timer timer = new Timer();
 
 	private String userStatusMessage = null;
 
@@ -250,7 +256,7 @@ public class JaxmppService extends Service {
 
 	protected final State getState() {
 		State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-		return state;
+		return state == null ? State.disconnected : state;
 	}
 
 	protected void insertRosterItem(RosterItem item) {
@@ -479,6 +485,7 @@ public class JaxmppService extends Service {
 	public void onStart(Intent intent, int startId) {
 		if (DEBUG)
 			Log.i(TAG, "onStart()");
+
 		this.reconnect = true;
 		super.onStart(intent, startId);
 
@@ -492,19 +499,22 @@ public class JaxmppService extends Service {
 		jaxmpp.getProperties().setUserProperty(SessionObject.USER_JID, jid);
 		jaxmpp.getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
-		reconnect();
+		try {
+			reconnect();
+		} catch (Exception e) {
+			Log.e(TAG, "Can't connect. Show error dialog.", e);
+			Toast.makeText(this, "Cant connect: " + e.getMessage(), Toast.LENGTH_LONG).show();
+
+			stopSelf();
+		}
 	}
 
-	private void reconnect() {
+	private void reconnect() throws JaxmppException {
 		if (connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
 				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
-			try {
-				if (reconnect) {
-					getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI), null, null);
-					jaxmpp.login(false);
-				}
-			} catch (JaxmppException e) {
-				Log.e(TAG, "Can't connect", e);
+			if (reconnect) {
+				getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI), null, null);
+				jaxmpp.login(false);
 			}
 		}
 	}
@@ -528,7 +538,13 @@ public class JaxmppService extends Service {
 		} else if (networkAvailable && (state == State.disconnected)) {
 			if (DEBUG)
 				Log.i(TAG, "Network available! Reconnecting!");
-			reconnect();
+			try {
+				reconnect();
+			} catch (Exception e) {
+				++connectionErrorCounter;
+				Log.e(TAG, "Can't reconnect. Counter=" + connectionErrorCounter, e);
+
+			}
 		}
 
 	}
