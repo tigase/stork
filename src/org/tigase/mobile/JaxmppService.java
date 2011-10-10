@@ -8,7 +8,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 
@@ -32,7 +31,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
@@ -42,6 +40,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -216,7 +215,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
-				updateRosterItem(be.getPresence());
+				updateRosterItem(be);
 			}
 		};
 
@@ -225,11 +224,11 @@ public class JaxmppService extends Service {
 			@Override
 			public synchronized void handleEvent(final RosterEvent be) throws JaxmppException {
 				if (be.getType() == RosterModule.ItemAdded)
-					insertRosterItem(be.getItem());
+					changeRosterItem(be);
 				else if (be.getType() == RosterModule.ItemUpdated)
-					updateRosterItem(be.getItem());
+					changeRosterItem(be);
 				else if (be.getType() == RosterModule.ItemRemoved)
-					removeRosterItem(be.getItem());
+					changeRosterItem(be);
 			}
 		};
 
@@ -237,6 +236,8 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(Connector.ConnectorEvent be) throws JaxmppException {
+				if (getState() == State.disconnected)
+					jaxmpp.getPresence().clear(true);
 				notificationUpdate();
 				if (getState() == State.disconnected) {
 					reconnect();
@@ -254,21 +255,24 @@ public class JaxmppService extends Service {
 
 	}
 
+	protected synchronized void changeRosterItem(RosterEvent be) {
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), be.getItem().hashCode());
+		getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+
+		if (be.getChangedGroups() != null && !be.getChangedGroups().isEmpty()) {
+			for (String gr : be.getChangedGroups()) {
+				if (DEBUG)
+					Log.d(TAG, "Group changed: " + gr + ". Sending notification.");
+				insertedItem = Uri.parse(RosterProvider.GROUP_URI + "/" + gr);
+				getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+			}
+		}
+
+	}
+
 	protected final State getState() {
 		State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state == null ? State.disconnected : state;
-	}
-
-	protected void insertRosterItem(RosterItem item) {
-		ContentValues values = new ContentValues();
-		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
-		values.put(RosterTableMetaData.FIELD_NAME, item.getName());
-		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
-		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
-		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(item.getJid()).getId());
-		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterProvider.getDisplayName(item));
-
-		getContentResolver().insert(Uri.parse(RosterProvider.CONTENT_URI), values);
 	}
 
 	private void notificationCancel() {
@@ -383,8 +387,8 @@ public class JaxmppService extends Service {
 
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
 				this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
+				this.presenceListener);
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 
@@ -420,8 +424,6 @@ public class JaxmppService extends Service {
 			Log.e(TAG, "Can't disconnect", e);
 		}
 
-		getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
-
 		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).removeListener(
 				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
@@ -437,7 +439,7 @@ public class JaxmppService extends Service {
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactAvailable, this.presenceListener);
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+				PresenceModule.ContactUnavailable, this.presenceListener);
 		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 
@@ -513,7 +515,6 @@ public class JaxmppService extends Service {
 		if (connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
 				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
 			if (reconnect) {
-				getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI), null, null);
 				jaxmpp.login(false);
 			}
 		}
@@ -547,10 +548,6 @@ public class JaxmppService extends Service {
 			}
 		}
 
-	}
-
-	protected void removeRosterItem(RosterItem item) {
-		getContentResolver().delete(Uri.parse(RosterProvider.CONTENT_URI + "/" + item.getJid()), null, null);
 	}
 
 	protected void sendUnsentMessages() {
@@ -642,22 +639,13 @@ public class JaxmppService extends Service {
 
 	}
 
-	protected void updateRosterItem(final Presence presence) throws XMLException {
-		ContentValues values = new ContentValues();
-		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(presence.getFrom().getBareJid()).getId());
-		getContentResolver().update(Uri.parse(RosterProvider.CONTENT_URI + "/" + presence.getFrom().getBareJid()), values,
-				null, null);
+	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {
+		RosterItem it = XmppService.jaxmpp().getRoster().get(be.getJid().getBareJid());
+		if (it != null) {
+			Log.i(TAG, "Item " + it.getJid() + " has changed presence");
+			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.hashCode());
+			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+		}
 	}
 
-	protected void updateRosterItem(RosterItem item) {
-		ContentValues values = new ContentValues();
-		values.put(RosterTableMetaData.FIELD_JID, item.getJid().toString());
-		values.put(RosterTableMetaData.FIELD_NAME, item.getName());
-		values.put(RosterTableMetaData.FIELD_SUBSCRIPTION, item.getSubscription().name());
-		values.put(RosterTableMetaData.FIELD_ASK, item.isAsk() ? 1 : 0);
-		values.put(RosterTableMetaData.FIELD_PRESENCE, RosterProvider.getShowOf(item.getJid()).getId());
-		values.put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterProvider.getDisplayName(item));
-
-		getContentResolver().update(Uri.parse(RosterProvider.CONTENT_URI + "/" + item.getJid()), values, null, null);
-	}
 }

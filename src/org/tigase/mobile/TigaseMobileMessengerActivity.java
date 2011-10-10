@@ -2,8 +2,6 @@ package org.tigase.mobile;
 
 import java.util.List;
 
-import org.tigase.mobile.db.providers.RosterProvider;
-
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
@@ -22,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -99,6 +96,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		@Override
 		public Object instantiateItem(View container, int position) {
+
 			if (mCurTransaction == null) {
 				mCurTransaction = mFragmentManager.beginTransaction();
 			}
@@ -338,7 +336,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		// rosterList.setAdapter(adapter);
 
 		if (!XmppService.jaxmpp().isConnected()) {
-			getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI), null, null);
+			// getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI),
+			// null, null);
 		}
 
 		final Bundle extras = getIntent().getExtras();

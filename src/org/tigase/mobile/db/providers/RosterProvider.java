@@ -1,7 +1,7 @@
 package org.tigase.mobile.db.providers;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.tigase.mobile.CPresence;
@@ -9,8 +9,6 @@ import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -19,13 +17,9 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import android.content.ContentProvider;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.MergeCursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Log;
 
@@ -35,7 +29,9 @@ public class RosterProvider extends ContentProvider {
 
 	public static final String CONTENT_URI = "content://" + AUTHORITY + "/roster";
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
+
+	public static final String GROUP_URI = "content://" + AUTHORITY + "/groups";
 
 	public static final String PRESENCE_URI = "content://" + AUTHORITY + "/presence";
 
@@ -78,8 +74,12 @@ public class RosterProvider extends ContentProvider {
 	}
 
 	public static CPresence getShowOf(final BareJID jid) {
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
+		return getShowOf(item);
+	}
+
+	public static CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
 		try {
-			tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
 			if (item == null)
 				return CPresence.notinroster;
 			if (item.isAsk())
@@ -87,7 +87,7 @@ public class RosterProvider extends ContentProvider {
 			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
 				return CPresence.offline_nonauth;
 			PresenceStore presenceStore = XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).getPresence();
-			Presence p = presenceStore.getBestPresence(jid);
+			Presence p = presenceStore.getBestPresence(item.getJid());
 			CPresence r = CPresence.offline;
 			if (p != null) {
 				if (p.getType() == StanzaType.unavailable)
@@ -124,68 +124,7 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		switch (uriMatcher.match(uri)) {
-		case ROSTER_URI_INDICATOR: {
-			// clearing stored roster
-			int c = db.delete(RosterTableMetaData.TABLE_NAME, selection, selectionArgs);
-			getContext().getContentResolver().notifyChange(Uri.parse(RosterProvider.CONTENT_URI), null);
-			return c;
-		}
-		case ROSTER_ITEM_URI_INDICATOR: {
-			long pk = extractPrimaryKey(uri);
-			int c = db.delete(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_ID + '=' + pk, selectionArgs);
-			if (c > 0) {
-				Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), pk);
-				getContext().getContentResolver().notifyChange(insertedItem, null);
-			}
-			return c;
-		}
-		case PRESENCE_URI_INDICATOR: {
-			ContentValues values = new ContentValues();
-			values.put(RosterTableMetaData.FIELD_PRESENCE, CPresence.offline.getId());
-			int i = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_PRESENCE + '>'
-					+ CPresence.offline.getId(), null);
-
-			if (DEBUG)
-				Log.d(TAG, "Update presence to offline of " + i + " buddies");
-			getContext().getContentResolver().notifyChange(Uri.parse(RosterProvider.CONTENT_URI), null);
-			return i;
-		}
-		default:
-			throw new IllegalArgumentException("Unknown URI " + uri);
-		}
-
-	}
-
-	private long extractPrimaryKey(Uri uri) {
-		String d = uri.getLastPathSegment();
-		try {
-			return Long.valueOf(d);
-		} catch (NumberFormatException e) {
-			final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-			qb.setTables(RosterTableMetaData.TABLE_NAME);
-			qb.setProjectionMap(rosterProjectionMap);
-			qb.appendWhere(RosterTableMetaData.FIELD_JID + "='" + d + "'");
-
-			SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-			Cursor c = null;
-			try {
-				c = qb.query(db, null, null, null, null, null, null);
-				final int column = c.getColumnIndex("_id");
-				int i = c.getCount();
-				if (i > 0) {
-					c.moveToFirst();
-					long result = c.getLong(column);
-					return result;
-				} else
-					return -1;
-			} finally {
-				c.close();
-			}
-
-		}
+		throw new RuntimeException("There is nothing to delete! uri=" + uri);
 	}
 
 	@Override
@@ -202,15 +141,7 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		if (uriMatcher.match(uri) != ROSTER_URI_INDICATOR)
-			throw new IllegalArgumentException("Unsupported URI " + uri);
-
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-		long rowId = db.insert(RosterTableMetaData.TABLE_NAME, RosterTableMetaData.FIELD_JID, values);
-		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(CONTENT_URI), rowId);
-		getContext().getContentResolver().notifyChange(insertedItem, null);
-		return insertedItem;
+		throw new RuntimeException("There is nothing to insert! uri=" + uri);
 	}
 
 	@Override
@@ -221,76 +152,26 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-		String sql = "SELECT * FROM " + RosterTableMetaData.TABLE_NAME;
 		Cursor c;
 		switch (uriMatcher.match(uri)) {
 		case ROSTER_URI_INDICATOR:
-			final List<Chat> chats = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChats();
-			String cj = null;
-			if (!chats.isEmpty()) {
-				cj = "(";
-				for (Chat chat : chats) {
-					cj += "'" + chat.getJid().getBareJid() + "',";
-				}
-				cj = cj.substring(0, cj.length() - 1) + ")";
-			}
-
-			if (cj != null)
-				sql += " WHERE " + RosterTableMetaData.FIELD_JID + " IN " + cj;
-
-			sql += " ORDER BY " + RosterTableMetaData.FIELD_PRESENCE + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME
-					+ " ASC";
-
-			String sql2 = "";
-			if (cj != null) {
-				sql2 = "SELECT * FROM " + RosterTableMetaData.TABLE_NAME;
-				sql2 += " WHERE " + RosterTableMetaData.FIELD_JID + " NOT IN " + cj;
-				sql2 += " ORDER BY " + RosterTableMetaData.FIELD_PRESENCE + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME
-						+ " ASC";
-			}
-
-			SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-			if (cj != null) {
-				Cursor c1 = db.rawQuery(sql, null);
-				Cursor c2 = db.rawQuery(sql2, null);
-				c = new MergeCursor(new Cursor[] { c1, c2 });
-			} else {
-				c = db.rawQuery(sql, null);
-			}
-
+			if (DEBUG)
+				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection
+						+ "; selectionArgs=" + Arrays.toString(selectionArgs));
+			c = new RosterCursor(null);
 			break;
 		case ROSTER_ITEM_URI_INDICATOR:
-
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
-		// Cursor c = qb.query(db, projection, selection, selectionArgs, null,
-		// null, RosterTableMetaData.FIELD_PRESENCE
-		// + " DESC, " + RosterTableMetaData.FIELD_DISPLAY_NAME + " ASC");
-
-		int i = c.getCount();
+		// int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);
 		return c;
 	}
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		if (uriMatcher.match(uri) != ROSTER_ITEM_URI_INDICATOR)
-			throw new IllegalArgumentException("Unsupported URI " + uri);
-
-		final SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-		long pk = extractPrimaryKey(uri);
-
-		int changed = db.update(RosterTableMetaData.TABLE_NAME, values, RosterTableMetaData.FIELD_ID + '=' + pk, null);
-
-		if (changed > 0) {
-			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), pk);
-			getContext().getContentResolver().notifyChange(insertedItem, null);
-		}
-
-		return changed;
+		throw new RuntimeException("There is nothing to update! uri=" + uri);
 	}
 
 }
