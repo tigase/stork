@@ -2,6 +2,7 @@ package org.tigase.mobile;
 
 import java.util.Date;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -86,6 +87,8 @@ public class JaxmppService extends Service {
 			if (DEBUG)
 				Log.i(TAG, info);
 
+			connectionErrorCounter = 0;
+
 			refreshInfos();
 
 		}
@@ -105,7 +108,13 @@ public class JaxmppService extends Service {
 
 	public static final int NOTIFICATION_ID = 5398777;
 
+	private static boolean serviceActive = false;
+
 	private static final String TAG = "tigase";
+
+	public static boolean isServiceActive() {
+		return serviceActive;
+	}
 
 	private int connectionErrorCounter = 0;
 
@@ -118,8 +127,6 @@ public class JaxmppService extends Service {
 	private ClientFocusReceiver focusChangeReceiver;
 
 	private boolean focused;
-
-	// private MessengerDatabaseHelper dbHelper;
 
 	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
 
@@ -141,11 +148,15 @@ public class JaxmppService extends Service {
 
 	private boolean reconnect = true;
 
+	private TimerTask reconnectTask;
+
 	private final Listener<ResourceBindEvent> resourceBindListener;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
 	private final Timer timer = new Timer();
+
+	private Integer usedNetworkType = null;
 
 	private String userStatusMessage = null;
 
@@ -236,11 +247,14 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(Connector.ConnectorEvent be) throws JaxmppException {
+				if (getState() == State.connected)
+					connectionErrorCounter = 0;
 				if (getState() == State.disconnected)
 					jaxmpp.getPresence().clear(true);
 				notificationUpdate();
 				if (getState() == State.disconnected) {
-					reconnect();
+					if (reconnect)
+						reconnect(true);
 				}
 			}
 		};
@@ -252,6 +266,14 @@ public class JaxmppService extends Service {
 				sendUnsentMessages();
 			}
 		};
+
+	}
+
+	private void cancelReconnectTask() {
+		if (this.reconnectTask != null) {
+			this.reconnectTask.cancel();
+			this.reconnectTask = null;
+		}
 
 	}
 
@@ -268,6 +290,15 @@ public class JaxmppService extends Service {
 			}
 		}
 
+	}
+
+	private Integer getActiveNetworkConnectionType() {
+		NetworkInfo info = connManager.getActiveNetworkInfo();
+		if (info == null)
+			return null;
+		if (!info.isConnected())
+			return null;
+		return info.getType();
 	}
 
 	protected final State getState() {
@@ -408,6 +439,8 @@ public class JaxmppService extends Service {
 
 	@Override
 	public void onDestroy() {
+		serviceActive = false;
+		cancelReconnectTask();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
 		if (myConnReceiver != null)
@@ -420,6 +453,7 @@ public class JaxmppService extends Service {
 		Log.i(TAG, "Stopping service");
 		try {
 			jaxmpp.disconnect();
+			usedNetworkType = null;
 		} catch (JaxmppException e) {
 			Log.e(TAG, "Can't disconnect", e);
 		}
@@ -487,7 +521,7 @@ public class JaxmppService extends Service {
 	public void onStart(Intent intent, int startId) {
 		if (DEBUG)
 			Log.i(TAG, "onStart()");
-
+		serviceActive = true;
 		this.reconnect = true;
 		super.onStart(intent, startId);
 
@@ -511,41 +545,82 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private void reconnect() throws JaxmppException {
-		if (connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
-				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
-			if (reconnect) {
-				jaxmpp.login(false);
+	private void reconnect() {
+		reconnect(false);
+	}
+
+	private void reconnect(boolean delayed) {
+		final Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					NetworkInfo active = connManager.getActiveNetworkInfo();
+					if (DEBUG)
+						Log.d(TAG, "NetworkInfo: " + active);
+					if (active != null && active.isConnected()) {
+						if (DEBUG)
+							Log.d(TAG, "Logging in with " + active.getTypeName());
+
+						usedNetworkType = active.getType();
+						jaxmpp.login(false);
+					}
+				} catch (Exception e) {
+					++connectionErrorCounter;
+					try {
+						jaxmpp.disconnect(true);
+						usedNetworkType = null;
+					} catch (JaxmppException e1) {
+						Log.w(TAG, "Can't disconnect", e1);
+					}
+					refreshInfos();
+					Log.e(TAG, "Can't connect. Counter=" + connectionErrorCounter, e);
+				}
 			}
+		};
+
+		cancelReconnectTask();
+		if (!delayed)
+			r.run();
+		else {
+			this.reconnectTask = new TimerTask() {
+
+				@Override
+				public void run() {
+					reconnectTask = null;
+					r.run();
+				}
+			};
+			timer.schedule(reconnectTask, 1000 * 15);
 		}
+
 	}
 
 	public void refreshInfos() {
 		final State state = getState();
-		final boolean networkAvailable = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected()
-				|| connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
+		final boolean networkSwitched = getActiveNetworkConnectionType() != usedNetworkType;
+		final boolean networkAvailable = getActiveNetworkConnectionType() != null;
 
-		if (DEBUG)
-			Log.d(TAG, "State=" + state + "; network=" + networkAvailable);
+		if (DEBUG) {
+			Log.d(TAG, "State=" + state + "; networkSwitched=" + networkSwitched);
+			NetworkInfo ac = connManager.getActiveNetworkInfo();
+			Log.d(TAG, "Current network: " + (ac == null ? "none" : ac.getTypeName()));
+		}
 
-		if (!networkAvailable && (state == State.connected || state == State.connecting || state == State.disconnecting)) {
+		if (networkSwitched && (state == State.connected || state == State.connecting)) {
 			if (DEBUG)
 				Log.i(TAG, "Network disconnected!");
 			try {
-				jaxmpp.disconnect();
+				jaxmpp.disconnect(true);
+				usedNetworkType = null;
 			} catch (JaxmppException e) {
 				Log.w(TAG, "Can't disconnect", e);
 			}
 		} else if (networkAvailable && (state == State.disconnected)) {
 			if (DEBUG)
 				Log.i(TAG, "Network available! Reconnecting!");
-			try {
-				reconnect();
-			} catch (Exception e) {
-				++connectionErrorCounter;
-				Log.e(TAG, "Can't reconnect. Counter=" + connectionErrorCounter, e);
-
-			}
+			if (reconnect && connectionErrorCounter < 5)
+				reconnect(true);
 		}
 
 	}

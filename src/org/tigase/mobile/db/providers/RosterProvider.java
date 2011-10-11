@@ -29,7 +29,7 @@ public class RosterProvider extends ContentProvider {
 
 	public static final String CONTENT_URI = "content://" + AUTHORITY + "/roster";
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final String GROUP_URI = "content://" + AUTHORITY + "/groups";
 

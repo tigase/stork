@@ -365,14 +365,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onMenuOpened(int featureId, Menu menu) {
 		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
 				: XmppService.jaxmpp().getConnector().getState();
+		final boolean serviceActive = JaxmppService.isServiceActive();
 
 		MenuItem con = menu.findItem(R.id.connectButton);
 		con.setVisible(currentPage == 0);
-		con.setEnabled(st == null || st == State.disconnected);
+		con.setEnabled(!serviceActive);
 
 		MenuItem dcon = menu.findItem(R.id.disconnectButton);
 		dcon.setVisible(currentPage == 0);
-		dcon.setEnabled(st == State.connected || st == State.connecting || st == State.disconnecting);
+		dcon.setEnabled(serviceActive);
 
 		MenuItem setup = menu.findItem(R.id.propertiesButton);
 		setup.setVisible(currentPage == 0);

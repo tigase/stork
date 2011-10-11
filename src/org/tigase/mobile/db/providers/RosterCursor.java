@@ -18,6 +18,8 @@ import android.util.Log;
 
 public class RosterCursor extends AbstractCursor {
 
+	private final static boolean DEBUG = false;
+
 	private static final String createComparable(String name, CPresence p) {
 		String r = "000" + (1000 - p.getId());
 		r = r.substring(r.length() - 5) + ":" + name.toLowerCase();
@@ -85,7 +87,8 @@ public class RosterCursor extends AbstractCursor {
 
 	@Override
 	public int getCount() {
-		Log.d("tigase", "rosterCursor.getCount()==" + getRoster().size());
+		if (DEBUG)
+			Log.d("tigase", "rosterCursor.getCount()==" + getRoster().size());
 		return getRoster().size();
 	}
 
@@ -163,7 +166,8 @@ public class RosterCursor extends AbstractCursor {
 
 	@Override
 	public boolean requery() {
-		Log.i("tigase", "Requery()");
+		if (DEBUG)
+			Log.d("tigase", "Requery()");
 		loadData();
 		return super.requery();
 	}
