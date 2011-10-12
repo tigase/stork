@@ -508,7 +508,7 @@ public class JaxmppService extends Service {
 			} else if (focused && pageIndex == -1) {
 				Log.d(TAG, "Sending auto-away presence");
 				focused = false;
-				int pr = prefs.getInt("auto_away_priority", 1);
+				int pr = prefs.getInt("auto_away_priority", 0);
 
 				XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
 			}

@@ -15,6 +15,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +35,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
@@ -155,15 +158,17 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 	}
 
+	private final static int ABOUT_DIALOG = 1;
+
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
 	private static final boolean DEBUG = false;
 
 	public static final int REQUEST_CHAT = 1;
 
-	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
-
 	// private ListView rosterList;
+
+	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
 
 	private static final String TAG = "tigase";
 
@@ -348,6 +353,33 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case ABOUT_DIALOG: {
+
+			final Dialog dialog = new Dialog(this);
+			dialog.setCancelable(true);
+			dialog.setCanceledOnTouchOutside(true);
+
+			dialog.setContentView(R.layout.about_dialog);
+			dialog.setTitle(getString(R.string.aboutButton));
+
+			Button okButton = (Button) dialog.findViewById(R.id.okButton);
+			okButton.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					dialog.cancel();
+				}
+			});
+			return dialog;
+		}
+		default:
+			return null;
+		}
+	}
+
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
@@ -381,6 +413,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		MenuItem closeChat = menu.findItem(R.id.closeChatButton);
 		closeChat.setVisible(currentPage != 0);
 
+		MenuItem about = menu.findItem(R.id.aboutButton);
+		about.setVisible(currentPage == 0);
+
 		return super.onMenuOpened(featureId, menu);
 	}
 
@@ -400,6 +435,40 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewPager.post(action);
 	}
 
+	// @Override
+	// protected void onActivityResult(int requestCode, int resultCode, Intent
+	// data) {
+	// super.onActivityResult(requestCode, resultCode, data);
+	//
+	// if(DEBUG)Log.i(TAG, "Sprawdzamy extrasy...");
+	// if (getIntent() != null && getIntent().getExtras() != null) {
+	// if(DEBUG)Log.i(TAG, "Mamy extrasy");
+	// if (getIntent().getExtras().containsKey("chatId")) {
+	// long chatId = getIntent().getLongExtra("chatId", -1);
+	// getIntent().removeExtra("chatId");
+	//
+	// List<Chat> l = getChatList();
+	// for (int i = 0; i < l.size(); i++) {
+	// Chat chh = l.get(i);
+	// if (chh.getId() == chatId) {
+	// final int x = i + 1;
+	// viewSwitcher.post(new Runnable() {
+	//
+	// @Override
+	// public void run() {
+	// if(DEBUG)Log.i(TAG, "Switch chats to " + x);
+	//
+	// viewSwitcher.setCurrentItem(x);
+	// }
+	// });
+	//
+	// }
+	// }
+	// }
+	//
+	// }
+	// }
+
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
@@ -411,6 +480,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.aboutButton:
+			showDialog(ABOUT_DIALOG);
+			break;
 		case R.id.showChatsButton:
 			Intent chatListActivity = new Intent(this, ChatListActivity.class);
 			this.startActivityForResult(chatListActivity, REQUEST_CHAT);
@@ -460,40 +532,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		return true;
 	}
-
-	// @Override
-	// protected void onActivityResult(int requestCode, int resultCode, Intent
-	// data) {
-	// super.onActivityResult(requestCode, resultCode, data);
-	//
-	// if(DEBUG)Log.i(TAG, "Sprawdzamy extrasy...");
-	// if (getIntent() != null && getIntent().getExtras() != null) {
-	// if(DEBUG)Log.i(TAG, "Mamy extrasy");
-	// if (getIntent().getExtras().containsKey("chatId")) {
-	// long chatId = getIntent().getLongExtra("chatId", -1);
-	// getIntent().removeExtra("chatId");
-	//
-	// List<Chat> l = getChatList();
-	// for (int i = 0; i < l.size(); i++) {
-	// Chat chh = l.get(i);
-	// if (chh.getId() == chatId) {
-	// final int x = i + 1;
-	// viewSwitcher.post(new Runnable() {
-	//
-	// @Override
-	// public void run() {
-	// if(DEBUG)Log.i(TAG, "Switch chats to " + x);
-	//
-	// viewSwitcher.setCurrentItem(x);
-	// }
-	// });
-	//
-	// }
-	// }
-	// }
-	//
-	// }
-	// }
 
 	@Override
 	protected void onPause() {
