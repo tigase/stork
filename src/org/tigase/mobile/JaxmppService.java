@@ -104,7 +104,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -278,15 +278,16 @@ public class JaxmppService extends Service {
 	}
 
 	protected synchronized void changeRosterItem(RosterEvent be) {
-		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), be.getItem().hashCode());
+		Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), be.getItem().getId());
 		getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
 
 		if (be.getChangedGroups() != null && !be.getChangedGroups().isEmpty()) {
 			for (String gr : be.getChangedGroups()) {
+
+				Uri x = ContentUris.withAppendedId(Uri.parse(RosterProvider.GROUP_URI), gr.hashCode());
 				if (DEBUG)
-					Log.d(TAG, "Group changed: " + gr + ". Sending notification.");
-				insertedItem = Uri.parse(RosterProvider.GROUP_URI + "/" + gr);
-				getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+					Log.d(TAG, "Group changed: " + gr + ". Sending notification for " + x);
+				getApplicationContext().getContentResolver().notifyChange(x, null, true);
 			}
 		}
 
@@ -718,7 +719,7 @@ public class JaxmppService extends Service {
 		RosterItem it = XmppService.jaxmpp().getRoster().get(be.getJid().getBareJid());
 		if (it != null) {
 			Log.i(TAG, "Item " + it.getJid() + " has changed presence");
-			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.hashCode());
+			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
 			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
 		}
 	}

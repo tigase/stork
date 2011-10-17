@@ -9,18 +9,17 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
-import android.widget.ListView;
 
 public class RosterFragment extends Fragment {
 
@@ -38,6 +37,8 @@ public class RosterFragment extends Fragment {
 	private ImageView connectionStatus;
 
 	private final Listener<ConnectorEvent> connectorListener;
+
+	private ExpandableListView listView;
 
 	public RosterFragment() {
 		super();
@@ -58,24 +59,30 @@ public class RosterFragment extends Fragment {
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onCreateView()");
 		View layout = inflater.inflate(R.layout.roster_list, null);
-		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null, null);
-		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), R.layout.roster_item, c);
+		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
+		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), c);
 
-		final ListView lv = (ListView) layout.findViewById(R.id.rosterList);
-		lv.setAdapter(adapter);
-		lv.setOnItemClickListener(new OnItemClickListener() {
+		listView = (ExpandableListView) layout.findViewById(R.id.rosterList);
+		if (savedInstanceState != null) {
+			Parcelable listState = savedInstanceState.getParcelable("ListState");
+			listView.onRestoreInstanceState(listState);
+		}
+		listView.setSaveEnabled(true);
+		listView.setAdapter(adapter);
+
+		listView.setOnChildClickListener(new OnChildClickListener() {
 
 			@Override
-			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				CursorWrapper cw = (CursorWrapper) lv.getItemAtPosition(position);
+			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 
-				final String jid = cw.getString(1);
+				Log.i(TAG, "Clicked on id=" + id);
 
 				Intent intent = new Intent();
 				intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
-				intent.putExtra("jid", jid);
+				intent.putExtra("id", id);
 
 				getActivity().getApplicationContext().sendBroadcast(intent);
+				return true;
 			}
 		});
 
@@ -104,6 +111,13 @@ public class RosterFragment extends Fragment {
 		super.onResume();
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onResume()");
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		Parcelable listState = listView.onSaveInstanceState();
+		outState.putParcelable("ListState", listState);
+		super.onSaveInstanceState(outState);
 	}
 
 	@Override

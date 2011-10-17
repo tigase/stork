@@ -13,6 +13,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
 import android.app.Dialog;
@@ -26,6 +27,7 @@ import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -40,13 +42,14 @@ import android.widget.Button;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
-	public abstract class MyFragmentPagerAdapter<T> extends PagerAdapter {
+	public abstract class MyFragmentPagerAdapter<T> extends FragmentStatePagerAdapter {
 
 		private FragmentTransaction mCurTransaction = null;
 
 		private final FragmentManager mFragmentManager;
 
 		public MyFragmentPagerAdapter(FragmentManager fm) {
+			super(fm);
 			mFragmentManager = fm;
 		}
 
@@ -153,8 +156,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		public void onReceive(Context context, Intent intent) {
 			// if (!active)
 			// return;
-			JID jid = JID.jidInstance(intent.getStringExtra("jid"));
-			openChatWith(jid);
+			final long id = intent.getLongExtra("id", -1);
+
+			for (RosterItem i : XmppService.jaxmpp().getRoster().getAll()) {
+				if (id == i.getId()) {
+					JID jid = JID.jidInstance(i.getJid());
+					openChatWith(jid);
+					break;
+				}
+			}
+
 		}
 	}
 

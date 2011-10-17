@@ -1,18 +1,20 @@
 package org.tigase.mobile;
 
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.method.SingleLineTransformationMethod;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.SimpleCursorTreeAdapter;
 import android.widget.TextView;
 
-public class RosterAdapter extends SimpleCursorAdapter {
+public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
 			RosterTableMetaData.FIELD_PRESENCE };
@@ -23,17 +25,24 @@ public class RosterAdapter extends SimpleCursorAdapter {
 
 	private int resource;
 
-	public RosterAdapter(Context context, int layout, Cursor c) {
-		super(context, layout, c, cols, names);
+	public RosterAdapter(Context context, Cursor c) {
+		// Context context, Cursor cursor, int groupLayout, String[] groupFrom,
+		// int[] groupTo, int childLayout, String[] childFrom, int[] childTo
+		super(context, c, R.layout.roster_group_item, new String[] { RosterTableMetaData.FIELD_GROUP_NAME },
+				new int[] { R.id.roster_group_name }, R.layout.roster_item, cols, names);
+
 		this.context = context;
-		this.resource = layout;
-		findColumns(cols, c);
+		this.resource = R.layout.roster_item;
 	}
 
 	@Override
-	public void bindView(View view, Context context, Cursor cursor) {
+	protected void bindChildView(View view, Context context, Cursor cursor, boolean isLastChild) {
 		// TODO Auto-generated method stub
 		// super.bindView(view, context, cursor);
+
+		if (mFrom == null) {
+			findColumns(cols, cursor);
+		}
 
 		TextView itemJid = (TextView) view.findViewById(R.id.roster_item_jid);
 		TextView itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
@@ -94,6 +103,13 @@ public class RosterAdapter extends SimpleCursorAdapter {
 				mFrom[i] = -1;
 			}
 		}
+	}
+
+	@Override
+	protected Cursor getChildrenCursor(Cursor groupCursor) {
+		String group = groupCursor.getString(1);
+		return context.getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, new String[] { group },
+				null);
 	}
 
 }

@@ -28,7 +28,7 @@ public class RosterCursor extends AbstractCursor {
 
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
-			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, };
+			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME };
 
 	private final ArrayList<RosterItem> items = new ArrayList<RosterItem>();
 
@@ -52,9 +52,7 @@ public class RosterCursor extends AbstractCursor {
 		}
 		switch (column) {
 		case 0:
-			// XXX DIRTY HACK!
-			return items.get(mPos).hashCode();
-			// return items.get(mPos).getData("ID");
+			return items.get(mPos).getId();
 		case 1:
 			return items.get(mPos).getJid();
 		case 2:
@@ -74,6 +72,11 @@ public class RosterCursor extends AbstractCursor {
 		case 6: {
 			RosterItem item = items.get(mPos);
 			return RosterProvider.getShowOf(item.getJid()).getId();
+		}
+		case 7: {
+			RosterItem item = items.get(mPos);
+			String x = item.getGroups().size() == 0 ? "default" : item.getGroups().get(0);
+			return x;
 		}
 		default:
 			throw new CursorIndexOutOfBoundsException("Unknown column!");

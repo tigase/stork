@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:padding="5px" android:layout_width="wrap_content"
+	android:layout_height="wrap_content">
+
+
+	<TextView android:textSize="18sp" android:id="@+id/roster_group_name"
+		android:layout_width="fill_parent" android:textStyle="bold"
+		android:layout_alignParentTop="true" android:layout_alignParentRight="true"
+		android:layout_toLeftOf="@+id/roster_group_name"
+		android:layout_height="55sp" android:text="Group name"
+		android:paddingLeft="50sp" android:gravity="center_vertical" />
+</RelativeLayout>

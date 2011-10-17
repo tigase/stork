@@ -13,6 +13,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
@@ -31,11 +32,11 @@ public class RosterProvider extends ContentProvider {
 
 	private static final boolean DEBUG = false;
 
+	private static final int GROUP_ITEM_URI_INDICATOR = 4;
+
 	public static final String GROUP_URI = "content://" + AUTHORITY + "/groups";
 
-	public static final String PRESENCE_URI = "content://" + AUTHORITY + "/presence";
-
-	protected static final int PRESENCE_URI_INDICATOR = 3;
+	protected static final int GROUPS_URI_INDICATOR = 3;
 
 	protected static final int ROSTER_ITEM_URI_INDICATOR = 2;
 
@@ -116,10 +117,10 @@ public class RosterProvider extends ContentProvider {
 
 	public RosterProvider() {
 		this.uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-		this.uriMatcher.addURI(AUTHORITY, "presence", PRESENCE_URI_INDICATOR);
 		this.uriMatcher.addURI(AUTHORITY, "roster", ROSTER_URI_INDICATOR);
 		this.uriMatcher.addURI(AUTHORITY, "roster/*", ROSTER_ITEM_URI_INDICATOR);
-
+		this.uriMatcher.addURI(AUTHORITY, "groups", GROUPS_URI_INDICATOR);
+		this.uriMatcher.addURI(AUTHORITY, "groups/*", GROUP_ITEM_URI_INDICATOR);
 	}
 
 	@Override
@@ -132,6 +133,10 @@ public class RosterProvider extends ContentProvider {
 		switch (uriMatcher.match(uri)) {
 		case ROSTER_URI_INDICATOR:
 			return RosterTableMetaData.CONTENT_TYPE;
+		case GROUPS_URI_INDICATOR:
+			return RosterTableMetaData.GROUPS_TYPE;
+		case GROUP_ITEM_URI_INDICATOR:
+			return RosterTableMetaData.GROUP_ITEM_TYPE;
 		case ROSTER_ITEM_URI_INDICATOR:
 			return RosterTableMetaData.CONTENT_ITEM_TYPE;
 		default:
@@ -151,16 +156,36 @@ public class RosterProvider extends ContentProvider {
 	}
 
 	@Override
-	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+	public Cursor query(Uri uri, String[] projection, String selection, final String[] selectionArgs, String sortOrder) {
 		Cursor c;
+		Predicate p = null;
 		switch (uriMatcher.match(uri)) {
 		case ROSTER_URI_INDICATOR:
+			if (selectionArgs != null) {
+				final String g = selectionArgs[0];
+				p = new Predicate() {
+
+					@Override
+					public boolean match(RosterItem item) {
+						if (g.equals("All"))
+							return true;
+						else if (g.equals("default") && item.getGroups().isEmpty())
+							return true;
+						else
+							return item.getGroups().contains(g);
+					}
+				};
+			}
+
 			if (DEBUG)
 				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection
 						+ "; selectionArgs=" + Arrays.toString(selectionArgs));
-			c = new RosterCursor(null);
+
+			c = new RosterCursor(p);
 			break;
-		case ROSTER_ITEM_URI_INDICATOR:
+		case GROUPS_URI_INDICATOR:
+			c = new GroupsCursor();
+			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
