@@ -27,7 +27,7 @@ import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -42,7 +42,7 @@ import android.widget.Button;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
-	public abstract class MyFragmentPagerAdapter<T> extends FragmentStatePagerAdapter {
+	public abstract class MyFragmentPagerAdapter<T> extends FragmentPagerAdapter {
 
 		private FragmentTransaction mCurTransaction = null;
 
@@ -87,6 +87,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		/**
 		 * Return the Fragment associated with a specified position.
 		 */
+		@Override
 		public abstract Fragment getItem(int position);
 
 		@Override

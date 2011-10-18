@@ -20,7 +20,10 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 			RosterTableMetaData.FIELD_PRESENCE };
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
-	private final Context context;
+	static Context staticContext;
+
+	private Context context;
+
 	protected int[] mFrom;
 
 	private int resource;
@@ -107,6 +110,8 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	@Override
 	protected Cursor getChildrenCursor(Cursor groupCursor) {
+		if (context == null)
+			context = staticContext;
 		String group = groupCursor.getString(1);
 		return context.getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, new String[] { group },
 				null);

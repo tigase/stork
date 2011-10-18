@@ -27,6 +27,10 @@ public class RosterFragment extends Fragment {
 
 	private static final String TAG = "tigase";
 
+	static final int TOKEN_CHILD = 1;
+
+	static final int TOKEN_GROUP = 0;
+
 	public static RosterFragment newInstance() {
 		RosterFragment f = new RosterFragment();
 		return f;
@@ -60,14 +64,12 @@ public class RosterFragment extends Fragment {
 			Log.d(TAG + "_rf", "onCreateView()");
 		View layout = inflater.inflate(R.layout.roster_list, null);
 		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
+		RosterAdapter.staticContext = inflater.getContext();
 		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), c);
 
 		listView = (ExpandableListView) layout.findViewById(R.id.rosterList);
-		if (savedInstanceState != null) {
-			Parcelable listState = savedInstanceState.getParcelable("ListState");
-			listView.onRestoreInstanceState(listState);
-		}
-		listView.setSaveEnabled(true);
+
+		// listView.setSaveEnabled(true);
 		listView.setAdapter(adapter);
 
 		listView.setOnChildClickListener(new OnChildClickListener() {
