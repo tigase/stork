@@ -592,7 +592,8 @@ public class JaxmppService extends Service {
 					r.run();
 				}
 			};
-			timer.schedule(reconnectTask, 1000 * 15);
+			int timeInSecs = prefs.getInt("reconnect_time", 5);
+			timer.schedule(reconnectTask, 1000 * timeInSecs);
 		}
 
 	}

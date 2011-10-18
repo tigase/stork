@@ -2,9 +2,8 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 	android:key="tigase_messenger_preferences" android:title="@string/preferencesTitle">
 
-	<PreferenceCategory xmlns:android="http://schemas.android.com/apk/res/android"
-		android:key="login_data" android:title="@string/pref_login_section_title"
-		android:summary="@string/pref_login_section_summary">
+	<PreferenceCategory android:key="login_data" android:title="@string/pref_login_section_title"
+		android:summary="@string/pref_login_section_summary" xmlns:android="http://schemas.android.com/apk/res/android">
 		<EditTextPreference android:key="user_jid"
 			android:dialogTitle="@string/pref_login_jid_dialog" android:summary="@string/pref_login_jid_summary"
 			android:title="@string/pref_login_jid_title" />
@@ -16,6 +15,15 @@
 			android:title="@string/pref_login_hostname_title" android:key="hostname"
 			android:dialogTitle="@string/pref_login_hostname_dialog"></EditTextPreference>
 	</PreferenceCategory>
+	<PreferenceScreen android:key="advanced_data"
+	android:title="@string/pref_advanced_section_title" android:summary="@string/pref_advanced_section_summary"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	
+		<EditTextPreference android:summary="@string/pref_reconnect_time_summary" android:defaultValue="5" 
+			android:title="@string/pref_reconnect_time_title" android:key="reconnect_time"
+			android:dialogTitle="@string/pref_reconnect_time_dialog"></EditTextPreference>
+
+	</PreferenceScreen>
 
 	<PreferenceCategory android:key="gui_details"
 		android:title="@string/pref_login_ui_section_title" xmlns:android="http://schemas.android.com/apk/res/android">
