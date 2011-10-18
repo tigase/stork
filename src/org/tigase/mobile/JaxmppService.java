@@ -1,5 +1,6 @@
 package org.tigase.mobile;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -251,10 +252,13 @@ public class JaxmppService extends Service {
 					connectionErrorCounter = 0;
 				if (getState() == State.disconnected)
 					jaxmpp.getPresence().clear(true);
-				notificationUpdate();
 				if (getState() == State.disconnected) {
-					if (reconnect)
+					if (reconnect) {
 						reconnect(true);
+					} else
+						notificationUpdate();
+				} else {
+					notificationUpdate();
 				}
 			}
 		};
@@ -356,7 +360,10 @@ public class JaxmppService extends Service {
 				return;
 			}
 		}
+		notificationUpdate(ico, notiticationTitle, expandedNotificationText);
+	}
 
+	private void notificationUpdate(final int ico, final String notiticationTitle, final String expandedNotificationText) {
 		long whenNotify = System.currentTimeMillis();
 		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
 
@@ -370,6 +377,22 @@ public class JaxmppService extends Service {
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify(NOTIFICATION_ID, notification);
+	}
+
+	private void notificationUpdateFail() {
+		notificationUpdate(R.drawable.sb_offline, "Disconnected", "Connection impossible");
+	}
+
+	private void notificationUpdateReconnect(Date d) {
+		if (this.notificationVariant == NotificationVariant.only_connected) {
+			notificationCancel();
+			return;
+		}
+
+		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+
+		String expandedNotificationText = "Next try on " + s.format(d);
+		notificationUpdate(R.drawable.sb_offline, "Disconnected", expandedNotificationText);
 	}
 
 	@Override
@@ -592,8 +615,19 @@ public class JaxmppService extends Service {
 					r.run();
 				}
 			};
-			int timeInSecs = prefs.getInt("reconnect_time", 5);
-			timer.schedule(reconnectTask, 1000 * timeInSecs);
+			int timeInSecs = Integer.parseInt(prefs.getString("reconnect_time", "5"));
+			if (connectionErrorCounter > 20) {
+				timeInSecs += 60 * 5;
+			} else if (connectionErrorCounter > 10) {
+				timeInSecs += 120;
+			} else if (connectionErrorCounter > 5) {
+				timeInSecs += 60;
+			}
+
+			Date d = new Date((new Date()).getTime() + 1000 * timeInSecs);
+
+			timer.schedule(reconnectTask, d);
+			notificationUpdateReconnect(d);
 		}
 
 	}
@@ -621,8 +655,13 @@ public class JaxmppService extends Service {
 		} else if (networkAvailable && (state == State.disconnected)) {
 			if (DEBUG)
 				Log.i(TAG, "Network available! Reconnecting!");
-			if (reconnect && connectionErrorCounter < 5)
-				reconnect(true);
+			if (reconnect) {
+				if (connectionErrorCounter < 50)
+					reconnect(true);
+				else
+					notificationUpdateFail();
+
+			}
 		}
 
 	}
