@@ -27,8 +27,17 @@
 	<string name="pref_login_hostname_title">Hostname</string>
 	<string name="pref_login_hostname_summary">Enter XMPP server name</string>
 
-<string name="pref_advanced_section_title">Advanced settings</string>
-<string name="pref_advanced_section_summary">Advanced settings</string>
+	<string name="pref_advanced_section_title">Advanced settings</string>
+	<string name="pref_advanced_section_summary">Advanced settings</string>
+
+	<string name="pref_default_priority_summary">Online priority</string>
+	<string name="pref_default_priority_title">Online priority</string>
+	<string name="pref_default_priority_dialog">Enter online priority</string>
+
+	<string name="pref_auto_away_priority_summary">Auto away priority</string>
+	<string name="pref_auto_away_priority_title">Auto away priority</string>
+	<string name="pref_auto_away_priority_dialog">Enter auto away priority</string>
+
 
 	<string name="pref_reconnect_time_summary">Reconnect delay</string>
 	<string name="pref_reconnect_time_title">Reconnect delay</string>

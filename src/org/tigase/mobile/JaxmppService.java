@@ -615,7 +615,7 @@ public class JaxmppService extends Service {
 					r.run();
 				}
 			};
-			int timeInSecs = Integer.parseInt(prefs.getString("reconnect_time", "5"));
+			int timeInSecs = prefs.getInt("reconnect_time", 5);
 			if (connectionErrorCounter > 20) {
 				timeInSecs += 60 * 5;
 			} else if (connectionErrorCounter > 10) {
