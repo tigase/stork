@@ -28,7 +28,7 @@ public class ChatListActivity extends Activity {
 		private LayoutInflater mInflater;
 
 		public ImageAdapter(Context c) {
-			this.chats.addAll(XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChats());
+			this.chats.addAll(XmppService.jaxmpp(c).getModulesManager().getModule(MessageModule.class).getChats());
 			mContext = c;
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		}

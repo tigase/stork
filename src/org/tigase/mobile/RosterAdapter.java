@@ -58,7 +58,7 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		String name = cursor.getString(mFrom[1]);
 		itemJid.setText(name);
 
-		boolean co = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
+		boolean co = XmppService.jaxmpp(context).getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
 				BareJID.bareJIDInstance(cursor.getString(mFrom[0])));
 		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 

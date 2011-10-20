@@ -4,7 +4,6 @@ import java.util.Date;
 
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
-import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -104,8 +103,10 @@ public class ChatView extends LinearLayout {
 		if (chat == null)
 			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
-		RosterItem ri = XmppService.jaxmpp().getRoster().get(chat.getJid().getBareJid());
-		t.setText("Chat with " + (ri == null ? chat.getJid().getBareJid().toString() : RosterProvider.getDisplayName(ri)));
+		RosterItem ri = XmppService.jaxmpp(getContext()).getRoster().get(chat.getJid().getBareJid());
+		t.setText("Chat with "
+				+ (ri == null ? chat.getJid().getBareJid().toString()
+						: (new RosterDisplayTools(getContext())).getDisplayName(ri)));
 	}
 
 	public void setImagePresence(final CPresence cp) {

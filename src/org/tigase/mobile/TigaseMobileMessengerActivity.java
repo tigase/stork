@@ -9,8 +9,8 @@ import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -159,7 +159,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// return;
 			final long id = intent.getLongExtra("id", -1);
 
-			for (RosterItem i : XmppService.jaxmpp().getRoster().getAll()) {
+			for (RosterItem i : XmppService.jaxmpp(getApplicationContext()).getRoster().getAll()) {
 				if (id == i.getId()) {
 					JID jid = JID.jidInstance(i.getJid());
 					openChatWith(jid);
@@ -227,7 +227,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected List<Chat> getChatList() {
-		return XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
+		return XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
 	}
 
 	private void notifyPageChange(int msg) {
@@ -266,6 +266,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		if (DEBUG)
 			Log.d(TAG, "onCreate()");
+
 		super.onCreate(savedInstanceState);
 		if (savedInstanceState != null) {
 			currentPage = savedInstanceState.getInt("currentPage", 0);
@@ -352,7 +353,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		// adapter.setNotifyOnChange(true);
 		// rosterList.setAdapter(adapter);
 
-		if (!XmppService.jaxmpp().isConnected()) {
+		if (!XmppService.jaxmpp(TigaseMobileMessengerActivity.this).isConnected()) {
 			// getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI),
 			// null, null);
 		}
@@ -407,8 +408,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onMenuOpened(int featureId, Menu menu) {
-		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
-				: XmppService.jaxmpp().getConnector().getState();
+		final Connector.State st = XmppService.jaxmpp(this).getConnector() == null ? State.disconnected : XmppService.jaxmpp(
+				this).getConnector().getState();
 		final boolean serviceActive = JaxmppService.isServiceActive();
 
 		MenuItem con = menu.findItem(R.id.connectButton);
@@ -501,7 +502,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			break;
 		case R.id.closeChatButton:
 			final int p = this.currentPage;
-			final ChatManager cm = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChatManager();
+			final AbstractChatManager cm = XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).getChatManager();
 			Chat chat = cm.getChats().get(p - 1);
 			try {
 				cm.close(chat);
@@ -528,15 +529,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			String password = prefs.getString("user_password", null);
 			String hostname = prefs.getString("hostname", null);
 
-			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
-			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
 					getResources().getString(R.string.app_version));
-			XmppService.jaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY,
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.OS_KEY,
 					"Android " + android.os.Build.VERSION.RELEASE);
 
-			XmppService.jaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);
-			XmppService.jaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SessionObject.USER_JID, jid);
+			XmppService.jaxmpp(this).getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
 			startService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
 		default:
@@ -549,7 +550,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	protected void onPause() {
 		unregisterReceiver(rosterClickReceiver);
 
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
+		XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
 		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
@@ -568,7 +569,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		viewPager.getAdapter().notifyDataSetChanged();
 
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
+		XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
 
 		if (incomingExtras != null) {
 			String s_jid = incomingExtras.getString("jid");
@@ -624,7 +625,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 						Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
 
 					if (idx == null) {
-						XmppService.jaxmpp().createChat(jid);
+						XmppService.jaxmpp(TigaseMobileMessengerActivity.this).createChat(jid);
 						viewPager.setCurrentItem(getChatList().size());
 					} else {
 						viewPager.setCurrentItem(idx + 1);

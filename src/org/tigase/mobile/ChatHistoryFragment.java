@@ -3,7 +3,6 @@ package org.tigase.mobile;
 import java.util.List;
 
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
-import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -140,7 +139,8 @@ public class ChatHistoryFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
-		this.layout.setImagePresence(RosterProvider.getShowOf(this.chat.getJid().getBareJid()));
+
+		this.layout.setImagePresence((new RosterDisplayTools(getActivity())).getShowOf(this.chat.getJid().getBareJid()));
 	}
 
 	@Override
@@ -156,11 +156,11 @@ public class ChatHistoryFragment extends Fragment {
 	public void onStart() {
 		if (DEBUG)
 			Log.d(TAG, "Start ChatFragment");
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
-				this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
-				this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.ContactAvailable, this.presenceListener);
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
+				PresenceModule.ContactUnavailable, this.presenceListener);
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStart();
 
@@ -172,17 +172,17 @@ public class ChatHistoryFragment extends Fragment {
 		if (DEBUG)
 			Log.d(TAG, "Stop ChatFragment");
 
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactAvailable, this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactUnavailable, this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
+		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
 				PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStop();
 	}
 
 	private void setChatId(final long chatId) {
-		List<Chat> l = XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).getChats();
+		List<Chat> l = XmppService.jaxmpp(getActivity()).getModulesManager().getModule(MessageModule.class).getChats();
 		for (int i = 0; i < l.size(); i++) {
 			Chat c = l.get(i);
 			if (c.getId() == chatId) {
@@ -197,7 +197,7 @@ public class ChatHistoryFragment extends Fragment {
 	}
 
 	protected void updatePresence() {
-		CPresence cp = RosterProvider.getShowOf(chat.getJid().getBareJid());
+		CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getJid().getBareJid());
 		System.out.println("Updating presence to " + cp);
 		// layout.setImagePresence(cp);
 	}

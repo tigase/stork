@@ -6,12 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.tigase.mobile.CPresence;
+import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
+import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.util.Log;
@@ -30,11 +32,17 @@ public class RosterCursor extends AbstractCursor {
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
 			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME };
 
+	private final Context context;
+
 	private final ArrayList<RosterItem> items = new ArrayList<RosterItem>();
 
 	private final Predicate predicate;
 
-	public RosterCursor(RosterStore.Predicate predicate) {
+	private final RosterDisplayTools rdt;
+
+	public RosterCursor(Context ctx, RosterStore.Predicate predicate) {
+		this.rdt = new RosterDisplayTools(ctx);
+		this.context = ctx;
 		this.predicate = predicate;
 		loadData();
 	}
@@ -71,7 +79,7 @@ public class RosterCursor extends AbstractCursor {
 		}
 		case 6: {
 			RosterItem item = items.get(mPos);
-			return RosterProvider.getShowOf(item.getJid()).getId();
+			return rdt.getShowOf(item.getJid()).getId();
 		}
 		case 7: {
 			RosterItem item = items.get(mPos);
@@ -140,18 +148,18 @@ public class RosterCursor extends AbstractCursor {
 	}
 
 	private final void loadData() {
-		List<RosterItem> r = XmppService.jaxmpp().getRoster().getAll(predicate);
+		List<RosterItem> r = XmppService.jaxmpp(context).getRoster().getAll(predicate);
 
 		Collections.sort(r, new Comparator<RosterItem>() {
 
 			@Override
 			public int compare(RosterItem object1, RosterItem object2) {
 				try {
-					String n1 = RosterProvider.getDisplayName(object1);
-					String n2 = RosterProvider.getDisplayName(object2);
+					String n1 = rdt.getDisplayName(object1);
+					String n2 = rdt.getDisplayName(object2);
 
-					CPresence s1 = RosterProvider.getShowOf(object1);
-					CPresence s2 = RosterProvider.getShowOf(object2);
+					CPresence s1 = rdt.getShowOf(object1);
+					CPresence s2 = rdt.getShowOf(object2);
 
 					return createComparable(n1, s1).compareTo(createComparable(n2, s2));
 

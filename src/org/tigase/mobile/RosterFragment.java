@@ -125,7 +125,7 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		XmppService.jaxmpp().addListener(Connector.StateChanged, this.connectorListener);
+		XmppService.jaxmpp(getActivity()).addListener(Connector.StateChanged, this.connectorListener);
 		updateConnectionStatus();
 
 		if (DEBUG)
@@ -134,7 +134,7 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public void onStop() {
-		XmppService.jaxmpp().removeListener(Connector.StateChanged, this.connectorListener);
+		XmppService.jaxmpp(getActivity()).removeListener(Connector.StateChanged, this.connectorListener);
 		super.onStop();
 
 	}
@@ -147,8 +147,8 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void updateConnectionStatus() {
-		final Connector.State st = XmppService.jaxmpp().getConnector() == null ? State.disconnected
-				: XmppService.jaxmpp().getConnector().getState();
+		final Connector.State st = XmppService.jaxmpp(getActivity()).getConnector() == null ? State.disconnected
+				: XmppService.jaxmpp(getActivity()).getConnector().getState();
 		if (DEBUG)
 			Log.i(TAG, "State changed to " + st);
 

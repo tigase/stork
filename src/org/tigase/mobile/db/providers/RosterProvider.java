@@ -4,19 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.tigase.mobile.CPresence;
-import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
-import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -58,58 +49,6 @@ public class RosterProvider extends ContentProvider {
 	};
 
 	private static final String TAG = "tigase";
-
-	public static String getDisplayName(final BareJID jid) {
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
-		return getDisplayName(item);
-	}
-
-	public static String getDisplayName(final RosterItem item) {
-		if (item == null)
-			return null;
-		else if (item.getName() != null && item.getName().length() != 0) {
-			return item.getName();
-		} else {
-			return item.getJid().toString();
-		}
-	}
-
-	public static CPresence getShowOf(final BareJID jid) {
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp().getRoster().get(jid);
-		return getShowOf(item);
-	}
-
-	public static CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
-		try {
-			if (item == null)
-				return CPresence.notinroster;
-			if (item.isAsk())
-				return CPresence.requested;
-			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
-				return CPresence.offline_nonauth;
-			PresenceStore presenceStore = XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).getPresence();
-			Presence p = presenceStore.getBestPresence(item.getJid());
-			CPresence r = CPresence.offline;
-			if (p != null) {
-				if (p.getType() == StanzaType.unavailable)
-					r = CPresence.offline;
-				else if (p.getShow() == Show.online)
-					r = CPresence.online;
-				else if (p.getShow() == Show.away)
-					r = CPresence.away;
-				else if (p.getShow() == Show.chat)
-					r = CPresence.chat;
-				else if (p.getShow() == Show.dnd)
-					r = CPresence.dnd;
-				else if (p.getShow() == Show.xa)
-					r = CPresence.xa;
-			}
-			return r;
-		} catch (Exception e) {
-			Log.e(TAG, "Can't calculate presence", e);
-			return CPresence.error;
-		}
-	}
 
 	private MessengerDatabaseHelper dbHelper;
 
@@ -181,10 +120,10 @@ public class RosterProvider extends ContentProvider {
 				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection
 						+ "; selectionArgs=" + Arrays.toString(selectionArgs));
 
-			c = new RosterCursor(p);
+			c = new RosterCursor(getContext(), p);
 			break;
 		case GROUPS_URI_INDICATOR:
-			c = new GroupsCursor();
+			c = new GroupsCursor(getContext());
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);

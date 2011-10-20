@@ -7,6 +7,7 @@ import java.util.List;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 
+import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.util.Log;
@@ -17,9 +18,12 @@ public class GroupsCursor extends AbstractCursor {
 
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_GROUP_NAME };
 
+	private final Context context;
+
 	private final ArrayList<String> items = new ArrayList<String>();
 
-	public GroupsCursor() {
+	public GroupsCursor(Context ctx) {
+		this.context = ctx;
 		loadData();
 	}
 
@@ -101,7 +105,7 @@ public class GroupsCursor extends AbstractCursor {
 	private final void loadData() {
 		synchronized (this.items) {
 			this.items.clear();
-			this.items.addAll(XmppService.jaxmpp().getRoster().getGroups());
+			this.items.addAll(XmppService.jaxmpp(context).getRoster().getGroups());
 			Collections.sort(this.items);
 			this.items.add(0, "All");
 			this.items.add(1, "default");

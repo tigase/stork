@@ -18,7 +18,6 @@ import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -129,8 +128,6 @@ public class JaxmppService extends Service {
 
 	private boolean focused;
 
-	private final Jaxmpp jaxmpp = XmppService.jaxmpp();
-
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
 	private ConnReceiver myConnReceiver;
@@ -164,28 +161,13 @@ public class JaxmppService extends Service {
 	private Show userStatusShow = Show.online;
 
 	public JaxmppService() {
+		super();
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
 		// create a ConsoleHandler
 		Handler handler = new ConsoleHandler();
 		handler.setLevel(Level.ALL);
 		logger.addHandler(handler);
 		logger.setLevel(Level.ALL);
-
-		// for BOSH connector
-		jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, "http://xmpp.tigase.org");
-		// jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL,
-		// "http://messenger.tigase.org:80/bosh");
-
-		// for Socket connector
-		jaxmpp.getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.TRUE);
-
-		// port value is not necessary. Default is 5222
-		jaxmpp.getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
-
-		// "bosh" and "socket" values available
-		jaxmpp.getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
-
-		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
 		if (DEBUG)
 			Log.i(TAG, "creating");
@@ -251,7 +233,7 @@ public class JaxmppService extends Service {
 				if (getState() == State.connected)
 					connectionErrorCounter = 0;
 				if (getState() == State.disconnected)
-					jaxmpp.getPresence().clear(true);
+					getJaxmpp().getPresence().clear(true);
 				if (getState() == State.disconnected) {
 					if (reconnect) {
 						reconnect(true);
@@ -306,8 +288,12 @@ public class JaxmppService extends Service {
 		return info.getType();
 	}
 
+	private final Jaxmpp getJaxmpp() {
+		return XmppService.jaxmpp(getApplicationContext());
+	}
+
 	protected final State getState() {
-		State state = XmppService.jaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		State state = getJaxmpp().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state == null ? State.disconnected : state;
 	}
 
@@ -405,6 +391,11 @@ public class JaxmppService extends Service {
 		if (DEBUG)
 			Log.i(TAG, "onCreate()");
 
+		getJaxmpp().getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.TRUE);
+		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
+		getJaxmpp().getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
+		getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
+
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
 
 			@Override
@@ -430,34 +421,31 @@ public class JaxmppService extends Service {
 		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
 		registerReceiver(focusChangeReceiver, filter);
 
-		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).addListener(
+		getJaxmpp().getModulesManager().getModule(ResourceBinderModule.class).addListener(
 				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded,
-				this.rosterListener);
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemRemoved,
-				this.rosterListener);
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemUpdated,
-				this.rosterListener);
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemAdded, this.rosterListener);
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemRemoved, this.rosterListener);
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).addListener(RosterModule.ItemUpdated, this.rosterListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
 				this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
 				this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactChangedPresence,
+				this.presenceListener);
 
-		XmppService.jaxmpp().addListener(Connector.StateChanged, this.disconnectListener);
+		getJaxmpp().addListener(Connector.StateChanged, this.disconnectListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
+		getJaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
 				this.messageListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.BeforeInitialPresence, this.presenceSendListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.BeforeInitialPresence,
+				this.presenceSendListener);
 
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-		XmppService.jaxmpp().getSessionObject().setProperty(Connector.CONNECTOR_STAGE_KEY, null);
+		getJaxmpp().getSessionObject().setProperty(Connector.CONNECTOR_STAGE_KEY, null);
 		notificationUpdate();
 	}
 
@@ -476,34 +464,34 @@ public class JaxmppService extends Service {
 		this.reconnect = false;
 		Log.i(TAG, "Stopping service");
 		try {
-			jaxmpp.disconnect();
+			getJaxmpp().disconnect();
 			usedNetworkType = null;
 		} catch (JaxmppException e) {
 			Log.e(TAG, "Can't disconnect", e);
 		}
 
-		XmppService.jaxmpp().getModulesManager().getModule(ResourceBinderModule.class).removeListener(
+		getJaxmpp().getModulesManager().getModule(ResourceBinderModule.class).removeListener(
 				ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.BeforeInitialPresence, this.presenceSendListener);
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.BeforeInitialPresence,
+				this.presenceSendListener);
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemAdded,
 				this.rosterListener);
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemRemoved,
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemRemoved,
 				this.rosterListener);
-		XmppService.jaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemUpdated,
+		getJaxmpp().getModulesManager().getModule(RosterModule.class).removeListener(RosterModule.ItemUpdated,
 				this.rosterListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactAvailable, this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactUnavailable, this.presenceListener);
-		XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactAvailable,
+				this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactUnavailable,
+				this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactChangedPresence,
+				this.presenceListener);
 
-		XmppService.jaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
+		getJaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
 
-		XmppService.jaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(MessageModule.MessageReceived,
+		getJaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(MessageModule.MessageReceived,
 				this.messageListener);
 
 		notificationCancel();
@@ -514,7 +502,7 @@ public class JaxmppService extends Service {
 	protected void onPageChanged(int pageIndex) {
 		try {
 			boolean connected = getState() == State.connected
-					&& XmppService.jaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
+					&& getJaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 			Log.d(TAG, "onPageChanged(): " + focused + ", " + pageIndex);
 
 			if (!connected) {
@@ -527,14 +515,14 @@ public class JaxmppService extends Service {
 				focused = true;
 				int pr = prefs.getInt("default_priority", 5);
 
-				XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow,
-						userStatusMessage, pr);
+				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow, userStatusMessage,
+						pr);
 			} else if (focused && pageIndex == -1) {
 				Log.d(TAG, "Sending auto-away presence");
 				focused = false;
 				int pr = prefs.getInt("auto_away_priority", 0);
 
-				XmppService.jaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
+				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
 			}
 		} catch (JaxmppException e) {
 			Log.e(TAG, "Can't update priority!");
@@ -555,9 +543,9 @@ public class JaxmppService extends Service {
 
 		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
 
-		jaxmpp.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-		jaxmpp.getProperties().setUserProperty(SessionObject.USER_JID, jid);
-		jaxmpp.getProperties().setUserProperty(SessionObject.PASSWORD, password);
+		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+		getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);
+		getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
 		try {
 			reconnect();
@@ -587,12 +575,12 @@ public class JaxmppService extends Service {
 							Log.d(TAG, "Logging in with " + active.getTypeName());
 
 						usedNetworkType = active.getType();
-						jaxmpp.login(false);
+						getJaxmpp().login(false);
 					}
 				} catch (Exception e) {
 					++connectionErrorCounter;
 					try {
-						jaxmpp.disconnect(true);
+						getJaxmpp().disconnect(true);
 						usedNetworkType = null;
 					} catch (JaxmppException e1) {
 						Log.w(TAG, "Can't disconnect", e1);
@@ -647,7 +635,7 @@ public class JaxmppService extends Service {
 			if (DEBUG)
 				Log.i(TAG, "Network disconnected!");
 			try {
-				jaxmpp.disconnect(true);
+				getJaxmpp().disconnect(true);
 				usedNetworkType = null;
 			} catch (JaxmppException e) {
 				Log.w(TAG, "Can't disconnect", e);
@@ -694,7 +682,7 @@ public class JaxmppService extends Service {
 					Log.i(TAG, "Found unsetn message: " + jid + " :: " + body);
 
 				try {
-					jaxmpp.send(msg);
+					getJaxmpp().send(msg);
 
 					ContentValues values = new ContentValues();
 					values.put(ChatTableMetaData.FIELD_ID, id);
@@ -719,7 +707,7 @@ public class JaxmppService extends Service {
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
 		int ico = R.drawable.new_message;
 
-		String n = RosterProvider.getDisplayName(event.getMessage().getFrom().getBareJid());
+		String n = (new RosterDisplayTools(getApplicationContext())).getDisplayName(event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().toString();
 
@@ -756,7 +744,7 @@ public class JaxmppService extends Service {
 	}
 
 	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {
-		RosterItem it = XmppService.jaxmpp().getRoster().get(be.getJid().getBareJid());
+		RosterItem it = getJaxmpp().getRoster().get(be.getJid().getBareJid());
 		if (it != null) {
 			Log.i(TAG, "Item " + it.getJid() + " has changed presence");
 			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
