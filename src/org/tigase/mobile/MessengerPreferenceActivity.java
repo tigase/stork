@@ -3,17 +3,15 @@ package org.tigase.mobile;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.util.Log;
 
 public class MessengerPreferenceActivity extends PreferenceActivity {
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	private static final String TAG = "tigase";
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
-		Log.i(TAG, "Zmiana : " + newConfig);
 		super.onConfigurationChanged(newConfig);
 	}
 

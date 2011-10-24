@@ -6,7 +6,12 @@
 	<ImageView android:id="@+id/imageView1" android:src="@drawable/user_avatar" 
  		android:layout_width="fill_parent" 
  		android:layout_height="wrap_content" android:minHeight="60sp"></ImageView>
-	<TextView android:id="@+id/chat_list_item_name"
+	
+	<ImageView android:id="@+id/imageView2" android:src="@drawable/user_offline" 
+ 		android:layout_width="wrap_content"  android:layout_alignRight="@+id/imageView1"
+ 		android:layout_height="wrap_content" android:minHeight="60sp"/>
+	
+	    	<TextView android:id="@+id/chat_list_item_name"
 	 android:layout_width="fill_parent" 
 	 android:textSize="14sp" android:gravity="center" android:text="bmalkow@tigase.org" 
 	 android:layout_height="wrap_content"   android:layout_below="@+id/imageView1" android:lines="1" android:layout_centerInParent="true"></TextView>

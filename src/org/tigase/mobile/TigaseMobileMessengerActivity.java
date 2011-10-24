@@ -5,23 +5,19 @@ import java.util.List;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -362,6 +358,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (extras != null) {
 			if (DEBUG)
 				Log.i(TAG, "Jest extras! " + extras.getString("jid"));
+			incomingExtras = extras;
 		}
 	}
 
@@ -493,14 +490,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.aboutButton:
+		case R.id.aboutButton: {
 			showDialog(ABOUT_DIALOG);
 			break;
-		case R.id.showChatsButton:
+		}
+		case R.id.showChatsButton: {
 			Intent chatListActivity = new Intent(this, ChatListActivity.class);
 			this.startActivityForResult(chatListActivity, REQUEST_CHAT);
 			break;
-		case R.id.closeChatButton:
+		}
+		case R.id.closeChatButton: {
 			final int p = this.currentPage;
 			final AbstractChatManager cm = XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).getChatManager();
 			Chat chat = cm.getChats().get(p - 1);
@@ -513,33 +512,21 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 			viewPager.setCurrentItem(0);
 			break;
-		case R.id.propertiesButton:
+		}
+		case R.id.propertiesButton: {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
 			break;
-		case R.id.disconnectButton:
+		}
+		case R.id.disconnectButton: {
 			stopService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
 			break;
-		case R.id.connectButton:
-			// Toast.makeText(getApplicationContext(), "Connecting...",
-			// Toast.LENGTH_LONG).show();
-
-			SharedPreferences prefs = getSharedPreferences("org.tigase.mobile_preferences", 0);
-			JID jid = JID.jidInstance(prefs.getString("user_jid", null));
-			String password = prefs.getString("user_password", null);
-			String hostname = prefs.getString("hostname", null);
-
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
-					getResources().getString(R.string.app_version));
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SoftwareVersionModule.OS_KEY,
-					"Android " + android.os.Build.VERSION.RELEASE);
-
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SessionObject.USER_JID, jid);
-			XmppService.jaxmpp(this).getProperties().setUserProperty(SessionObject.PASSWORD, password);
-
-			startService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
+		}
+		case R.id.connectButton: {
+			Intent intent = new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class);
+			intent.putExtra("focused", true);
+			startService(intent);
+		}
 		default:
 			break;
 		}

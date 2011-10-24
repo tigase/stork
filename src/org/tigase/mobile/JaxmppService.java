@@ -23,6 +23,7 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
@@ -80,9 +81,9 @@ public class JaxmppService extends Service {
 			NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
 			String info;
 			if (netInfo.isConnected())
-				info = "Nawiˆzano po¸ˆczenie z: " + netInfo.getTypeName();
+				info = "NawiÄ…zano poÅ‚Ä…czenie z: " + netInfo.getTypeName();
 			else
-				info = "Zerwano po¸ˆczenie z: " + netInfo.getTypeName();
+				info = "Zerwano poÅ‚Ä…czenie z: " + netInfo.getTypeName();
 
 			if (DEBUG)
 				Log.i(TAG, info);
@@ -104,7 +105,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -176,9 +177,15 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
-				be.setShow(userStatusShow);
 				be.setStatus(userStatusMessage);
-				be.setPriority(prefs.getInt("default_priority", 5));
+				if (focused) {
+					be.setShow(userStatusShow);
+					be.setPriority(prefs.getInt("default_priority", 5));
+				} else {
+					be.setShow(Show.away);
+					be.setStatus("Auto away");
+					be.setPriority(prefs.getInt("auto_away_priority", 0));
+				}
 			}
 		};
 
@@ -407,7 +414,7 @@ public class JaxmppService extends Service {
 			}
 		};
 
-		this.prefs = getSharedPreferences("org.tigase.mobile_preferences", 0);
+		this.prefs = getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
 
@@ -511,14 +518,16 @@ public class JaxmppService extends Service {
 			}
 
 			if (!focused && pageIndex >= 0) {
-				Log.d(TAG, "Focused. Sending online presence.");
+				if (DEBUG)
+					Log.d(TAG, "Focused. Sending online presence.");
 				focused = true;
 				int pr = prefs.getInt("default_priority", 5);
 
 				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow, userStatusMessage,
 						pr);
 			} else if (focused && pageIndex == -1) {
-				Log.d(TAG, "Sending auto-away presence");
+				if (DEBUG)
+					Log.d(TAG, "Sending auto-away presence");
 				focused = false;
 				int pr = prefs.getInt("auto_away_priority", 0);
 
@@ -536,12 +545,23 @@ public class JaxmppService extends Service {
 		serviceActive = true;
 		this.reconnect = true;
 		super.onStart(intent, startId);
+		if (intent != null) {
+			// Log.i(TAG, intent.getExtras().toString());
+			if (DEBUG)
+				Log.i(TAG, "Found intent! focused=" + intent.getBooleanExtra("focused", false));
+			this.focused = intent.getBooleanExtra("focused", false);
+		}
 
 		JID jid = JID.jidInstance(prefs.getString("user_jid", null));
 		String password = prefs.getString("user_password", null);
 		String hostname = prefs.getString("hostname", null);
 
 		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
+
+		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
+		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
+				getResources().getString(R.string.app_version));
+		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
 		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
 		getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);

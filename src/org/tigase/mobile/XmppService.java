@@ -6,12 +6,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.db.providers.DBChatManager;
+import org.tigase.mobile.db.providers.DBRosterCacheProvider;
 
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.factory.UniversalFactory;
+import tigase.jaxmpp.core.client.factory.UniversalFactory.FactorySpi;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManagerFactory;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatManagerFactory.ChatManagerFactorySpi;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.content.Context;
@@ -29,11 +31,18 @@ public class XmppService {
 	private Jaxmpp jaxmpp;
 
 	private XmppService(final Context context) {
-		ChatManagerFactory.setSpi(new ChatManagerFactorySpi() {
+		UniversalFactory.setSpi(AbstractChatManager.class.getName(), new FactorySpi<AbstractChatManager>() {
 
 			@Override
-			public AbstractChatManager createChatManager() {
+			public AbstractChatManager create() {
 				return new DBChatManager(context);
+			}
+		});
+		UniversalFactory.setSpi(RosterCacheProvider.class.getName(), new FactorySpi<RosterCacheProvider>() {
+
+			@Override
+			public RosterCacheProvider create() {
+				return new DBRosterCacheProvider(context);
 			}
 		});
 

@@ -24,7 +24,7 @@ public class EditIntegerPreference extends EditTextPreference {
 
 	@Override
 	public String getText() {
-		return String.valueOf(getSharedPreferences().getInt(getKey(), 0));
+		return String.valueOf(getSharedPreferences().getInt(getKey(), Context.MODE_PRIVATE));
 	}
 
 	@Override

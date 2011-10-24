@@ -1,10 +1,11 @@
 package org.tigase.mobile;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
@@ -13,15 +14,18 @@ import android.util.Log;
 
 public class RosterDisplayTools {
 
-	private final Context context;
+	private PresenceStore presence;
 
-	public RosterDisplayTools(Context context) {
+	private final RosterStore roster;
+
+	public RosterDisplayTools(final Context context) {
 		super();
-		this.context = context;
+		this.roster = XmppService.jaxmpp(context).getRoster();
+		this.presence = XmppService.jaxmpp(context).getPresence();
 	}
 
 	public String getDisplayName(final BareJID jid) {
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp(context).getRoster().get(jid);
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
 		return getDisplayName(item);
 	}
 
@@ -36,11 +40,21 @@ public class RosterDisplayTools {
 	}
 
 	public CPresence getShowOf(final BareJID jid) {
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.jaxmpp(context).getRoster().get(jid);
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
 		return getShowOf(item);
 	}
 
+	public CPresence getShowOf(final JID jid) {
+		RosterItem ri = roster.get(jid.getBareJid());
+		Presence p = presence.getPresence(jid);
+		return getShowOf(ri, p);
+	}
+
 	public CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
+		return getShowOf(item, null);
+	}
+
+	public CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item, Presence p) {
 		try {
 			if (item == null)
 				return CPresence.notinroster;
@@ -48,8 +62,7 @@ public class RosterDisplayTools {
 				return CPresence.requested;
 			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
 				return CPresence.offline_nonauth;
-			PresenceStore presenceStore = XmppService.jaxmpp(context).getModulesManager().getModule(PresenceModule.class).getPresence();
-			Presence p = presenceStore.getBestPresence(item.getJid());
+			p = p == null ? presence.getBestPresence(item.getJid()) : p;
 			CPresence r = CPresence.offline;
 			if (p != null) {
 				if (p.getType() == StanzaType.unavailable)

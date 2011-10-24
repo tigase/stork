@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -15,11 +17,12 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class ChatListActivity extends Activity {
 
-	public class ImageAdapter extends BaseAdapter {
+	private class ImageAdapter extends BaseAdapter {
 
 		private final ArrayList<Chat> chats = new ArrayList<Chat>();
 
@@ -27,10 +30,16 @@ public class ChatListActivity extends Activity {
 
 		private LayoutInflater mInflater;
 
+		private RosterDisplayTools rdt;
+
+		private final RosterStore roster;
+
 		public ImageAdapter(Context c) {
 			this.chats.addAll(XmppService.jaxmpp(c).getModulesManager().getModule(MessageModule.class).getChats());
 			mContext = c;
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			this.roster = XmppService.jaxmpp(c).getRoster();
+			this.rdt = new RosterDisplayTools(c);
 		}
 
 		@Override
@@ -66,12 +75,43 @@ public class ChatListActivity extends Activity {
 
 			Chat chat = this.chats.get(position);
 
+			String x;
+			RosterItem ri = this.roster.get(chat.getJid().getBareJid());
+			if (ri == null)
+				x = chat.getJid().toString();
+			else
+				x = rdt.getDisplayName(ri);
+
+			final CPresence cp = rdt.getShowOf(chat.getJid());
+
+			ImageView itemPresence = (ImageView) imageView.findViewById(R.id.imageView2);
+			if (cp == null)
+				itemPresence.setImageResource(R.drawable.user_offline);
+			else
+				switch (cp) {
+				case chat:
+				case online:
+					itemPresence.setImageResource(R.drawable.user_available);
+					break;
+				case away:
+					itemPresence.setImageResource(R.drawable.user_away);
+					break;
+				case xa:
+					itemPresence.setImageResource(R.drawable.user_extended_away);
+					break;
+				case dnd:
+					itemPresence.setImageResource(R.drawable.user_busy);
+					break;
+				default:
+					itemPresence.setImageResource(R.drawable.user_offline);
+					break;
+				}
+
 			TextView tv = (TextView) imageView.findViewById(R.id.chat_list_item_name);
-			tv.setText(chat.getJid().toString());
+			tv.setText(x);
 
 			return imageView;
 		}
-
 	}
 
 	@Override

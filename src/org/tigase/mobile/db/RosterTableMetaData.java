@@ -28,6 +28,4 @@ public class RosterTableMetaData implements BaseColumns {
 
 	public static final String GROUPS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.groups";
 
-	// public static final String TABLE_NAME = "roster";
-
 }
