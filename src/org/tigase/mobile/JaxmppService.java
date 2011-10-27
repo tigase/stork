@@ -541,9 +541,7 @@ public class JaxmppService extends Service {
 	@Override
 	public void onStart(Intent intent, int startId) {
 		if (DEBUG)
-			Log.i(TAG, "onStart()");
-		serviceActive = true;
-		this.reconnect = true;
+			Log.i(TAG, "onStartCommand()");
 		super.onStart(intent, startId);
 		if (intent != null) {
 			// Log.i(TAG, intent.getExtras().toString());
@@ -552,9 +550,22 @@ public class JaxmppService extends Service {
 			this.focused = intent.getBooleanExtra("focused", false);
 		}
 
-		JID jid = JID.jidInstance(prefs.getString("user_jid", null));
-		String password = prefs.getString("user_password", null);
-		String hostname = prefs.getString("hostname", null);
+		final JID jid = JID.jidInstance(prefs.getString("user_jid", null));
+		final String password = prefs.getString("user_password", null);
+		final String hostname = prefs.getString("hostname", null);
+
+		if (jid == null || password == null || password.length() == 0 || hostname == null || hostname.length() == 0) {
+			Intent x = new Intent().setClass(this, MessengerPreferenceActivity.class);
+			x.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			x.putExtra("missingLogin", Boolean.TRUE);
+			getApplicationContext().startActivity(x);
+
+			stopSelf();
+
+			return;
+		}
+		serviceActive = true;
+		this.reconnect = true;
 
 		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
 

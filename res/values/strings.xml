@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="pref_autostart_title">Autostart</string>
+    <string name="pref_autostart_summary">Connects after phone starts</string>
     <string name="showChatsButton">Show chats</string>
     <string name="chat_list_title">Active chats</string>
     <string name="app_name">Tigase Messenger</string>
@@ -8,7 +10,7 @@
     <string name="logoutButton">Disconnect</string>
     <string name="propertiesButton">Settings</string>
     <string name="preferencesTitle">Settings</string>
-    <string name="app_version">0.0.4 (2011-10-24)</string>
+    <string name="app_version">0.0.5 (2011-10-27)</string>
     <string name="closeChatButton">Close chat</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>

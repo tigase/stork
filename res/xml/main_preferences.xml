@@ -14,6 +14,9 @@
 		<EditTextPreference android:summary="@string/pref_login_hostname_summary"
 			android:title="@string/pref_login_hostname_title" android:key="hostname"
 			android:dialogTitle="@string/pref_login_hostname_dialog"></EditTextPreference>
+		<CheckBoxPreference android:summary="@string/pref_autostart_summary"
+			android:title="@string/pref_autostart_title" android:key="autostart"
+			 />
 	</PreferenceCategory>
 
 	<PreferenceCategory android:key="gui_details"
