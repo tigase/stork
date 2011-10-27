@@ -5,7 +5,7 @@
 
 	<FrameLayout android:id="@+id/openChatNotifier"
 		android:layout_height="fill_parent" android:layout_width="fill_parent"
-		android:background="#000070" android:layout_alignBottom="@+id/roster_item_precence">
+		android:background="#ADD8E6" android:layout_alignBottom="@+id/roster_item_precence">
 
 
 	</FrameLayout>

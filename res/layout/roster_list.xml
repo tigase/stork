@@ -7,7 +7,7 @@
 		android:background="@android:drawable/title_bar_tall" android:padding="0dp"
 		android:layout_height="26dp">
 
-		<TextView android:textColor="#ffffff" android:layout_width="fill_parent"
+		<TextView  android:layout_width="fill_parent" android:textColor="@color/title_bar_text_color"
 			android:paddingLeft="5dp" android:layout_height="wrap_content"
 			android:text="@string/app_name" android:id="@+id/textView1"
 			android:textSize="14dp" android:layout_centerVertical="true"
