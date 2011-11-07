@@ -27,7 +27,7 @@
 		
 	<TextView android:id="@+id/chat_item_body" 
 		android:layout_height="wrap_content" 
-		android:layout_width="fill_parent"
+		android:layout_width="fill_parent" android:autoLink="all"
 		android:layout_toRightOf="@+id/imageView1" 
 			android:layout_below="@+id/chat_item_nickname" android:text="body">
 		</TextView>

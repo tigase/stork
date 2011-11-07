@@ -6,8 +6,10 @@ import org.tigase.mobile.db.ChatTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.content.Context;
 import android.database.Cursor;
+import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.ImageView;
@@ -70,33 +72,13 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		}
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
-
-		final String txt = cursor.getString(mFrom[1]);
-
-		webview.setText(txt);
+		final String txt = EscapeUtils.escape(cursor.getString(mFrom[1]));
+		webview.setText(Html.fromHtml(txt));
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
 		Date t = new Date(cursor.getLong(mFrom[0]));
 		timestamp.setText(df.format(t));
 
-	}
-
-	private String buildHtmlCode(int type, String articleDescription) {
-		String html = "";
-		String style = "";
-
-		style += "<style>" + "body { color: ";
-		if (type == 0)
-			style += "blue";
-		else if (type == 0)
-			style += "red";
-		else
-			style += "#f0f0f0";
-		style += "; font-size: 14px;}" + "</style>";
-
-		html += "<html>" + "<head>" + style + "</head>" + "<body>" + articleDescription + "</body>" + "</html>";
-
-		return html;
 	}
 
 	private void findColumns(String[] from, Cursor mCursor) {

@@ -105,7 +105,7 @@ public class ChatHistoryFragment extends Fragment {
 
 		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
 
-		ChatAdapter ad = new ChatAdapter(getActivity().getApplicationContext(), R.layout.chat_item, c);
+		ChatAdapter ad = new ChatAdapter(inflater.getContext(), R.layout.chat_item, c);
 		lv.setAdapter(ad);
 		ad.registerDataSetObserver(new DataSetObserver() {
 
