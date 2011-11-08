@@ -30,7 +30,8 @@ public class RosterCursor extends AbstractCursor {
 
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
-			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME };
+			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME,
+			RosterTableMetaData.FIELD_STATUS_MESSAGE };
 
 	private final Context context;
 
@@ -86,6 +87,10 @@ public class RosterCursor extends AbstractCursor {
 			String x = item.getGroups().size() == 0 ? "default" : item.getGroups().get(0);
 			return x;
 		}
+		case 8: {
+			RosterItem item = items.get(mPos);
+			return rdt.getStatusMessageOf(item);
+		}
 		default:
 			throw new CursorIndexOutOfBoundsException("Unknown column!");
 		}
@@ -139,7 +144,8 @@ public class RosterCursor extends AbstractCursor {
 
 	@Override
 	public String getString(int column) {
-		return String.valueOf(get(column));
+		Object s = get(column);
+		return s == null ? null : String.valueOf(s);
 	}
 
 	@Override

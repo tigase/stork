@@ -8,6 +8,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.Html;
 import android.text.method.SingleLineTransformationMethod;
 import android.view.View;
 import android.widget.ImageView;
@@ -17,7 +18,7 @@ import android.widget.TextView;
 public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
-			RosterTableMetaData.FIELD_PRESENCE };
+			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE };
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
 	static Context staticContext;
@@ -65,8 +66,6 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		Integer p = cursor.getInt(mFrom[2]);
 		CPresence cp = CPresence.valueOf(p);
 
-		itemDescription.setText(cp == null ? CPresence.offline.name() : cp.name());
-
 		if (cp == null)
 			itemPresence.setImageResource(R.drawable.user_offline);
 		else
@@ -88,6 +87,12 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 				itemPresence.setImageResource(R.drawable.user_offline);
 				break;
 			}
+
+		String status = cursor.getString(mFrom[3]);
+		if (status != null) {
+			itemDescription.setText(Html.fromHtml(status));
+		} else
+			itemDescription.setText("");
 
 	}
 

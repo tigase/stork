@@ -85,4 +85,19 @@ public class RosterDisplayTools {
 		}
 	}
 
+	public String getStatusMessageOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
+		try {
+			if (item == null)
+				return null;
+			Presence p = presence.getBestPresence(item.getJid());
+			if (p != null && p.getType() == null) {
+				return p.getStatus();
+			} else
+				return null;
+		} catch (Exception e) {
+			Log.e("tigase", "Can't calculate presence", e);
+			return null;
+		}
+	}
+
 }

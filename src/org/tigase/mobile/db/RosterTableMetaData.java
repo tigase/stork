@@ -22,6 +22,8 @@ public class RosterTableMetaData implements BaseColumns {
 
 	public static final String FIELD_PRESENCE = "presence";
 
+	public static final String FIELD_STATUS_MESSAGE = "status";
+
 	public static final String FIELD_SUBSCRIPTION = "subscription";
 
 	public static final String GROUP_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.groupitem";
