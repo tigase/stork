@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="pref_entertosend_summary">If checked, then Enter will send your message</string>
+    <string name="pref_entertosend_title">Enter to send</string>
     <string name="pref_autostart_title">Autostart</string>
     <string name="pref_autostart_summary">Connects after phone starts</string>
     <string name="showChatsButton">Show chats</string>

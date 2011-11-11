@@ -1,49 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-	android:key="tigase_messenger_preferences" android:title="@string/preferencesTitle">
+    android:key="tigase_messenger_preferences"
+    android:title="@string/preferencesTitle" >
 
-	<PreferenceCategory android:key="login_data" android:title="@string/pref_login_section_title"
-		android:summary="@string/pref_login_section_summary" xmlns:android="http://schemas.android.com/apk/res/android">
-		<EditTextPreference android:key="user_jid"
-			android:dialogTitle="@string/pref_login_jid_dialog" android:summary="@string/pref_login_jid_summary"
-			android:title="@string/pref_login_jid_title" />
-		<EditTextPreference android:key="user_password"
-			android:dialogTitle="@string/pref_login_password_dialog"
-			android:summary="@string/pref_login_password_summary" android:title="@string/pref_login_password_title"
-			android:password="true"></EditTextPreference>
-		<EditTextPreference android:summary="@string/pref_login_hostname_summary"
-			android:title="@string/pref_login_hostname_title" android:key="hostname"
-			android:dialogTitle="@string/pref_login_hostname_dialog"></EditTextPreference>
-		<CheckBoxPreference android:summary="@string/pref_autostart_summary"
-			android:title="@string/pref_autostart_title" android:key="autostart"
-			 />
-	</PreferenceCategory>
+    <PreferenceCategory
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:key="login_data"
+        android:summary="@string/pref_login_section_summary"
+        android:title="@string/pref_login_section_title" >
 
-	<PreferenceCategory android:key="gui_details"
-		android:title="@string/pref_login_ui_section_title" xmlns:android="http://schemas.android.com/apk/res/android">
+        <EditTextPreference
+            android:dialogTitle="@string/pref_login_jid_dialog"
+            android:key="user_jid"
+            android:summary="@string/pref_login_jid_summary"
+            android:title="@string/pref_login_jid_title" />
 
-		<ListPreference android:key="notification_type"
-			android:defaultValue="always" android:title="@string/pref_login_ui_notification_title"
-			android:entries="@array/app_icon_options" android:entryValues="@array/app_icon_options_values" />
+        <EditTextPreference
+            android:dialogTitle="@string/pref_login_password_dialog"
+            android:key="user_password"
+            android:password="true"
+            android:summary="@string/pref_login_password_summary"
+            android:title="@string/pref_login_password_title" >
+        </EditTextPreference>
 
-	</PreferenceCategory>
+        <EditTextPreference
+            android:dialogTitle="@string/pref_login_hostname_dialog"
+            android:key="hostname"
+            android:summary="@string/pref_login_hostname_summary"
+            android:title="@string/pref_login_hostname_title" >
+        </EditTextPreference>
 
-	<PreferenceScreen android:key="advanced_data"
-	android:title="@string/pref_advanced_section_title" android:summary="@string/pref_advanced_section_summary"
-	xmlns:android="http://schemas.android.com/apk/res/android">
-	
-		<org.tigase.mobile.EditIntegerPreference android:summary="@string/pref_reconnect_time_summary" android:defaultValue="5" 
-			android:title="@string/pref_reconnect_time_title" android:key="reconnect_time"
-			android:dialogTitle="@string/pref_reconnect_time_dialog"/>
+        <CheckBoxPreference
+            android:key="autostart"
+            android:summary="@string/pref_autostart_summary"
+            android:title="@string/pref_autostart_title" />
+    </PreferenceCategory>
 
-		<org.tigase.mobile.EditIntegerPreference android:summary="@string/pref_default_priority_summary" android:defaultValue="5" 
-			android:title="@string/pref_default_priority_title" android:key="default_priority"
-			android:dialogTitle="@string/pref_default_priority_dialog"/>
-		<org.tigase.mobile.EditIntegerPreference android:summary="@string/pref_auto_away_priority_summary" android:defaultValue="0" 
-			android:title="@string/pref_auto_away_priority_title" android:key="away_priority"
-			android:dialogTitle="@string/pref_auto_away_priority_dialog"/>
+    <PreferenceCategory
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:key="gui_details"
+        android:title="@string/pref_login_ui_section_title" >
 
+        <ListPreference
+            android:defaultValue="always"
+            android:entries="@array/app_icon_options"
+            android:entryValues="@array/app_icon_options_values"
+            android:key="notification_type"
+            android:title="@string/pref_login_ui_notification_title" />
 
-	</PreferenceScreen>
+        <CheckBoxPreference
+            android:key="enter_to_send" android:defaultValue="true"
+            android:summary="@string/pref_entertosend_summary"
+            android:title="@string/pref_entertosend_title" />
+    </PreferenceCategory>
+
+    <PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:key="advanced_data"
+        android:summary="@string/pref_advanced_section_summary"
+        android:title="@string/pref_advanced_section_title" >
+
+        <org.tigase.mobile.EditIntegerPreference
+            android:defaultValue="5"
+            android:dialogTitle="@string/pref_reconnect_time_dialog"
+            android:key="reconnect_time"
+            android:summary="@string/pref_reconnect_time_summary"
+            android:title="@string/pref_reconnect_time_title" />
+
+        <org.tigase.mobile.EditIntegerPreference
+            android:defaultValue="5"
+            android:dialogTitle="@string/pref_default_priority_dialog"
+            android:key="default_priority"
+            android:summary="@string/pref_default_priority_summary"
+            android:title="@string/pref_default_priority_title" />
+
+        <org.tigase.mobile.EditIntegerPreference
+            android:defaultValue="0"
+            android:dialogTitle="@string/pref_auto_away_priority_dialog"
+            android:key="away_priority"
+            android:summary="@string/pref_auto_away_priority_summary"
+            android:title="@string/pref_auto_away_priority_title" />
+    </PreferenceScreen>
 
 </PreferenceScreen>

@@ -9,9 +9,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +29,8 @@ public class ChatView extends LinearLayout {
 	private static final String TAG = "tigase";
 
 	private Chat chat;
+
+	private EditText ed;
 
 	public ChatView(Context context) {
 		super(context);
@@ -44,7 +48,21 @@ public class ChatView extends LinearLayout {
 		if (DEBUG)
 			Log.i(TAG, "Zrobione");
 
-		final EditText ed = (EditText) findViewById(R.id.chat_message_entry);
+		final SharedPreferences prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
+
+		this.ed = (EditText) findViewById(R.id.chat_message_entry);
+		this.ed.setOnKeyListener(new OnKeyListener() {
+
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				boolean ets = prefs.getBoolean("enter_to_send", true);
+				if (ets && keyCode == KeyEvent.KEYCODE_ENTER) {
+					sendMessage();
+					return true;
+				}
+				return false;
+			}
+		});
 
 		final Button b = (Button) findViewById(R.id.chat_send_button);
 		b.setOnClickListener(new OnClickListener() {
@@ -53,10 +71,8 @@ public class ChatView extends LinearLayout {
 			public void onClick(View v) {
 				if (DEBUG)
 					Log.i(TAG, "Klikniete");
-				String t = ed.getText().toString();
-				ed.setText("");
 
-				sendMessage(t);
+				sendMessage();
 
 			}
 		});
@@ -71,7 +87,13 @@ public class ChatView extends LinearLayout {
 		});
 	}
 
-	protected void sendMessage(String t) {
+	protected void sendMessage() {
+		if (ed == null)
+			return;
+
+		String t = ed.getText().toString();
+		ed.setText("");
+
 		if (t == null || t.length() == 0)
 			return;
 		if (DEBUG)
