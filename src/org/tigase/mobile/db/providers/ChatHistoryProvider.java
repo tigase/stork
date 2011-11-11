@@ -34,7 +34,6 @@ public class ChatHistoryProvider extends ContentProvider {
 			put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_STATE);
 			put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.FIELD_THREAD_ID);
 			put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_TIMESTAMP);
-			put(ChatTableMetaData.FIELD_TYPE, ChatTableMetaData.FIELD_TYPE);
 		}
 	};
 
@@ -78,10 +77,8 @@ public class ChatHistoryProvider extends ContentProvider {
 				return insertedItem;
 			}
 			break;
-		case CHAT_ITEM_URI_INDICATOR:
-			throw new IllegalArgumentException("Inserting not supported for URI " + uri);
 		default:
-			throw new IllegalArgumentException("Unknown URI " + uri);
+			throw new IllegalArgumentException("Unsupported URI " + uri);
 		}
 
 		return null;
@@ -122,18 +119,21 @@ public class ChatHistoryProvider extends ContentProvider {
 			qb.setProjectionMap(chatHistoryProjectionMap);
 			qb.appendWhere(ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_OUT_NOT_SENT);
 			break;
-		case CHAT_URI_INDICATOR:
+		case CHAT_URI_INDICATOR: {
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
 			qb.setProjectionMap(chatHistoryProjectionMap);
 			String jid = uri.getPathSegments().get(1);
 			qb.appendWhere(ChatTableMetaData.FIELD_JID + "='" + jid + "'");
 			break;
-		case CHAT_ITEM_URI_INDICATOR:
+		}
+		case CHAT_ITEM_URI_INDICATOR: {
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
 			qb.setProjectionMap(chatHistoryProjectionMap);
-			String id = uri.getPathSegments().get(1);
-			qb.appendWhere(ChatTableMetaData.FIELD_ID + "=" + id + "");
+			List<String> segments = uri.getPathSegments();
+			String id = segments.get(2);
+			qb.appendWhere(ChatTableMetaData.FIELD_ID + "='" + id + "'");
 			break;
+		}
 		default:
 			throw new IllegalArgumentException("Unknown URI ");
 		}
@@ -144,10 +144,6 @@ public class ChatHistoryProvider extends ContentProvider {
 		// int i = c.getCount();
 		c.setNotificationUri(getContext().getContentResolver(), uri);
 		return c;
-	}
-
-	private void sentUnsentMessages() {
-
 	}
 
 	@Override

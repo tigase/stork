@@ -22,17 +22,10 @@ public class ChatTableMetaData implements BaseColumns {
 	 * </ul>
 	 */
 	public static final String FIELD_STATE = "state";
-	public static final String FIELD_THREAD_ID = "thread_id";
-	public static final String FIELD_TIMESTAMP = "timestamp";
 
-	/**
-	 * <ul>
-	 * <li><code>0</code> - incoming</li>
-	 * <li><code>1</code> - outgoing</li>
-	 * </ul>
-	 */
-	@Deprecated
-	public static final String FIELD_TYPE = "type";
+	public static final String FIELD_THREAD_ID = "thread_id";
+
+	public static final String FIELD_TIMESTAMP = "timestamp";
 
 	public final static int STATE_INCOMING = 0;
 

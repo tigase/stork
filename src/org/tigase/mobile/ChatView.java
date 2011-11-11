@@ -91,7 +91,6 @@ public class ChatView extends LinearLayout {
 		values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
 		values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 		values.put(ChatTableMetaData.FIELD_BODY, t);
-		values.put(ChatTableMetaData.FIELD_TYPE, 1);
 		values.put(ChatTableMetaData.FIELD_STATE, state);
 
 		getContext().getContentResolver().insert(uri, values);

@@ -201,7 +201,6 @@ public class JaxmppService extends Service {
 					values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
 					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
-					values.put(ChatTableMetaData.FIELD_TYPE, 0);
 					values.put(ChatTableMetaData.FIELD_STATE, 0);
 
 					getContentResolver().insert(uri, values);

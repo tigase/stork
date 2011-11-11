@@ -1,7 +1,9 @@
 package org.tigase.mobile;
 
+import java.util.Date;
 import java.util.List;
 
+import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -10,16 +12,26 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import android.app.Dialog;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.ClipboardManager;
+import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class ChatHistoryFragment extends Fragment {
 
@@ -63,8 +75,44 @@ public class ChatHistoryFragment extends Fragment {
 		};
 	}
 
+	private void copyMessageBody(final long id) {
+		ClipboardManager clipMan = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+		Cursor cc = null;
+		try {
+			cc = getChatEntry(id);
+			String t = cc.getString(cc.getColumnIndex(ChatTableMetaData.FIELD_BODY));
+			clipMan.setText(t);
+		} finally {
+			if (cc != null && !cc.isClosed())
+				cc.close();
+		}
+
+	}
+
 	public Chat getChat() {
 		return chat;
+	}
+
+	private Cursor getChatEntry(long id) {
+		Cursor cursor = getActivity().getApplicationContext().getContentResolver().query(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid() + "/" + id), null, null, null, null);
+		cursor.moveToNext();
+		return cursor;
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		switch (item.getItemId()) {
+		case R.id.detailsMessage:
+			showMessageDetails(info.id);
+			return true;
+		case R.id.copyMessage:
+			copyMessageBody(info.id);
+			return true;
+		default:
+			return super.onContextItemSelected(item);
+		}
 	}
 
 	@Override
@@ -74,6 +122,13 @@ public class ChatHistoryFragment extends Fragment {
 		if (getArguments() != null) {
 			setChatId(getArguments().getLong("chatId"));
 		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		MenuInflater m = new MenuInflater(getActivity());
+		m.inflate(R.menu.chat_context_menu, menu);
 	}
 
 	@Override
@@ -104,6 +159,17 @@ public class ChatHistoryFragment extends Fragment {
 				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
 
 		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
+		registerForContextMenu(lv);
+		// lv.setOnItemLongClickListener(new OnItemLongClickListener() {
+		//
+		// @Override
+		// public boolean onItemLongClick(AdapterView<?> parent, View view, int
+		// position, long id) {
+		// Men
+		//
+		// return true;
+		// }
+		// });
 
 		ChatAdapter ad = new ChatAdapter(inflater.getContext(), R.layout.chat_item, c);
 		lv.setAdapter(ad);
@@ -194,6 +260,51 @@ public class ChatHistoryFragment extends Fragment {
 			}
 		}
 		throw new RuntimeException("Chat not found!");
+	}
+
+	private void showMessageDetails(final long id) {
+		Cursor cc = null;
+		final java.text.DateFormat df = DateFormat.getDateFormat(getActivity());
+		final java.text.DateFormat tf = DateFormat.getTimeFormat(getActivity());
+
+		try {
+			cc = getChatEntry(id);
+
+			Dialog alertDialog = new Dialog(getActivity());
+			alertDialog.setContentView(R.layout.chat_item_details_dialog);
+			alertDialog.setCancelable(true);
+			alertDialog.setCanceledOnTouchOutside(true);
+			alertDialog.setTitle("Message details");
+
+			TextView msgDetSender = (TextView) alertDialog.findViewById(R.id.msgDetSender);
+			msgDetSender.setText(cc.getString(cc.getColumnIndex(ChatTableMetaData.FIELD_JID)));
+
+			Date timestamp = new Date(cc.getLong(cc.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
+			TextView msgDetReceived = (TextView) alertDialog.findViewById(R.id.msgDetReceived);
+			msgDetReceived.setText(df.format(timestamp) + " " + tf.format(timestamp));
+
+			final int state = cc.getInt(cc.getColumnIndex(ChatTableMetaData.FIELD_STATE));
+			TextView msgDetState = (TextView) alertDialog.findViewById(R.id.msgDetState);
+			switch (state) {
+			case ChatTableMetaData.STATE_INCOMING:
+				msgDetState.setText("Received");
+				break;
+			case ChatTableMetaData.STATE_OUT_SENT:
+				msgDetState.setText("Sent");
+				break;
+			case ChatTableMetaData.STATE_OUT_NOT_SENT:
+				msgDetState.setText("Not sent");
+				break;
+			default:
+				msgDetState.setText("?");
+				break;
+			}
+
+			alertDialog.show();
+		} finally {
+			if (cc != null && !cc.isClosed())
+				cc.close();
+		}
 	}
 
 	protected void updatePresence() {

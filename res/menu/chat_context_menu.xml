@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/copyMessage"
+        android:title="Copy"></item>
+
+    <item
+        android:id="@+id/detailsMessage"
+        android:title="Details"></item>
+
+</menu>

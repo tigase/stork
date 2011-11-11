@@ -29,7 +29,6 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
 		sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
-		sql += ChatTableMetaData.FIELD_TYPE + " INTEGER, ";
 		sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
 		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
 		sql += ChatTableMetaData.FIELD_THREAD_ID + " TEXT, ";

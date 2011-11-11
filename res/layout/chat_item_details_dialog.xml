@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:stretchColumns="1" >
+
+    <TableRow >
+
+        <TextView
+            android:layout_column="1"
+            android:padding="3dip"
+            android:text="Chat with" />
+
+        <TextView
+            android:id="@+id/msgDetSender"
+            android:gravity="right"
+            android:padding="3dip"
+            android:text="Ctrl-O" />
+    </TableRow>
+
+    <TableRow >
+
+        <TextView
+            android:layout_column="1"
+            android:padding="3dip"
+            android:text="Timestamp" />
+
+        <TextView
+            android:id="@+id/msgDetReceived"
+            android:gravity="right"
+            android:padding="3dip"
+            android:text="Ctrl-O" />
+    </TableRow>
+
+    <TableRow >
+
+        <TextView
+            android:layout_column="1"
+            android:padding="3dip"
+            android:text="State" />
+
+        <TextView
+            android:id="@+id/msgDetState"
+            android:gravity="right"
+            android:padding="3dip"
+            android:text="Ctrl-O" />
+    </TableRow>
+
+</TableLayout>
