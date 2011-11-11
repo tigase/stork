@@ -122,6 +122,22 @@ public class RosterProvider extends ContentProvider {
 
 			c = new RosterCursor(getContext(), p);
 			break;
+		case ROSTER_ITEM_URI_INDICATOR:
+			final String l = uri.getLastPathSegment();
+			p = new Predicate() {
+
+				@Override
+				public boolean match(RosterItem item) {
+					if (item.getJid().toString().equals(l))
+						return true;
+					else if (("" + item.getId()).equals(l))
+						return true;
+					else
+						return false;
+				}
+			};
+			c = new RosterCursor(getContext(), p);
+			break;
 		case GROUPS_URI_INDICATOR:
 			c = new GroupsCursor(getContext());
 			break;

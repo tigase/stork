@@ -13,10 +13,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
 
@@ -58,6 +63,34 @@ public class RosterFragment extends Fragment {
 	}
 
 	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		switch (item.getItemId()) {
+		case R.id.contactDetails: {
+			Intent intent = new Intent(getActivity().getApplicationContext(), VCardViewActivity.class);
+			intent.putExtra("itemId", info.id);
+			this.startActivityForResult(intent, 0);
+
+			return true;
+		}
+		default:
+			return super.onContextItemSelected(item);
+		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+
+		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
+		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+			MenuInflater m = new MenuInflater(getActivity());
+			m.inflate(R.menu.roster_context_menu, menu);
+		}
+	}
+
+	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onCreateView()");
@@ -70,6 +103,7 @@ public class RosterFragment extends Fragment {
 
 		// listView.setSaveEnabled(true);
 		listView.setAdapter(adapter);
+		registerForContextMenu(listView);
 
 		listView.setOnChildClickListener(new OnChildClickListener() {
 
