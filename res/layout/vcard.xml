@@ -7,78 +7,105 @@
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Full Name:" />
+            android:text="Full Name:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_fn"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow >
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Nickname:" />
+            android:text="Nickname:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_nickname"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow >
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Birthday:" />
+            android:text="Birthday:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_bday"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow >
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Phone:" />
+            android:text="Phone:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_home_tel_voice"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:autoLink="all"
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow >
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Homepage" />
+            android:text="Homepage:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_url"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:autoLink="all"
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow >
 
         <TextView
             android:layout_column="1"
+            android:gravity="right"
             android:padding="3dip"
-            android:text="Email" />
+            android:text="Email:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/vcard_home_mail"
-            android:gravity="right"
-            android:padding="3dip" />
+            android:autoLink="all"
+            android:padding="3dip"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="bold" />
     </TableRow>
 
 </TableLayout>

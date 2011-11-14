@@ -32,7 +32,6 @@ public class VCardViewActivity extends Activity {
 		((TextView) findViewById(R.id.vcard_url)).setText(vcard.getUrl());
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
