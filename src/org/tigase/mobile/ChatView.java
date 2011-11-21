@@ -11,6 +11,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -98,25 +99,36 @@ public class ChatView extends LinearLayout {
 			return;
 		if (DEBUG)
 			Log.d(TAG, "Send: " + t);
-		int state;
-		try {
-			chat.sendMessage(t);
-			state = ChatTableMetaData.STATE_OUT_SENT;
-		} catch (Exception e) {
-			state = ChatTableMetaData.STATE_OUT_NOT_SENT;
-			Log.e(TAG, e.getMessage(), e);
-		}
 
-		Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
+		AsyncTask<String, Void, Void> task = new AsyncTask<String, Void, Void>() {
+			@Override
+			public Void doInBackground(String... ts) {
+				String t = ts[0];
+				Log.d(TAG, "Send: " + t);
+				int state;
+				try {
+					chat.sendMessage(t);
+					state = ChatTableMetaData.STATE_OUT_SENT;
+				} catch (Exception e) {
+					state = ChatTableMetaData.STATE_OUT_NOT_SENT;
+					Log.e(TAG, e.getMessage(), e);
+				}
+				// dbHelper.addChatHistory(1, chat, t);
 
-		ContentValues values = new ContentValues();
-		values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
-		values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
-		values.put(ChatTableMetaData.FIELD_BODY, t);
-		values.put(ChatTableMetaData.FIELD_STATE, state);
+				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
 
-		getContext().getContentResolver().insert(uri, values);
+				ContentValues values = new ContentValues();
+				values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
+				values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+				values.put(ChatTableMetaData.FIELD_BODY, t);
+				values.put(ChatTableMetaData.FIELD_STATE, state);
 
+				getContext().getContentResolver().insert(uri, values);
+
+				return null;
+			}
+		};
+		task.execute(t);
 	}
 
 	public void setChat(Chat chat) {
