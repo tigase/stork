@@ -10,16 +10,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
@@ -32,8 +37,12 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEv
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
@@ -684,6 +693,40 @@ public class JaxmppService extends Service {
 
 	}
 
+	private void retrieveVCard(final BareJID jid) {
+		try {
+			getJaxmpp().getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid),
+					new VCardAsyncCallback() {
+
+						@Override
+						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+						}
+
+						@Override
+						protected void onVCardReceived(VCard vcard) throws XMLException {
+							try {
+								if (vcard.getPhotoVal() != null && vcard.getPhotoVal().length() > 0) {
+									ContentValues values = new ContentValues();
+									byte[] buffer = Base64.decode(vcard.getPhotoVal());
+
+									values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
+									getContentResolver().insert(Uri.parse(RosterProvider.VCARD_URI + "/" + jid.toString()),
+											values);
+								}
+							} catch (Exception e) {
+								Log.e("tigase", "WTF?", e);
+							}
+						}
+					});
+		} catch (Exception e) {
+			Log.e("tigase", "WTF?", e);
+		}
+	}
+
 	protected void sendUnsentMessages() {
 		final Cursor c = getApplication().getContentResolver().query(Uri.parse(ChatHistoryProvider.UNSENT_MESSAGES_URI), null,
 				null, null, null);
@@ -779,6 +822,21 @@ public class JaxmppService extends Service {
 			Log.i(TAG, "Item " + it.getJid() + " has changed presence");
 			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
 			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+
+			Element x = be != null && be.getPresence() != null ? be.getPresence().getChildrenNS("x", "vcard-temp:x:update")
+					: null;
+			if (x != null) {
+				for (Element c : x.getChildren()) {
+					if (c.getName().equals("photo") && c.getValue() != null) {
+						String sha = c.getValue();
+						String isha = it.getData("photo");
+						if (sha != null && (isha == null || !isha.equalsIgnoreCase(sha))) {
+							retrieveVCard(it.getJid());
+						}
+					} else if (c.getName().equals("photo") && c.getValue() == null) {
+					}
+				}
+			}
 		}
 	}
 

@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
@@ -66,6 +67,7 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 						ri.getGroups().add(string);
 					}
 				}
+				updateAvatarData(ri);
 				items.add(ri);
 			}
 		} finally {
@@ -107,6 +109,21 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
+		}
+
+	}
+
+	private void updateAvatarData(RosterItem item) {
+		final Cursor c = dbHelper.getReadableDatabase().rawQuery(
+				"SELECT * FROM " + VCardsCacheTableMetaData.TABLE_NAME + " WHERE " + VCardsCacheTableMetaData.FIELD_JID + "='"
+						+ item.getJid() + "'", null);
+		try {
+			while (c.moveToNext()) {
+				String sha = c.getString(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_HASH));
+				item.setData("photo", sha);
+			}
+		} finally {
+			c.close();
 		}
 
 	}

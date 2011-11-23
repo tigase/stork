@@ -7,6 +7,8 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.text.Html;
 import android.text.method.SingleLineTransformationMethod;
@@ -18,7 +20,7 @@ import android.widget.TextView;
 public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
-			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE };
+			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR };
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
 	static Context staticContext;
@@ -54,6 +56,7 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 		View openChatNotifier = view.findViewById(R.id.openChatNotifier);
 
+		ImageView itemAvatar = (ImageView) view.findViewById(R.id.imageView1);
 		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
 
 		String name = cursor.getString(mFrom[1]);
@@ -93,6 +96,14 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 			itemDescription.setText(Html.fromHtml(status));
 		} else
 			itemDescription.setText("");
+
+		byte[] avatar = cursor.getBlob(mFrom[4]);
+		if (avatar != null) {
+			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
+			itemAvatar.setImageBitmap(bmp);
+		} else {
+			itemAvatar.setImageResource(R.drawable.user_avatar);
+		}
 
 	}
 

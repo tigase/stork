@@ -3,6 +3,7 @@ package org.tigase.mobile.db.providers;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,7 +14,7 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 4;
+	public static final Integer DATABASE_VERSION = 6;
 
 	private static final boolean DEBUG = false;
 
@@ -55,15 +56,37 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += RosterCacheTableMetaData.FIELD_SUBSCRIPTION + " TEXT";
 		sql += ");";
 		db.execSQL(sql);
+
+		sql = "CREATE TABLE " + VCardsCacheTableMetaData.TABLE_NAME + " (";
+		sql += VCardsCacheTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += VCardsCacheTableMetaData.FIELD_JID + " TEXT, ";
+		sql += VCardsCacheTableMetaData.FIELD_HASH + " TEXT, ";
+		sql += VCardsCacheTableMetaData.FIELD_DATA + " BLOB, ";
+		sql += VCardsCacheTableMetaData.FIELD_TIMESTAMP + " DATETIME";
+		sql += ");";
+		db.execSQL(sql);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
-		db.execSQL("DROP TABLE IF EXISTS " + OpenChatsTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + RosterCacheTableMetaData.TABLE_NAME);
-		onCreate(db);
+		if (oldVersion == 5 && newVersion == 6) {
+			db.execSQL("DROP TABLE IF EXISTS " + VCardsCacheTableMetaData.TABLE_NAME);
+			String sql = "CREATE TABLE " + VCardsCacheTableMetaData.TABLE_NAME + " (";
+			sql += VCardsCacheTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+			sql += VCardsCacheTableMetaData.FIELD_JID + " TEXT, ";
+			sql += VCardsCacheTableMetaData.FIELD_HASH + " TEXT, ";
+			sql += VCardsCacheTableMetaData.FIELD_DATA + " BLOB, ";
+			sql += VCardsCacheTableMetaData.FIELD_TIMESTAMP + " DATETIME";
+			sql += ");";
+			db.execSQL(sql);
+
+		} else {
+			Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
+			db.execSQL("DROP TABLE IF EXISTS " + OpenChatsTableMetaData.TABLE_NAME);
+			db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
+			db.execSQL("DROP TABLE IF EXISTS " + RosterCacheTableMetaData.TABLE_NAME);
+			onCreate(db);
+		}
 	}
 
 }

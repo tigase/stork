@@ -1,111 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="2px" >
 
-    <TableRow >
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Full Name:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-
+        <ImageView
+            android:id="@+id/vcard_avatar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+             />
+<!-- android:src="@drawable/blank_polaroid_frame" -->
         <TextView
             android:id="@+id/vcard_fn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/vcard_avatar"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="34dp"
             android:padding="3dip"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="bold" />
-    </TableRow>
+    </RelativeLayout>
 
-    <TableRow >
+    <TableLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/relativeLayout1" >
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Nickname:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TableRow >
 
-        <TextView
-            android:id="@+id/vcard_nickname"
-            android:padding="3dip"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-    </TableRow>
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Nickname:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <TableRow >
+            <TextView
+                android:id="@+id/vcard_nickname"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Birthday:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TableRow >
 
-        <TextView
-            android:id="@+id/vcard_bday"
-            android:padding="3dip"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-    </TableRow>
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Birthday:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <TableRow >
+            <TextView
+                android:id="@+id/vcard_bday"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Phone:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TableRow >
 
-        <TextView
-            android:id="@+id/vcard_home_tel_voice"
-            android:autoLink="all"
-            android:padding="3dip"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-    </TableRow>
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Phone:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <TableRow >
+            <TextView
+                android:id="@+id/vcard_home_tel_voice"
+                android:autoLink="all"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Homepage:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TableRow >
 
-        <TextView
-            android:id="@+id/vcard_url"
-            android:autoLink="all"
-            android:padding="3dip"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-    </TableRow>
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Homepage:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <TableRow >
+            <TextView
+                android:id="@+id/vcard_url"
+                android:autoLink="all"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
 
-        <TextView
-            android:layout_column="1"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="Email:"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TableRow >
 
-        <TextView
-            android:id="@+id/vcard_home_mail"
-            android:autoLink="all"
-            android:padding="3dip"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-    </TableRow>
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Email:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-</TableLayout>
+            <TextView
+                android:id="@+id/vcard_home_mail"
+                android:autoLink="all"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
+    </TableLayout>
+
+</RelativeLayout>

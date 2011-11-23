@@ -10,6 +10,8 @@ public class RosterTableMetaData implements BaseColumns {
 
 	public static final String FIELD_ASK = "ask";
 
+	public static final String FIELD_AVATAR = "avatar";
+
 	public static final String FIELD_DISPLAY_NAME = "display";
 
 	public static final String FIELD_GROUP_NAME = "group";

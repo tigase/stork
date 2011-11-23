@@ -3,19 +3,23 @@ package org.tigase.mobile.db.providers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import org.tigase.mobile.CPresence;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.Context;
 import android.database.AbstractCursor;
+import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 public class RosterCursor extends AbstractCursor {
@@ -28,12 +32,16 @@ public class RosterCursor extends AbstractCursor {
 		return r;
 	}
 
+	private HashMap<RosterItem, byte[]> avatarCache = new HashMap<RosterItem, byte[]>();
+
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
 			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME,
-			RosterTableMetaData.FIELD_STATUS_MESSAGE };
+			RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR };
 
 	private final Context context;
+
+	private final SQLiteDatabase db;
 
 	private final ArrayList<RosterItem> items = new ArrayList<RosterItem>();
 
@@ -41,10 +49,11 @@ public class RosterCursor extends AbstractCursor {
 
 	private final RosterDisplayTools rdt;
 
-	public RosterCursor(Context ctx, RosterStore.Predicate predicate) {
+	public RosterCursor(Context ctx, SQLiteDatabase sqLiteDatabase, RosterStore.Predicate predicate) {
 		this.rdt = new RosterDisplayTools(ctx);
 		this.context = ctx;
 		this.predicate = predicate;
+		this.db = sqLiteDatabase;
 		loadData();
 	}
 
@@ -91,9 +100,19 @@ public class RosterCursor extends AbstractCursor {
 			RosterItem item = items.get(mPos);
 			return rdt.getStatusMessageOf(item);
 		}
+		case 9: {
+			RosterItem item = items.get(mPos);
+			return readAvatar(item);
+		}
 		default:
 			throw new CursorIndexOutOfBoundsException("Unknown column!");
 		}
+	}
+
+	@Override
+	public byte[] getBlob(int column) {
+		Object value = get(column);
+		return (byte[]) value;
 	}
 
 	@Override
@@ -179,6 +198,33 @@ public class RosterCursor extends AbstractCursor {
 			this.items.clear();
 			this.items.addAll(r);
 		}
+	}
+
+	private byte[] readAvatar(RosterItem item) {
+		if (item.getData("photo") == null)
+			return null;
+		if (avatarCache.containsKey(item)) {
+			if (DEBUG)
+				Log.d("tigase", "Getting from cache avatar of user " + item.getJid());
+			return avatarCache.get(item);
+		}
+		if (DEBUG)
+			Log.d("tigase", "Reading avatar of user " + item.getJid());
+		final Cursor c = db.rawQuery("SELECT * FROM " + VCardsCacheTableMetaData.TABLE_NAME + " WHERE "
+				+ VCardsCacheTableMetaData.FIELD_JID + "='" + item.getJid() + "'", null);
+		try {
+			while (c.moveToNext()) {
+				String sha = c.getString(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_HASH));
+				item.setData("photo", sha);
+				byte[] data = c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+				avatarCache.put(item, data);
+				return data;
+			}
+			return null;
+		} finally {
+			c.close();
+		}
+
 	}
 
 	@Override

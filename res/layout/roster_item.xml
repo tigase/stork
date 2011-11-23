@@ -10,10 +10,15 @@
 
 	</FrameLayout>
 
+	<ImageView
+	    android:id="@+id/imageView1"
+	    android:layout_width="50sp"
+	    android:layout_height="50sp"
+	    android:layout_alignBottom="@+id/openChatNotifier"
+	    android:layout_alignTop="@+id/openChatNotifier"
+	    android:src="@drawable/blank_polaroid_frame" >
 
-
-	<ImageView android:id="@+id/imageView1" android:src="@drawable/user_avatar"
-		android:layout_width="50sp" android:layout_height="50sp"></ImageView>
+</ImageView>
 	<ImageView android:id="@+id/roster_item_precence"
 		android:src="@drawable/user_offline" android:textSize="16sp"
 		android:gravity="center" android:scaleType="center"

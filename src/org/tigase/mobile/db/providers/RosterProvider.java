@@ -1,17 +1,23 @@
 package org.tigase.mobile.db.providers;
 
+import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
@@ -22,6 +28,8 @@ public class RosterProvider extends ContentProvider {
 	public static final String CONTENT_URI = "content://" + AUTHORITY + "/roster";
 
 	private static final boolean DEBUG = false;
+
+	private static final char[] DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 	private static final int GROUP_ITEM_URI_INDICATOR = 4;
 
@@ -50,6 +58,24 @@ public class RosterProvider extends ContentProvider {
 
 	private static final String TAG = "tigase";
 
+	public static final String VCARD_URI = "content://" + AUTHORITY + "/vcard";
+
+	protected static final int VCARD_URI_INDICATOR = 5;
+
+	public static String encodeHex(byte[] data) {
+
+		int l = data.length;
+
+		char[] out = new char[l << 1];
+
+		for (int i = 0, j = 0; i < l; i++) {
+			out[j++] = DIGITS[(0xF0 & data[i]) >>> 4];
+			out[j++] = DIGITS[0x0F & data[i]];
+		}
+
+		return new String(out);
+	}
+
 	private MessengerDatabaseHelper dbHelper;
 
 	protected final UriMatcher uriMatcher;
@@ -60,6 +86,7 @@ public class RosterProvider extends ContentProvider {
 		this.uriMatcher.addURI(AUTHORITY, "roster/*", ROSTER_ITEM_URI_INDICATOR);
 		this.uriMatcher.addURI(AUTHORITY, "groups", GROUPS_URI_INDICATOR);
 		this.uriMatcher.addURI(AUTHORITY, "groups/*", GROUP_ITEM_URI_INDICATOR);
+		this.uriMatcher.addURI(AUTHORITY, "vcard/*", VCARD_URI_INDICATOR);
 	}
 
 	@Override
@@ -85,7 +112,38 @@ public class RosterProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		throw new RuntimeException("There is nothing to insert! uri=" + uri);
+		final int indicator = uriMatcher.match(uri);
+		if (indicator == VCARD_URI_INDICATOR) {
+			String jid = uri.getLastPathSegment();
+			RosterItem rosterItem = XmppService.jaxmpp(getContext()).getRoster().get(BareJID.bareJIDInstance(jid));
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			db.beginTransaction();
+			try {
+				db.execSQL("DELETE FROM " + VCardsCacheTableMetaData.TABLE_NAME + " WHERE "
+						+ VCardsCacheTableMetaData.FIELD_JID + "='" + jid + "'");
+				try {
+					MessageDigest md = MessageDigest.getInstance("SHA1");
+					md.update(values.getAsByteArray(VCardsCacheTableMetaData.FIELD_DATA));
+					String md5 = encodeHex(md.digest());
+					values.put(VCardsCacheTableMetaData.FIELD_HASH, md5);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+				values.put(VCardsCacheTableMetaData.FIELD_JID, jid);
+				values.put(VCardsCacheTableMetaData.FIELD_TIMESTAMP, (new Date()).getTime());
+				db.insert(VCardsCacheTableMetaData.TABLE_NAME, null, values);
+				db.setTransactionSuccessful();
+			} finally {
+				db.endTransaction();
+			}
+			if (rosterItem != null) {
+				Uri u = Uri.parse(CONTENT_URI + "/" + rosterItem.getId());
+				getContext().getContentResolver().notifyChange(u, null);
+				return u;
+			} else
+				return null;
+		} else
+			throw new RuntimeException("There is nothing to insert! (" + indicator + ") uri=" + uri);
 	}
 
 	@Override
@@ -120,7 +178,7 @@ public class RosterProvider extends ContentProvider {
 				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection
 						+ "; selectionArgs=" + Arrays.toString(selectionArgs));
 
-			c = new RosterCursor(getContext(), p);
+			c = new RosterCursor(getContext(), dbHelper.getReadableDatabase(), p);
 			break;
 		case ROSTER_ITEM_URI_INDICATOR:
 			final String l = uri.getLastPathSegment();
@@ -136,7 +194,7 @@ public class RosterProvider extends ContentProvider {
 						return false;
 				}
 			};
-			c = new RosterCursor(getContext(), p);
+			c = new RosterCursor(getContext(), dbHelper.getReadableDatabase(), p);
 			break;
 		case GROUPS_URI_INDICATOR:
 			c = new GroupsCursor(getContext());
