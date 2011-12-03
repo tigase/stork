@@ -3,12 +3,15 @@ package org.tigase.mobile;
 import java.sql.Date;
 
 import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
@@ -19,17 +22,14 @@ import android.widget.TextView;
 public class ChatAdapter extends SimpleCursorAdapter {
 
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID };
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID, VCardsCacheTableMetaData.FIELD_DATA };
 	private final static int[] names = new int[] { R.id.chat_item_body };
-
-	protected int[] mFrom;
 
 	private final RosterDisplayTools rdt;
 
 	public ChatAdapter(Context context, int layout, Cursor c) {
 		super(context, layout, c, cols, names);
 		this.rdt = new RosterDisplayTools(context);
-		findColumns(cols, c);
 	}
 
 	@Override
@@ -40,10 +40,19 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
 		ImageView msgStatus = (ImageView) view.findViewById(R.id.msgStatus);
 
-		final int state = cursor.getInt(mFrom[2]);
+		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
+
+		ImageView avatar = (ImageView) view.findViewById(R.id.user_avatar);
+		byte[] avatarData = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+		if (avatarData != null) {
+			Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
+			avatar.setImageBitmap(bmp);
+		} else {
+			avatar.setImageResource(R.drawable.user_avatar);
+		}
 
 		if (state == ChatTableMetaData.STATE_INCOMING) {
-			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(mFrom[3]));
+			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_JID)));
 			RosterItem ri = XmppService.jaxmpp(context).getRoster().get(jid);
 			nickname.setText(ri == null ? jid.toString() : rdt.getDisplayName(ri));
 
@@ -72,29 +81,13 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		}
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
-		final String txt = EscapeUtils.escape(cursor.getString(mFrom[1]));
+		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
 		webview.setText(Html.fromHtml(txt));
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
-		Date t = new Date(cursor.getLong(mFrom[0]));
+		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
 		timestamp.setText(df.format(t));
 
 	}
 
-	private void findColumns(String[] from, Cursor mCursor) {
-		int i;
-		int count = from.length;
-		if (mFrom == null) {
-			mFrom = new int[count];
-		}
-		if (mCursor != null) {
-			for (i = 0; i < count; i++) {
-				mFrom[i] = mCursor.getColumnIndexOrThrow(from[i]);
-			}
-		} else {
-			for (i = 0; i < count; i++) {
-				mFrom[i] = -1;
-			}
-		}
-	}
 }

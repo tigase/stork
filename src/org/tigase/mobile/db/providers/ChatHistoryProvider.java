@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -28,12 +29,12 @@ public class ChatHistoryProvider extends ContentProvider {
 
 		private static final long serialVersionUID = 1L;
 		{
-			put(ChatTableMetaData.FIELD_BODY, ChatTableMetaData.FIELD_BODY);
-			put(ChatTableMetaData.FIELD_ID, ChatTableMetaData.FIELD_ID);
-			put(ChatTableMetaData.FIELD_JID, ChatTableMetaData.FIELD_JID);
-			put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_STATE);
-			put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.FIELD_THREAD_ID);
-			put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_TIMESTAMP);
+			put(ChatTableMetaData.FIELD_BODY, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_BODY);
+			put(ChatTableMetaData.FIELD_ID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_ID);
+			put(ChatTableMetaData.FIELD_JID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_JID);
+			put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_STATE);
+			put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_THREAD_ID);
+			put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_TIMESTAMP);
 		}
 	};
 
@@ -120,10 +121,17 @@ public class ChatHistoryProvider extends ContentProvider {
 			qb.appendWhere(ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_OUT_NOT_SENT);
 			break;
 		case CHAT_URI_INDICATOR: {
-			qb.setTables(ChatTableMetaData.TABLE_NAME);
-			qb.setProjectionMap(chatHistoryProjectionMap);
+			final Map<String, String> x = new HashMap<String, String>(chatHistoryProjectionMap);
+			x.put(VCardsCacheTableMetaData.FIELD_DATA, VCardsCacheTableMetaData.TABLE_NAME + "."
+					+ VCardsCacheTableMetaData.FIELD_DATA);
+
+			qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " + VCardsCacheTableMetaData.TABLE_NAME + " ON ("
+					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_JID + "="
+					+ VCardsCacheTableMetaData.TABLE_NAME + "." + VCardsCacheTableMetaData.FIELD_JID + ")");
+
+			qb.setProjectionMap(x);
 			String jid = uri.getPathSegments().get(1);
-			qb.appendWhere(ChatTableMetaData.FIELD_JID + "='" + jid + "'");
+			qb.appendWhere(ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_JID + "='" + jid + "'");
 			break;
 		}
 		case CHAT_ITEM_URI_INDICATOR: {
@@ -138,7 +146,8 @@ public class ChatHistoryProvider extends ContentProvider {
 			throw new IllegalArgumentException("Unknown URI ");
 		}
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, ChatTableMetaData.FIELD_TIMESTAMP + " ASC, "
+		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, ChatTableMetaData.TABLE_NAME + "."
+				+ ChatTableMetaData.FIELD_TIMESTAMP + " ASC, " + ChatTableMetaData.TABLE_NAME + "."
 				+ ChatTableMetaData.FIELD_ID + " ASC");
 
 		// int i = c.getCount();
