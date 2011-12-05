@@ -562,7 +562,7 @@ public class JaxmppService extends Service {
 		final String password = prefs.getString("user_password", null);
 		final String hostname = prefs.getString("hostname", null);
 
-		if (jid == null || password == null || password.length() == 0 || hostname == null || hostname.length() == 0) {
+		if (jid == null || password == null || password.length() == 0) {
 			Intent x = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			x.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			x.putExtra("missingLogin", Boolean.TRUE);
@@ -582,7 +582,10 @@ public class JaxmppService extends Service {
 				getResources().getString(R.string.app_version));
 		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
-		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+		if (hostname != null && hostname.trim().length() > 0)
+			getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+		else
+			getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, null);
 		getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);
 		getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
 

@@ -16,6 +16,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import tigase.jaxmpp.j2se.connectors.socket.SocketConnector.DnsResolver;
 import android.content.Context;
 
 public class XmppService {
@@ -45,6 +46,13 @@ public class XmppService {
 				return new DBRosterCacheProvider(context);
 			}
 		});
+		UniversalFactory.setSpi(DnsResolver.class.getName(), new FactorySpi<DnsResolver>() {
+
+			@Override
+			public DnsResolver create() {
+				return new DNSResolver();
+			}
+		});
 
 		jaxmpp = new Jaxmpp();
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -66,5 +74,4 @@ public class XmppService {
 		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
 	}
-
 }
