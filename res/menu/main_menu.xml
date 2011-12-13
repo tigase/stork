@@ -1,15 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-	<item android:title="@string/loginButton" android:id="@+id/connectButton"  android:icon="@drawable/login"></item>
-	<item android:icon="@drawable/logout"
-		android:title="@string/logoutButton" android:id="@+id/disconnectButton"></item>
-	<item android:icon="@android:drawable/ic_menu_preferences"
-		android:id="@+id/propertiesButton" android:title="@string/propertiesButton"></item>
-	<item android:icon="@android:drawable/ic_menu_close_clear_cancel"
-		android:title="@string/closeChatButton" android:id="@+id/closeChatButton"></item>
-	<item 
-		android:title="@string/showChatsButton" android:id="@+id/showChatsButton"></item>
-	<item 
-		android:title="@string/aboutButton" android:icon="@android:drawable/ic_menu_info_details" android:id="@+id/aboutButton"></item>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/contactAdd"
+        android:title="@string/contact_add">
+    </item>
+
+    <item
+        android:id="@+id/connectButton"
+        android:icon="@drawable/login"
+        android:title="@string/loginButton">
+    </item>
+
+    <item
+        android:id="@+id/disconnectButton"
+        android:icon="@drawable/logout"
+        android:title="@string/logoutButton">
+    </item>
+
+    <item
+        android:id="@+id/propertiesButton"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/propertiesButton">
+    </item>
+
+    <item
+        android:id="@+id/showChatsButton"
+        android:title="@string/showChatsButton">
+    </item>
+
+    <item
+        android:id="@+id/aboutButton"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="@string/aboutButton">
+    </item>
 
 </menu>

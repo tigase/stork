@@ -2,8 +2,6 @@ package org.tigase.mobile;
 
 import java.util.List;
 
-import tigase.jaxmpp.core.client.Connector;
-import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -166,11 +164,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 	}
 
-	private final static int ABOUT_DIALOG = 1;
+	public final static int ABOUT_DIALOG = 1;
 
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
-	private static final boolean DEBUG = false;
+	public final static int CONTACT_REMOVE_DIALOG = 2;
+
+	private static final boolean DEBUG = true;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -393,6 +393,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
+		case CONTACT_REMOVE_DIALOG:
+			return null;
 		case ABOUT_DIALOG: {
 
 			final Dialog dialog = new Dialog(this);
@@ -418,43 +420,26 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.main_menu, menu);
-		return true;
-	}
-
-	@Override
 	public void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
 		if (DEBUG)
 			Log.d(TAG, "onDetachedFromWindow()");
 	}
 
-	@Override
-	public boolean onMenuOpened(int featureId, Menu menu) {
-		final Connector.State st = XmppService.jaxmpp(this).getConnector() == null ? State.disconnected : XmppService.jaxmpp(
-				this).getConnector().getState();
-		final boolean serviceActive = JaxmppService.isServiceActive();
+	protected void onMessageEvent(final MessageEvent be) {
+		Runnable action = new Runnable() {
 
-		MenuItem con = menu.findItem(R.id.connectButton);
-		con.setVisible(currentPage == 0);
-		con.setEnabled(!serviceActive);
+			@Override
+			public void run() {
+				if (be.getType() == MessageModule.ChatCreated) {
+					viewPager.getAdapter().notifyDataSetChanged();
+				} else if (be.getType() == MessageModule.ChatClosed) {
+					viewPager.getAdapter().notifyDataSetChanged();
+				}
+			}
+		};
 
-		MenuItem dcon = menu.findItem(R.id.disconnectButton);
-		dcon.setVisible(currentPage == 0);
-		dcon.setEnabled(serviceActive);
-
-		MenuItem setup = menu.findItem(R.id.propertiesButton);
-		setup.setVisible(currentPage == 0);
-
-		MenuItem closeChat = menu.findItem(R.id.closeChatButton);
-		closeChat.setVisible(currentPage != 0);
-
-		MenuItem about = menu.findItem(R.id.aboutButton);
-		about.setVisible(currentPage == 0);
-
-		return super.onMenuOpened(featureId, menu);
+		viewPager.post(action);
 	}
 
 	// @Override
@@ -491,22 +476,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// }
 	// }
 
-	protected void onMessageEvent(final MessageEvent be) {
-		Runnable action = new Runnable() {
-
-			@Override
-			public void run() {
-				if (be.getType() == MessageModule.ChatCreated) {
-					viewPager.getAdapter().notifyDataSetChanged();
-				} else if (be.getType() == MessageModule.ChatClosed) {
-					viewPager.getAdapter().notifyDataSetChanged();
-				}
-			}
-		};
-
-		viewPager.post(action);
-	}
-
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
@@ -518,6 +487,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.contactAdd: {
+			Intent intent = new Intent(this.getApplicationContext(), ContactEditActivity.class);
+			this.startActivityForResult(intent, 0);
+			break;
+		}
 		case R.id.aboutButton: {
 			showDialog(ABOUT_DIALOG);
 			break;
@@ -572,6 +546,27 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onPause()");
 
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		menu.clear();
+		if (currentPage == 0) {
+			inflater.inflate(R.menu.main_menu, menu);
+
+			final boolean serviceActive = JaxmppService.isServiceActive();
+
+			MenuItem con = menu.findItem(R.id.connectButton);
+			con.setEnabled(!serviceActive);
+
+			MenuItem dcon = menu.findItem(R.id.disconnectButton);
+			dcon.setEnabled(serviceActive);
+
+		} else {
+			inflater.inflate(R.menu.chat_main_menu, menu);
+		}
+		return true;
 	}
 
 	@Override

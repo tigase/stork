@@ -5,4 +5,13 @@
         android:id="@+id/contactDetails"
         android:title="@string/contact_details"></item>
 
+    <item
+        android:id="@+id/contactEdit"
+        android:title="@string/contact_edit"></item>
+    <item
+        android:id="@+id/contactRemove"
+        android:title="@string/contact_remove"></item>
+        
+        
+        
 </menu>

@@ -8,7 +8,7 @@
 
     <application
         android:icon="@drawable/icon"
-        android:label="@string/app_name" >
+        android:label="@string/app_name" android:name="MessengerApplication">
         <activity
             android:label="@string/chat_list_title"
             android:name=".ChatListActivity"
@@ -19,7 +19,11 @@
             android:name=".VCardViewActivity"
             android:theme="@android:style/Theme.Light" >
         </activity>
-            <activity
+        <activity
+            android:label="@string/contact_editor"
+            android:name=".ContactEditActivity"
+            android:theme="@android:style/Theme.Light" />
+        <activity
             android:label="@string/app_name"
             android:name=".TigaseMobileMessengerActivity"
             android:theme="@android:style/Theme.Light.NoTitleBar" >

@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -70,9 +71,19 @@ public class RosterFragment extends Fragment {
 			Intent intent = new Intent(getActivity().getApplicationContext(), VCardViewActivity.class);
 			intent.putExtra("itemId", info.id);
 			this.startActivityForResult(intent, 0);
+			return true;
+		}
+		case R.id.contactEdit: {
+			Intent intent = new Intent(getActivity().getApplicationContext(), ContactEditActivity.class);
+			intent.putExtra("itemId", info.id);
+			this.startActivityForResult(intent, 0);
 
 			return true;
 		}
+		case R.id.contactRemove:
+			DialogFragment newFragment = ContactRemoveDialog.newInstance(info.id);
+			newFragment.show(getFragmentManager(), "dialog");
+			return true;
 		default:
 			return super.onContextItemSelected(item);
 		}

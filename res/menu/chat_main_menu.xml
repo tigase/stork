@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/closeChatButton"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:title="@string/closeChatButton">
+    </item>
+
+    <item
+        android:id="@+id/showChatsButton"
+        android:title="@string/showChatsButton">
+    </item>
+</menu>
