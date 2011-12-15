@@ -9,6 +9,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.util.Log;
 
@@ -20,8 +21,10 @@ public class RosterDisplayTools {
 
 	public RosterDisplayTools(final Context context) {
 		super();
-		this.roster = XmppService.jaxmpp(context).getRoster();
-		this.presence = XmppService.jaxmpp(context).getPresence();
+		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+
+		this.roster = jaxmpp.getRoster();
+		this.presence = jaxmpp.getPresence();
 	}
 
 	public String getDisplayName(final BareJID jid) {

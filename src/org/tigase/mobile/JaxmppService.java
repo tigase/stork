@@ -304,7 +304,7 @@ public class JaxmppService extends Service {
 	}
 
 	private final Jaxmpp getJaxmpp() {
-		return XmppService.jaxmpp(getApplicationContext());
+		return ((MessengerApplication) getApplicationContext()).getJaxmpp();
 	}
 
 	protected final State getState() {
@@ -324,12 +324,12 @@ public class JaxmppService extends Service {
 			return;
 		}
 
-		int ico = R.drawable.sb_offline;
+		int ico = R.drawable.ic_stat_disconnected;
 		String notiticationTitle = null;
 		String expandedNotificationText = null;
 
 		if (state == State.connecting) {
-			ico = R.drawable.sb_online;
+			ico = R.drawable.ic_stat_connected;
 			notiticationTitle = "Connecting";
 			expandedNotificationText = "Connecting...";
 			if (this.notificationVariant != NotificationVariant.always) {
@@ -337,7 +337,7 @@ public class JaxmppService extends Service {
 				return;
 			}
 		} else if (state == State.connected) {
-			ico = R.drawable.sb_online;
+			ico = R.drawable.ic_stat_connected;
 			notiticationTitle = "Connected";
 			expandedNotificationText = "Online";
 			if (this.notificationVariant == NotificationVariant.only_disconnected) {
@@ -345,7 +345,7 @@ public class JaxmppService extends Service {
 				return;
 			}
 		} else if (state == State.disconnecting) {
-			ico = R.drawable.sb_offline;
+			ico = R.drawable.ic_stat_disconnected;
 			notiticationTitle = "Disconnecting";
 			expandedNotificationText = "Disconnecting...";
 			if (this.notificationVariant != NotificationVariant.always) {
@@ -353,7 +353,7 @@ public class JaxmppService extends Service {
 				return;
 			}
 		} else if (state == State.disconnected) {
-			ico = R.drawable.sb_offline;
+			ico = R.drawable.ic_stat_disconnected;
 			notiticationTitle = "Disconnected";
 			expandedNotificationText = "Offline";
 			if (this.notificationVariant == NotificationVariant.only_connected) {
@@ -381,7 +381,7 @@ public class JaxmppService extends Service {
 	}
 
 	private void notificationUpdateFail() {
-		notificationUpdate(R.drawable.sb_offline, "Disconnected", "Connection impossible");
+		notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", "Connection impossible");
 	}
 
 	private void notificationUpdateReconnect(Date d) {
@@ -393,7 +393,7 @@ public class JaxmppService extends Service {
 		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
 
 		String expandedNotificationText = "Next try on " + s.format(d);
-		notificationUpdate(R.drawable.sb_offline, "Disconnected", expandedNotificationText);
+		notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", expandedNotificationText);
 	}
 
 	@Override

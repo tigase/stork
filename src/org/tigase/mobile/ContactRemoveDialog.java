@@ -37,7 +37,7 @@ public class ContactRemoveDialog extends DialogFragment {
 		} finally {
 			cursor.close();
 		}
-		final Jaxmpp jaxmpp = XmppService.jaxmpp(getActivity().getApplicationContext());
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
 		final RosterItem rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
 
 		String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(rosterItem);

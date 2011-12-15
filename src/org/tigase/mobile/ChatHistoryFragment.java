@@ -12,6 +12,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Dialog;
 import android.content.Context;
 import android.database.Cursor;
@@ -222,12 +223,14 @@ public class ChatHistoryFragment extends Fragment {
 	public void onStart() {
 		if (DEBUG)
 			Log.d(TAG, "Start ChatFragment");
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.ContactAvailable, this.presenceListener);
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.ContactUnavailable, this.presenceListener);
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).addListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
+				this.presenceListener);
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
+				this.presenceListener);
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactChangedPresence,
+				this.presenceListener);
 		super.onStart();
 
 		updatePresence();
@@ -237,18 +240,21 @@ public class ChatHistoryFragment extends Fragment {
 	public void onStop() {
 		if (DEBUG)
 			Log.d(TAG, "Stop ChatFragment");
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
 
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactAvailable, this.presenceListener);
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactUnavailable, this.presenceListener);
-		XmppService.jaxmpp(getActivity()).getModulesManager().getModule(PresenceModule.class).removeListener(
-				PresenceModule.ContactChangedPresence, this.presenceListener);
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactAvailable,
+				this.presenceListener);
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactUnavailable,
+				this.presenceListener);
+		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactChangedPresence,
+				this.presenceListener);
 		super.onStop();
 	}
 
 	private void setChatId(final long chatId) {
-		List<Chat> l = XmppService.jaxmpp(getActivity()).getModulesManager().getModule(MessageModule.class).getChats();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		List<Chat> l = jaxmpp.getModulesManager().getModule(MessageModule.class).getChats();
 		for (int i = 0; i < l.size(); i++) {
 			Chat c = l.get(i);
 			if (c.getId() == chatId) {

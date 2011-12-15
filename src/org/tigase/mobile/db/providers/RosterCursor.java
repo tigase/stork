@@ -7,14 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.tigase.mobile.CPresence;
+import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.RosterDisplayTools;
-import org.tigase.mobile.XmppService;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.Cursor;
@@ -173,7 +174,9 @@ public class RosterCursor extends AbstractCursor {
 	}
 
 	private final void loadData() {
-		List<RosterItem> r = XmppService.jaxmpp(context).getRoster().getAll(predicate);
+		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+
+		List<RosterItem> r = jaxmpp.getRoster().getAll(predicate);
 
 		Collections.sort(r, new Comparator<RosterItem>() {
 

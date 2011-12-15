@@ -13,10 +13,21 @@
 			android:textSize="14dp" android:layout_centerVertical="true"
 			android:layout_toLeftOf="@+id/connection_status" android:textStyle="bold" />
 		<ImageView android:layout_height="wrap_content" android:id="@+id/connection_status"
-			android:scaleType="center" android:layout_width="wrap_content"
+			android:scaleType="centerInside" android:layout_width="wrap_content"
 			android:cropToPadding="true" android:src="@drawable/user_offline"
 			android:adjustViewBounds="true" android:layout_centerVertical="true"
+			android:padding="2dp"
 			android:layout_alignParentRight="true" android:paddingRight="5dp"></ImageView>
+
+		<ProgressBar
+		    android:id="@+id/progressBar1"
+		    style="?android:attr/progressBarStyleSmall"
+		    android:layout_width="26dp" android:padding="3dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentBottom="true"
+		    android:layout_alignParentTop="true"
+		    android:layout_alignParentRight="true" />
+
 	</RelativeLayout>
 
 

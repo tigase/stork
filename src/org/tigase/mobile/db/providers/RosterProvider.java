@@ -6,13 +6,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.tigase.mobile.XmppService;
+import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -115,7 +116,8 @@ public class RosterProvider extends ContentProvider {
 		final int indicator = uriMatcher.match(uri);
 		if (indicator == VCARD_URI_INDICATOR) {
 			String jid = uri.getLastPathSegment();
-			RosterItem rosterItem = XmppService.jaxmpp(getContext()).getRoster().get(BareJID.bareJIDInstance(jid));
+			final Jaxmpp jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
+			RosterItem rosterItem = jaxmpp.getRoster().get(BareJID.bareJIDInstance(jid));
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			db.beginTransaction();
 			try {

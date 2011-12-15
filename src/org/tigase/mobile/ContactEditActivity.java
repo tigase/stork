@@ -45,7 +45,7 @@ public class ContactEditActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.jaxmpp = XmppService.jaxmpp(getApplicationContext());
+		this.jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
 		setContentView(R.layout.contact_edit);
 		final long id = getIntent().getLongExtra("itemId", -1);
 		if (id != -1) {

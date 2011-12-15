@@ -7,6 +7,7 @@ import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -136,7 +137,8 @@ public class ChatView extends LinearLayout {
 		if (chat == null)
 			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
-		RosterItem ri = XmppService.jaxmpp(getContext()).getRoster().get(chat.getJid().getBareJid());
+		final Jaxmpp jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
+		RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
 		t.setText("Chat with "
 				+ (ri == null ? chat.getJid().getBareJid().toString()
 						: (new RosterDisplayTools(getContext())).getDisplayName(ri)));
@@ -155,6 +157,8 @@ public class ChatView extends LinearLayout {
 				else
 					switch (cp) {
 					case chat:
+						itemPresence.setImageResource(R.drawable.user_free_for_chat);
+						break;
 					case online:
 						itemPresence.setImageResource(R.drawable.user_available);
 						break;
@@ -166,6 +170,15 @@ public class ChatView extends LinearLayout {
 						break;
 					case dnd:
 						itemPresence.setImageResource(R.drawable.user_busy);
+						break;
+					case requested:
+						itemPresence.setImageResource(R.drawable.user_ask);
+						break;
+					case error:
+						itemPresence.setImageResource(R.drawable.user_error);
+						break;
+					case offline_nonauth:
+						itemPresence.setImageResource(R.drawable.user_noauth);
 						break;
 					default:
 						itemPresence.setImageResource(R.drawable.user_offline);

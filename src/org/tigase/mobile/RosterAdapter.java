@@ -5,6 +5,7 @@ import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -62,7 +63,9 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		String name = cursor.getString(mFrom[1]);
 		itemJid.setText(name);
 
-		boolean co = XmppService.jaxmpp(context).getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
+		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+
+		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
 				BareJID.bareJIDInstance(cursor.getString(mFrom[0])));
 		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
@@ -74,6 +77,8 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		else
 			switch (cp) {
 			case chat:
+				itemPresence.setImageResource(R.drawable.user_free_for_chat);
+				break;
 			case online:
 				itemPresence.setImageResource(R.drawable.user_available);
 				break;
@@ -85,6 +90,15 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 				break;
 			case dnd:
 				itemPresence.setImageResource(R.drawable.user_busy);
+				break;
+			case requested:
+				itemPresence.setImageResource(R.drawable.user_ask);
+				break;
+			case error:
+				itemPresence.setImageResource(R.drawable.user_error);
+				break;
+			case offline_nonauth:
+				itemPresence.setImageResource(R.drawable.user_noauth);
 				break;
 			default:
 				itemPresence.setImageResource(R.drawable.user_offline);

@@ -5,8 +5,12 @@ import org.tigase.mobile.db.providers.RosterProvider;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,6 +29,7 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 public class RosterFragment extends Fragment {
 
@@ -41,6 +46,8 @@ public class RosterFragment extends Fragment {
 		return f;
 	}
 
+	private Listener<ResourceBindEvent> bindListener;
+
 	private Cursor c;
 
 	private ImageView connectionStatus;
@@ -48,6 +55,8 @@ public class RosterFragment extends Fragment {
 	private final Listener<ConnectorEvent> connectorListener;
 
 	private ExpandableListView listView;
+
+	private ProgressBar progressBar;
 
 	public RosterFragment() {
 		super();
@@ -58,6 +67,13 @@ public class RosterFragment extends Fragment {
 
 			@Override
 			public void handleEvent(ConnectorEvent be) throws JaxmppException {
+				updateConnectionStatus();
+			}
+		};
+		this.bindListener = new Listener<ResourceBindEvent>() {
+
+			@Override
+			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				updateConnectionStatus();
 			}
 		};
@@ -133,6 +149,7 @@ public class RosterFragment extends Fragment {
 		});
 
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
+		this.progressBar = (ProgressBar) layout.findViewById(R.id.progressBar1);
 
 		if (DEBUG)
 			Log.d(TAG + "_rf", "layout created");
@@ -167,7 +184,10 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		XmppService.jaxmpp(getActivity()).addListener(Connector.StateChanged, this.connectorListener);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
+		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 		updateConnectionStatus();
 
 		if (DEBUG)
@@ -176,7 +196,10 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public void onStop() {
-		XmppService.jaxmpp(getActivity()).removeListener(Connector.StateChanged, this.connectorListener);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
+		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 		super.onStop();
 
 	}
@@ -189,8 +212,11 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void updateConnectionStatus() {
-		final Connector.State st = XmppService.jaxmpp(getActivity()).getConnector() == null ? State.disconnected
-				: XmppService.jaxmpp(getActivity()).getConnector().getState();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		final Connector.State st = jaxmpp.getConnector() == null ? State.disconnected : jaxmpp.getConnector().getState();
+		final JID jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
+
 		if (DEBUG)
 			Log.i(TAG, "State changed to " + st);
 
@@ -198,12 +224,17 @@ public class RosterFragment extends Fragment {
 
 			@Override
 			public void run() {
-				if (st == State.connected) {
+				if (st == State.connected && jid != null) {
 					connectionStatus.setImageResource(R.drawable.user_available);
+					connectionStatus.setVisibility(View.VISIBLE);
+					progressBar.setVisibility(View.GONE);
 				} else if (st == State.disconnected) {
 					connectionStatus.setImageResource(R.drawable.user_offline);
+					connectionStatus.setVisibility(View.VISIBLE);
+					progressBar.setVisibility(View.GONE);
 				} else {
-					connectionStatus.setImageResource(R.drawable.user_extended_away);
+					connectionStatus.setVisibility(View.GONE);
+					progressBar.setVisibility(View.VISIBLE);
 				}
 			}
 		});

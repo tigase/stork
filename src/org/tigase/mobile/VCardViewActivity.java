@@ -63,7 +63,7 @@ public class VCardViewActivity extends Activity {
 			bmp = null;
 		}
 
-		Bitmap x = BitmapFactory.decodeResource(getResources(), R.drawable.blank_polaroid_frame);
+		Bitmap x = BitmapFactory.decodeResource(getResources(), R.drawable.user_avatar);
 		if (bmp != null) {
 			Rect xr = new Rect(37, 35, 431, 394);
 			Canvas c = new Canvas(x);
@@ -106,7 +106,8 @@ public class VCardViewActivity extends Activity {
 		}
 		((TextView) findViewById(R.id.vcard_fn)).setText(jid.toString());
 
-		VCardModule module = XmppService.jaxmpp(this).getModulesManager().getModule(VCardModule.class);
+		VCardModule module = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
+				VCardModule.class);
 		try {
 			module.retrieveVCard(jid, new VCardAsyncCallback() {
 

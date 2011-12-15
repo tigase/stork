@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.tigase.mobile.XmppService;
+import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.RosterTableMetaData;
 
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -104,8 +105,9 @@ public class GroupsCursor extends AbstractCursor {
 
 	private final void loadData() {
 		synchronized (this.items) {
+			final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
 			this.items.clear();
-			this.items.addAll(XmppService.jaxmpp(context).getRoster().getGroups());
+			this.items.addAll(jaxmpp.getRoster().getGroups());
 			Collections.sort(this.items);
 			this.items.add(0, "All");
 			this.items.add(1, "default");

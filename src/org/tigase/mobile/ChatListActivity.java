@@ -6,6 +6,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -35,10 +36,11 @@ public class ChatListActivity extends Activity {
 		private final RosterStore roster;
 
 		public ImageAdapter(Context c) {
-			this.chats.addAll(XmppService.jaxmpp(c).getModulesManager().getModule(MessageModule.class).getChats());
+			final Jaxmpp jaxmpp = ((MessengerApplication) c.getApplicationContext()).getJaxmpp();
+			this.chats.addAll(jaxmpp.getModulesManager().getModule(MessageModule.class).getChats());
 			mContext = c;
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			this.roster = XmppService.jaxmpp(c).getRoster();
+			this.roster = jaxmpp.getRoster();
 			this.rdt = new RosterDisplayTools(c);
 		}
 

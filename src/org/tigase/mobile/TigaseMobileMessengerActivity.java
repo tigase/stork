@@ -10,6 +10,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -152,8 +153,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// if (!active)
 			// return;
 			final long id = intent.getLongExtra("id", -1);
+			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
 
-			for (RosterItem i : XmppService.jaxmpp(getApplicationContext()).getRoster().getAll()) {
+			for (RosterItem i : jaxmpp.getRoster().getAll()) {
 				if (id == i.getId()) {
 					JID jid = JID.jidInstance(i.getJid());
 					openChatWith(jid);
@@ -224,7 +226,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected List<Chat> getChatList() {
-		return XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+		return jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
 	}
 
 	protected boolean isXLarge() {
@@ -377,7 +380,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		// adapter.setNotifyOnChange(true);
 		// rosterList.setAdapter(adapter);
 
-		if (!XmppService.jaxmpp(TigaseMobileMessengerActivity.this).isConnected()) {
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+
+		if (!jaxmpp.isConnected()) {
 			// getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI),
 			// null, null);
 		}
@@ -503,7 +508,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		case R.id.closeChatButton: {
 			final int p = this.currentPage;
-			final AbstractChatManager cm = XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).getChatManager();
+			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+
+			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
 			Chat chat = cm.getChats().get(p - (isXLarge() ? 0 : 1));
 			try {
 				cm.close(chat);
@@ -538,8 +545,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onPause() {
 		unregisterReceiver(rosterClickReceiver);
-
-		XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+		jaxmpp.getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
 		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
@@ -579,7 +586,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		viewPager.getAdapter().notifyDataSetChanged();
 
-		XmppService.jaxmpp(this).getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+
+		jaxmpp.getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
 
 		if (incomingExtras != null) {
 			String s_jid = incomingExtras.getString("jid");
@@ -635,7 +644,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 						Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
 
 					if (idx == null) {
-						XmppService.jaxmpp(TigaseMobileMessengerActivity.this).createChat(jid);
+						final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getJaxmpp();
+
+						jaxmpp.createChat(jid);
 						viewPager.setCurrentItem(getChatList().size() - (isXLarge() ? 1 : 0));
 					} else {
 						viewPager.setCurrentItem(idx + (isXLarge() ? 0 : 1));

@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.tigase.mobile.XmppService;
+import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
@@ -13,6 +13,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -88,7 +89,9 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 	}
 
 	private void storeCache(final String receivedVersion) {
-		final List<RosterItem> items = XmppService.jaxmpp(context).getRoster().getAll();
+		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+
+		final List<RosterItem> items = jaxmpp.getRoster().getAll();
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
@@ -96,7 +99,7 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 			for (RosterItem rosterItem : items) {
 				ContentValues v = new ContentValues();
 
-				v.put(RosterCacheTableMetaData.FIELD_ID, rosterItem.hashCode());
+				v.put(RosterCacheTableMetaData.FIELD_ID, rosterItem.getId());
 				v.put(RosterCacheTableMetaData.FIELD_JID, rosterItem.getJid().toString());
 				v.put(RosterCacheTableMetaData.FIELD_NAME, rosterItem.getName());
 				v.put(RosterCacheTableMetaData.FIELD_GROUP_NAME, serializeGroups(rosterItem.getGroups()));
