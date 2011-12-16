@@ -208,6 +208,7 @@ public class JaxmppService extends Service {
 
 					ContentValues values = new ContentValues();
 					values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
+					values.put(ChatTableMetaData.FIELD_AUTHOR_JID, be.getChat().getJid().getBareJid().toString());
 					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
 					values.put(ChatTableMetaData.FIELD_STATE, 0);
@@ -739,6 +740,9 @@ public class JaxmppService extends Service {
 			final int columnMsg = c.getColumnIndex(ChatTableMetaData.FIELD_BODY);
 			final int columnThd = c.getColumnIndex(ChatTableMetaData.FIELD_THREAD_ID);
 
+			final JID ownJid = getJaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
+			final String nickname = ownJid.getLocalpart();
+
 			c.moveToFirst();
 			if (c.isAfterLast())
 				return;
@@ -762,6 +766,8 @@ public class JaxmppService extends Service {
 
 					ContentValues values = new ContentValues();
 					values.put(ChatTableMetaData.FIELD_ID, id);
+					values.put(ChatTableMetaData.FIELD_AUTHOR_JID, ownJid.getBareJid().toString());
+					values.put(ChatTableMetaData.FIELD_AUTHOR_NICKNAME, nickname);
 					values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_OUT_SENT);
 
 					getContentResolver().update(Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + jid + "/" + id), values, null,

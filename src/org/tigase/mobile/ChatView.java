@@ -5,6 +5,9 @@ import java.util.Date;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
@@ -34,23 +37,40 @@ public class ChatView extends LinearLayout {
 
 	private EditText ed;
 
+	private final Jaxmpp jaxmpp;
+
+	private final SharedPreferences prefs;
+
 	public ChatView(Context context) {
 		super(context);
+		this.jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
+		this.prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
 	}
 
 	public ChatView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
+		this.prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
 	}
 
 	public Chat getChat() {
 		return chat;
 	}
 
+	private BareJID getCurrentUserJid() {
+		JID jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
+		if (jid == null) {
+			String x = prefs.getString("user_jid", null);
+			if (x == null)
+				throw new RuntimeException("Users JID is not defined");
+			jid = JID.jidInstance(x);
+		}
+		return jid.getBareJid();
+	}
+
 	void init() {
 		if (DEBUG)
 			Log.i(TAG, "Zrobione");
-
-		final SharedPreferences prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
 
 		this.ed = (EditText) findViewById(R.id.chat_message_entry);
 		this.ed.setOnKeyListener(new OnKeyListener() {
@@ -119,6 +139,7 @@ public class ChatView extends LinearLayout {
 				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
 
 				ContentValues values = new ContentValues();
+				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, getCurrentUserJid().toString());
 				values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 				values.put(ChatTableMetaData.FIELD_BODY, t);
@@ -137,7 +158,6 @@ public class ChatView extends LinearLayout {
 		if (chat == null)
 			return;
 		TextView t = (TextView) findViewById(R.id.textView1);
-		final Jaxmpp jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
 		RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
 		t.setText("Chat with "
 				+ (ri == null ? chat.getJid().getBareJid().toString()

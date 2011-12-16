@@ -35,6 +35,9 @@ public class ChatHistoryProvider extends ContentProvider {
 			put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_STATE);
 			put(ChatTableMetaData.FIELD_THREAD_ID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_THREAD_ID);
 			put(ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_TIMESTAMP);
+			put(ChatTableMetaData.FIELD_AUTHOR_JID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID);
+			put(ChatTableMetaData.FIELD_AUTHOR_NICKNAME, ChatTableMetaData.TABLE_NAME + "."
+					+ ChatTableMetaData.FIELD_AUTHOR_NICKNAME);
 		}
 	};
 
@@ -126,7 +129,7 @@ public class ChatHistoryProvider extends ContentProvider {
 					+ VCardsCacheTableMetaData.FIELD_DATA);
 
 			qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " + VCardsCacheTableMetaData.TABLE_NAME + " ON ("
-					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_JID + "="
+					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID + "="
 					+ VCardsCacheTableMetaData.TABLE_NAME + "." + VCardsCacheTableMetaData.FIELD_JID + ")");
 
 			qb.setProjectionMap(x);

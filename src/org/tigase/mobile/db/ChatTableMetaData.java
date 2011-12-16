@@ -8,6 +8,10 @@ public class ChatTableMetaData implements BaseColumns {
 
 	public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.chat";
 
+	public static final String FIELD_AUTHOR_JID = "author_jid";
+
+	public static final String FIELD_AUTHOR_NICKNAME = "author_nickname";
+
 	public static final String FIELD_BODY = "body";
 
 	public static final String FIELD_ID = "_id";

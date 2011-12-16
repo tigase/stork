@@ -14,7 +14,7 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 6;
+	public static final Integer DATABASE_VERSION = 7;
 
 	private static final boolean DEBUG = false;
 
@@ -30,9 +30,14 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 		sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
 		sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
-		sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
-		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
+
 		sql += ChatTableMetaData.FIELD_THREAD_ID + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
+
+		sql += ChatTableMetaData.FIELD_AUTHOR_JID + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_AUTHOR_NICKNAME + " TEXT, ";
+
+		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
 		sql += ChatTableMetaData.FIELD_BODY + " TEXT, ";
 		sql += ChatTableMetaData.FIELD_STATE + " INTEGER";
 		sql += ");";
@@ -69,7 +74,27 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		if (oldVersion == 5 && newVersion == 6) {
+		if (oldVersion == 6 && newVersion == 7) {
+			db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
+
+			String sql;
+
+			sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
+			sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+
+			sql += ChatTableMetaData.FIELD_THREAD_ID + " TEXT, ";
+			sql += ChatTableMetaData.FIELD_JID + " TEXT, ";
+
+			sql += ChatTableMetaData.FIELD_AUTHOR_JID + " TEXT, ";
+			sql += ChatTableMetaData.FIELD_AUTHOR_NICKNAME + " TEXT, ";
+
+			sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
+			sql += ChatTableMetaData.FIELD_BODY + " TEXT, ";
+			sql += ChatTableMetaData.FIELD_STATE + " INTEGER";
+			sql += ");";
+			db.execSQL(sql);
+
+		} else if (oldVersion == 5 && newVersion == 6) {
 			db.execSQL("DROP TABLE IF EXISTS " + VCardsCacheTableMetaData.TABLE_NAME);
 			String sql = "CREATE TABLE " + VCardsCacheTableMetaData.TABLE_NAME + " (";
 			sql += VCardsCacheTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";

@@ -22,8 +22,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -65,11 +63,7 @@ public class VCardViewActivity extends Activity {
 
 		Bitmap x = BitmapFactory.decodeResource(getResources(), R.drawable.user_avatar);
 		if (bmp != null) {
-			Rect xr = new Rect(37, 35, 431, 394);
-			Canvas c = new Canvas(x);
-			Rect br = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
-			c.drawBitmap(bmp, br, xr, null);
-			c.save();
+			x = bmp;
 		}
 		avatar.setImageBitmap(x);
 	}
