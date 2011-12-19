@@ -1,5 +1,6 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.Connector;
@@ -10,6 +11,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Intent;
 import android.database.Cursor;
@@ -30,6 +32,7 @@ import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 public class RosterFragment extends Fragment {
 
@@ -53,6 +56,8 @@ public class RosterFragment extends Fragment {
 	private ImageView connectionStatus;
 
 	private final Listener<ConnectorEvent> connectorListener;
+
+	private ExpandableListContextMenuInfo lastMenuInfo;
 
 	private ExpandableListView listView;
 
@@ -79,26 +84,55 @@ public class RosterFragment extends Fragment {
 		};
 	}
 
+	private JID getJid(long itemId) {
+		final Cursor cursor = getActivity().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + itemId),
+				null, null, null, null);
+		JID jid = null;
+		try {
+			cursor.moveToNext();
+			jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+		} finally {
+			cursor.close();
+		}
+		return jid;
+	}
+
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 		switch (item.getItemId()) {
 		case R.id.contactDetails: {
+			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 			Intent intent = new Intent(getActivity().getApplicationContext(), VCardViewActivity.class);
 			intent.putExtra("itemId", info.id);
 			this.startActivityForResult(intent, 0);
 			return true;
 		}
 		case R.id.contactEdit: {
+			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 			Intent intent = new Intent(getActivity().getApplicationContext(), ContactEditActivity.class);
 			intent.putExtra("itemId", info.id);
 			this.startActivityForResult(intent, 0);
 
 			return true;
 		}
-		case R.id.contactRemove:
+		case R.id.contactRemove: {
+			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 			DialogFragment newFragment = ContactRemoveDialog.newInstance(info.id);
 			newFragment.show(getFragmentManager(), "dialog");
+			return true;
+		}
+		case R.id.contactAuthorization: {
+			this.lastMenuInfo = (ExpandableListContextMenuInfo) item.getMenuInfo();
+			return true;
+		}
+		case R.id.contactAuthResend:
+			sendAuthResend(lastMenuInfo.id);
+			return true;
+		case R.id.contactAuthRerequest:
+			sendAuthRerequest(lastMenuInfo.id);
+			return true;
+		case R.id.contactAuthRemove:
+			sendAuthRemove(lastMenuInfo.id);
 			return true;
 		default:
 			return super.onContextItemSelected(item);
@@ -209,6 +243,48 @@ public class RosterFragment extends Fragment {
 		super.onViewCreated(view, savedInstanceState);
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onViewCreated()");
+	}
+
+	private void sendAuthRemove(long id) {
+		final JID jid = getJid(id);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		try {
+			jaxmpp.getModulesManager().getModule(PresenceModule.class).unsubscribed(jid);
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			String txt = String.format(getActivity().getString(R.string.auth_removed), name, jid.getBareJid().toString());
+			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
+		} catch (JaxmppException e) {
+			Log.w(TAG, "Can't remove auth", e);
+		}
+	}
+
+	private void sendAuthRerequest(long id) {
+		final JID jid = getJid(id);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		try {
+			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(jid);
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			String txt = String.format(getActivity().getString(R.string.auth_rerequested), name, jid.getBareJid().toString());
+			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
+		} catch (JaxmppException e) {
+			Log.w(TAG, "Can't rerequest subscription", e);
+		}
+	}
+
+	private void sendAuthResend(long id) {
+		final JID jid = getJid(id);
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+
+		try {
+			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribed(jid);
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			String txt = String.format(getActivity().getString(R.string.auth_resent), name, jid.getBareJid().toString());
+			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
+		} catch (JaxmppException e) {
+			Log.w(TAG, "Can't resend subscription", e);
+		}
 	}
 
 	private void updateConnectionStatus() {

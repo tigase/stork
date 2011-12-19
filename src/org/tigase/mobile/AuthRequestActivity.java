@@ -1,6 +1,5 @@
 package org.tigase.mobile;
 
-import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
@@ -9,26 +8,26 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.ContentValues;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
-import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class VCardViewActivity extends Activity {
+public class AuthRequestActivity extends FragmentActivity {
 
 	private JID jid;
 
@@ -69,73 +68,87 @@ public class VCardViewActivity extends Activity {
 	}
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.vcard);
+	protected void onCreate(Bundle arg0) {
+		super.onCreate(arg0);
+		setContentView(R.layout.auth_request);
 
-		final ProgressDialog dialog = ProgressDialog.show(VCardViewActivity.this, "", "Loading. Please wait...", true);
-		dialog.setCancelable(true);
-		dialog.setOnCancelListener(new OnCancelListener() {
+		this.jid = JID.jidInstance(getIntent().getStringExtra("jid"));
+		final TextView jidTextView = (TextView) findViewById(R.id.vcard_jid);
+		jidTextView.setText(jid.toString());
+
+		final VCardModule module = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
+				VCardModule.class);
+		final PresenceModule presenceModule = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
+				PresenceModule.class);
+
+		final Button okButton = (Button) findViewById(R.id.req_yesButton);
+		okButton.setOnClickListener(new OnClickListener() {
 
 			@Override
-			public void onCancel(DialogInterface dialog) {
-				Intent result = new Intent();
-				setResult(Activity.RESULT_CANCELED, result);
+			public void onClick(View v) {
+				try {
+					presenceModule.subscribed(jid);
+					presenceModule.subscribe(jid);
+				} catch (Exception e) {
+					showWarning("Can't accept subscription");
+				}
 				finish();
 			}
 		});
 
-		long id = getIntent().getLongExtra("itemId", -1);
+		final Button noButton = (Button) findViewById(R.id.req_noButton);
+		noButton.setOnClickListener(new OnClickListener() {
 
-		final TextView fullName = (TextView) findViewById(R.id.vcard_fn);
+			@Override
+			public void onClick(View v) {
+				try {
+					presenceModule.unsubscribe(jid);
+					presenceModule.unsubscribed(jid);
+				} catch (Exception e) {
+					showWarning("Can't deny subscription");
+				}
+				finish();
+			}
+		});
+		final Button cancelButton = (Button) findViewById(R.id.req_cancelButton);
+		cancelButton.setOnClickListener(new OnClickListener() {
 
-		final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null, null, null,
-				null);
-		this.jid = null;
-		try {
-			cursor.moveToNext();
-			this.jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
-		} finally {
-			cursor.close();
-		}
-		((TextView) findViewById(R.id.vcard_fn)).setText(jid.toString());
-		((TextView) findViewById(R.id.vcard_jid)).setText(jid.toString());
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
 
-		VCardModule module = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
-				VCardModule.class);
 		try {
 			module.retrieveVCard(jid, new VCardAsyncCallback() {
 
 				@Override
 				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-					// TODO Auto-generated method stub
-					dialog.dismiss();
 				}
 
 				@Override
 				public void onTimeout() throws JaxmppException {
-					// TODO Auto-generated method stub
-					dialog.dismiss();
 				}
 
 				@Override
 				protected void onVCardReceived(final VCard vcard) throws XMLException {
-					fullName.post(new Runnable() {
+					jidTextView.post(new Runnable() {
 
 						@Override
 						public void run() {
-							dialog.dismiss();
 							fillFields(vcard);
 						}
 					});
 				}
 			});
 		} catch (JaxmppException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
 
-		dialog.show();
+	private void showWarning(String message) {
+		DialogFragment newFragment = WarningDialog.newInstance(message);
+		newFragment.show(getSupportFragmentManager(), "dialog");
 	}
 
 }

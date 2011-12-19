@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="auth_rerequested">Rerequested authorization from %1$s (%2$s)</string>
+    <string name="auth_removed">Removed authorization from %1$s (%2$s)</string>
+    <string name="auth_resent">Sent authorization to %1$s (%2$s)</string>
     <string name="contact_edit">Edit</string>
     <string name="contact_remove">Remove</string>
     <string name="contact_add">Add</string>

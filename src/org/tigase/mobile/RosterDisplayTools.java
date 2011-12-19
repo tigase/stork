@@ -63,7 +63,7 @@ public class RosterDisplayTools {
 				return CPresence.notinroster;
 			if (item.isAsk())
 				return CPresence.requested;
-			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
+			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.from)
 				return CPresence.offline_nonauth;
 			p = p == null ? presence.getBestPresence(item.getJid()) : p;
 			CPresence r = CPresence.offline;

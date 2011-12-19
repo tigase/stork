@@ -3,15 +3,30 @@
 
     <item
         android:id="@+id/contactDetails"
-        android:title="@string/contact_details"></item>
-
+        android:title="@string/contact_details">
+    </item>
     <item
         android:id="@+id/contactEdit"
-        android:title="@string/contact_edit"></item>
+        android:title="@string/contact_edit">
+    </item>
     <item
         android:id="@+id/contactRemove"
-        android:title="@string/contact_remove"></item>
-        
-        
-        
+        android:title="@string/contact_remove">
+    </item>
+    <item
+        android:id="@+id/contactAuthorization"
+        android:title="Authorization">
+        <menu>
+            <item
+                android:id="@+id/contactAuthResend"
+                android:title="Resend"/>
+            <item
+                android:id="@+id/contactAuthRerequest"
+                android:title="Rerequest"/>
+            <item
+                android:id="@+id/contactAuthRemove"
+                android:title="Remove"/>
+        </menu>
+    </item>
+
 </menu>

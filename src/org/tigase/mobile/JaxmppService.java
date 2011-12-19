@@ -162,6 +162,8 @@ public class JaxmppService extends Service {
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
+	private Listener<PresenceEvent> subscribeRequestListener;
+
 	private final Timer timer = new Timer();
 
 	private Integer usedNetworkType = null;
@@ -226,6 +228,13 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(PresenceEvent be) throws JaxmppException {
 				updateRosterItem(be);
+			}
+		};
+		this.subscribeRequestListener = new Listener<PresenceModule.PresenceEvent>() {
+
+			@Override
+			public void handleEvent(PresenceEvent be) throws JaxmppException {
+				onSubscribeRequest(be);
 			}
 		};
 
@@ -450,6 +459,8 @@ public class JaxmppService extends Service {
 				this.presenceListener);
 		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactChangedPresence,
 				this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.SubscribeRequest,
+				this.subscribeRequestListener);
 
 		getJaxmpp().addListener(Connector.StateChanged, this.disconnectListener);
 
@@ -504,6 +515,8 @@ public class JaxmppService extends Service {
 				this.presenceListener);
 		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactChangedPresence,
 				this.presenceListener);
+		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.SubscribeRequest,
+				this.subscribeRequestListener);
 
 		getJaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
 
@@ -598,6 +611,35 @@ public class JaxmppService extends Service {
 
 			stopSelf();
 		}
+	}
+
+	protected void onSubscribeRequest(PresenceEvent be) {
+		// XXX
+
+		String notiticationTitle = "Authentication request: " + be.getJid();
+		String expandedNotificationText = notiticationTitle;
+
+		Notification notification = new Notification(R.drawable.user_ask, notiticationTitle, System.currentTimeMillis());
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		final Context context = getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+		Intent intent = new Intent(context, AuthRequestActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("jid", "" + be.getJid());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("authRequest:" + be.getJid(), CHAT_NOTIFICATION_ID, notification);
 	}
 
 	private void reconnect() {

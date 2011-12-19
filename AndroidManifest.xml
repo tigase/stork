@@ -20,6 +20,11 @@
             android:theme="@android:style/Theme.Light" >
         </activity>
         <activity
+            android:label="Auth request"
+            android:name=".AuthRequestActivity"
+            android:theme="@android:style/Theme.Light" >
+        </activity>
+        <activity
             android:label="@string/contact_editor"
             android:name=".ContactEditActivity"
             android:theme="@android:style/Theme.Light" />

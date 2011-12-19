@@ -103,14 +103,17 @@ public class ChatHistoryFragment extends Fragment {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 		switch (item.getItemId()) {
-		case R.id.detailsMessage:
+		case R.id.detailsMessage: {
+			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 			showMessageDetails(info.id);
 			return true;
-		case R.id.copyMessage:
+		}
+		case R.id.copyMessage: {
+			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 			copyMessageBody(info.id);
 			return true;
+		}
 		default:
 			return super.onContextItemSelected(item);
 		}

@@ -34,6 +34,23 @@
         android:layout_height="fill_parent"
         android:layout_below="@+id/relativeLayout1" >
 
+                <TableRow >
+
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="JabberID:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/vcard_jid"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+        </TableRow>
+        
         <TableRow >
 
             <TextView
