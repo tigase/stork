@@ -1,31 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:padding="2px" >
 
     <RelativeLayout
         android:id="@+id/relativeLayout1"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
 
         <ImageView
             android:id="@+id/vcard_avatar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-             />
-<!-- android:src="@drawable/blank_polaroid_frame" -->
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_margin="3dp"
+            android:src="@drawable/user_avatar" />
+
         <TextView
             android:id="@+id/vcard_fn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/vcard_avatar"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="34dp"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@+id/vcard_avatar"
             android:padding="3dip"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/vcard_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/vcard_fn"
+            android:layout_below="@+id/vcard_fn"
+            android:padding="3dip"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/vcard_org"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/vcard_title"
+            android:layout_below="@+id/vcard_title"
+            android:padding="3dip"
+            android:singleLine="true" />
     </RelativeLayout>
 
     <TableLayout
@@ -34,24 +52,37 @@
         android:layout_height="fill_parent"
         android:layout_below="@+id/relativeLayout1" >
 
-                <TableRow >
+        <TableRow>
 
             <TextView
                 android:layout_column="1"
                 android:gravity="right"
                 android:padding="3dip"
-                android:text="JabberID:"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="JabberID:" />
 
             <TextView
                 android:id="@+id/vcard_jid"
                 android:padding="3dip"
                 android:singleLine="true"
-                android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold" />
         </TableRow>
-        
-        <TableRow >
+
+        <TableRow android:id="@+id/vcard_subscription_status_row" >
+
+            <TextView
+                android:layout_column="1"
+                android:gravity="right"
+                android:padding="3dip"
+                android:text="Subscription:" />
+
+            <TextView
+                android:id="@+id/vcard_subscription_status"
+                android:padding="3dip"
+                android:singleLine="true"
+                android:textStyle="bold" />
+        </TableRow>
+
+        <TableRow>
 
             <TextView
                 android:layout_column="1"
@@ -68,7 +99,7 @@
                 android:textStyle="bold" />
         </TableRow>
 
-        <TableRow >
+        <TableRow>
 
             <TextView
                 android:layout_column="1"
@@ -85,7 +116,7 @@
                 android:textStyle="bold" />
         </TableRow>
 
-        <TableRow >
+        <TableRow>
 
             <TextView
                 android:layout_column="1"
@@ -103,7 +134,7 @@
                 android:textStyle="bold" />
         </TableRow>
 
-        <TableRow >
+        <TableRow>
 
             <TextView
                 android:layout_column="1"
@@ -121,7 +152,7 @@
                 android:textStyle="bold" />
         </TableRow>
 
-        <TableRow >
+        <TableRow>
 
             <TextView
                 android:layout_column="1"

@@ -1,32 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
-        android:id="@+id/contactDetails"
-        android:title="@string/contact_details">
-    </item>
-    <item
-        android:id="@+id/contactEdit"
-        android:title="@string/contact_edit">
-    </item>
-    <item
-        android:id="@+id/contactRemove"
-        android:title="@string/contact_remove">
-    </item>
-    <item
-        android:id="@+id/contactAuthorization"
-        android:title="Authorization">
-        <menu>
-            <item
-                android:id="@+id/contactAuthResend"
-                android:title="Resend"/>
-            <item
-                android:id="@+id/contactAuthRerequest"
-                android:title="Rerequest"/>
-            <item
-                android:id="@+id/contactAuthRemove"
-                android:title="Remove"/>
-        </menu>
-    </item>
+    <group android:id="@+id/contactsOnlineGroup" >
+        <item
+            android:id="@+id/contactDetails"
+            android:title="@string/contact_details">
+        </item>
+        <item
+            android:id="@+id/contactEdit"
+            android:title="@string/contact_edit">
+        </item>
+        <item
+            android:id="@+id/contactRemove"
+            android:title="@string/contact_remove">
+        </item>
+        <item
+            android:id="@+id/contactAuthorization"
+            android:title="Authorization">
+            <menu>
+                <item
+                    android:id="@+id/contactAuthResend"
+                    android:title="Resend"/>
+                <item
+                    android:id="@+id/contactAuthRerequest"
+                    android:title="Rerequest"/>
+                <item
+                    android:id="@+id/contactAuthRemove"
+                    android:title="Remove"/>
+            </menu>
+        </item>
+    </group>
 
 </menu>

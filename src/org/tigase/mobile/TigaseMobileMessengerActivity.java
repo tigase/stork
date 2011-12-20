@@ -5,6 +5,7 @@ import java.util.List;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
@@ -557,6 +558,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+		final boolean sessionEstablished = jaxmpp.isConnected()
+				&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 		MenuInflater inflater = getMenuInflater();
 		menu.clear();
 		if (currentPage == 0) {
@@ -565,10 +569,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			final boolean serviceActive = JaxmppService.isServiceActive();
 
 			MenuItem con = menu.findItem(R.id.connectButton);
-			con.setEnabled(!serviceActive);
+			con.setVisible(!serviceActive);
 
 			MenuItem dcon = menu.findItem(R.id.disconnectButton);
-			dcon.setEnabled(serviceActive);
+			dcon.setVisible(serviceActive);
+
+			MenuItem add = menu.findItem(R.id.contactAdd);
+			add.setVisible(sessionEstablished);
 
 		} else {
 			inflater.inflate(R.menu.chat_main_menu, menu);

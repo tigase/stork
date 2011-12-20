@@ -2,6 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
+        android:icon="@android:drawable/ic_menu_add"
         android:id="@+id/contactAdd"
         android:title="@string/contact_add">
     </item>
@@ -25,7 +26,8 @@
     </item>
 
     <item
-        android:id="@+id/showChatsButton"
+        android:id="@+id/showChatsButton" 
+         android:icon="@drawable/ic_menu_chatswitch"
         android:title="@string/showChatsButton">
     </item>
 

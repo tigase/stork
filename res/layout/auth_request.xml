@@ -18,7 +18,8 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Someone requested " />
+                android:padding="3dp"
+                android:text="This user wants to subscribe to your presence." />
 
             <include
                 android:id="@+id/include1"
@@ -49,14 +50,13 @@
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_yesButton"
             android:text="@android:string/no" />
-        
+
         <Button
             android:id="@+id/req_cancelButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_noButton"
             android:text="@android:string/cancel" />
-        
     </RelativeLayout>
 
 </RelativeLayout>

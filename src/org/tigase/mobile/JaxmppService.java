@@ -619,7 +619,7 @@ public class JaxmppService extends Service {
 		String notiticationTitle = "Authentication request: " + be.getJid();
 		String expandedNotificationText = notiticationTitle;
 
-		Notification notification = new Notification(R.drawable.user_ask, notiticationTitle, System.currentTimeMillis());
+		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		notification.defaults |= Notification.DEFAULT_SOUND;
@@ -829,7 +829,7 @@ public class JaxmppService extends Service {
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
-		int ico = R.drawable.new_message;
+		int ico = R.drawable.ic_stat_message;
 
 		String n = (new RosterDisplayTools(getApplicationContext())).getDisplayName(event.getMessage().getFrom().getBareJid());
 		if (n == null)

@@ -144,10 +144,16 @@ public class RosterFragment extends Fragment {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
 
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final boolean sessionEstablished = jaxmpp.isConnected()
+				&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
+
 		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
 		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
 			MenuInflater m = new MenuInflater(getActivity());
 			m.inflate(R.menu.roster_context_menu, menu);
+
+			menu.setGroupVisible(R.id.contactsOnlineGroup, sessionEstablished);
 		}
 	}
 

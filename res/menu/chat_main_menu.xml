@@ -6,9 +6,10 @@
         android:icon="@android:drawable/ic_menu_close_clear_cancel"
         android:title="@string/closeChatButton">
     </item>
-
     <item
         android:id="@+id/showChatsButton"
+        android:icon="@drawable/ic_menu_chatswitch"
         android:title="@string/showChatsButton">
     </item>
+
 </menu>
