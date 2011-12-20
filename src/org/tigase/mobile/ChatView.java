@@ -44,13 +44,13 @@ public class ChatView extends LinearLayout {
 	public ChatView(Context context) {
 		super(context);
 		this.jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
-		this.prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
+		this.prefs = getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 	}
 
 	public ChatView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
-		this.prefs = getContext().getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
+		this.prefs = getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 	}
 
 	public Chat getChat() {
@@ -60,7 +60,7 @@ public class ChatView extends LinearLayout {
 	private BareJID getCurrentUserJid() {
 		JID jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
 		if (jid == null) {
-			String x = prefs.getString("user_jid", null);
+			String x = prefs.getString(Preferences.USER_JID_KEY, null);
 			if (x == null)
 				throw new RuntimeException("Users JID is not defined");
 			jid = JID.jidInstance(x);
@@ -77,7 +77,7 @@ public class ChatView extends LinearLayout {
 
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				boolean ets = prefs.getBoolean("enter_to_send", true);
+				boolean ets = prefs.getBoolean(Preferences.ENTER_TO_SEND_KEY, true);
 				if (ets && keyCode == KeyEvent.KEYCODE_ENTER) {
 					sendMessage();
 					return true;

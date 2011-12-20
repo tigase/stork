@@ -191,11 +191,11 @@ public class JaxmppService extends Service {
 				be.setStatus(userStatusMessage);
 				if (focused) {
 					be.setShow(userStatusShow);
-					be.setPriority(prefs.getInt("default_priority", 5));
+					be.setPriority(prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5));
 				} else {
 					be.setShow(Show.away);
 					be.setStatus("Auto away");
-					be.setPriority(prefs.getInt("auto_away_priority", 0));
+					be.setPriority(prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0));
 				}
 			}
 		};
@@ -415,26 +415,30 @@ public class JaxmppService extends Service {
 	public void onCreate() {
 		if (DEBUG)
 			Log.i(TAG, "onCreate()");
+		this.prefs = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
 		getJaxmpp().getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.TRUE);
 		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
 		getJaxmpp().getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 		getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
+		final String nickname = prefs.getString(Preferences.NICKNAME_KEY, null);
+		getJaxmpp().getProperties().setUserProperty(SessionObject.NICKNAME,
+				nickname == null || nickname.length() == 0 ? null : nickname);
+
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
 
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-				if ("notification_type".equals(key)) {
+				if (Preferences.NOTIFICATION_TYPE_KEY.equals(key)) {
 					notificationVariant = NotificationVariant.valueOf(sharedPreferences.getString(key, "always"));
 					notificationUpdate();
 				}
 			}
 		};
 
-		this.prefs = getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
-		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
-		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
+		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -543,7 +547,7 @@ public class JaxmppService extends Service {
 				if (DEBUG)
 					Log.d(TAG, "Focused. Sending online presence.");
 				focused = true;
-				int pr = prefs.getInt("default_priority", 5);
+				int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
 
 				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow, userStatusMessage,
 						pr);
@@ -551,7 +555,7 @@ public class JaxmppService extends Service {
 				if (DEBUG)
 					Log.d(TAG, "Sending auto-away presence");
 				focused = false;
-				int pr = prefs.getInt("auto_away_priority", 0);
+				int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
 
 				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
 			}
@@ -572,9 +576,9 @@ public class JaxmppService extends Service {
 			this.focused = intent.getBooleanExtra("focused", false);
 		}
 
-		final JID jid = JID.jidInstance(prefs.getString("user_jid", null));
-		final String password = prefs.getString("user_password", null);
-		final String hostname = prefs.getString("hostname", null);
+		final JID jid = JID.jidInstance(prefs.getString(Preferences.USER_JID_KEY, null));
+		final String password = prefs.getString(Preferences.USER_PASSWORD_KEY, null);
+		final String hostname = prefs.getString(Preferences.HOSTNAME_KEY, null);
 
 		if (jid == null || password == null || password.length() == 0) {
 			Intent x = new Intent().setClass(this, MessengerPreferenceActivity.class);
@@ -589,7 +593,7 @@ public class JaxmppService extends Service {
 		serviceActive = true;
 		this.reconnect = true;
 
-		notificationVariant = NotificationVariant.valueOf(prefs.getString("notification_type", "always"));
+		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
 		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.VERSION_KEY,
@@ -688,7 +692,7 @@ public class JaxmppService extends Service {
 					r.run();
 				}
 			};
-			int timeInSecs = prefs.getInt("reconnect_time", 5);
+			int timeInSecs = prefs.getInt(Preferences.RECONNECT_TIME_KEY, 5);
 			if (connectionErrorCounter > 20) {
 				timeInSecs += 60 * 5;
 			} else if (connectionErrorCounter > 10) {

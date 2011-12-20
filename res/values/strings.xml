@@ -48,5 +48,8 @@
     <string name="pref_reconnect_time_dialog">Enter reconnect delay</string>
     <string name="pref_login_ui_section_title">User Interface</string>
     <string name="pref_login_ui_notification_title">Application icon</string>
+    <string name="pref_nickname_dialog">Nickname</string>
+    <string name="pref_nickname_title">Nickname</string>
+    <string name="pref_nickname_summary">Enter your nickname</string>
 
 </resources>

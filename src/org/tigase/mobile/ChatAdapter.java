@@ -10,6 +10,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,11 +27,16 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID, VCardsCacheTableMetaData.FIELD_DATA };
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
+	private String nickname;
 	private final RosterDisplayTools rdt;
 
 	public ChatAdapter(Context context, int layout, Cursor c) {
 		super(context, layout, c, cols, names);
 		this.rdt = new RosterDisplayTools(context);
+
+		SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		String tmp = prefs.getString(Preferences.NICKNAME_KEY, null);
+		nickname = tmp == null || tmp.length() == 0 ? null : tmp;
 	}
 
 	@Override
@@ -65,7 +71,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			view.setBackgroundColor(context.getResources().getColor(R.color.message_his_background));
 			msgStatus.setVisibility(View.GONE);
 		} else if (state == ChatTableMetaData.STATE_OUT_NOT_SENT || state == ChatTableMetaData.STATE_OUT_SENT) {
-			nickname.setText("Ja");
+			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_AUTHOR_JID)));
+			nickname.setText(this.nickname == null ? jid.getLocalpart() : this.nickname);
 
 			nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
 			webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
@@ -91,5 +98,4 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		timestamp.setText(df.format(t));
 
 	}
-
 }

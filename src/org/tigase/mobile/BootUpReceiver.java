@@ -9,9 +9,9 @@ public class BootUpReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent i) {
-		SharedPreferences prefs = context.getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
+		SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 
-		boolean autostart = prefs.getBoolean("autostart", false);
+		boolean autostart = prefs.getBoolean(Preferences.AUTOSTART_KEY, false);
 		if (autostart) {
 			Intent intent = new Intent(context, JaxmppService.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

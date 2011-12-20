@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
@@ -31,13 +32,13 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 	public DBRosterCacheProvider(Context context) {
 		this.context = context;
 		this.dbHelper = new MessengerDatabaseHelper(context);
-		this.prefs = context.getSharedPreferences("org.tigase.mobile_preferences", Context.MODE_PRIVATE);
+		this.prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 
 	}
 
 	@Override
 	public String getCachedVersion() {
-		return prefs.getString("roster_version", "");
+		return prefs.getString(Preferences.ROSTER_VERSION_KEY, "");
 	}
 
 	@Override
@@ -108,7 +109,7 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 
 				long id = db.insert(RosterCacheTableMetaData.TABLE_NAME, null, v);
 			}
-			prefs.edit().putString("roster_version", receivedVersion).commit();
+			prefs.edit().putString(Preferences.ROSTER_VERSION_KEY, receivedVersion).commit();
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();

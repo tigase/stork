@@ -23,6 +23,12 @@
             android:title="@string/pref_login_password_title" >
         </EditTextPreference>
 
+           <EditTextPreference
+            android:dialogTitle="@string/pref_nickname_dialog"
+            android:key="nickname"
+            android:summary="@string/pref_nickname_summary"
+            android:title="@string/pref_nickname_title" />
+        
         <EditTextPreference
             android:dialogTitle="@string/pref_login_hostname_dialog"
             android:key="hostname"
