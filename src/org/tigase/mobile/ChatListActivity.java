@@ -2,6 +2,9 @@ package org.tigase.mobile;
 
 import java.util.ArrayList;
 
+import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.RosterProvider;
+
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -10,6 +13,10 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -77,6 +84,16 @@ public class ChatListActivity extends Activity {
 
 			Chat chat = this.chats.get(position);
 
+			final Cursor cursor = getContentResolver().query(
+					Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+			byte[] avatarData = null;
+			try {
+				cursor.moveToNext();
+				avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
+			} finally {
+				cursor.close();
+			}
+
 			String x;
 			RosterItem ri = this.roster.get(chat.getJid().getBareJid());
 			if (ri == null)
@@ -111,6 +128,15 @@ public class ChatListActivity extends Activity {
 
 			TextView tv = (TextView) imageView.findViewById(R.id.chat_list_item_name);
 			tv.setText(x);
+
+			ImageView avatar = (ImageView) imageView.findViewById(R.id.imageView1);
+
+			if (avatarData != null) {
+				Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
+				avatar.setImageBitmap(bmp);
+			} else {
+				avatar.setImageResource(R.drawable.user_avatar);
+			}
 
 			return imageView;
 		}
