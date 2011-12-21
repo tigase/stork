@@ -1,7 +1,11 @@
-package org.tigase.mobile;
+package org.tigase.mobile.chat;
 
 import java.sql.Date;
 
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.Preferences;
+import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 

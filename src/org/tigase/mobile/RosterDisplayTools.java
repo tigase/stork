@@ -1,5 +1,7 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.roster.CPresence;
+
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;

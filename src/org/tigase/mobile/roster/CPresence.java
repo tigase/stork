@@ -1,4 +1,4 @@
-package org.tigase.mobile;
+package org.tigase.mobile.roster;
 
 import java.util.HashMap;
 import java.util.Map;

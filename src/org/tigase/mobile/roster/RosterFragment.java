@@ -1,7 +1,12 @@
-package org.tigase.mobile;
+package org.tigase.mobile.roster;
 
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.vcard.VCardViewActivity;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;

@@ -1,4 +1,9 @@
-package org.tigase.mobile;
+package org.tigase.mobile.roster;
+
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.R;
+import org.tigase.mobile.WarningDialog;
+import org.tigase.mobile.vcard.VCardViewActivity;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;

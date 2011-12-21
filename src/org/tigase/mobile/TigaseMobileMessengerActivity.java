@@ -2,6 +2,12 @@ package org.tigase.mobile;
 
 import java.util.List;
 
+import org.tigase.mobile.chat.ChatHistoryFragment;
+import org.tigase.mobile.chatlist.ChatListActivity;
+import org.tigase.mobile.roster.ContactEditActivity;
+import org.tigase.mobile.roster.RosterFragment;
+import org.tigase.mobile.service.JaxmppService;
+
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;

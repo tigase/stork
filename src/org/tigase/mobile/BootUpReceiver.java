@@ -1,5 +1,7 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.service.JaxmppService;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

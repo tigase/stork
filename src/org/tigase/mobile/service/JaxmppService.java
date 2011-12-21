@@ -1,4 +1,4 @@
-package org.tigase.mobile;
+package org.tigase.mobile.service;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,10 +9,17 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MessengerPreferenceActivity;
+import org.tigase.mobile.Preferences;
+import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.roster.AuthRequestActivity;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;

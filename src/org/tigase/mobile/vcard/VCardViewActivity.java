@@ -1,5 +1,7 @@
-package org.tigase.mobile;
+package org.tigase.mobile.vcard;
 
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.R;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;

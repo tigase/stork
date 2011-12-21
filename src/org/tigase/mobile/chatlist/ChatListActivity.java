@@ -1,9 +1,13 @@
-package org.tigase.mobile;
+package org.tigase.mobile.chatlist;
 
 import java.util.ArrayList;
 
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
