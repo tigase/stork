@@ -133,6 +133,8 @@ public class JaxmppService extends Service {
 		return serviceActive;
 	}
 
+	private TimerTask autoPresenceTask;
+
 	private int connectionErrorCounter = 0;
 
 	private ConnectivityManager connManager;
@@ -540,34 +542,28 @@ public class JaxmppService extends Service {
 	}
 
 	protected void onPageChanged(int pageIndex) {
-		try {
-			boolean connected = getState() == State.connected
-					&& getJaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
-			Log.d(TAG, "onPageChanged(): " + focused + ", " + pageIndex);
+		boolean connected = getState() == State.connected
+				&& getJaxmpp().getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
+		Log.d(TAG, "onPageChanged(): " + focused + ", " + pageIndex);
 
-			if (!connected) {
-				Log.d(TAG, "onPageChanged(): Not connected!");
-				return;
-			}
+		if (!connected) {
+			Log.d(TAG, "onPageChanged(): Not connected!");
+			return;
+		}
 
-			if (!focused && pageIndex >= 0) {
-				if (DEBUG)
-					Log.d(TAG, "Focused. Sending online presence.");
-				focused = true;
-				int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
+		if (!focused && pageIndex >= 0) {
+			if (DEBUG)
+				Log.d(TAG, "Focused. Sending online presence.");
+			focused = true;
+			int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
 
-				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(userStatusShow, userStatusMessage,
-						pr);
-			} else if (focused && pageIndex == -1) {
-				if (DEBUG)
-					Log.d(TAG, "Sending auto-away presence");
-				focused = false;
-				int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
-
-				getJaxmpp().getModulesManager().getModule(PresenceModule.class).setPresence(Show.away, "Auto away", pr);
-			}
-		} catch (JaxmppException e) {
-			Log.e(TAG, "Can't update priority!");
+			sendAutoPresence(userStatusShow, userStatusMessage, pr, false);
+		} else if (focused && pageIndex == -1) {
+			if (DEBUG)
+				Log.d(TAG, "Sending auto-away presence");
+			focused = false;
+			int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
+			sendAutoPresence(Show.away, "Auto away", pr, true);
 		}
 	}
 
@@ -625,8 +621,6 @@ public class JaxmppService extends Service {
 	}
 
 	protected void onSubscribeRequest(PresenceEvent be) {
-		// XXX
-
 		String notiticationTitle = "Authentication request: " + be.getJid();
 		String expandedNotificationText = notiticationTitle;
 
@@ -782,6 +776,38 @@ public class JaxmppService extends Service {
 		} catch (Exception e) {
 			Log.e("tigase", "WTF?", e);
 		}
+	}
+
+	private void sendAutoPresence(final Show show, final String status, final int priority, final boolean delayed) {
+		final PresenceModule presenceModule = getJaxmpp().getModulesManager().getModule(PresenceModule.class);
+
+		if (autoPresenceTask != null) {
+			autoPresenceTask.cancel();
+			autoPresenceTask = null;
+		}
+
+		if (delayed) {
+			autoPresenceTask = new TimerTask() {
+
+				@Override
+				public void run() {
+					autoPresenceTask = null;
+					try {
+						presenceModule.setPresence(show, status, priority);
+					} catch (Exception e) {
+						Log.e(TAG, "Can't send auto presence!", e);
+					}
+				}
+			};
+			timer.schedule(autoPresenceTask, 1000 * 60);
+		} else {
+			try {
+				presenceModule.setPresence(show, status, priority);
+			} catch (Exception e) {
+				Log.e(TAG, "Can't send auto presence!", e);
+			}
+		}
+
 	}
 
 	protected void sendUnsentMessages() {
