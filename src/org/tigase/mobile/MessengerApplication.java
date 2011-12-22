@@ -1,21 +1,14 @@
 package org.tigase.mobile;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
 
-import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.factory.UniversalFactory;
 import tigase.jaxmpp.core.client.factory.UniversalFactory.FactorySpi;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector.DnsResolver;
 import android.app.Application;
 import android.content.Context;
@@ -55,23 +48,19 @@ public class MessengerApplication extends Application {
 		});
 
 		jaxmpp = new Jaxmpp();
-		Logger logger = Logger.getLogger("tigase.jaxmpp");
-		// create a ConsoleHandler
-		Handler handler = new ConsoleHandler();
-		handler.setLevel(Level.ALL);
-		logger.addHandler(handler);
-		logger.setLevel(Level.ALL);
+		// Logger logger = Logger.getLogger("tigase.jaxmpp");
+		// // create a ConsoleHandler
+		// Handler handler = new ConsoleHandler();
+		// handler.setLevel(Level.ALL);
+		// logger.addHandler(handler);
+		// logger.setLevel(Level.ALL);
 
-		// for Socket connector
 		jaxmpp.getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.FALSE);
 
 		// port value is not necessary. Default is 5222
-		jaxmpp.getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
 
 		// "bosh" and "socket" values available
 		jaxmpp.getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
-
-		jaxmpp.getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
 
 	}
 

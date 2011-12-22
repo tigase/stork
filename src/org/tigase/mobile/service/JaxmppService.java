@@ -1,5 +1,6 @@
 package org.tigase.mobile.service;
 
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
@@ -26,7 +27,6 @@ import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -37,6 +37,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
@@ -72,7 +73,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 public class JaxmppService extends Service {
 
@@ -119,15 +119,32 @@ public class JaxmppService extends Service {
 		only_disconnected
 	}
 
+	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
+
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
 	private static boolean serviceActive = false;
 
 	private static final String TAG = "tigase";
+
+	private static Throwable extractCauseException(Exception ex) {
+		Throwable th = ex.getCause();
+		if (th == null)
+			return ex;
+
+		for (int i = 0; i < 4; i++) {
+			if (!(th instanceof JaxmppException))
+				return th;
+			if (th.getCause() == null)
+				return th;
+			th = th.getCause();
+		}
+		return ex;
+	}
 
 	public static boolean isServiceActive() {
 		return serviceActive;
@@ -146,6 +163,8 @@ public class JaxmppService extends Service {
 	private ClientFocusReceiver focusChangeReceiver;
 
 	private boolean focused;
+
+	private Listener<AuthEvent> invalidAuthListener;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
@@ -257,6 +276,15 @@ public class JaxmppService extends Service {
 					changeRosterItem(be);
 				else if (be.getType() == RosterModule.ItemRemoved)
 					changeRosterItem(be);
+			}
+		};
+
+		this.invalidAuthListener = new Listener<AuthModule.AuthEvent>() {
+
+			@Override
+			public void handleEvent(AuthEvent be) throws JaxmppException {
+				notificationUpdateFail("Invalid JID or password");
+				stopSelf();
 			}
 		};
 
@@ -399,8 +427,33 @@ public class JaxmppService extends Service {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	private void notificationUpdateFail() {
+	private void notificationUpdateFail(String message) {
 		notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", "Connection impossible");
+
+		String notiticationTitle = "Connection error";
+		String expandedNotificationText = message == null ? notiticationTitle : message;
+
+		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		final Context context = getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("error", NOTIFICATION_ID, notification);
+
 	}
 
 	private void notificationUpdateReconnect(Date d) {
@@ -475,6 +528,7 @@ public class JaxmppService extends Service {
 		getJaxmpp().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.SubscribeRequest,
 				this.subscribeRequestListener);
 
+		getJaxmpp().addListener(AuthModule.AuthFailed, this.invalidAuthListener);
 		getJaxmpp().addListener(Connector.StateChanged, this.disconnectListener);
 
 		getJaxmpp().getModulesManager().getModule(MessageModule.class).addListener(MessageModule.MessageReceived,
@@ -531,7 +585,8 @@ public class JaxmppService extends Service {
 		getJaxmpp().getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.SubscribeRequest,
 				this.subscribeRequestListener);
 
-		getJaxmpp().removeListener(JaxmppCore.Disconnected, this.disconnectListener);
+		getJaxmpp().removeListener(AuthModule.AuthFailed, this.invalidAuthListener);
+		getJaxmpp().removeListener(Connector.StateChanged, this.disconnectListener);
 
 		getJaxmpp().getModulesManager().getModule(MessageModule.class).removeListener(MessageModule.MessageReceived,
 				this.messageListener);
@@ -568,10 +623,9 @@ public class JaxmppService extends Service {
 	}
 
 	@Override
-	public void onStart(Intent intent, int startId) {
+	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)
 			Log.i(TAG, "onStartCommand()");
-		super.onStart(intent, startId);
 		if (intent != null) {
 			// Log.i(TAG, intent.getExtras().toString());
 			if (DEBUG)
@@ -579,20 +633,6 @@ public class JaxmppService extends Service {
 			this.focused = intent.getBooleanExtra("focused", false);
 		}
 
-		final JID jid = JID.jidInstance(prefs.getString(Preferences.USER_JID_KEY, null));
-		final String password = prefs.getString(Preferences.USER_PASSWORD_KEY, null);
-		final String hostname = prefs.getString(Preferences.HOSTNAME_KEY, null);
-
-		if (jid == null || password == null || password.length() == 0) {
-			Intent x = new Intent().setClass(this, MessengerPreferenceActivity.class);
-			x.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			x.putExtra("missingLogin", Boolean.TRUE);
-			getApplicationContext().startActivity(x);
-
-			stopSelf();
-
-			return;
-		}
 		serviceActive = true;
 		this.reconnect = true;
 
@@ -603,21 +643,9 @@ public class JaxmppService extends Service {
 				getResources().getString(R.string.app_version));
 		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
-		if (hostname != null && hostname.trim().length() > 0)
-			getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-		else
-			getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, null);
-		getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, jid);
-		getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
+		reconnect();
 
-		try {
-			reconnect();
-		} catch (Exception e) {
-			Log.e(TAG, "Can't connect. Show error dialog.", e);
-			Toast.makeText(this, "Cant connect: " + e.getMessage(), Toast.LENGTH_LONG).show();
-
-			stopSelf();
-		}
+		return START_STICKY;
 	}
 
 	protected void onSubscribeRequest(PresenceEvent be) {
@@ -644,7 +672,7 @@ public class JaxmppService extends Service {
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
-		notificationManager.notify("authRequest:" + be.getJid(), CHAT_NOTIFICATION_ID, notification);
+		notificationManager.notify("authRequest:" + be.getJid(), AUTH_REQUEST_NOTIFICATION_ID, notification);
 	}
 
 	private void reconnect() {
@@ -652,6 +680,7 @@ public class JaxmppService extends Service {
 	}
 
 	private void reconnect(boolean delayed) {
+		Log.d(TAG, "reconnect(" + delayed + ")", new Exception());
 		final Runnable r = new Runnable() {
 
 			@Override
@@ -665,9 +694,41 @@ public class JaxmppService extends Service {
 							Log.d(TAG, "Logging in with " + active.getTypeName());
 
 						usedNetworkType = active.getType();
-						getJaxmpp().login(false);
+
+						final JID jid = JID.jidInstance(prefs.getString(Preferences.USER_JID_KEY, null));
+						final String password = prefs.getString(Preferences.USER_PASSWORD_KEY, null);
+						final String hostname = prefs.getString(Preferences.HOSTNAME_KEY, null);
+
+						getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
+
+						if (jid.getResource() != null)
+							getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, jid.getResource());
+						else
+							getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, null);
+
+						if (hostname != null && hostname.trim().length() > 0)
+							getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+						else
+							getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, null);
+						getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, JID.jidInstance(jid.getBareJid()));
+						getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
+
+						if (jid == null || password == null || password.length() == 0) {
+							Intent x = new Intent().setClass(JaxmppService.this, MessengerPreferenceActivity.class);
+							x.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							x.putExtra("missingLogin", Boolean.TRUE);
+							getApplicationContext().startActivity(x);
+							stopSelf();
+						} else
+							getJaxmpp().login(false);
 					}
 				} catch (Exception e) {
+					final Throwable cause = extractCauseException(e);
+					if (cause instanceof UnknownHostException) {
+						notificationUpdateFail("Unknown host: " + cause.getMessage());
+						stopSelf();
+					}
+
 					++connectionErrorCounter;
 					try {
 						getJaxmpp().disconnect(true);
@@ -683,7 +744,7 @@ public class JaxmppService extends Service {
 
 		cancelReconnectTask();
 		if (!delayed)
-			r.run();
+			(new Thread(r)).start();
 		else {
 			this.reconnectTask = new TimerTask() {
 
@@ -736,9 +797,10 @@ public class JaxmppService extends Service {
 			if (reconnect) {
 				if (connectionErrorCounter < 50)
 					reconnect(true);
-				else
-					notificationUpdateFail();
-
+				else {
+					notificationUpdateFail("Can't connect to server");
+					stopSelf();
+				}
 			}
 		}
 
