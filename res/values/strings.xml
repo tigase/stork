@@ -20,7 +20,7 @@
     <string name="logoutButton">Disconnect</string>
     <string name="propertiesButton">Settings</string>
     <string name="preferencesTitle">Settings</string>
-    <string name="app_version">0.0.9 (2011-12-05)</string>
+    <string name="app_version">0.0.10 (2011-12-29)</string>
     <string name="closeChatButton">Close chat</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>

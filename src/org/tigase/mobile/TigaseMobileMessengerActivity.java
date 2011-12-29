@@ -179,7 +179,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -194,8 +194,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private final Listener<MessageEvent> chatListener;
 
 	private int currentPage;
-
-	private Bundle incomingExtras;
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
 
@@ -232,6 +230,26 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return null;
 	}
 
+	private int findChatPage(Bundle incomingExtras) {
+		if (incomingExtras != null) {
+			String s_jid = incomingExtras.getString("jid");
+			long chatId = incomingExtras.getLong("chatId", -1);
+			incomingExtras = null;
+			if (DEBUG)
+				Log.d(TAG, "Intent with data? chatId=" + chatId);
+			if (s_jid != null && chatId != -1) {
+				final Integer idx = findChat(chatId);
+				if (idx != null) {
+					int currentPage = idx + (isXLarge() ? 0 : 1);
+					if (DEBUG)
+						Log.d(TAG, "Set current page " + currentPage);
+					return currentPage;
+				}
+			}
+		}
+		return -1;
+	}
+
 	protected List<Chat> getChatList() {
 		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
 		return jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
@@ -262,7 +280,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onActivityResult()");
 		if (requestCode == REQUEST_CHAT && resultCode == Activity.RESULT_OK) {
-			this.incomingExtras = data.getExtras();
+			this.currentPage = findChatPage(data.getExtras());
 		}
 	}
 
@@ -281,8 +299,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onCreate()");
 
 		super.onCreate(savedInstanceState);
-		if (savedInstanceState != null) {
-			currentPage = savedInstanceState.getInt("currentPage", 0);
+		if (savedInstanceState != null && currentPage == -1) {
+			currentPage = savedInstanceState.getInt("currentPage", -1);
 		}
 
 		if (isXLarge()) {
@@ -394,12 +412,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// null, null);
 		}
 
-		final Bundle extras = getIntent().getExtras();
-		if (extras != null) {
-			if (DEBUG)
-				Log.i(TAG, "Jest extras! " + extras.getString("jid"));
-			incomingExtras = extras;
-		}
 	}
 
 	@Override
@@ -438,22 +450,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onDetachedFromWindow()");
 	}
 
-	protected void onMessageEvent(final MessageEvent be) {
-		Runnable action = new Runnable() {
-
-			@Override
-			public void run() {
-				if (be.getType() == MessageModule.ChatCreated) {
-					viewPager.getAdapter().notifyDataSetChanged();
-				} else if (be.getType() == MessageModule.ChatClosed) {
-					viewPager.getAdapter().notifyDataSetChanged();
-				}
-			}
-		};
-
-		viewPager.post(action);
-	}
-
 	// @Override
 	// protected void onActivityResult(int requestCode, int resultCode, Intent
 	// data) {
@@ -488,12 +484,28 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	// }
 	// }
 
+	protected void onMessageEvent(final MessageEvent be) {
+		Runnable action = new Runnable() {
+
+			@Override
+			public void run() {
+				if (be.getType() == MessageModule.ChatCreated) {
+					viewPager.getAdapter().notifyDataSetChanged();
+				} else if (be.getType() == MessageModule.ChatClosed) {
+					viewPager.getAdapter().notifyDataSetChanged();
+				}
+			}
+		};
+
+		viewPager.post(action);
+	}
+
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent()");
-		this.incomingExtras = intent.getExtras();
+		this.currentPage = findChatPage(intent.getExtras());
 	}
 
 	@Override
@@ -603,20 +615,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		jaxmpp.getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
 
-		if (incomingExtras != null) {
-			String s_jid = incomingExtras.getString("jid");
-			long chatId = incomingExtras.getLong("chatId", -1);
-			incomingExtras = null;
-			if (DEBUG)
-				Log.d(TAG, "Intent with data? chatId=" + chatId);
-			if (s_jid != null && chatId != -1) {
-				final Integer idx = findChat(chatId);
-				if (idx != null) {
-					currentPage = idx + (isXLarge() ? 0 : 1);
-					if (DEBUG)
-						Log.d(TAG, "Set current page " + currentPage);
-				}
-			}
+		if (currentPage < 0) {
+			currentPage = 0;
 		}
 		viewPager.post(new Runnable() {
 

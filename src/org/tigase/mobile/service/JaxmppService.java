@@ -123,7 +123,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -480,7 +480,6 @@ public class JaxmppService extends Service {
 		this.prefs = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
-		getJaxmpp().getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.TRUE);
 		getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
 		getJaxmpp().getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 		getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, "TigaseMobileMessenger");
@@ -643,7 +642,8 @@ public class JaxmppService extends Service {
 				getResources().getString(R.string.app_version));
 		getJaxmpp().getProperties().setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
-		reconnect();
+		// ni chuja nie wiem dlaczego to ma byc zakomentowane
+		// reconnect();
 
 		return START_STICKY;
 	}
@@ -695,23 +695,10 @@ public class JaxmppService extends Service {
 
 						usedNetworkType = active.getType();
 
-						final JID jid = JID.jidInstance(prefs.getString(Preferences.USER_JID_KEY, null));
+						final JID jid = prefs.getString(Preferences.USER_JID_KEY, null) == null ? null
+								: JID.jidInstance(prefs.getString(Preferences.USER_JID_KEY, null));
 						final String password = prefs.getString(Preferences.USER_PASSWORD_KEY, null);
 						final String hostname = prefs.getString(Preferences.HOSTNAME_KEY, null);
-
-						getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
-
-						if (jid.getResource() != null)
-							getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, jid.getResource());
-						else
-							getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, null);
-
-						if (hostname != null && hostname.trim().length() > 0)
-							getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-						else
-							getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, null);
-						getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID, JID.jidInstance(jid.getBareJid()));
-						getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
 
 						if (jid == null || password == null || password.length() == 0) {
 							Intent x = new Intent().setClass(JaxmppService.this, MessengerPreferenceActivity.class);
@@ -719,8 +706,25 @@ public class JaxmppService extends Service {
 							x.putExtra("missingLogin", Boolean.TRUE);
 							getApplicationContext().startActivity(x);
 							stopSelf();
-						} else
+						} else {
+							getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_PORT, 5222);
+
+							if (jid.getResource() != null)
+								getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, jid.getResource());
+							else
+								getJaxmpp().getProperties().setUserProperty(SessionObject.RESOURCE, null);
+
+							if (hostname != null && hostname.trim().length() > 0)
+								getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+							else
+								getJaxmpp().getProperties().setUserProperty(SocketConnector.SERVER_HOST, null);
+							getJaxmpp().getProperties().setUserProperty(SessionObject.USER_JID,
+									JID.jidInstance(jid.getBareJid()));
+							getJaxmpp().getProperties().setUserProperty(SessionObject.PASSWORD, password);
+
 							getJaxmpp().login(false);
+						}
+
 					}
 				} catch (Exception e) {
 					final Throwable cause = extractCauseException(e);

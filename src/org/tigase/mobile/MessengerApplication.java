@@ -7,6 +7,8 @@ import tigase.jaxmpp.core.client.factory.UniversalFactory;
 import tigase.jaxmpp.core.client.factory.UniversalFactory.FactorySpi;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatSelector;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.JidOnlyChatSelector;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector.DnsResolver;
@@ -25,6 +27,14 @@ public class MessengerApplication extends Application {
 		Log.i("tigase", "Creating new instance of JaXMPP");
 
 		final Context context = this;
+		UniversalFactory.setSpi(ChatSelector.class.getName(), new FactorySpi<ChatSelector>() {
+
+			@Override
+			public ChatSelector create() {
+				return new JidOnlyChatSelector();
+			}
+		});
+
 		UniversalFactory.setSpi(AbstractChatManager.class.getName(), new FactorySpi<AbstractChatManager>() {
 
 			@Override
