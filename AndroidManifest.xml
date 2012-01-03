@@ -40,7 +40,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MessengerPreferenceActivity"
+            android:name=".preferences.AccountsEditorActivity"
+            android:label="Accounts" >
+        </activity>
+        <activity
+            android:name=".preferences.MessengerPreferenceActivity"
             android:label="@string/preferencesTitle" >
             <intent-filter>
                 <action android:name="org.tigase.mobile.MessengerPreferenceActivity" />
@@ -70,6 +74,10 @@
         <provider
             android:name=".db.providers.ChatHistoryProvider"
             android:authorities="org.tigase.mobile.db.providers.ChatHistoryProvider" >
+        </provider>
+        <provider
+            android:name=".db.providers.AccountsProvider"
+            android:authorities="org.tigase.mobile.db.providers.AccountsProvider" >
         </provider>
     </application>
 

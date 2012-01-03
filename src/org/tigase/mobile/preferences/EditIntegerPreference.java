@@ -1,4 +1,4 @@
-package org.tigase.mobile;
+package org.tigase.mobile.preferences;
 
 import android.content.Context;
 import android.preference.EditTextPreference;

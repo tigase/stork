@@ -2,27 +2,38 @@ package org.tigase.mobile;
 
 import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
+import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.service.JaxmppService;
 
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
+import tigase.jaxmpp.core.client.Connector.State;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.factory.UniversalFactory;
 import tigase.jaxmpp.core.client.factory.UniversalFactory.FactorySpi;
-import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatSelector;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.JidOnlyChatSelector;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
-import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector.DnsResolver;
 import android.app.Application;
+import android.content.ContentUris;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 public class MessengerApplication extends Application {
 
-	private Jaxmpp jaxmpp;
+	private MultiJaxmpp multiJaxmpp;
 
-	private void createJaxmpp() {
-		if (jaxmpp != null)
-			return;
+	public MessengerApplication() {
+		super();
 
 		Log.i("tigase", "Creating new instance of JaXMPP");
 
@@ -57,7 +68,6 @@ public class MessengerApplication extends Application {
 			}
 		});
 
-		jaxmpp = new Jaxmpp();
 		// Logger logger = Logger.getLogger("tigase.jaxmpp");
 		// // create a ConsoleHandler
 		// Handler handler = new ConsoleHandler();
@@ -65,19 +75,49 @@ public class MessengerApplication extends Application {
 		// logger.addHandler(handler);
 		// logger.setLevel(Level.ALL);
 
-		jaxmpp.getProperties().setUserProperty(AuthModule.FORCE_NON_SASL, Boolean.FALSE);
+	}
 
-		// port value is not necessary. Default is 5222
+	private void createMultiJaxmpp() {
+		this.multiJaxmpp = new MultiJaxmpp();
 
-		// "bosh" and "socket" values available
-		jaxmpp.getProperties().setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
+		Listener<PresenceEvent> presenceListener = new Listener<PresenceModule.PresenceEvent>() {
+
+			@Override
+			public void handleEvent(PresenceEvent be) throws JaxmppException {
+				RosterItem it = multiJaxmpp.get(be.getSessionObject()).getRoster().get(be.getJid().getBareJid());
+				if (it != null) {
+					Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
+					getContentResolver().notifyChange(insertedItem, null);
+				}
+			}
+		};
+		multiJaxmpp.addListener(PresenceModule.ContactAvailable, presenceListener);
+		multiJaxmpp.addListener(PresenceModule.ContactUnavailable, presenceListener);
+		multiJaxmpp.addListener(PresenceModule.ContactChangedPresence, presenceListener);
+
+		multiJaxmpp.addListener(Connector.StateChanged, new Listener<Connector.ConnectorEvent>() {
+
+			@Override
+			public void handleEvent(ConnectorEvent be) throws JaxmppException {
+
+				if (getState(be.getSessionObject()) == State.disconnected)
+					multiJaxmpp.get(be.getSessionObject()).getPresence().clear(true);
+			}
+		});
+		JaxmppService.updateJaxmppInstances(multiJaxmpp, getContentResolver(), getResources());
 
 	}
 
-	public Jaxmpp getJaxmpp() {
-		if (jaxmpp == null)
-			createJaxmpp();
-		return jaxmpp;
+	public MultiJaxmpp getMultiJaxmpp() {
+		if (multiJaxmpp == null) {
+			createMultiJaxmpp();
+		}
+		return multiJaxmpp;
+	}
+
+	protected final State getState(SessionObject object) {
+		State state = multiJaxmpp.get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		return state == null ? State.disconnected : state;
 	}
 
 }

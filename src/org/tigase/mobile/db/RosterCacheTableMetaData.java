@@ -4,6 +4,8 @@ import android.provider.BaseColumns;
 
 public class RosterCacheTableMetaData implements BaseColumns {
 
+	public static final String FIELD_ACCOUNT = "account";
+
 	public static final String FIELD_ASK = "ask";
 
 	public static final String FIELD_GROUP_NAME = "groups";

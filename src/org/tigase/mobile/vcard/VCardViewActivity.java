@@ -6,6 +6,7 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
@@ -83,6 +84,8 @@ public class VCardViewActivity extends Activity {
 		avatar.setImageBitmap(x);
 	}
 
+	private BareJID account;
+
 	private JID jid;
 
 	@Override
@@ -109,16 +112,19 @@ public class VCardViewActivity extends Activity {
 		final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null, null, null,
 				null);
 		this.jid = null;
+		this.account = null;
 		try {
 			cursor.moveToNext();
 			this.jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+			account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
+
 		} finally {
 			cursor.close();
 		}
 		((TextView) findViewById(R.id.vcard_fn)).setText(jid.toString());
 		((TextView) findViewById(R.id.vcard_jid)).setText(jid.toString());
 
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
 		final RosterItem rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
 
 		((TableRow) findViewById(R.id.vcard_subscription_status_row)).setVisibility(rosterItem == null ? View.GONE

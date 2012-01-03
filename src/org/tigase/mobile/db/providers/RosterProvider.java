@@ -11,9 +11,9 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -54,6 +54,7 @@ public class RosterProvider extends ContentProvider {
 			put(RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_ASK);
 			put(RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_PRESENCE);
 			put(RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_DISPLAY_NAME);
+			put(RosterTableMetaData.FIELD_ACCOUNT, RosterTableMetaData.FIELD_ACCOUNT);
 		}
 	};
 
@@ -116,8 +117,10 @@ public class RosterProvider extends ContentProvider {
 		final int indicator = uriMatcher.match(uri);
 		if (indicator == VCARD_URI_INDICATOR) {
 			String jid = uri.getLastPathSegment();
-			final Jaxmpp jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getJaxmpp();
-			RosterItem rosterItem = jaxmpp.getRoster().get(BareJID.bareJIDInstance(jid));
+			// final Jaxmpp jaxmpp = ((MessengerApplication)
+			// getContext().getApplicationContext()).getJaxmpp();
+			// RosterItem rosterItem =
+			// jaxmpp.getRoster().get(BareJID.bareJIDInstance(jid));
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			db.beginTransaction();
 			try {
@@ -138,12 +141,16 @@ public class RosterProvider extends ContentProvider {
 			} finally {
 				db.endTransaction();
 			}
-			if (rosterItem != null) {
-				Uri u = Uri.parse(CONTENT_URI + "/" + rosterItem.getId());
-				getContext().getContentResolver().notifyChange(u, null);
-				return u;
-			} else
-				return null;
+
+			for (JaxmppCore jaxmpp : ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get()) {
+				RosterItem rosterItem = jaxmpp.getRoster().get(BareJID.bareJIDInstance(jid));
+				if (rosterItem != null) {
+					Uri u = Uri.parse(CONTENT_URI + "/" + rosterItem.getId());
+					getContext().getContentResolver().notifyChange(u, null);
+				}
+			}
+
+			return null;
 		} else
 			throw new RuntimeException("There is nothing to insert! (" + indicator + ") uri=" + uri);
 	}

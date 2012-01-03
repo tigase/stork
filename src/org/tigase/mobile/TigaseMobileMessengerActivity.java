@@ -4,14 +4,19 @@ import java.util.List;
 
 import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
+import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.preferences.MessengerPreferenceActivity;
 import org.tigase.mobile.roster.ContactEditActivity;
 import org.tigase.mobile.roster.RosterFragment;
 import org.tigase.mobile.service.JaxmppService;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.BaseEvent;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
@@ -24,6 +29,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -160,12 +167,25 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// if (!active)
 			// return;
 			final long id = intent.getLongExtra("id", -1);
-			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+
+			final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null, null,
+					null, null);
+			JID jid = null;
+			BareJID account = null;
+			try {
+				cursor.moveToNext();
+				jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+				account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
+
+			} finally {
+				cursor.close();
+			}
+
+			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
 
 			for (RosterItem i : jaxmpp.getRoster().getAll()) {
 				if (id == i.getId()) {
-					JID jid = JID.jidInstance(i.getJid());
-					openChatWith(jid);
+					openChatWith(i);
 					break;
 				}
 			}
@@ -191,7 +211,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private PagerAdapter adapter;
 
-	private final Listener<MessageEvent> chatListener;
+	private final Listener<BaseEvent> chatListener;
 
 	private int currentPage;
 
@@ -201,23 +221,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private ViewPager viewRoster;
 
 	public TigaseMobileMessengerActivity() {
-		this.chatListener = new Listener<MessageModule.MessageEvent>() {
+		this.chatListener = new Listener<BaseEvent>() {
 
 			@Override
-			public void handleEvent(MessageEvent be) throws JaxmppException {
-				onMessageEvent(be);
+			public void handleEvent(BaseEvent be) throws JaxmppException {
+				if (be instanceof MessageEvent)
+					onMessageEvent((MessageEvent) be);
 			}
 		};
-	}
-
-	protected Integer findChat(final JID jid) {
-		List<Chat> l = getChatList();
-		for (int i = 0; i < l.size(); i++) {
-			Chat c = l.get(i);
-			if (c.getJid().getBareJid().equals(jid.getBareJid()))
-				return i;
-		}
-		return null;
 	}
 
 	protected Integer findChat(final long chatId) {
@@ -225,6 +236,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		for (int i = 0; i < l.size(); i++) {
 			Chat c = l.get(i);
 			if (c.getId() == chatId)
+				return i;
+		}
+		return null;
+	}
+
+	protected Integer findChat(final RosterItem rosterItem) {
+		List<Chat> l = getChatList();
+		for (int i = 0; i < l.size(); i++) {
+			Chat c = l.get(i);
+			if (c.getSessionObject() == rosterItem.getSessionObject() && c.getJid().getBareJid().equals(rosterItem.getJid()))
 				return i;
 		}
 		return null;
@@ -251,8 +272,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected List<Chat> getChatList() {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
-		return jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats();
+		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
 	}
 
 	protected boolean isXLarge() {
@@ -372,7 +392,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				} else {
 					final Chat chat = getChatList().get(i - (!isXLarge() ? 1 : 0));
-					return ChatHistoryFragment.newInstance(chat.getId());
+					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserJid().getBareJid().toString(),
+							chat.getId());
 				}
 			}
 
@@ -399,18 +420,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		};
 		viewPager.setAdapter(this.adapter);
-
-		// final ArrayAdapter<String> adapter = new
-		// ArrayAdapter<String>(getApplicationContext(), R.layout.item, item);
-		// adapter.setNotifyOnChange(true);
-		// rosterList.setAdapter(adapter);
-
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
-
-		if (!jaxmpp.isConnected()) {
-			// getContentResolver().delete(Uri.parse(RosterProvider.PRESENCE_URI),
-			// null, null);
-		}
 
 	}
 
@@ -527,10 +536,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		case R.id.closeChatButton: {
 			final int p = this.currentPage;
-			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
-
+			Chat chat = getChatList().get(p - (isXLarge() ? 0 : 1));
+			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(chat.getSessionObject());
 			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
-			Chat chat = cm.getChats().get(p - (isXLarge() ? 0 : 1));
 			try {
 				cm.close(chat);
 				if (DEBUG)
@@ -564,8 +572,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	protected void onPause() {
 		unregisterReceiver(rosterClickReceiver);
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
-		jaxmpp.getModulesManager().getModule(MessageModule.class).removeListener(this.chatListener);
+		final MultiJaxmpp multi = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
+		multi.removeListener(this.chatListener);
 		notifyPageChange(-1);
 		// TODO Auto-generated method stub
 		super.onPause();
@@ -576,9 +584,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
-		final boolean sessionEstablished = jaxmpp.isConnected()
-				&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 		MenuInflater inflater = getMenuInflater();
 		menu.clear();
 		if (currentPage == 0) {
@@ -593,7 +598,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			dcon.setVisible(serviceActive);
 
 			MenuItem add = menu.findItem(R.id.contactAdd);
-			add.setVisible(sessionEstablished);
+			add.setVisible(serviceActive);
 
 		} else {
 			inflater.inflate(R.menu.chat_main_menu, menu);
@@ -611,9 +616,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		viewPager.getAdapter().notifyDataSetChanged();
 
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp multi = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
 
-		jaxmpp.getModulesManager().getModule(MessageModule.class).addListener(this.chatListener);
+		multi.addListener(this.chatListener);
 
 		if (currentPage < 0) {
 			currentPage = 0;
@@ -644,22 +649,22 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onStop()");
 	}
 
-	protected void openChatWith(final JID jid) {
+	protected void openChatWith(final RosterItem rosterItem) {
 		Runnable r = new Runnable() {
 
 			@Override
 			public void run() {
 
 				try {
-					Integer idx = findChat(jid);
+					Integer idx = findChat(rosterItem);
 
 					if (DEBUG)
-						Log.i(TAG, "Opening new chat with " + jid + ". idx=" + idx);
+						Log.i(TAG, "Opening new chat with " + rosterItem + ". idx=" + idx);
 
 					if (idx == null) {
-						final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getJaxmpp();
-
-						jaxmpp.createChat(jid);
+						final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+								rosterItem.getSessionObject());
+						jaxmpp.createChat(JID.jidInstance(rosterItem.getJid()));
 						viewPager.setCurrentItem(getChatList().size() - (isXLarge() ? 1 : 0));
 					} else {
 						viewPager.setCurrentItem(idx + (isXLarge() ? 0 : 1));

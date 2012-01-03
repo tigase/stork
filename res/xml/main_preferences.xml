@@ -8,13 +8,21 @@
         android:key="login_data"
         android:summary="@string/pref_login_section_summary"
         android:title="@string/pref_login_section_title" >
+        <PreferenceScreen
+            android:key="fav_settings"
+            android:summary="Rearange and delete categories"
+            android:title="Manage Favorites" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:targetClass="org.tigase.mobile.preferences.AccountsEditorActivity"
+                android:targetPackage="org.tigase.mobile" />
+        </PreferenceScreen>
 
         <EditTextPreference
             android:dialogTitle="@string/pref_login_jid_dialog"
             android:key="user_jid"
             android:summary="@string/pref_login_jid_summary"
             android:title="@string/pref_login_jid_title" />
-
         <EditTextPreference
             android:dialogTitle="@string/pref_login_password_dialog"
             android:key="user_password"
@@ -22,13 +30,11 @@
             android:summary="@string/pref_login_password_summary"
             android:title="@string/pref_login_password_title" >
         </EditTextPreference>
-
-           <EditTextPreference
+        <EditTextPreference
             android:dialogTitle="@string/pref_nickname_dialog"
             android:key="nickname"
             android:summary="@string/pref_nickname_summary"
             android:title="@string/pref_nickname_title" />
-        
         <EditTextPreference
             android:dialogTitle="@string/pref_login_hostname_dialog"
             android:key="hostname"
@@ -41,12 +47,10 @@
             android:summary="@string/pref_autostart_summary"
             android:title="@string/pref_autostart_title" />
     </PreferenceCategory>
-
     <PreferenceCategory
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:key="gui_details"
         android:title="@string/pref_login_ui_section_title" >
-
         <ListPreference
             android:defaultValue="always"
             android:entries="@array/app_icon_options"
@@ -55,7 +59,8 @@
             android:title="@string/pref_login_ui_notification_title" />
 
         <CheckBoxPreference
-            android:key="enter_to_send" android:defaultValue="true"
+            android:defaultValue="true"
+            android:key="enter_to_send"
             android:summary="@string/pref_entertosend_summary"
             android:title="@string/pref_entertosend_title" />
     </PreferenceCategory>
@@ -65,22 +70,19 @@
         android:key="advanced_data"
         android:summary="@string/pref_advanced_section_summary"
         android:title="@string/pref_advanced_section_title" >
-
-        <org.tigase.mobile.EditIntegerPreference
+        <org.tigase.mobile.preferences.EditIntegerPreference
             android:defaultValue="5"
             android:dialogTitle="@string/pref_reconnect_time_dialog"
             android:key="reconnect_time"
             android:summary="@string/pref_reconnect_time_summary"
             android:title="@string/pref_reconnect_time_title" />
-
-        <org.tigase.mobile.EditIntegerPreference
+        <org.tigase.mobile.preferences.EditIntegerPreference
             android:defaultValue="5"
             android:dialogTitle="@string/pref_default_priority_dialog"
             android:key="default_priority"
             android:summary="@string/pref_default_priority_summary"
             android:title="@string/pref_default_priority_title" />
-
-        <org.tigase.mobile.EditIntegerPreference
+        <org.tigase.mobile.preferences.EditIntegerPreference
             android:defaultValue="0"
             android:dialogTitle="@string/pref_auto_away_priority_dialog"
             android:key="away_priority"

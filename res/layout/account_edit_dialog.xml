@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="5px" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:padding="5px" >
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter details of your XMPP account" />
+
+            <EditText
+                android:id="@+id/newAccountJID"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Jabber ID"
+                android:inputType="textEmailAddress" >
+
+                <requestFocus />
+            </EditText>
+
+            <EditText
+                android:id="@+id/newAccountPassowrd"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:inputType="textPassword" />
+
+            <EditText
+                android:id="@+id/newAccountNickname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nickname" />
+
+            <EditText
+                android:id="@+id/newAccountHostname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Alternative hostname" />
+        </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="52dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:gravity="center" >
+
+        <Button
+            android:id="@+id/newAccountAddButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:text="@android:string/ok" />
+
+        <Button
+            android:id="@+id/newAccountcancelButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/newAccountAddButton"
+            android:text="@android:string/cancel" />
+    </RelativeLayout>
+
+</LinearLayout>

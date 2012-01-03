@@ -8,15 +8,17 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.vcard.VCardViewActivity;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
-import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Intent;
 import android.database.Cursor;
@@ -89,17 +91,27 @@ public class RosterFragment extends Fragment {
 		};
 	}
 
-	private JID getJid(long itemId) {
+	private RosterItem getJid(long itemId) {
 		final Cursor cursor = getActivity().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + itemId),
 				null, null, null, null);
-		JID jid = null;
+
 		try {
 			cursor.moveToNext();
-			jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+			JID jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+			BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
+
+			if (account != null && jid != null) {
+				return getMulti().get(account).getRoster().get(jid.getBareJid());
+			}
+
 		} finally {
 			cursor.close();
 		}
-		return jid;
+		return null;
+	}
+
+	private MultiJaxmpp getMulti() {
+		return ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 	}
 
 	@Override
@@ -149,9 +161,7 @@ public class RosterFragment extends Fragment {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
 
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
-		final boolean sessionEstablished = jaxmpp.isConnected()
-				&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
+		final boolean sessionEstablished = true;
 
 		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
 		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
@@ -172,6 +182,7 @@ public class RosterFragment extends Fragment {
 		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), c);
 
 		listView = (ExpandableListView) layout.findViewById(R.id.rosterList);
+		listView.setTextFilterEnabled(true);
 
 		// listView.setSaveEnabled(true);
 		listView.setAdapter(adapter);
@@ -229,7 +240,7 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
 		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
@@ -241,7 +252,7 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public void onStop() {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
 		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
@@ -257,12 +268,15 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void sendAuthRemove(long id) {
-		final JID jid = getJid(id);
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final RosterItem rosterItem = getJid(id);
+		final JID jid = JID.jidInstance(rosterItem.getJid());
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+				rosterItem.getSessionObject());
 
 		try {
 			jaxmpp.getModulesManager().getModule(PresenceModule.class).unsubscribed(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+					rosterItem.getSessionObject(), jid.getBareJid());
 			String txt = String.format(getActivity().getString(R.string.auth_removed), name, jid.getBareJid().toString());
 			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 		} catch (JaxmppException e) {
@@ -271,12 +285,14 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void sendAuthRerequest(long id) {
-		final JID jid = getJid(id);
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final RosterItem rosterItem = getJid(id);
+		final JID jid = JID.jidInstance(rosterItem.getJid());
+		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 
 		try {
 			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+					rosterItem.getSessionObject(), jid.getBareJid());
 			String txt = String.format(getActivity().getString(R.string.auth_rerequested), name, jid.getBareJid().toString());
 			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 		} catch (JaxmppException e) {
@@ -285,12 +301,14 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void sendAuthResend(long id) {
-		final JID jid = getJid(id);
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final RosterItem rosterItem = getJid(id);
+		final JID jid = JID.jidInstance(rosterItem.getJid());
+		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 
 		try {
 			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribed(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(jid.getBareJid());
+			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+					rosterItem.getSessionObject(), jid.getBareJid());
 			String txt = String.format(getActivity().getString(R.string.auth_resent), name, jid.getBareJid().toString());
 			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 		} catch (JaxmppException e) {
@@ -299,33 +317,6 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void updateConnectionStatus() {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
-
-		final Connector.State st = jaxmpp.getConnector() == null ? State.disconnected : jaxmpp.getConnector().getState();
-		final JID jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
-
-		if (DEBUG)
-			Log.i(TAG, "State changed to " + st);
-
-		connectionStatus.post(new Runnable() {
-
-			@Override
-			public void run() {
-				if (st == State.connected && jid != null) {
-					connectionStatus.setImageResource(R.drawable.user_available);
-					connectionStatus.setVisibility(View.VISIBLE);
-					progressBar.setVisibility(View.GONE);
-				} else if (st == State.disconnected) {
-					connectionStatus.setImageResource(R.drawable.user_offline);
-					connectionStatus.setVisibility(View.VISIBLE);
-					progressBar.setVisibility(View.GONE);
-				} else {
-					connectionStatus.setVisibility(View.GONE);
-					progressBar.setVisibility(View.VISIBLE);
-				}
-			}
-		});
-
 	}
 
 }

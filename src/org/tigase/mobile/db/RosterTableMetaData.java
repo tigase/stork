@@ -8,6 +8,8 @@ public class RosterTableMetaData implements BaseColumns {
 
 	public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.roster";
 
+	public static final String FIELD_ACCOUNT = "account";
+
 	public static final String FIELD_ASK = "ask";
 
 	public static final String FIELD_AVATAR = "avatar";

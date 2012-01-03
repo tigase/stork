@@ -2,12 +2,14 @@ package org.tigase.mobile.db.providers;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.RosterTableMetaData;
 
-import tigase.jaxmpp.j2se.Jaxmpp;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -105,9 +107,15 @@ public class GroupsCursor extends AbstractCursor {
 
 	private final void loadData() {
 		synchronized (this.items) {
-			final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+			final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
+
+			final HashSet<String> tmp = new HashSet<String>();
+			for (JaxmppCore j : multi.get()) {
+				tmp.addAll(j.getRoster().getGroups());
+			}
+
 			this.items.clear();
-			this.items.addAll(jaxmpp.getRoster().getGroups());
+			this.items.addAll(tmp);
 			Collections.sort(this.items);
 			this.items.add(0, "All");
 			this.items.add(1, "default");

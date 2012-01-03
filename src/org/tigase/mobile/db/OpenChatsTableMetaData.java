@@ -4,6 +4,8 @@ import android.provider.BaseColumns;
 
 public class OpenChatsTableMetaData implements BaseColumns {
 
+	public static final String FIELD_ACCOUNT = "account";
+
 	public static final String FIELD_ID = "_id";
 
 	public static final String FIELD_JID = "jid";

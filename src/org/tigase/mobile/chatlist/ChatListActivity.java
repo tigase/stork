@@ -9,11 +9,10 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.CPresence;
 
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -42,16 +41,15 @@ public class ChatListActivity extends Activity {
 
 		private LayoutInflater mInflater;
 
+		private final MultiJaxmpp multi;
+
 		private RosterDisplayTools rdt;
 
-		private final RosterStore roster;
-
 		public ImageAdapter(Context c) {
-			final Jaxmpp jaxmpp = ((MessengerApplication) c.getApplicationContext()).getJaxmpp();
-			this.chats.addAll(jaxmpp.getModulesManager().getModule(MessageModule.class).getChats());
+			this.multi = ((MessengerApplication) c.getApplicationContext()).getMultiJaxmpp();
+			this.chats.addAll(multi.getChats());
 			mContext = c;
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			this.roster = jaxmpp.getRoster();
 			this.rdt = new RosterDisplayTools(c);
 		}
 
@@ -99,13 +97,14 @@ public class ChatListActivity extends Activity {
 			}
 
 			String x;
-			RosterItem ri = this.roster.get(chat.getJid().getBareJid());
+			RosterStore roster = multi.get(chat.getSessionObject()).getRoster();
+			RosterItem ri = roster.get(chat.getJid().getBareJid());
 			if (ri == null)
 				x = chat.getJid().toString();
 			else
 				x = rdt.getDisplayName(ri);
 
-			final CPresence cp = rdt.getShowOf(chat.getJid());
+			final CPresence cp = rdt.getShowOf(ri.getSessionObject(), chat.getJid());
 
 			ImageView itemPresence = (ImageView) imageView.findViewById(R.id.imageView2);
 			if (cp == null)

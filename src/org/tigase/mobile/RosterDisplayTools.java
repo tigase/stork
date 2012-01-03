@@ -4,6 +4,8 @@ import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
@@ -11,27 +13,16 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.util.Log;
 
 public class RosterDisplayTools {
 
-	private PresenceStore presence;
-
-	private final RosterStore roster;
+	private final MultiJaxmpp multi;
 
 	public RosterDisplayTools(final Context context) {
 		super();
-		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
-
-		this.roster = jaxmpp.getRoster();
-		this.presence = jaxmpp.getPresence();
-	}
-
-	public String getDisplayName(final BareJID jid) {
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
-		return getDisplayName(item);
+		this.multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
 	}
 
 	public String getDisplayName(final RosterItem item) {
@@ -44,12 +35,21 @@ public class RosterDisplayTools {
 		}
 	}
 
-	public CPresence getShowOf(final BareJID jid) {
+	public String getDisplayName(SessionObject sessionObject, final BareJID jid) {
+		RosterStore roster = multi.get(sessionObject).getRoster();
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
+		return getDisplayName(item);
+	}
+
+	public CPresence getShowOf(SessionObject sessionObject, final BareJID jid) {
+		RosterStore roster = multi.get(sessionObject).getRoster();
 		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
 		return getShowOf(item);
 	}
 
-	public CPresence getShowOf(final JID jid) {
+	public CPresence getShowOf(SessionObject sessionObject, final JID jid) {
+		RosterStore roster = multi.get(sessionObject).getRoster();
+		PresenceStore presence = multi.get(sessionObject).getPresence();
 		RosterItem ri = roster.get(jid.getBareJid());
 		Presence p = presence.getPresence(jid);
 		return getShowOf(ri, p);
@@ -61,6 +61,7 @@ public class RosterDisplayTools {
 
 	public CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item, Presence p) {
 		try {
+			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();
 			if (item == null)
 				return CPresence.notinroster;
 			if (item.isAsk())
@@ -94,6 +95,7 @@ public class RosterDisplayTools {
 		try {
 			if (item == null)
 				return null;
+			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();
 			Presence p = presence.getBestPresence(item.getJid());
 			if (p != null && p.getType() == null) {
 				return p.getStatus();

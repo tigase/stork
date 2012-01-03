@@ -7,6 +7,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-j2se"/>
 	<classpathentry kind="lib" path="lib/dnsjava-2.1.3.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tigase-xmltools-oryg"/>
-	<classpathentry kind="lib" path="/home/bmalkow/Dokumenty/android-sdk-linux_x86/extras/android/compatibility/v4/android-support-v4.jar"/>
+	<classpathentry kind="lib" path="/home/bmalkow/Dokumenty/android-sdk-linux_x86/extras/android/compatibility/v4/android-support-v4.jar" sourcepath="/home/bmalkow/Dokumenty/android-sdk-linux_x86/extras/android/compatibility/v4/src"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

@@ -50,10 +50,11 @@ public class DBChatManager extends AbstractChatManager {
 		if (threadId != null)
 			values.put(OpenChatsTableMetaData.FIELD_THREAD_ID, threadId);
 		values.put(OpenChatsTableMetaData.FIELD_TIMESTAMP, (new Date()).getTime());
+		values.put(OpenChatsTableMetaData.FIELD_ACCOUNT, sessionObject.getUserJid().getBareJid().toString());
 
 		long rowId = db.insert(OpenChatsTableMetaData.TABLE_NAME, null, values);
 
-		Chat chat = new Chat(rowId, packetWriter);
+		Chat chat = new Chat(rowId, packetWriter, sessionObject);
 		chat.setJid(jid);
 		chat.setThreadId(threadId);
 		return chat;
@@ -66,19 +67,20 @@ public class DBChatManager extends AbstractChatManager {
 		SQLiteDatabase db = this.helper.getReadableDatabase();
 		String sql = "SELECT " + OpenChatsTableMetaData.FIELD_ID + ", " + OpenChatsTableMetaData.FIELD_JID + ", "
 				+ OpenChatsTableMetaData.FIELD_RESOURCE + ", " + OpenChatsTableMetaData.FIELD_THREAD_ID + ", "
-				+ OpenChatsTableMetaData.FIELD_TIMESTAMP + " FROM " + OpenChatsTableMetaData.TABLE_NAME;
+				+ OpenChatsTableMetaData.FIELD_TIMESTAMP + " FROM " + OpenChatsTableMetaData.TABLE_NAME + " WHERE "
+				+ OpenChatsTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserJid().getBareJid() + "'";
 		final Cursor c = db.rawQuery(sql, null);
 		try {
 			while (c.moveToNext()) {
 				final int id = c.getInt(0);
 
-				final JID sJid = JID.jidInstance(c.getString(1));
-				final String sRes = c.getString(2);
+				final JID sJid = JID.jidInstance(c.getString(c.getColumnIndex(OpenChatsTableMetaData.FIELD_JID)));
+				final String sRes = c.getString(c.getColumnIndex(OpenChatsTableMetaData.FIELD_RESOURCE));
 				final JID jid = sRes == null ? sJid : JID.jidInstance(sJid.getBareJid(), sRes);
-				final String threadId = c.getString(3);
-				final long timestamp = c.getLong(4);
+				final String threadId = c.getString(c.getColumnIndex(OpenChatsTableMetaData.FIELD_THREAD_ID));
+				final long timestamp = c.getLong(c.getColumnIndex(OpenChatsTableMetaData.FIELD_TIMESTAMP));
 
-				Chat chat = new Chat(id, packetWriter);
+				Chat chat = new Chat(id, packetWriter, sessionObject);
 				chat.setJid(jid);
 				chat.setThreadId(threadId);
 

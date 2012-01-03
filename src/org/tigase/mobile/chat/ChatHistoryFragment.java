@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
-import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
-import org.tigase.mobile.roster.CPresence;
 
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -44,11 +44,12 @@ public class ChatHistoryFragment extends Fragment {
 
 	private static final String TAG = "tigase";
 
-	public static Fragment newInstance(long chatId) {
+	public static Fragment newInstance(String account, long chatId) {
 		ChatHistoryFragment f = new ChatHistoryFragment();
 
 		Bundle args = new Bundle();
 		args.putLong("chatId", chatId);
+		args.putString("account", account);
 		f.setArguments(args);
 
 		if (DEBUG)
@@ -128,7 +129,7 @@ public class ChatHistoryFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
-			setChatId(getArguments().getLong("chatId"));
+			setChatId(BareJID.bareJIDInstance(getArguments().getString("account")), getArguments().getLong("chatId"));
 		}
 	}
 
@@ -214,7 +215,8 @@ public class ChatHistoryFragment extends Fragment {
 	public void onResume() {
 		super.onResume();
 
-		this.layout.setImagePresence((new RosterDisplayTools(getActivity())).getShowOf(this.chat.getJid().getBareJid()));
+		// this.layout.setImagePresence((new
+		// RosterDisplayTools(getActivity())).getShowOf(this.chat.getJid().getBareJid()));
 	}
 
 	@Override
@@ -230,14 +232,11 @@ public class ChatHistoryFragment extends Fragment {
 	public void onStart() {
 		if (DEBUG)
 			Log.d(TAG, "Start ChatFragment");
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
-				this.presenceListener);
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
-				this.presenceListener);
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactChangedPresence,
-				this.presenceListener);
+		jaxmpp.addListener(PresenceModule.ContactAvailable, this.presenceListener);
+		jaxmpp.addListener(PresenceModule.ContactUnavailable, this.presenceListener);
+		jaxmpp.addListener(PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStart();
 
 		updatePresence();
@@ -247,19 +246,16 @@ public class ChatHistoryFragment extends Fragment {
 	public void onStop() {
 		if (DEBUG)
 			Log.d(TAG, "Stop ChatFragment");
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactAvailable,
-				this.presenceListener);
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactUnavailable,
-				this.presenceListener);
-		jaxmpp.getModulesManager().getModule(PresenceModule.class).removeListener(PresenceModule.ContactChangedPresence,
-				this.presenceListener);
+		jaxmpp.removeListener(PresenceModule.ContactAvailable, this.presenceListener);
+		jaxmpp.removeListener(PresenceModule.ContactUnavailable, this.presenceListener);
+		jaxmpp.removeListener(PresenceModule.ContactChangedPresence, this.presenceListener);
 		super.onStop();
 	}
 
-	private void setChatId(final long chatId) {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+	private void setChatId(final BareJID account, final long chatId) {
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(account);
 
 		List<Chat> l = jaxmpp.getModulesManager().getModule(MessageModule.class).getChats();
 		for (int i = 0; i < l.size(); i++) {
@@ -321,8 +317,9 @@ public class ChatHistoryFragment extends Fragment {
 	}
 
 	protected void updatePresence() {
-		CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getJid().getBareJid());
-		System.out.println("Updating presence to " + cp);
+		// CPresence cp = (new
+		// RosterDisplayTools(getActivity())).getShowOf(chat.getJid().getBareJid());
+		// System.out.println("Updating presence to " + cp);
 		// layout.setImagePresence(cp);
 	}
 

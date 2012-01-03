@@ -12,10 +12,12 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.roster.CPresence;
 
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.Cursor;
@@ -38,7 +40,7 @@ public class RosterCursor extends AbstractCursor {
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
 			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME,
-			RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR };
+			RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR, RosterTableMetaData.FIELD_ACCOUNT };
 
 	private final Context context;
 
@@ -90,7 +92,7 @@ public class RosterCursor extends AbstractCursor {
 		}
 		case 6: {
 			RosterItem item = items.get(mPos);
-			return rdt.getShowOf(item.getJid()).getId();
+			return rdt.getShowOf(item.getSessionObject(), item.getJid()).getId();
 		}
 		case 7: {
 			RosterItem item = items.get(mPos);
@@ -104,6 +106,11 @@ public class RosterCursor extends AbstractCursor {
 		case 9: {
 			RosterItem item = items.get(mPos);
 			return readAvatar(item);
+		}
+		case 10: {
+			RosterItem item = items.get(mPos);
+			JID jid = item.getSessionObject().getUserJid();
+			return jid == null ? null : jid.getBareJid().toString();
 		}
 		default:
 			throw new CursorIndexOutOfBoundsException("Unknown column!");
@@ -174,9 +181,12 @@ public class RosterCursor extends AbstractCursor {
 	}
 
 	private final void loadData() {
-		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+		final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
 
-		List<RosterItem> r = jaxmpp.getRoster().getAll(predicate);
+		ArrayList<RosterItem> r = new ArrayList<RosterItem>();
+		for (JaxmppCore jaxmpp : multi.get()) {
+			r.addAll(jaxmpp.getRoster().getAll(predicate));
+		}
 
 		Collections.sort(r, new Comparator<RosterItem>() {
 

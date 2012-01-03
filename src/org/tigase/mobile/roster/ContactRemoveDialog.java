@@ -5,6 +5,7 @@ import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
@@ -33,13 +34,15 @@ public class ContactRemoveDialog extends DialogFragment {
 		final Cursor cursor = getActivity().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null,
 				null, null, null);
 		JID jid = null;
+		BareJID account = null;
 		try {
 			cursor.moveToNext();
 			jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+			account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 		} finally {
 			cursor.close();
 		}
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getJaxmpp();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(account);
 		final RosterItem rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
 
 		String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(rosterItem);

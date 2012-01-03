@@ -5,6 +5,7 @@ import org.tigase.mobile.R;
 import org.tigase.mobile.WarningDialog;
 import org.tigase.mobile.vcard.VCardViewActivity;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -32,12 +33,14 @@ public class AuthRequestActivity extends FragmentActivity {
 		setContentView(R.layout.auth_request);
 
 		this.jid = JID.jidInstance(getIntent().getStringExtra("jid"));
+		BareJID account = BareJID.bareJIDInstance(getIntent().getStringExtra("account"));
+
 		final TextView jidTextView = (TextView) findViewById(R.id.vcard_jid);
 		jidTextView.setText(jid.toString());
 
-		final VCardModule module = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
+		final VCardModule module = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModulesManager().getModule(
 				VCardModule.class);
-		final PresenceModule presenceModule = ((MessengerApplication) getApplicationContext()).getJaxmpp().getModulesManager().getModule(
+		final PresenceModule presenceModule = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModulesManager().getModule(
 				PresenceModule.class);
 
 		final Button okButton = (Button) findViewById(R.id.req_yesButton);

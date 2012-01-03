@@ -1,4 +1,6 @@
-package org.tigase.mobile;
+package org.tigase.mobile.preferences;
+
+import org.tigase.mobile.R;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

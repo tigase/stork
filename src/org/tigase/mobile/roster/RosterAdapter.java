@@ -30,7 +30,7 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	private Context context;
 
-	protected int[] mFrom;
+	// protected int[] mFrom;
 
 	private int resource;
 
@@ -49,10 +49,6 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		// TODO Auto-generated method stub
 		// super.bindView(view, context, cursor);
 
-		if (mFrom == null) {
-			findColumns(cols, cursor);
-		}
-
 		TextView itemJid = (TextView) view.findViewById(R.id.roster_item_jid);
 		TextView itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
 		itemJid.setTransformationMethod(SingleLineTransformationMethod.getInstance());
@@ -62,16 +58,18 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 		ImageView itemAvatar = (ImageView) view.findViewById(R.id.imageView1);
 		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
 
-		String name = cursor.getString(mFrom[1]);
+		String name = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_DISPLAY_NAME));
 		itemJid.setText(name);
 
-		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
+		BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
+
+		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 
 		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
-				BareJID.bareJIDInstance(cursor.getString(mFrom[0])));
+				BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID))));
 		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
-		Integer p = cursor.getInt(mFrom[2]);
+		Integer p = cursor.getInt(cursor.getColumnIndex(RosterTableMetaData.FIELD_PRESENCE));
 		CPresence cp = CPresence.valueOf(p);
 
 		if (cp == null)
@@ -107,13 +105,13 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 				break;
 			}
 
-		String status = cursor.getString(mFrom[3]);
+		String status = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_STATUS_MESSAGE));
 		if (status != null) {
 			itemDescription.setText(Html.fromHtml(status));
 		} else
 			itemDescription.setText("");
 
-		byte[] avatar = cursor.getBlob(mFrom[4]);
+		byte[] avatar = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
 		if (avatar != null) {
 			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
 			itemAvatar.setImageBitmap(bmp);
@@ -121,23 +119,6 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 			itemAvatar.setImageResource(R.drawable.user_avatar);
 		}
 
-	}
-
-	private void findColumns(String[] from, Cursor mCursor) {
-		int i;
-		int count = from.length;
-		if (mFrom == null) {
-			mFrom = new int[count];
-		}
-		if (mCursor != null) {
-			for (i = 0; i < count; i++) {
-				mFrom[i] = mCursor.getColumnIndexOrThrow(from[i]);
-			}
-		} else {
-			for (i = 0; i < count; i++) {
-				mFrom[i] = -1;
-			}
-		}
 	}
 
 	@Override

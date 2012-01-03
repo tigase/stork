@@ -48,9 +48,10 @@ public class ContactEditActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.jaxmpp = ((MessengerApplication) getApplicationContext()).getJaxmpp();
 		setContentView(R.layout.contact_edit);
 		final long id = getIntent().getLongExtra("itemId", -1);
+		final BareJID account;
+
 		if (id != -1) {
 			JID jid = null;
 			final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null, null,
@@ -58,9 +59,11 @@ public class ContactEditActivity extends FragmentActivity {
 			try {
 				cursor.moveToNext();
 				jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+				account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 			} finally {
 				cursor.close();
 			}
+			this.jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
 			rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
 		}
 

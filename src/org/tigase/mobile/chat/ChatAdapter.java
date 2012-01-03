@@ -10,9 +10,9 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -45,8 +45,6 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
-		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getJaxmpp();
-
 		TextView nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
 		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
 		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
@@ -64,7 +62,9 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		}
 
 		if (state == ChatTableMetaData.STATE_INCOMING) {
+			final BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_ACCOUNT)));
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_JID)));
+			JaxmppCore jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 			RosterItem ri = jaxmpp.getRoster().get(jid);
 			nickname.setText(ri == null ? jid.toString() : rdt.getDisplayName(ri));
 
