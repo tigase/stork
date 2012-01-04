@@ -39,7 +39,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		this.rdt = new RosterDisplayTools(context);
 
 		SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
-		String tmp = prefs.getString(Preferences.NICKNAME_KEY, null);
+		String tmp = null;// prefs.getString(Preferences.NICKNAME_KEY, null);
 		nickname = tmp == null || tmp.length() == 0 ? null : tmp;
 	}
 

@@ -187,6 +187,7 @@ public class RosterCursor extends AbstractCursor {
 		for (JaxmppCore jaxmpp : multi.get()) {
 			r.addAll(jaxmpp.getRoster().getAll(predicate));
 		}
+		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
 		Collections.sort(r, new Comparator<RosterItem>() {
 

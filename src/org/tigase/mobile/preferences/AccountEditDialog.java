@@ -4,7 +4,9 @@ import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.providers.AccountsProvider;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -17,8 +19,16 @@ import android.widget.EditText;
 
 public class AccountEditDialog extends DialogFragment {
 
+	private AccountEditDialog(Long id) {
+		this.accountId = id;
+	}
+
 	public static AccountEditDialog newInstance() {
-		return new AccountEditDialog();
+		return new AccountEditDialog(null);
+	}
+
+	public static AccountEditDialog newInstance(long id) {
+		return new AccountEditDialog(id);
 	}
 
 	private Long accountId = null;
@@ -34,6 +44,22 @@ public class AccountEditDialog extends DialogFragment {
 		final EditText nickname = (EditText) v.findViewById(R.id.newAccountNickname);
 		final EditText hostname = (EditText) v.findViewById(R.id.newAccountHostname);
 
+		if (accountId != null) {
+			Cursor c = inflater.getContext().getContentResolver().query(
+					ContentUris.withAppendedId(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), accountId), null, null, null,
+					null);
+			try {
+				while (c.moveToNext()) {
+					jid.setText(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
+					passowrd.setText(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD)));
+					nickname.setText(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME)));
+					hostname.setText(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME)));
+				}
+			} finally {
+				c.close();
+			}
+		}
+
 		addButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -44,8 +70,13 @@ public class AccountEditDialog extends DialogFragment {
 				values.put(AccountsTableMetaData.FIELD_NICKNAME, nickname.getText().toString());
 				values.put(AccountsTableMetaData.FIELD_HOSTNAME, hostname.getText().toString());
 
-				inflater.getContext().getApplicationContext().getContentResolver().insert(
-						Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), values);
+				if (accountId == null)
+					inflater.getContext().getContentResolver().insert(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), values);
+				else
+					inflater.getContext().getContentResolver().update(
+							ContentUris.withAppendedId(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), accountId), values, null,
+							null);
+
 			}
 		});
 		cancelButton.setOnClickListener(new OnClickListener() {
@@ -61,5 +92,4 @@ public class AccountEditDialog extends DialogFragment {
 
 		return v;
 	}
-
 }

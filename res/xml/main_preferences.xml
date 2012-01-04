@@ -9,38 +9,14 @@
         android:summary="@string/pref_login_section_summary"
         android:title="@string/pref_login_section_title" >
         <PreferenceScreen
-            android:key="fav_settings"
-            android:summary="Rearange and delete categories"
-            android:title="Manage Favorites" >
+            android:key="accounts_manager"
+            android:summary="Accounts manager"
+            android:title="Accounts" >
             <intent
                 android:action="android.intent.action.VIEW"
                 android:targetClass="org.tigase.mobile.preferences.AccountsEditorActivity"
                 android:targetPackage="org.tigase.mobile" />
         </PreferenceScreen>
-
-        <EditTextPreference
-            android:dialogTitle="@string/pref_login_jid_dialog"
-            android:key="user_jid"
-            android:summary="@string/pref_login_jid_summary"
-            android:title="@string/pref_login_jid_title" />
-        <EditTextPreference
-            android:dialogTitle="@string/pref_login_password_dialog"
-            android:key="user_password"
-            android:password="true"
-            android:summary="@string/pref_login_password_summary"
-            android:title="@string/pref_login_password_title" >
-        </EditTextPreference>
-        <EditTextPreference
-            android:dialogTitle="@string/pref_nickname_dialog"
-            android:key="nickname"
-            android:summary="@string/pref_nickname_summary"
-            android:title="@string/pref_nickname_title" />
-        <EditTextPreference
-            android:dialogTitle="@string/pref_login_hostname_dialog"
-            android:key="hostname"
-            android:summary="@string/pref_login_hostname_summary"
-            android:title="@string/pref_login_hostname_title" >
-        </EditTextPreference>
 
         <CheckBoxPreference
             android:key="autostart"

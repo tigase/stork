@@ -10,7 +10,9 @@ import org.tigase.mobile.vcard.VCardViewActivity;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
+import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -178,6 +180,7 @@ public class RosterFragment extends Fragment {
 			Log.d(TAG + "_rf", "onCreateView()");
 		View layout = inflater.inflate(R.layout.roster_list, null);
 		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
+		getActivity().startManagingCursor(c);
 		RosterAdapter.staticContext = inflater.getContext();
 		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), c);
 
@@ -317,6 +320,47 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void updateConnectionStatus() {
+		int onlineCount = 0;
+		int offlineCount = 0;
+		int notOnlineCount = 0;
+		for (JaxmppCore jaxmpp : getMulti().get()) {
+			State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+			if (state == State.connected
+					&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null) {
+				++onlineCount;
+			} else if (state == null || state == State.disconnected)
+				++offlineCount;
+			else
+				++notOnlineCount;
+		}
+
+		final State st;
+		if (notOnlineCount > 0)
+			st = State.connecting;
+		else if (offlineCount == 0)
+			st = State.connected;
+		else
+			st = State.disconnected;
+
+		connectionStatus.post(new Runnable() {
+
+			@Override
+			public void run() {
+				if (st == State.connected) {
+					connectionStatus.setImageResource(R.drawable.user_available);
+					connectionStatus.setVisibility(View.VISIBLE);
+					progressBar.setVisibility(View.GONE);
+				} else if (st == State.disconnected) {
+					connectionStatus.setImageResource(R.drawable.user_offline);
+					connectionStatus.setVisibility(View.VISIBLE);
+					progressBar.setVisibility(View.GONE);
+				} else {
+					connectionStatus.setVisibility(View.GONE);
+					progressBar.setVisibility(View.VISIBLE);
+				}
+			}
+		});
+
 	}
 
 }

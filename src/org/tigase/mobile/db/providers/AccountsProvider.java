@@ -21,8 +21,6 @@ public class AccountsProvider extends ContentProvider {
 
 	private final static int ACCOUNT_INDICATOR = 2;
 
-	public static final String ACCOUNT_KEY = "content://" + AUTHORITY + "/account";
-
 	private final static int ACCOUNTS_LIST_INDICATOR = 1;
 
 	public static final String ACCOUNTS_LIST_KEY = "content://" + AUTHORITY + "/accounts";
@@ -53,13 +51,21 @@ public class AccountsProvider extends ContentProvider {
 	public AccountsProvider() {
 		this.uriMatcher = new UriMatcher(0);
 		this.uriMatcher.addURI(AUTHORITY, "accounts", ACCOUNTS_LIST_INDICATOR);
-		this.uriMatcher.addURI(AUTHORITY, "account/#", ACCOUNT_INDICATOR);
+		this.uriMatcher.addURI(AUTHORITY, "accounts/#", ACCOUNT_INDICATOR);
 	}
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		// TODO Auto-generated method stub
-		return 0;
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		switch (uriMatcher.match(uri)) {
+		case ACCOUNT_INDICATOR:
+			int r = db.delete(AccountsTableMetaData.TABLE_NAME,
+					AccountsTableMetaData.FIELD_ID + "=" + uri.getLastPathSegment(), null);
+			getContext().getContentResolver().notifyChange(uri, null);
+			return r;
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
 	}
 
 	@Override
@@ -80,12 +86,9 @@ public class AccountsProvider extends ContentProvider {
 		case ACCOUNTS_LIST_INDICATOR:
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			long rowId = db.insert(AccountsTableMetaData.TABLE_NAME, null, values);
-			if (rowId > 0) {
-				Uri insertedItem = ContentUris.withAppendedId(Uri.parse(ACCOUNT_KEY), rowId);
-				getContext().getContentResolver().notifyChange(insertedItem, null);
-				return insertedItem;
-			}
-			throw new RuntimeException("Account is not added");
+			Uri insertedItem = ContentUris.withAppendedId(Uri.parse(ACCOUNTS_LIST_KEY), rowId);
+			getContext().getContentResolver().notifyChange(insertedItem, null);
+			return insertedItem;
 		default:
 			throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
@@ -127,8 +130,16 @@ public class AccountsProvider extends ContentProvider {
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		// TODO Auto-generated method stub
-		return 0;
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		switch (uriMatcher.match(uri)) {
+		case ACCOUNT_INDICATOR:
+			int r = db.update(AccountsTableMetaData.TABLE_NAME, values,
+					AccountsTableMetaData.FIELD_ID + "=" + uri.getLastPathSegment(), null);
+			getContext().getContentResolver().notifyChange(uri, null);
+			return r;
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
 	}
 
 }

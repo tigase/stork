@@ -15,7 +15,7 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 11;
+	public static final Integer DATABASE_VERSION = 14;
 
 	private static final String TAG = "tigase";
 

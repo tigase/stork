@@ -101,19 +101,7 @@ public class JaxmppService extends Service {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
-			String info;
-			if (netInfo.isConnected())
-				info = "Nawiązano połączenie z: " + netInfo.getTypeName();
-			else
-				info = "Zerwano połączenie z: " + netInfo.getTypeName();
-
-			if (DEBUG)
-				Log.i(TAG, info);
-
-			connectionErrorCounter = 0;
-
-			refreshInfos();
-
+			onNetworkChanged(netInfo);
 		}
 
 	}
@@ -129,7 +117,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -150,6 +138,27 @@ public class JaxmppService extends Service {
 			th = th.getCause();
 		}
 		return ex;
+	}
+
+	private boolean reconnect = true;
+
+	public void onNetworkChanged(final NetworkInfo netInfo) {
+		if (DEBUG)
+			Log.d(TAG,
+					"Network " + netInfo == null ? null : netInfo.getTypeName() + " (" + netInfo == null ? null
+							: netInfo.getType() + ") state changed! Currently used=" + usedNetworkType);
+		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
+			if (DEBUG)
+				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
+			reconnect = true;
+			connectionErrorCounter = 0;
+			connectAllJaxmpp(true);
+		} else if (netInfo != null && !netInfo.isConnected() && netInfo.getType() == usedNetworkType) {
+			if (DEBUG)
+				Log.d(TAG, "currently used network disconnected" + netInfo.getTypeName());
+			reconnect = false;
+			disconnectAllJaxmpp();
+		}
 	}
 
 	public static boolean isServiceActive() {
@@ -247,7 +256,7 @@ public class JaxmppService extends Service {
 
 	private final Timer timer = new Timer();
 
-	private Integer usedNetworkType = null;
+	private int usedNetworkType = -1;
 
 	private String userStatusMessage = null;
 
@@ -347,11 +356,9 @@ public class JaxmppService extends Service {
 			public void handleEvent(final Connector.ConnectorEvent be) throws JaxmppException {
 				if (getState(be.getSessionObject()) == State.connected)
 					connectionErrorCounter = 0;
-				if (getState(be.getSessionObject()) == State.disconnected) {
-					notificationUpdate();
-				} else {
-					notificationUpdate();
-				}
+				if (getState(be.getSessionObject()) == State.disconnected)
+					reconnectIfAvailable(be.getSessionObject());
+				notificationUpdate();
 			}
 		};
 
@@ -363,6 +370,41 @@ public class JaxmppService extends Service {
 			}
 		};
 
+	}
+
+	protected void reconnectIfAvailable(final SessionObject sessionObject) {
+		if (!reconnect)
+			return;
+
+		if (DEBUG)
+			Log.d(TAG, "Start delayed reconnect account " + sessionObject.getUserJid());
+
+		TimerTask tt = new TimerTask() {
+
+			@Override
+			public void run() {
+
+				if (connectionErrorCounter > 50)
+					return;
+
+				Integer net = getActiveNetworkConnectionType();
+
+				if (net == null)
+					return;
+
+				final JaxmppCore j = getMulti().get(sessionObject);
+				try {
+					if (DEBUG)
+						Log.d(TAG, "Connecting account " + sessionObject.getUserJid());
+					((Jaxmpp) j).login(false);
+				} catch (Exception e) {
+					++connectionErrorCounter;
+					Log.e(TAG, "cant; connect account " + j.getSessionObject().getUserJid(), e);
+				}
+			}
+		};
+
+		timer.schedule(tt, calculateNextRestart(5, connectionErrorCounter));
 	}
 
 	protected synchronized void changeRosterItem(RosterEvent be) {
@@ -381,22 +423,47 @@ public class JaxmppService extends Service {
 
 	}
 
-	private void connectAllJaxmpp() {
-		for (final JaxmppCore j : getMulti().get()) {
-			(new Thread() {
+	private void connectAllJaxmpp(boolean delayed) {
+		final Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				usedNetworkType = getActiveNetworkConnectionType();
+				if (usedNetworkType != -1)
+					for (final JaxmppCore j : getMulti().get()) {
+						final State state = j.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+						if (state == null || state == State.disconnected)
+							(new Thread() {
+								@Override
+								public void run() {
+									try {
+										((Jaxmpp) j).login(false);
+									} catch (Exception e) {
+										++connectionErrorCounter;
+										Log.e(TAG, "cant; connect account " + j.getSessionObject().getUserJid(), e);
+									}
+								}
+							}).start();
+					}
+			}
+		};
+
+		if (!delayed)
+			r.run();
+		else
+			timer.schedule(new TimerTask() {
+
 				@Override
 				public void run() {
-					try {
-						((Jaxmpp) j).login(false);
-					} catch (Exception e) {
-						Log.e(TAG, "cant; connect account " + j.getSessionObject().getUserJid(), e);
-					}
+					r.run();
 				}
-			}).start();
-		}
+			}, 5000);
+
 	}
 
-	private void disconnectAllJaxmpp() throws JaxmppException {
+	private void disconnectAllJaxmpp() {
+		usedNetworkType = -1;
+		connectionErrorCounter = 0;
 		for (final JaxmppCore j : getMulti().get()) {
 			(new Thread() {
 				@Override
@@ -434,51 +501,100 @@ public class JaxmppService extends Service {
 	}
 
 	private void notificationUpdate() {
-		// XXX
-		final State state = State.connected;// getState();
-
-		if (this.notificationVariant == NotificationVariant.none) {
-			notificationCancel();
-			return;
-		}
-
 		int ico = R.drawable.ic_stat_disconnected;
 		String notiticationTitle = null;
 		String expandedNotificationText = null;
 
-		if (state == State.connecting) {
-			ico = R.drawable.ic_stat_connected;
-			notiticationTitle = "Connecting";
-			expandedNotificationText = "Connecting...";
-			if (this.notificationVariant != NotificationVariant.always) {
-				notificationCancel();
-				return;
-			}
-		} else if (state == State.connected) {
-			ico = R.drawable.ic_stat_connected;
-			notiticationTitle = "Connected";
-			expandedNotificationText = "Online";
-			if (this.notificationVariant == NotificationVariant.only_disconnected) {
-				notificationCancel();
-				return;
-			}
-		} else if (state == State.disconnecting) {
-			ico = R.drawable.ic_stat_disconnected;
-			notiticationTitle = "Disconnecting";
-			expandedNotificationText = "Disconnecting...";
-			if (this.notificationVariant != NotificationVariant.always) {
-				notificationCancel();
-				return;
-			}
-		} else if (state == State.disconnected) {
+		if (usedNetworkType == -1) {
 			ico = R.drawable.ic_stat_disconnected;
 			notiticationTitle = "Disconnected";
-			expandedNotificationText = "Offline";
+			expandedNotificationText = "No network";
 			if (this.notificationVariant == NotificationVariant.only_connected) {
 				notificationCancel();
 				return;
 			}
+		} else {
+			int onlineCount = 0;
+			int notOnlineCount = 0;
+			for (JaxmppCore jaxmpp : getMulti().get()) {
+				State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+				if (state == State.connected) {
+					++onlineCount;
+				} else
+					++notOnlineCount;
+			}
+
+			if (notOnlineCount > 0) {
+				ico = R.drawable.ic_stat_connected;
+				notiticationTitle = "Connecting";
+				expandedNotificationText = "Connecting...";
+				if (this.notificationVariant != NotificationVariant.always) {
+					notificationCancel();
+					return;
+				}
+			} else if (onlineCount == 0) {
+				ico = R.drawable.ic_stat_disconnected;
+				notiticationTitle = "Disconnected";
+				expandedNotificationText = "No active accounts!";
+				if (this.notificationVariant == NotificationVariant.only_connected) {
+					notificationCancel();
+					return;
+				}
+			} else {
+				ico = R.drawable.ic_stat_connected;
+				notiticationTitle = "Connected";
+				expandedNotificationText = "Online";
+				if (this.notificationVariant == NotificationVariant.only_disconnected) {
+					notificationCancel();
+					return;
+				}
+
+			}
+
 		}
+
+		// // XXX
+		// final State state = State.connected;// getState();
+		//
+		// if (this.notificationVariant == NotificationVariant.none) {
+		// notificationCancel();
+		// return;
+		// }
+		//
+		// if (state == State.connecting) {
+		// ico = R.drawable.ic_stat_connected;
+		// notiticationTitle = "Connecting";
+		// expandedNotificationText = "Connecting...";
+		// if (this.notificationVariant != NotificationVariant.always) {
+		// notificationCancel();
+		// return;
+		// }
+		// } else if (state == State.connected) {
+		// ico = R.drawable.ic_stat_connected;
+		// notiticationTitle = "Connected";
+		// expandedNotificationText = "Online";
+		// if (this.notificationVariant ==
+		// NotificationVariant.only_disconnected) {
+		// notificationCancel();
+		// return;
+		// }
+		// } else if (state == State.disconnecting) {
+		// ico = R.drawable.ic_stat_disconnected;
+		// notiticationTitle = "Disconnecting";
+		// expandedNotificationText = "Disconnecting...";
+		// if (this.notificationVariant != NotificationVariant.always) {
+		// notificationCancel();
+		// return;
+		// }
+		// } else if (state == State.disconnected) {
+		// ico = R.drawable.ic_stat_disconnected;
+		// notiticationTitle = "Disconnected";
+		// expandedNotificationText = "Offline";
+		// if (this.notificationVariant == NotificationVariant.only_connected) {
+		// notificationCancel();
+		// return;
+		// }
+		// }
 		notificationUpdate(ico, notiticationTitle, expandedNotificationText);
 	}
 
@@ -602,6 +718,7 @@ public class JaxmppService extends Service {
 	@Override
 	public void onDestroy() {
 		serviceActive = false;
+		timer.cancel();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
 		if (myConnReceiver != null)
@@ -611,12 +728,9 @@ public class JaxmppService extends Service {
 			unregisterReceiver(focusChangeReceiver);
 
 		Log.i(TAG, "Stopping service");
-		try {
-			disconnectAllJaxmpp();
-			usedNetworkType = null;
-		} catch (JaxmppException e) {
-			Log.e(TAG, "Can't disconnect", e);
-		}
+		reconnect = false;
+		disconnectAllJaxmpp();
+		usedNetworkType = -1;
 
 		getMulti().removeListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
@@ -672,8 +786,7 @@ public class JaxmppService extends Service {
 
 		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
-		// ni chuja nie wiem dlaczego to ma byc zakomentowane
-		connectAllJaxmpp();
+		notificationUpdate();
 
 		return START_STICKY;
 	}
@@ -877,6 +990,20 @@ public class JaxmppService extends Service {
 		} finally {
 			c.close();
 		}
+	}
+
+	private static Date calculateNextRestart(final int delayInSecs, final int errorCounter) {
+		long timeInSecs = delayInSecs;
+		if (errorCounter > 20) {
+			timeInSecs += 60 * 5;
+		} else if (errorCounter > 10) {
+			timeInSecs += 120;
+		} else if (errorCounter > 5) {
+			timeInSecs += 60;
+		}
+
+		Date d = new Date((new Date()).getTime() + 1000 * timeInSecs);
+		return d;
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
