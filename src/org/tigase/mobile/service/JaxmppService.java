@@ -10,6 +10,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.tigase.mobile.Constants;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
@@ -60,6 +61,8 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -177,28 +180,34 @@ public class JaxmppService extends Service {
 	private static void lock(SessionObject jaxmpp, boolean locked) {
 		jaxmpp.setProperty("CC:LOCKED", locked);
 	}
-
-	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources) {
+	
+	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources, Context context) {
 
 		final HashSet<JID> accountsJids = new HashSet<JID>();
 		for (JaxmppCore jc : multi.get()) {
 			accountsJids.add(jc.getSessionObject().getUserJid());
 		}
-		final Cursor c = contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), null, null, null, null);
+//		final Cursor c = contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), null, null, null, null);
 		try {
-			while (c.moveToNext()) {
-				long id = c.getLong(c.getColumnIndex(AccountsTableMetaData.FIELD_ID));
-				JID jid = JID.jidInstance(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
-				String password = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD));
-				String nickname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
-				String hostname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
+//			while (c.moveToNext()) {
+			AccountManager accountManager = AccountManager.get(context);
+			for (Account account : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+//				long id = c.getLong(c.getColumnIndex(AccountsTableMetaData.FIELD_ID));
+//				JID jid = JID.jidInstance(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
+//				String password = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD));
+//				String nickname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
+//				String hostname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
+				JID jid = JID.jidInstance(account.name);
+				String password = accountManager.getPassword(account);
+				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
+				String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
 
 				if (!accountsJids.contains(jid)) {
 					SessionObject sessionObject = new DefaultSessionObject();
 					sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 					sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
 					sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
-					sessionObject.setUserProperty("ID", id);
+					sessionObject.setUserProperty("ID", (long) account.hashCode());
 					sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 					sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 					sessionObject.setUserProperty(SessionObject.USER_JID, JID.jidInstance(jid.getBareJid()));
@@ -220,7 +229,7 @@ public class JaxmppService extends Service {
 				accountsJids.remove(jid);
 			}
 		} finally {
-			c.close();
+			//c.close();
 		}
 		for (JID jid : accountsJids) {
 			JaxmppCore jaxmpp = multi.get(jid.getBareJid());
@@ -747,7 +756,7 @@ public class JaxmppService extends Service {
 		getMulti().addListener(Connector.Error, this.connectorListener);
 		getMulti().addListener(Connector.StreamTerminated, this.connectorListener);
 
-		updateJaxmppInstances(getMulti(), getContentResolver(), getResources());
+		updateJaxmppInstances(getMulti(), getContentResolver(), getResources(), getApplicationContext());
 
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 

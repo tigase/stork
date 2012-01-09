@@ -4,7 +4,7 @@
     android:versionCode="1"
     android:versionName="@string/app_version" >
 
-    <uses-sdk android:minSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14" />
 
     <application
         android:name="MessengerApplication"
@@ -12,36 +12,33 @@
         android:label="@string/app_name" >
         <activity
             android:name=".chatlist.ChatListActivity"
-            android:label="@string/chat_list_title"
-            android:theme="@android:style/Theme.Light" >
+            android:label="@string/chat_list_title" 
+            android:theme="@style/XTheme.Light">
         </activity>
         <activity
             android:name=".vcard.VCardViewActivity"
             android:label="@string/contact_details"
-            android:theme="@android:style/Theme.Light" >
+            android:theme="@style/XTheme.Light">
         </activity>
         <activity
             android:name=".roster.AuthRequestActivity"
             android:label="Auth request"
-            android:theme="@android:style/Theme.Light" >
+            android:theme="@style/XTheme.Light">
         </activity>
         <activity
             android:name=".roster.ContactEditActivity"
             android:label="@string/contact_editor"
-            android:theme="@android:style/Theme.Light" />
+            android:theme="@style/XTheme.Light">
+        </activity>
         <activity
             android:name=".TigaseMobileMessengerActivity"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@style/XTheme.Light.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".preferences.AccountsEditorActivity"
-            android:label="Accounts" >
         </activity>
         <activity
             android:name=".preferences.MessengerPreferenceActivity"
@@ -53,9 +50,36 @@
             </intent-filter>
         </activity>
 
+        <!-- AuthenticatorActivity -->
+        <activity            
+            android:name=".authenticator.AuthenticatorActivity"
+            android:label="@string/ui_activity_title"
+            android:theme="@style/XTheme"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation"
+            >
+            <intent-filter>
+                <action android:name="org.tigase.mobile.account.preference.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+                
+        <!-- The authenticator service -->
+        <service
+            android:name=".authenticator.AuthenticationService"
+            android:exported="true">
+            <intent-filter>
+                <action
+                    android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+        
         <service android:name=".service.JaxmppService" >
         </service>
-
+        
         <receiver
             android:name=".BootUpReceiver"
             android:enabled="true"
@@ -87,4 +111,27 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- additional permissions -->
+    <uses-permission
+        android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission
+        android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission
+        android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission
+        android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission
+        android:name="android.permission.READ_CONTACTS" />
+    <uses-permission
+        android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission
+        android:name="android.permission.READ_SYNC_STATS" />
+    <uses-permission
+        android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission
+        android:name="android.permission.WRITE_SYNC_SETTINGS" />    
 </manifest>

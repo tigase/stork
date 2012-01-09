@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
+        android:title="@string/preferencesTitle" android:enabled="true" 
+        android:key="key">
+            <intent
+                android:action="org.tigase.mobile.account.preference.MAIN" 
+                android:targetClass="authenticator.AuthenticatorActivity.class" />
+    </PreferenceScreen>    
+
+</PreferenceScreen>

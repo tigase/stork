@@ -1,0 +1,8 @@
+<resources>
+    <style name="XTheme.Light" parent="@android:style/Theme.Holo.Light.DarkActionBar">
+        <!-- Any customizations for your app running on pre-3.0 devices here -->
+    </style>
+    <style name="XTheme.Light.NoTitleBar" parent="@android:style/Theme.Holo.Light.DarkActionBar">
+        <!-- Any customizations for your app running on pre-3.0 devices here -->
+    </style>
+</resources>

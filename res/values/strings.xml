@@ -39,5 +39,30 @@
     <string name="pref_reconnect_time_dialog">Enter reconnect delay</string>
     <string name="pref_login_ui_section_title">User Interface</string>
     <string name="pref_login_ui_notification_title">Application icon</string>
-
+    
+    <!-- Label for this package -->
+    <string
+        name="label">Tigase XMPP</string>    
+    <string
+        name="ui_activity_title">Sign-in</string>
+    <!-- Message shown in progress dialog while app connects to the server -->
+    <string
+        name="ui_activity_authenticating">Authenticating\u2026</string>
+            <!-- Message shown in dialog if the username or password is invalid. -->
+    <string
+        name="login_activity_loginfail_text_both">The username or password isn\'t valid. XMPP account is
+        required. Please try again. </string>
+    <!-- Message shown in dialog if the password is invalid -->
+    <string
+        name="login_activity_loginfail_text_pwonly">You entered the wrong password or your account has changed.
+        Please re-enter your password.</string>
+    <!-- Message shown in dialog to prompt the user for their password -->
+    <string
+        name="login_activity_loginfail_text_pwmissing">Type the password for this account.</string>
+    <!--
+        Message shown if the provided account doesn't support the current
+        activity.
+    -->
+    <string
+        name="login_activity_newaccount_text">Sign in to your XMPP account. </string>    
 </resources>

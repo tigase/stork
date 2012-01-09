@@ -1,0 +1,11 @@
+<resources>
+    <style name="XTheme" parent="@android:style/Theme">
+        <!-- Any customizations for your app running on pre-3.0 devices here -->
+    </style>
+    <style name="XTheme.Light" parent="@android:style/Theme.Light">
+        <!-- Any customizations for your app running on pre-3.0 devices here -->
+    </style>
+    <style name="XTheme.Light.NoTitleBar" parent="@android:style/Theme.Light.NoTitleBar">
+        <!-- Any customizations for your app running on pre-3.0 devices here -->
+    </style>
+</resources>

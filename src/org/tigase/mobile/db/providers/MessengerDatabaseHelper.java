@@ -1,6 +1,6 @@
 package org.tigase.mobile.db.providers;
 
-import org.tigase.mobile.db.AccountsTableMetaData;
+//import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
@@ -27,17 +27,17 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		String sql;
 
-		sql = "CREATE TABLE " + AccountsTableMetaData.TABLE_NAME + " (";
-		sql += AccountsTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
-		sql += AccountsTableMetaData.FIELD_JID + " TEXT, ";
-		sql += AccountsTableMetaData.FIELD_PASSWORD + " TEXT, ";
-		sql += AccountsTableMetaData.FIELD_NICKNAME + " TEXT, ";
-		sql += AccountsTableMetaData.FIELD_HOSTNAME + " TEXT, ";
-		sql += AccountsTableMetaData.FIELD_ROSTER_VERSION + " TEXT, ";
-		sql += AccountsTableMetaData.FIELD_ACTIVE + " BOOLEAN, ";
-		sql += AccountsTableMetaData.FIELD_PORT + " INTEGER";
-		sql += ");";
-		db.execSQL(sql);
+//		sql = "CREATE TABLE " + AccountsTableMetaData.TABLE_NAME + " (";
+//		sql += AccountsTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+//		sql += AccountsTableMetaData.FIELD_JID + " TEXT, ";
+//		sql += AccountsTableMetaData.FIELD_PASSWORD + " TEXT, ";
+//		sql += AccountsTableMetaData.FIELD_NICKNAME + " TEXT, ";
+//		sql += AccountsTableMetaData.FIELD_HOSTNAME + " TEXT, ";
+//		sql += AccountsTableMetaData.FIELD_ROSTER_VERSION + " TEXT, ";
+//		sql += AccountsTableMetaData.FIELD_ACTIVE + " BOOLEAN, ";
+//		sql += AccountsTableMetaData.FIELD_PORT + " INTEGER";
+//		sql += ");";
+//		db.execSQL(sql);
 
 		sql = "CREATE TABLE " + ChatTableMetaData.TABLE_NAME + " (";
 		sql += ChatTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
@@ -90,7 +90,7 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + RosterCacheTableMetaData.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + VCardsCacheTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + AccountsTableMetaData.TABLE_NAME);
+		//db.execSQL("DROP TABLE IF EXISTS " + AccountsTableMetaData.TABLE_NAME);
 		onCreate(db);
 	}
 

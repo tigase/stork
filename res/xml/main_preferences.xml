@@ -12,10 +12,13 @@
             android:key="accounts_manager"
             android:summary="Accounts manager"
             android:title="Accounts" >
-            <intent
+<!--             <intent
                 android:action="android.intent.action.VIEW"
                 android:targetClass="org.tigase.mobile.preferences.AccountsEditorActivity"
-                android:targetPackage="org.tigase.mobile" />
+                android:targetPackage="org.tigase.mobile" /> -->
+            <intent
+                android:action="android.settings.SYNC_SETTINGS"
+                />
         </PreferenceScreen>
 
         <CheckBoxPreference

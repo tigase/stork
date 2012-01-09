@@ -104,7 +104,7 @@ public class MessengerApplication extends Application {
 					multiJaxmpp.get(be.getSessionObject()).getPresence().clear(true);
 			}
 		});
-		JaxmppService.updateJaxmppInstances(multiJaxmpp, getContentResolver(), getResources());
+		JaxmppService.updateJaxmppInstances(multiJaxmpp, getContentResolver(), getResources(), this);
 
 	}
 

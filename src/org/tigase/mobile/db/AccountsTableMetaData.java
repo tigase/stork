@@ -1,8 +1,12 @@
 package org.tigase.mobile.db;
 
-import android.provider.BaseColumns;
+//import android.provider.BaseColumns;
 
-public class AccountsTableMetaData implements BaseColumns {
+/**
+ * Class left as container for constant keys used for working with accounts
+ *
+ */
+public class AccountsTableMetaData /*implements BaseColumns*/ {
 
 	public static final String ACCOUNT_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.account";
 
