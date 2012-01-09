@@ -11,15 +11,12 @@ import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
-import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Dialog;
 import android.content.Context;
 import android.database.Cursor;
@@ -257,9 +254,9 @@ public class ChatHistoryFragment extends Fragment {
 	}
 
 	private void setChatId(final BareJID account, final long chatId) {
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(account);
+		MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
-		List<Chat> l = jaxmpp.getModulesManager().getModule(MessageModule.class).getChats();
+		List<Chat> l = multi.getChats();
 		for (int i = 0; i < l.size(); i++) {
 			Chat c = l.get(i);
 			if (c.getId() == chatId) {

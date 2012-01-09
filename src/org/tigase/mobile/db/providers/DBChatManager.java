@@ -72,7 +72,7 @@ public class DBChatManager extends AbstractChatManager {
 		final Cursor c = db.rawQuery(sql, null);
 		try {
 			while (c.moveToNext()) {
-				final int id = c.getInt(0);
+				final long id = c.getLong(c.getColumnIndex(OpenChatsTableMetaData.FIELD_ID));
 
 				final JID sJid = JID.jidInstance(c.getString(c.getColumnIndex(OpenChatsTableMetaData.FIELD_JID)));
 				final String sRes = c.getString(c.getColumnIndex(OpenChatsTableMetaData.FIELD_RESOURCE));

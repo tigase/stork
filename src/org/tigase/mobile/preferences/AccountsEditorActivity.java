@@ -28,12 +28,6 @@ import android.widget.SimpleCursorAdapter;
 public class AccountsEditorActivity extends FragmentActivity {
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		MenuInflater m = new MenuInflater(this);
-		m.inflate(R.menu.accounts_context_menu, menu);
-	}
-
-	@Override
 	public boolean onContextItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.accountEdit: {
@@ -48,6 +42,7 @@ public class AccountsEditorActivity extends FragmentActivity {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Are you sure you want to remove this account?").setCancelable(false).setPositiveButton(
 					android.R.string.yes, new DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int id) {
 							getContentResolver().delete(
 									ContentUris.withAppendedId(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), info.id), null,
@@ -55,6 +50,7 @@ public class AccountsEditorActivity extends FragmentActivity {
 							dialog.cancel();
 						}
 					}).setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int id) {
 					dialog.cancel();
 				}
@@ -103,6 +99,12 @@ public class AccountsEditorActivity extends FragmentActivity {
 			}
 		});
 
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		MenuInflater m = new MenuInflater(this);
+		m.inflate(R.menu.accounts_context_menu, menu);
 	}
 
 }

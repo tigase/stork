@@ -32,13 +32,9 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
@@ -50,115 +46,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
-
-	public abstract class MyFragmentPagerAdapter<T> extends FragmentPagerAdapter {
-
-		private FragmentTransaction mCurTransaction = null;
-
-		private final FragmentManager mFragmentManager;
-
-		public MyFragmentPagerAdapter(FragmentManager fm) {
-			super(fm);
-			mFragmentManager = fm;
-		}
-
-		@Override
-		public void destroyItem(View container, int position, Object object) {
-			if (mCurTransaction == null) {
-				mCurTransaction = mFragmentManager.beginTransaction();
-			}
-
-			if (DEBUG)
-				Log.v(TAG, "Detaching item #" + position + ": f=" + object + " v=" + ((Fragment) object).getView());
-
-			mCurTransaction.detach((Fragment) object);
-		}
-
-		@Override
-		public void finishUpdate(View container) {
-			try {
-				if (mCurTransaction != null) {
-					mCurTransaction.commit();
-					mCurTransaction = null;
-					mFragmentManager.executePendingTransactions();
-				}
-			} catch (IllegalStateException e) {
-				Log.e(TAG, "Again?", e);
-				mCurTransaction = null;
-			}
-		}
-
-		@Override
-		public int getCount() {
-			return getPages().size();
-		}
-
-		/**
-		 * Return the Fragment associated with a specified position.
-		 */
-		@Override
-		public abstract Fragment getItem(int position);
-
-		@Override
-		public int getItemPosition(Object object) {
-			return PagerAdapter.POSITION_NONE;
-		}
-
-		public T getObject(int i) {
-			return getPages().get(i);
-		}
-
-		protected abstract List<T> getPages();
-
-		@Override
-		public Object instantiateItem(View container, int position) {
-
-			if (mCurTransaction == null) {
-				mCurTransaction = mFragmentManager.beginTransaction();
-			}
-
-			// Do we already have this fragment?
-			String name = makeFragmentName(container.getId(), position);
-			Fragment fragment = mFragmentManager.findFragmentByTag(name);
-
-			if (fragment != null) {
-				if (DEBUG)
-					Log.v(TAG, "Attaching item #" + position + ": f=" + fragment);
-
-				mCurTransaction.attach(fragment);
-			} else {
-				fragment = getItem(position);
-				if (DEBUG)
-					Log.v(TAG, "Adding item #" + position + ": f=" + fragment);
-
-				mCurTransaction.add(container.getId(), fragment, makeFragmentName(container.getId(), position));
-			}
-
-			return fragment;
-		}
-
-		@Override
-		public boolean isViewFromObject(View view, Object object) {
-			return ((Fragment) object).getView() == view;
-		}
-
-		protected String makeFragmentName(int viewId, int index) {
-			return "android:switcher:" + viewId + ":" + getPages().get(index);
-		}
-
-		@Override
-		public void restoreState(Parcelable state, ClassLoader loader) {
-		}
-
-		@Override
-		public Parcelable saveState() {
-			return null;
-		}
-
-		@Override
-		public void startUpdate(View container) {
-		}
-	}
 
 	private class RosterClickReceiver extends BroadcastReceiver {
 
@@ -199,7 +86,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -209,7 +96,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private static final String TAG = "tigase";
 
-	private PagerAdapter adapter;
+	private MyFragmentPageAdapter adapter;
 
 	private final Listener<BaseEvent> chatListener;
 
@@ -370,7 +257,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			});
 		}
-		this.adapter = new MyFragmentPagerAdapter<Chat>(getSupportFragmentManager()) {
+
+		this.adapter = new MyFragmentPageAdapter(getSupportFragmentManager()) {
 
 			@Override
 			public int getCount() {
@@ -405,20 +293,19 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 
 			@Override
-			protected List<Chat> getPages() {
-				return getChatList();
-			}
-
-			@Override
 			protected String makeFragmentName(int viewId, int index) {
 				if (index == 0)
 					return "android:switcher:" + viewId + ":roster";
 				else {
-					return "android:switcher:" + viewId + ":" + getPages().get(index - 1).getId();
+					Chat chat = getChatList().get(index - 1);
+					String name = "android:switcher:" + viewId + ":" + chat;
+					if (DEBUG)
+						Log.d(TAG, "Chat page name: " + name);
+					return name;
 				}
 			}
-
 		};
+
 		viewPager.setAdapter(this.adapter);
 
 	}

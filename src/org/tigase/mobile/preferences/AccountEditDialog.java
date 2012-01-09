@@ -19,10 +19,6 @@ import android.widget.EditText;
 
 public class AccountEditDialog extends DialogFragment {
 
-	private AccountEditDialog(Long id) {
-		this.accountId = id;
-	}
-
 	public static AccountEditDialog newInstance() {
 		return new AccountEditDialog(null);
 	}
@@ -32,6 +28,10 @@ public class AccountEditDialog extends DialogFragment {
 	}
 
 	private Long accountId = null;
+
+	private AccountEditDialog(Long id) {
+		this.accountId = id;
+	}
 
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
