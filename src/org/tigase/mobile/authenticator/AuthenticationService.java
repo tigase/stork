@@ -7,31 +7,30 @@ import android.util.Log;
 
 public class AuthenticationService extends Service {
 
-    private static final String TAG = "AuthenticationService";
+	private static final String TAG = "AuthenticationService";
 
-    private Authenticator mAuthenticator;
+	private Authenticator mAuthenticator;
 
-    @Override
-    public void onCreate() {
-        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG, "TigaseMobile Authentication Service started.");
-        }
-        mAuthenticator = new Authenticator(this);
-    }
+	@Override
+	public IBinder onBind(Intent intent) {
+		if (Log.isLoggable(TAG, Log.VERBOSE)) {
+			Log.v(TAG, "getBinder()...  returning the AccountAuthenticator binder for intent " + intent);
+		}
+		return mAuthenticator.getIBinder();
+	}
 
-    @Override
-    public void onDestroy() {
-        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG, "TigaseMobile Authentication Service stopped.");
-        }
-    }
+	@Override
+	public void onCreate() {
+		if (Log.isLoggable(TAG, Log.VERBOSE)) {
+			Log.v(TAG, "TigaseMobile Authentication Service started.");
+		}
+		mAuthenticator = new Authenticator(this);
+	}
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG, "getBinder()...  returning the AccountAuthenticator binder for intent "
-                    + intent);
-        }
-        return mAuthenticator.getIBinder();
-    }
+	@Override
+	public void onDestroy() {
+		if (Log.isLoggable(TAG, Log.VERBOSE)) {
+			Log.v(TAG, "TigaseMobile Authentication Service stopped.");
+		}
+	}
 }

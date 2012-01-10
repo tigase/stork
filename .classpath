@@ -7,6 +7,6 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-j2se"/>
-	<classpathentry kind="lib" path="/home/andrzej/bin/android-sdk-linux_x86/extras/android/compatibility/v4/android-support-v4.jar"/>
+	<classpathentry kind="lib" path="/Users/bmalkow/programs/android-sdk-mac_86/extras/android/support/v4/android-support-v4.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

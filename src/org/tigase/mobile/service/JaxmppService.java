@@ -19,7 +19,6 @@ import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
-import org.tigase.mobile.db.providers.AccountsProvider;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.AuthRequestActivity;
