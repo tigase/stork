@@ -99,7 +99,7 @@ public class RosterDisplayTools {
 				return null;
 			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();
 			Presence p = presence.getBestPresence(item.getJid());
-			if (p != null && p.getType() == null) {
+			if (p != null) {
 				return p.getStatus();
 			} else
 				return null;
