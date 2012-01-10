@@ -180,23 +180,31 @@ public class JaxmppService extends Service {
 	private static void lock(SessionObject jaxmpp, boolean locked) {
 		jaxmpp.setProperty("CC:LOCKED", locked);
 	}
-	
-	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources, Context context) {
+
+	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
+			Context context) {
 
 		final HashSet<JID> accountsJids = new HashSet<JID>();
 		for (JaxmppCore jc : multi.get()) {
 			accountsJids.add(jc.getSessionObject().getUserJid());
 		}
-//		final Cursor c = contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY), null, null, null, null);
+		// final Cursor c =
+		// contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY),
+		// null, null, null, null);
 		try {
-//			while (c.moveToNext()) {
+			// while (c.moveToNext()) {
 			AccountManager accountManager = AccountManager.get(context);
 			for (Account account : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
-//				long id = c.getLong(c.getColumnIndex(AccountsTableMetaData.FIELD_ID));
-//				JID jid = JID.jidInstance(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
-//				String password = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD));
-//				String nickname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
-//				String hostname = c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
+				// long id =
+				// c.getLong(c.getColumnIndex(AccountsTableMetaData.FIELD_ID));
+				// JID jid =
+				// JID.jidInstance(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
+				// String password =
+				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD));
+				// String nickname =
+				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
+				// String hostname =
+				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
 				JID jid = JID.jidInstance(account.name);
 				String password = accountManager.getPassword(account);
 				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
@@ -229,7 +237,7 @@ public class JaxmppService extends Service {
 				accountsJids.remove(jid);
 			}
 		} finally {
-			//c.close();
+			// c.close();
 		}
 		for (JID jid : accountsJids) {
 			JaxmppCore jaxmpp = multi.get(jid.getBareJid());
@@ -881,6 +889,7 @@ public class JaxmppService extends Service {
 		Intent intent = new Intent(context, AuthRequestActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("jid", "" + be.getJid());
+		intent.putExtra("account", "" + be.getSessionObject().getUserJid());
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
