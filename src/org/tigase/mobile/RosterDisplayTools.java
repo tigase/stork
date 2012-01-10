@@ -61,9 +61,9 @@ public class RosterDisplayTools {
 
 	public CPresence getShowOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item, Presence p) {
 		try {
-			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();
 			if (item == null)
 				return CPresence.notinroster;
+			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();
 			if (item.isAsk())
 				return CPresence.requested;
 			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.from)
@@ -71,7 +71,9 @@ public class RosterDisplayTools {
 			p = p == null ? presence.getBestPresence(item.getJid()) : p;
 			CPresence r = CPresence.offline;
 			if (p != null) {
-				if (p.getType() == StanzaType.unavailable)
+				if (p.getType() == StanzaType.error) {
+					r = CPresence.error;
+				} else if (p.getType() == StanzaType.unavailable)
 					r = CPresence.offline;
 				else if (p.getShow() == Show.online)
 					r = CPresence.online;
