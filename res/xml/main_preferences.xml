@@ -12,16 +12,11 @@
             android:key="accounts_manager"
             android:summary="Accounts manager"
             android:title="Accounts" >
-<!--             <intent
-                android:action="android.intent.action.VIEW"
-                android:targetClass="org.tigase.mobile.preferences.AccountsEditorActivity"
-                android:targetPackage="org.tigase.mobile" /> -->
-            <intent
-                android:action="android.settings.SYNC_SETTINGS"
-                />
+            <intent android:action="android.settings.SYNC_SETTINGS" />
         </PreferenceScreen>
 
         <CheckBoxPreference
+            android:defaultValue="true"
             android:key="autostart"
             android:summary="@string/pref_autostart_summary"
             android:title="@string/pref_autostart_title" />

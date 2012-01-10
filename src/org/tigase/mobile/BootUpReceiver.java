@@ -13,7 +13,7 @@ public class BootUpReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent i) {
 		SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 
-		boolean autostart = prefs.getBoolean(Preferences.AUTOSTART_KEY, false);
+		boolean autostart = prefs.getBoolean(Preferences.AUTOSTART_KEY, true);
 		if (autostart) {
 			Intent intent = new Intent(context, JaxmppService.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
