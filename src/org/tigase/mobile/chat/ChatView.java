@@ -148,6 +148,10 @@ public class ChatView extends LinearLayout {
 		TextView t = (TextView) findViewById(R.id.textView1);
 		JaxmppCore jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get(
 				chat.getSessionObject());
+
+		if (jaxmpp == null)
+			throw new RuntimeException("Account " + chat.getSessionObject().getUserJid() + " is unknown!");
+
 		RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
 		t.setText("Chat with "
 				+ (ri == null ? chat.getJid().getBareJid().toString()

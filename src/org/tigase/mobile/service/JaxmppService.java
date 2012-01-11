@@ -183,9 +183,9 @@ public class JaxmppService extends Service {
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
 
-		final HashSet<JID> accountsJids = new HashSet<JID>();
+		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jc : multi.get()) {
-			accountsJids.add(jc.getSessionObject().getUserJid());
+			accountsJids.add(jc.getSessionObject().getUserJid().getBareJid());
 		}
 		// final Cursor c =
 		// contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY),
@@ -209,7 +209,7 @@ public class JaxmppService extends Service {
 				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
 				String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
 
-				if (!accountsJids.contains(jid)) {
+				if (!accountsJids.contains(jid.getBareJid())) {
 					SessionObject sessionObject = new DefaultSessionObject();
 					sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 					sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
@@ -233,13 +233,13 @@ public class JaxmppService extends Service {
 					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
 					multi.add(jaxmpp);
 				}
-				accountsJids.remove(jid);
+				accountsJids.remove(jid.getBareJid());
 			}
 		} finally {
 			// c.close();
 		}
-		for (JID jid : accountsJids) {
-			JaxmppCore jaxmpp = multi.get(jid.getBareJid());
+		for (BareJID jid : accountsJids) {
+			JaxmppCore jaxmpp = multi.get(jid);
 			if (jaxmpp != null)
 				multi.remove(jaxmpp);
 		}
@@ -448,6 +448,9 @@ public class JaxmppService extends Service {
 	}
 
 	private void connectJaxmpp(final Jaxmpp jaxmpp, final Date delay) {
+		if (DEBUG)
+			Log.d(TAG, "Preparing to start account " + jaxmpp.getSessionObject().getUserJid());
+
 		if (isLocked(jaxmpp.getSessionObject())) {
 			if (DEBUG)
 				Log.d(TAG, "Skip connection for account " + jaxmpp.getSessionObject().getUserJid() + ". Locked.");
@@ -508,7 +511,6 @@ public class JaxmppService extends Service {
 	private void disconnectAllJaxmpp() {
 		usedNetworkType = -1;
 		connectionErrorCounter = 0;
-		timer.cancel();
 		for (final JaxmppCore j : getMulti().get()) {
 			(new Thread() {
 				@Override
