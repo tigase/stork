@@ -82,9 +82,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	protected boolean mRequestNewAccount = false;
 
-    private boolean mUsernameChanged = false;
-    
 	private String mUsername;
+
+	private boolean mUsernameChanged = false;
 
 	private EditText mUsernameEdit;
 
@@ -141,7 +141,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	public void handleLogin(View view) {
-		if (!mRequestNewAccount && mUsername != null && !mUsername.isEmpty() && !mUsername.equals(mUsernameEdit.getText().toString())) {        	
+		if (!mRequestNewAccount && !TextUtils.isEmpty(mUsername) && !mUsername.equals(mUsernameEdit.getText().toString())) {
 			final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
 			mAccountManager.removeAccount(account, null, null);
 			mRequestNewAccount = true;
@@ -151,7 +151,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		if (mRequestNewAccount) {
 			mUsername = mUsernameEdit.getText().toString();
 		}
-		
+
 		mPassword = mPasswordEdit.getText().toString();
 		mNickname = mNicknameEdit.getText().toString();
 		mHostname = mHostnameEdit.getText().toString();
@@ -249,7 +249,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		// because after editing account settings we are back to account
 		// page with old username presented as account name!!
 		mUsernameEdit.setEnabled(mUsername == null);
-		
+
 		final Button addButton = (Button) findViewById(R.id.newAccountAddButton);
 		final Button cancelButton = (Button) findViewById(R.id.newAccountcancelButton);
 		addButton.setOnClickListener(new OnClickListener() {

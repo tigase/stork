@@ -215,8 +215,8 @@ public class RosterCursor extends AbstractCursor {
 	}
 
 	private byte[] readAvatar(RosterItem item) {
-		if (item.getData("photo") == null)
-			return null;
+		// if (item.getData("photo") == null)
+		// return null;
 		if (avatarCache.containsKey(item)) {
 			if (DEBUG)
 				Log.d("tigase", "Getting from cache avatar of user " + item.getJid());

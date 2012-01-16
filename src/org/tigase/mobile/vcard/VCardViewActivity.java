@@ -133,38 +133,45 @@ public class VCardViewActivity extends Activity {
 			((TextView) findViewById(R.id.vcard_subscription_status)).setText(rosterItem.getSubscription().name());
 		}
 
-		VCardModule module = jaxmpp.getModulesManager().getModule(VCardModule.class);
-		try {
-			module.retrieveVCard(jid, new VCardAsyncCallback() {
+		final VCardModule module = jaxmpp.getModulesManager().getModule(VCardModule.class);
 
-				@Override
-				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-					// TODO Auto-generated method stub
-					dialog.dismiss();
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					// TODO Auto-generated method stub
-					dialog.dismiss();
-				}
-
-				@Override
-				protected void onVCardReceived(final VCard vcard) throws XMLException {
-					fullName.post(new Runnable() {
+		(new Thread() {
+			@Override
+			public void run() {
+				try {
+					module.retrieveVCard(jid, new VCardAsyncCallback() {
 
 						@Override
-						public void run() {
+						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+							// TODO Auto-generated method stub
 							dialog.dismiss();
-							fillFields(VCardViewActivity.this, getContentResolver(), getResources(), jid, vcard, rosterItem);
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+							// TODO Auto-generated method stub
+							dialog.dismiss();
+						}
+
+						@Override
+						protected void onVCardReceived(final VCard vcard) throws XMLException {
+							fullName.post(new Runnable() {
+
+								@Override
+								public void run() {
+									dialog.dismiss();
+									fillFields(VCardViewActivity.this, getContentResolver(), getResources(), jid, vcard,
+											rosterItem);
+								}
+							});
 						}
 					});
+				} catch (JaxmppException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			});
-		} catch (JaxmppException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			}
+		}).start();
 
 		dialog.show();
 	}

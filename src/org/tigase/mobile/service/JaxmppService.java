@@ -1,7 +1,10 @@
 package org.tigase.mobile.service;
 
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -147,7 +150,7 @@ public class JaxmppService extends Service {
 		jaxmpp.setProperty("CC:DISABLED", disabled);
 	}
 
-	private static Throwable extractCauseException(Exception ex) {
+	private static Throwable extractCauseException(Throwable ex) {
 		Throwable th = ex.getCause();
 		if (th == null)
 			return ex;
@@ -208,6 +211,7 @@ public class JaxmppService extends Service {
 				String password = accountManager.getPassword(account);
 				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
 				String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
+				hostname = hostname == null ? null : hostname.trim();
 
 				if (!accountsJids.contains(jid.getBareJid())) {
 					SessionObject sessionObject = new DefaultSessionObject();
@@ -232,6 +236,21 @@ public class JaxmppService extends Service {
 
 					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
 					multi.add(jaxmpp);
+				} else {
+					SessionObject sessionObject = multi.get(jid.getBareJid()).getSessionObject();
+
+					sessionObject.setUserProperty(SessionObject.PASSWORD, password);
+					sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
+					if (hostname != null && hostname.trim().length() > 0)
+						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, hostname);
+					else
+						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
+
+					if (jid.getResource() != null)
+						sessionObject.setUserProperty(SessionObject.RESOURCE, jid.getResource());
+					else
+						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
+
 				}
 				accountsJids.remove(jid.getBareJid());
 			}
@@ -247,7 +266,7 @@ public class JaxmppService extends Service {
 
 	private TimerTask autoPresenceTask;
 
-	private int connectionErrorCounter = 0;
+	private final HashMap<BareJID, Integer> connectionErrorsCounter = new HashMap<BareJID, Integer>();
 
 	private Listener<ConnectorEvent> connectorListener;
 
@@ -388,7 +407,7 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(final Connector.ConnectorEvent be) throws JaxmppException {
 				if (getState(be.getSessionObject()) == State.connected)
-					connectionErrorCounter = 0;
+					setConnectionError(be.getSessionObject().getUserJid().getBareJid(), 0);
 				if (getState(be.getSessionObject()) == State.disconnected)
 					reconnectIfAvailable(be.getSessionObject());
 				notificationUpdate();
@@ -437,6 +456,13 @@ public class JaxmppService extends Service {
 
 	}
 
+	private void clearLocalJaxmppProperties() {
+		for (JaxmppCore jaxmpp : getMulti().get()) {
+			lock(jaxmpp.getSessionObject(), false);
+			disable(jaxmpp.getSessionObject(), false);
+		}
+	}
+
 	private void connectAllJaxmpp(Long delay) {
 		if (DEBUG)
 			Log.d(TAG, "Starting all JAXMPPs");
@@ -479,7 +505,7 @@ public class JaxmppService extends Service {
 								try {
 									jaxmpp.login(false);
 								} catch (Exception e) {
-									++connectionErrorCounter;
+									incrementConnectionError(jaxmpp.getSessionObject().getUserJid().getBareJid());
 									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserJid(), e);
 								}
 							}
@@ -493,7 +519,7 @@ public class JaxmppService extends Service {
 			r.run();
 		else {
 			if (DEBUG)
-				Log.d(TAG, "Shedule connection for account " + jaxmpp.getSessionObject().getUserJid());
+				Log.d(TAG, "Shedule (time=" + delay + ") connection for account " + jaxmpp.getSessionObject().getUserJid());
 			timer.schedule(new TimerTask() {
 
 				@Override
@@ -510,7 +536,6 @@ public class JaxmppService extends Service {
 
 	private void disconnectAllJaxmpp() {
 		usedNetworkType = -1;
-		connectionErrorCounter = 0;
 		for (final JaxmppCore j : getMulti().get()) {
 			(new Thread() {
 				@Override
@@ -523,6 +548,9 @@ public class JaxmppService extends Service {
 				}
 			}).start();
 		}
+		synchronized (connectionErrorsCounter) {
+			connectionErrorsCounter.clear();
+		}
 	}
 
 	private Integer getActiveNetworkConnectionType() {
@@ -534,6 +562,13 @@ public class JaxmppService extends Service {
 		return info.getType();
 	}
 
+	private int getConnectionError(final BareJID jid) {
+		synchronized (connectionErrorsCounter) {
+			Integer x = connectionErrorsCounter.get(jid);
+			return x == null ? 0 : x.intValue();
+		}
+	}
+
 	private final MultiJaxmpp getMulti() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
 	}
@@ -541,6 +576,16 @@ public class JaxmppService extends Service {
 	protected final State getState(SessionObject object) {
 		State state = getMulti().get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state == null ? State.disconnected : state;
+	}
+
+	private int incrementConnectionError(final BareJID jid) {
+		synchronized (connectionErrorsCounter) {
+			Integer x = connectionErrorsCounter.get(jid);
+			int z = x == null ? 0 : x.intValue();
+			++z;
+			connectionErrorsCounter.put(jid, z);
+			return z;
+		}
 	}
 
 	private void notificationCancel() {
@@ -562,19 +607,25 @@ public class JaxmppService extends Service {
 			}
 		} else {
 			int onlineCount = 0;
-			int notOnlineCount = 0;
+			int offlineCount = 0;
+			int connectingCount = 0;
+			int disabledCount = 0;
 			for (JaxmppCore jaxmpp : getMulti().get()) {
 				State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-				if (state == State.connected) {
+				if (isDisabled(jaxmpp.getSessionObject()))
+					++disabledCount;
+				else if (state == State.connected)
 					++onlineCount;
-				} else
-					++notOnlineCount;
+				else if (state == null || state == State.disconnected)
+					++offlineCount;
+				else
+					++connectingCount;
 			}
 
-			if (notOnlineCount > 0) {
+			if (connectingCount > 0) {
 				ico = R.drawable.ic_stat_connected;
 				notiticationTitle = "Connecting";
-				expandedNotificationText = "Connecting...";
+				expandedNotificationText = "Connecting " + connectingCount + " accounts...";
 				if (this.notificationVariant != NotificationVariant.always) {
 					notificationCancel();
 					return;
@@ -662,7 +713,8 @@ public class JaxmppService extends Service {
 	}
 
 	private void notificationUpdateFail(String message) {
-		notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", "Connection impossible");
+		// notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected",
+		// "Connection impossible");
 
 		String notiticationTitle = "Connection error";
 		String expandedNotificationText = message == null ? notiticationTitle : message;
@@ -709,8 +761,19 @@ public class JaxmppService extends Service {
 
 	protected void onConnectorError(final ConnectorEvent be) {
 		if (be.getStreamError() == StreamError.host_unknown) {
-			notificationUpdateFail("Connection error: unknown host");
+			notificationUpdateFail("Connection error: unknown host " + be.getSessionObject().getUserJid().getDomain());
 			disable(be.getSessionObject(), true);
+		} else if (be.getCaught() != null) {
+			Throwable x = extractCauseException(be.getCaught());
+			if (x instanceof UnknownHostException) {
+				notificationUpdateFail("Connection error: unknown host " + x.getMessage());
+				disable(be.getSessionObject(), true);
+			} else if (x instanceof SocketException) {
+
+			} else {
+				notificationUpdateFail("Connection error: " + x.getMessage());
+				disable(be.getSessionObject(), true);
+			}
 		}
 	}
 
@@ -718,6 +781,7 @@ public class JaxmppService extends Service {
 	public void onCreate() {
 		if (DEBUG)
 			Log.i(TAG, "onCreate()");
+		clearLocalJaxmppProperties();
 		this.prefs = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
@@ -776,6 +840,7 @@ public class JaxmppService extends Service {
 	public void onDestroy() {
 		serviceActive = false;
 		timer.cancel();
+		clearLocalJaxmppProperties();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
 		if (myConnReceiver != null)
@@ -823,7 +888,9 @@ public class JaxmppService extends Service {
 			if (DEBUG)
 				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
 			reconnect = true;
-			connectionErrorCounter = 0;
+			synchronized (connectionErrorsCounter) {
+				connectionErrorsCounter.clear();
+			}
 			connectAllJaxmpp(5000l);
 		} else if (netInfo != null && !netInfo.isConnected() && netInfo.getType() == usedNetworkType) {
 			if (DEBUG)
@@ -906,7 +973,14 @@ public class JaxmppService extends Service {
 			Log.d(TAG, "Preparing for reconnect " + sessionObject.getUserJid());
 
 		final Jaxmpp j = getMulti().get(sessionObject);
-		connectJaxmpp(j, calculateNextRestart(5, connectionErrorCounter));
+
+		int connectionErrors = getConnectionError(j.getSessionObject().getUserJid().getBareJid());
+
+		if (connectionErrors > 50) {
+			disable(sessionObject, true);
+			notificationUpdateFail("Too many connection errors. Account disabled.");
+		} else
+			connectJaxmpp(j, calculateNextRestart(5, connectionErrors));
 
 	}
 
@@ -1020,14 +1094,19 @@ public class JaxmppService extends Service {
 			};
 			timer.schedule(autoPresenceTask, 1000 * 60);
 		} else {
-			try {
-				for (JaxmppCore jaxmpp : getMulti().get()) {
-					final PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
-					presenceModule.setPresence(show, status, priority);
+			(new Thread() {
+				@Override
+				public void run() {
+					try {
+						for (JaxmppCore jaxmpp : getMulti().get()) {
+							final PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
+							presenceModule.setPresence(show, status, priority);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Can't send auto presence!", e);
+					}
 				}
-			} catch (Exception e) {
-				Log.e(TAG, "Can't send auto presence!", e);
-			}
+			}).start();
 		}
 
 	}
@@ -1081,6 +1160,15 @@ public class JaxmppService extends Service {
 			Log.e(TAG, "WTF??", e);
 		} finally {
 			c.close();
+		}
+	}
+
+	private void setConnectionError(final BareJID jid, final int count) {
+		synchronized (connectionErrorsCounter) {
+			if (count == 0)
+				connectionErrorsCounter.remove(jid);
+			else
+				connectionErrorsCounter.put(jid, count);
 		}
 	}
 

@@ -15,6 +15,7 @@ import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
@@ -52,6 +53,11 @@ public class RosterFragment extends Fragment {
 	static final int TOKEN_CHILD = 1;
 
 	static final int TOKEN_GROUP = 0;
+
+	private static boolean isDisabled(SessionObject jaxmpp) {
+		Boolean x = jaxmpp.getProperty("CC:DISABLED");
+		return x == null ? false : x;
+	}
 
 	public static RosterFragment newInstance() {
 		RosterFragment f = new RosterFragment();
@@ -322,25 +328,26 @@ public class RosterFragment extends Fragment {
 	private void updateConnectionStatus() {
 		int onlineCount = 0;
 		int offlineCount = 0;
-		int notOnlineCount = 0;
+		int connectingCount = 0;
+		int disabledCount = 0;
 		for (JaxmppCore jaxmpp : getMulti().get()) {
 			State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-			if (state == State.connected
-					&& jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null) {
+			if (isDisabled(jaxmpp.getSessionObject()))
+				++disabledCount;
+			else if (state == State.connected)
 				++onlineCount;
-			} else if (state == null || state == State.disconnected)
+			else if (state == null || state == State.disconnected)
 				++offlineCount;
 			else
-				++notOnlineCount;
+				++connectingCount;
 		}
-
 		final State st;
-		if (notOnlineCount > 0)
+		if (connectingCount > 0)
 			st = State.connecting;
-		else if (offlineCount == 0)
-			st = State.connected;
-		else
+		else if (onlineCount == 0)
 			st = State.disconnected;
+		else
+			st = State.connected;
 
 		connectionStatus.post(new Runnable() {
 
