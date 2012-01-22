@@ -13,6 +13,7 @@ import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.BaseEvent;
@@ -209,7 +210,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (savedInstanceState != null && currentPage == -1) {
 			currentPage = savedInstanceState.getInt("currentPage", -1);
 		}
-
 		if (isXLarge()) {
 			setContentView(R.layout.all);
 		} else {
@@ -308,6 +308,19 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		viewPager.setAdapter(this.adapter);
 
+		if (getIntent().getData() instanceof Uri) {
+			Uri uri = getIntent().getData();
+			if (DEBUG)
+				Log.d(TAG, "onCreate("+uri+")");
+			
+			BareJID jid = BareJID.bareJIDInstance(uri.getPath().substring(1));
+			for (JaxmppCore jaxmpp : ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get()) {
+				RosterItem ri = jaxmpp.getRoster().get(jid);
+				if (ri != null) {
+					openChatWith(ri);
+				}
+			}			
+		}		
 	}
 
 	@Override

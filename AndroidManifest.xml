@@ -38,8 +38,12 @@
             android:theme="@style/XTheme.Light.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="imto" android:host="jabber" />                                 
             </intent-filter>
         </activity>
         <activity
@@ -65,7 +69,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
+         
         <!-- The authenticator service -->
         <service
             android:name=".authenticator.AuthenticationService"
@@ -78,6 +82,17 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
+        <service
+            android:name=".sync.SyncService"
+            android:exported="true">
+            <intent-filter>
+                <action
+                    android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>        
         <service android:name=".service.JaxmppService" >
         </service>
 

@@ -11,11 +11,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-class MessengerDatabaseHelper extends SQLiteOpenHelper {
+public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 14;
+	public static final Integer DATABASE_VERSION = 15;
 
 	private static final String TAG = "tigase";
 
@@ -57,7 +57,8 @@ class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += RosterCacheTableMetaData.FIELD_NAME + " TEXT, ";
 		sql += RosterCacheTableMetaData.FIELD_GROUP_NAME + " DATETIME, ";
 		sql += RosterCacheTableMetaData.FIELD_ASK + " BOOLEAN, ";
-		sql += RosterCacheTableMetaData.FIELD_SUBSCRIPTION + " TEXT";
+		sql += RosterCacheTableMetaData.FIELD_SUBSCRIPTION + " TEXT, ";
+		sql += RosterCacheTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 		sql += ");";
 		db.execSQL(sql);
 
