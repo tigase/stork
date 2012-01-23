@@ -1,5 +1,8 @@
 package org.tigase.mobile.roster;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
@@ -46,13 +49,22 @@ import android.widget.Toast;
 
 public class RosterFragment extends Fragment {
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	private static final String TAG = "tigase";
 
 	static final int TOKEN_CHILD = 1;
 
 	static final int TOKEN_GROUP = 0;
+
+	private static boolean inArray(long[] array, long element) {
+		for (long l : array) {
+			if (l == element) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private static boolean isDisabled(SessionObject jaxmpp) {
 		Boolean x = jaxmpp.getProperty("CC:DISABLED");
@@ -64,6 +76,16 @@ public class RosterFragment extends Fragment {
 		return f;
 	}
 
+	private static long[] toLongArray(List<Long> list) {
+		long[] ret = new long[list.size()];
+		int i = 0;
+		for (Long e : list)
+			ret[i++] = e.longValue();
+		return ret;
+	}
+
+	private RosterAdapter adapter;
+
 	private Listener<ResourceBindEvent> bindListener;
 
 	private Cursor c;
@@ -71,6 +93,8 @@ public class RosterFragment extends Fragment {
 	private ImageView connectionStatus;
 
 	private final Listener<ConnectorEvent> connectorListener;
+
+	private long[] expandedIds;
 
 	private ExpandableListContextMenuInfo lastMenuInfo;
 
@@ -97,6 +121,21 @@ public class RosterFragment extends Fragment {
 				updateConnectionStatus();
 			}
 		};
+	}
+
+	private long[] getExpandedIds() {
+		if (adapter != null) {
+			int length = adapter.getGroupCount();
+			ArrayList<Long> expandedIds = new ArrayList<Long>();
+			for (int i = 0; i < length; i++) {
+				if (listView.isGroupExpanded(i)) {
+					expandedIds.add(adapter.getGroupId(i));
+				}
+			}
+			return toLongArray(expandedIds);
+		} else {
+			return null;
+		}
 	}
 
 	private RosterItem getJid(long itemId) {
@@ -188,12 +227,12 @@ public class RosterFragment extends Fragment {
 		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
 		getActivity().startManagingCursor(c);
 		RosterAdapter.staticContext = inflater.getContext();
-		final RosterAdapter adapter = new RosterAdapter(inflater.getContext(), c);
+		this.adapter = new RosterAdapter(inflater.getContext(), c);
 
 		listView = (ExpandableListView) layout.findViewById(R.id.rosterList);
+		listView.setSaveEnabled(true);
 		listView.setTextFilterEnabled(true);
 
-		// listView.setSaveEnabled(true);
 		listView.setAdapter(adapter);
 		registerForContextMenu(listView);
 
@@ -218,6 +257,11 @@ public class RosterFragment extends Fragment {
 
 		if (DEBUG)
 			Log.d(TAG + "_rf", "layout created");
+
+		long[] expandedIds = savedInstanceState == null ? null : savedInstanceState.getLongArray("ExpandedIds");
+		if (expandedIds != null) {
+			restoreExpandedState(expandedIds);
+		}
 
 		return layout;
 	}
@@ -244,6 +288,11 @@ public class RosterFragment extends Fragment {
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
+
+		this.expandedIds = getExpandedIds();
+		if (DEBUG)
+			Log.d(TAG, "Save roster view state." + (this.expandedIds != null));
+		outState.putLongArray("ExpandedIds", this.expandedIds);
 	}
 
 	@Override
@@ -257,6 +306,10 @@ public class RosterFragment extends Fragment {
 
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onStart() " + getView());
+
+		if (this.expandedIds != null) {
+			restoreExpandedState(expandedIds);
+		}
 	}
 
 	@Override
@@ -267,6 +320,7 @@ public class RosterFragment extends Fragment {
 		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 		super.onStop();
 
+		expandedIds = getExpandedIds();
 	}
 
 	@Override
@@ -274,6 +328,19 @@ public class RosterFragment extends Fragment {
 		super.onViewCreated(view, savedInstanceState);
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onViewCreated()");
+	}
+
+	private void restoreExpandedState(long[] expandedIds) {
+		this.expandedIds = expandedIds;
+		if (expandedIds != null) {
+			if (adapter != null) {
+				for (int i = 0; i < adapter.getGroupCount(); i++) {
+					long id = adapter.getGroupId(i);
+					if (inArray(expandedIds, id))
+						listView.expandGroup(i);
+				}
+			}
+		}
 	}
 
 	private void sendAuthRemove(long id) {

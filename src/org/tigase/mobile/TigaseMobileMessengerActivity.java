@@ -87,7 +87,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int REQUEST_CHAT = 1;
 
