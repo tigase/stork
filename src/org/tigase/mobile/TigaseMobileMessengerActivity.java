@@ -311,16 +311,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (getIntent().getData() instanceof Uri) {
 			Uri uri = getIntent().getData();
 			if (DEBUG)
-				Log.d(TAG, "onCreate("+uri+")");
-			
+				Log.d(TAG, "onCreate(" + uri + ")");
+
 			BareJID jid = BareJID.bareJIDInstance(uri.getPath().substring(1));
 			for (JaxmppCore jaxmpp : ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get()) {
 				RosterItem ri = jaxmpp.getRoster().get(jid);
 				if (ri != null) {
 					openChatWith(ri);
 				}
-			}			
-		}		
+			}
+		}
 	}
 
 	@Override

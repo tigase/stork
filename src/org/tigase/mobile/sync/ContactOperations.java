@@ -3,7 +3,6 @@ package org.tigase.mobile.sync;
 import org.tigase.mobile.Constants;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Context;
@@ -20,53 +19,127 @@ import android.text.TextUtils;
 
 public class ContactOperations {
 
+	private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
+		if (isSyncOperation) {
+			return uri.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+		}
+		return uri;
+	}
+
+	public static ContactOperations createNewContact(Context context, long userId, String accountName, boolean isSyncOperation,
+			BatchOperation batchOperation) {
+		return new ContactOperations(context, userId, accountName, isSyncOperation, batchOperation);
+	}
+
+	public static ContentProviderOperation.Builder newDeleteCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newDelete(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
+	}
+
+	public static ContentProviderOperation.Builder newInsertCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newInsert(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
+	}
+
+	public static ContentProviderOperation.Builder newUpdateCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newUpdate(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
+	}
+
+	public static ContactOperations updateExistingContact(Context context, long rawContactId, boolean isSyncOperation,
+			BatchOperation batchOperation) {
+		return new ContactOperations(context, rawContactId, isSyncOperation, batchOperation);
+	}
+
+	private int mBackReference;
 	private final BatchOperation mBatchOperation;
+
 	private final Context mContext;
+
+	private boolean mIsNewContact;
+
+	private boolean mIsSyncOperation;
+
+	private boolean mIsYieldAllowed;
+
+	private long mRawContactId;
+
 	private final ContentValues mValues;
-    private boolean mIsSyncOperation;
-    private long mRawContactId;
-    private int mBackReference;
-    private boolean mIsNewContact;
-    private boolean mIsYieldAllowed;    
-    
-	public static ContactOperations createNewContact(Context context, long userId,
-            String accountName, boolean isSyncOperation, BatchOperation batchOperation) {
-        return new ContactOperations(context, userId, accountName, isSyncOperation, batchOperation);
-    }
 
-    public static ContactOperations updateExistingContact(Context context, long rawContactId,
-            boolean isSyncOperation, BatchOperation batchOperation) {
-        return new ContactOperations(context, rawContactId, isSyncOperation, batchOperation);
-    }
+	public ContactOperations(Context context, boolean isSyncOperation, BatchOperation batchOperation) {
+		mValues = new ContentValues();
+		mIsYieldAllowed = true;
+		mIsSyncOperation = isSyncOperation;
+		mContext = context;
+		mBatchOperation = batchOperation;
+	}
 
-    public ContactOperations(Context context, boolean isSyncOperation,
-            BatchOperation batchOperation) {
-        mValues = new ContentValues();
-        mIsYieldAllowed = true;
-        mIsSyncOperation = isSyncOperation;
-        mContext = context;
-        mBatchOperation = batchOperation;
-    }
+	public ContactOperations(Context context, long rawContactId, boolean isSyncOperation, BatchOperation batchOperation) {
+		this(context, isSyncOperation, batchOperation);
+		mIsNewContact = false;
+		mRawContactId = rawContactId;
+	}
 
-    public ContactOperations(Context context, long userId, String accountName,
-            boolean isSyncOperation, BatchOperation batchOperation) {
-        this(context, isSyncOperation, batchOperation);
-        mBackReference = mBatchOperation.size();
-        mIsNewContact = true;
-        mValues.put(RawContacts.SOURCE_ID, userId);
-        mValues.put(RawContacts.ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
-        mValues.put(RawContacts.ACCOUNT_NAME, accountName);
-        ContentProviderOperation.Builder builder =
-                newInsertCpo(RawContacts.CONTENT_URI, mIsSyncOperation, true).withValues(mValues);
-        mBatchOperation.add(builder.build());
-    }
+	public ContactOperations(Context context, long userId, String accountName, boolean isSyncOperation,
+			BatchOperation batchOperation) {
+		this(context, isSyncOperation, batchOperation);
+		mBackReference = mBatchOperation.size();
+		mIsNewContact = true;
+		mValues.put(RawContacts.SOURCE_ID, userId);
+		mValues.put(RawContacts.ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
+		mValues.put(RawContacts.ACCOUNT_NAME, accountName);
+		ContentProviderOperation.Builder builder = newInsertCpo(RawContacts.CONTENT_URI, mIsSyncOperation, true).withValues(
+				mValues);
+		mBatchOperation.add(builder.build());
+	}
 
-    public ContactOperations(Context context, long rawContactId, boolean isSyncOperation,
-            BatchOperation batchOperation) {
-        this(context, isSyncOperation, batchOperation);
-        mIsNewContact = false;
-        mRawContactId = rawContactId;
-    }
+	public ContactOperations addAvatar(byte[] blob) {
+		mValues.clear();
+
+		if (blob != null && blob.length > 0) {
+			mValues.put(Photo.PHOTO, blob);
+			mValues.put(Photo.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
+			addInsertOp();
+		}
+		return this;
+	}
+
+	public ContactOperations addGroupMembership(long groupId) {
+		mValues.clear();
+		mValues.put(GroupMembership.GROUP_ROW_ID, groupId);
+		mValues.put(GroupMembership.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
+		addInsertOp();
+		return this;
+	}
+
+	private void addInsertOp() {
+
+		if (!mIsNewContact) {
+			mValues.put(Phone.RAW_CONTACT_ID, mRawContactId);
+		}
+		ContentProviderOperation.Builder builder = newInsertCpo(Data.CONTENT_URI, mIsSyncOperation, mIsYieldAllowed);
+		builder.withValues(mValues);
+		if (mIsNewContact) {
+			builder.withValueBackReference(Data.RAW_CONTACT_ID, mBackReference);
+		}
+		mIsYieldAllowed = false;
+		mBatchOperation.add(builder.build());
+	}
+
+	public ContactOperations addJID(BareJID jid) {
+		mValues.clear();
+
+		String jidStr = jid.toString();
+		if (!TextUtils.isEmpty(jidStr)) {
+			mValues.put(Im.DATA, jidStr);
+			mValues.put(Im.LABEL, "IM");
+			mValues.put(Im.PROTOCOL, Im.PROTOCOL_JABBER);
+			mValues.put(Im.TYPE, Im.TYPE_OTHER);
+			mValues.put(Im.MIMETYPE, Im.CONTENT_ITEM_TYPE);
+			addInsertOp();
+		}
+		return this;
+	}
 
 	public ContactOperations addName(String fullName, String firstName, String lastName) {
 		mValues.clear();
@@ -90,59 +163,46 @@ public class ContactOperations {
 		return this;
 	}
 
-	public ContactOperations addJID(BareJID jid) {
+	public ContactOperations addProfile(String username) {
 		mValues.clear();
-
-		String jidStr = jid.toString();
-		if (!TextUtils.isEmpty(jidStr)) {
-			mValues.put(Im.DATA, jidStr);
-			mValues.put(Im.LABEL, "IM");
-			mValues.put(Im.PROTOCOL, Im.PROTOCOL_JABBER);
-			mValues.put(Im.TYPE, Im.TYPE_OTHER);
-			mValues.put(Im.MIMETYPE, Im.CONTENT_ITEM_TYPE);
+		if (username != null) {
+			mValues.put(ContactsContract.Data.MIMETYPE, Constants.PROFILE_MIMETYPE);
+			mValues.put(ContactsContract.Data.DATA1, username);
+			mValues.put(ContactsContract.Data.DATA2, "XMPP Profile");
+			mValues.put(ContactsContract.Data.DATA3, "View profile");
 			addInsertOp();
 		}
 		return this;
-	}    
+	}
 
-	public ContactOperations addAvatar(byte[] blob) {
-		mValues.clear();
+	private void addUpdateOp(Uri uri) {
+		ContentProviderOperation.Builder builder = newUpdateCpo(uri, mIsSyncOperation, mIsYieldAllowed).withValues(mValues);
+		mIsYieldAllowed = false;
+		mBatchOperation.add(builder.build());
+	}
+
+	public ContactOperations updateAvatar(Uri uri, byte[] blob) {
 
 		if (blob != null && blob.length > 0) {
+			mValues.clear();
 			mValues.put(Photo.PHOTO, blob);
 			mValues.put(Photo.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
-			addInsertOp();
+			addUpdateOp(uri);
 		}
-		return this;
-	}    
 
-    public ContactOperations addGroupMembership(long groupId) {
-        mValues.clear();
-        mValues.put(GroupMembership.GROUP_ROW_ID, groupId);
-        mValues.put(GroupMembership.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
-        addInsertOp();
-        return this;
-    }	
-    
-    public ContactOperations addProfile(String username) {
-    	mValues.clear();
-    	if (username != null) {
-    		mValues.put(ContactsContract.Data.MIMETYPE, Constants.PROFILE_MIMETYPE);
-        	mValues.put(ContactsContract.Data.DATA1, username);
-        	mValues.put(ContactsContract.Data.DATA2, "XMPP Profile");
-        	mValues.put(ContactsContract.Data.DATA3, "View profile");
-        	addInsertOp();
-    	}
-        return this;
-    }
-    
-    public ContactOperations updateName(Uri uri,
-			String existingFirstName,
-			String existingLastName,
-			String existingFullName,
-			String firstName,
-			String lastName,
-			String fullName) {
+		return this;
+	}
+
+	public ContactOperations updateGroupMembership(Uri uri, long groupId) {
+		mValues.clear();
+		mValues.put(GroupMembership.GROUP_ROW_ID, groupId);
+		mValues.put(GroupMembership.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
+		addUpdateOp(uri);
+		return this;
+	}
+
+	public ContactOperations updateName(Uri uri, String existingFirstName, String existingLastName, String existingFullName,
+			String firstName, String lastName, String fullName) {
 
 		mValues.clear();
 		if (TextUtils.isEmpty(fullName)) {
@@ -161,89 +221,17 @@ public class ContactOperations {
 			addUpdateOp(uri);
 		}
 		return this;
-	}    
+	}
 
-	public ContactOperations updateAvatar(Uri uri, byte[] blob) {		
-
-		if (blob != null && blob.length > 0) {
-			mValues.clear();
-			mValues.put(Photo.PHOTO, blob);
-			mValues.put(Photo.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
+	public ContactOperations updateProfile(Uri uri, String username) {
+		mValues.clear();
+		if (username != null) {
+			mValues.put(ContactsContract.Data.MIMETYPE, Constants.PROFILE_MIMETYPE);
+			mValues.put(ContactsContract.Data.DATA1, username);
+			mValues.put(ContactsContract.Data.DATA2, "XMPP Profile");
+			mValues.put(ContactsContract.Data.DATA3, "View profile");
 			addUpdateOp(uri);
 		}
-		
 		return this;
-	}    
-	
-    public ContactOperations updateGroupMembership(Uri uri, long groupId) {
-        mValues.clear();
-        mValues.put(GroupMembership.GROUP_ROW_ID, groupId);
-        mValues.put(GroupMembership.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
-        addUpdateOp(uri);
-        return this;
-    }	
-    
-    public ContactOperations updateProfile(Uri uri, String username) {
-    	mValues.clear();
-    	if (username != null) {
-    		mValues.put(ContactsContract.Data.MIMETYPE, Constants.PROFILE_MIMETYPE);
-        	mValues.put(ContactsContract.Data.DATA1, username);
-        	mValues.put(ContactsContract.Data.DATA2, "XMPP Profile");
-        	mValues.put(ContactsContract.Data.DATA3, "View profile");
-        	addUpdateOp(uri);
-    	}
-        return this;
-    }
-    
-	private void addInsertOp() {
-
-		if (!mIsNewContact) {
-			mValues.put(Phone.RAW_CONTACT_ID, mRawContactId);
-		}
-		ContentProviderOperation.Builder builder =
-				newInsertCpo(Data.CONTENT_URI, mIsSyncOperation, mIsYieldAllowed);
-		builder.withValues(mValues);
-		if (mIsNewContact) {
-			builder.withValueBackReference(Data.RAW_CONTACT_ID, mBackReference);
-		}
-		mIsYieldAllowed = false;
-		mBatchOperation.add(builder.build());
-	}    
-
-    private void addUpdateOp(Uri uri) {
-        ContentProviderOperation.Builder builder =
-                newUpdateCpo(uri, mIsSyncOperation, mIsYieldAllowed).withValues(mValues);
-        mIsYieldAllowed = false;
-        mBatchOperation.add(builder.build());
-    }
-    
-    public static ContentProviderOperation.Builder newInsertCpo(Uri uri,
-            boolean isSyncOperation, boolean isYieldAllowed) {
-        return ContentProviderOperation
-                .newInsert(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-                .withYieldAllowed(isYieldAllowed);
-    }
-    
-    public static ContentProviderOperation.Builder newUpdateCpo(Uri uri,
-            boolean isSyncOperation, boolean isYieldAllowed) {
-        return ContentProviderOperation
-                .newUpdate(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-                .withYieldAllowed(isYieldAllowed);
-    }
-
-    public static ContentProviderOperation.Builder newDeleteCpo(Uri uri,
-            boolean isSyncOperation, boolean isYieldAllowed) {
-        return ContentProviderOperation
-                .newDelete(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-                .withYieldAllowed(isYieldAllowed);
-    }
-    
-    private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
-        if (isSyncOperation) {
-            return uri.buildUpon()
-                    .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
-                    .build();
-        }
-        return uri;
-    }    
+	}
 }

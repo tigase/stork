@@ -764,14 +764,14 @@ public class JaxmppService extends Service {
 			notificationUpdateFail("Connection error: unknown host " + be.getSessionObject().getUserJid().getDomain());
 			disable(be.getSessionObject(), true);
 		} else if (be.getCaught() != null) {
-			Throwable x = extractCauseException(be.getCaught());
-			if (x instanceof UnknownHostException) {
-				notificationUpdateFail("Connection error: unknown host " + x.getMessage());
+			Throwable throwable = extractCauseException(be.getCaught());
+			if (throwable instanceof UnknownHostException) {
+				notificationUpdateFail("Connection error: unknown host " + throwable.getMessage());
 				disable(be.getSessionObject(), true);
-			} else if (x instanceof SocketException) {
+			} else if (throwable instanceof SocketException) {
 
 			} else {
-				notificationUpdateFail("Connection error: " + x.getMessage());
+				notificationUpdateFail("Error: " + throwable.getClass().getName() + " - " + throwable.getMessage());
 				disable(be.getSessionObject(), true);
 			}
 		}
@@ -933,6 +933,8 @@ public class JaxmppService extends Service {
 		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 		notificationUpdate();
+
+		connectAllJaxmpp(null);
 
 		return START_STICKY;
 	}

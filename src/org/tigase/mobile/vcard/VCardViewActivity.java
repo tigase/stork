@@ -19,6 +19,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallba
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -38,6 +40,10 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 public class VCardViewActivity extends Activity {
+
+	private final static int ERROR_DIALOG = 2;
+
+	private final static int TIMEOUT_DIALOG = 1;
 
 	public static void fillFields(final Activity activity, final ContentResolver contentResolver, final Resources resources,
 			final JID jid, final VCard vcard, final RosterItem rosterItem) {
@@ -142,15 +148,32 @@ public class VCardViewActivity extends Activity {
 					module.retrieveVCard(jid, new VCardAsyncCallback() {
 
 						@Override
-						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-							// TODO Auto-generated method stub
+						public void onError(Stanza responseStanza, final ErrorCondition error) throws JaxmppException {
 							dialog.dismiss();
+
+							fullName.post(new Runnable() {
+
+								@Override
+								public void run() {
+									Bundle args = new Bundle();
+									if (error != null)
+										args.putString("condition", error.name());
+									showDialog(ERROR_DIALOG, args);
+								}
+							});
+
 						}
 
 						@Override
 						public void onTimeout() throws JaxmppException {
-							// TODO Auto-generated method stub
 							dialog.dismiss();
+							fullName.post(new Runnable() {
+
+								@Override
+								public void run() {
+									showDialog(TIMEOUT_DIALOG);
+								}
+							});
 						}
 
 						@Override
@@ -176,4 +199,33 @@ public class VCardViewActivity extends Activity {
 		dialog.show();
 	}
 
+	@Override
+	protected Dialog onCreateDialog(int id, Bundle args) {
+		switch (id) {
+		case TIMEOUT_DIALOG: {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Error");
+			builder.setMessage("Request timeout");
+			builder.setCancelable(true);
+			builder.setIcon(android.R.drawable.ic_dialog_alert);
+			return builder.create();
+		}
+		case ERROR_DIALOG: {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Error");
+			String message = "Error?";
+			if (args != null) {
+				String t = args.getString("condition");
+				if (t != null)
+					message = t;
+			}
+			builder.setMessage(message);
+			builder.setCancelable(true);
+			builder.setIcon(android.R.drawable.ic_dialog_alert);
+			return builder.create();
+		}
+		default:
+			return null;
+		}
+	}
 }

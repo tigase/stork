@@ -19,7 +19,7 @@ public class RosterCacheTableMetaData implements BaseColumns {
 	public static final String FIELD_SUBSCRIPTION = "subscription";
 
 	public static final String FIELD_TIMESTAMP = "timestamp";
-	
+
 	public static final String TABLE_NAME = "roster_cache";
 
 }

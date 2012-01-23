@@ -109,11 +109,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mAccountManager.addAccountExplicitly(account, mPassword, null);
 			// Set contacts sync for this account.
 			ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
-//			ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+			// ContentResolver.setSyncAutomatically(account,
+			// ContactsContract.AUTHORITY, true);
 		} else {
 			mAccountManager.setPassword(account, mPassword);
 			ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
-//			ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+			// ContentResolver.setSyncAutomatically(account,
+			// ContactsContract.AUTHORITY, true);
 		}
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_NICKNAME, mNickname);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_HOSTNAME, mHostname);

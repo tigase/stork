@@ -119,7 +119,7 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 				v.put(RosterCacheTableMetaData.FIELD_SUBSCRIPTION, rosterItem.getSubscription().name());
 				v.put(RosterCacheTableMetaData.FIELD_ASK, rosterItem.isAsk());
 				v.put(RosterCacheTableMetaData.FIELD_TIMESTAMP, (new Date()).getTime());
-				
+
 				db.insert(RosterCacheTableMetaData.TABLE_NAME, null, v);
 			}
 			prefs.edit().putString(createKey(sessionObject), receivedVersion).commit();
