@@ -4,10 +4,12 @@ import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.service.JaxmppService;
+import org.tigase.mobile.sync.SyncAdapter;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -100,8 +102,14 @@ public class MessengerApplication extends Application {
 			@Override
 			public void handleEvent(ConnectorEvent be) throws JaxmppException {
 
-				if (getState(be.getSessionObject()) == State.disconnected)
+				if (getState(be.getSessionObject()) == State.disconnected) {
 					multiJaxmpp.get(be.getSessionObject()).getPresence().clear(true);
+					for (RosterItem ri : multiJaxmpp.get(be.getSessionObject()).getRoster().getAll()) {
+						PresenceEvent pe = new PresenceEvent(PresenceModule.ContactUnavailable, be.getSessionObject());
+						pe.setJid(JID.jidInstance(ri.getJid()));
+						SyncAdapter.syncContactStatus(getApplicationContext(), pe);
+					}
+				}
 			}
 		});
 		JaxmppService.updateJaxmppInstances(multiJaxmpp, getContentResolver(), getResources(), this);

@@ -25,6 +25,9 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.AuthRequestActivity;
+import org.tigase.mobile.sync.BatchOperation;
+import org.tigase.mobile.sync.ContactOperations;
+import org.tigase.mobile.sync.SyncAdapter;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
@@ -1052,7 +1055,7 @@ public class JaxmppService extends Service {
 									byte[] buffer = Base64.decode(vcard.getPhotoVal());
 
 									values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
-									getContentResolver().insert(Uri.parse(RosterProvider.VCARD_URI + "/" + jid.toString()),
+									getContentResolver().insert(Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())),
 											values);
 
 									if (rosterItem != null) {
@@ -1234,6 +1237,8 @@ public class JaxmppService extends Service {
 				}
 			}
 		}
-	}
 
+		// Synchronize contact status
+		SyncAdapter.syncContactStatus(getApplicationContext(), be);
+	}
 }
