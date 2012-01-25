@@ -49,7 +49,7 @@ import android.widget.Toast;
 
 public class RosterFragment extends Fragment {
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	private static final String TAG = "tigase";
 

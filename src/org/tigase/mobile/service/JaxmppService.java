@@ -126,7 +126,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -401,7 +401,7 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(AuthEvent be) throws JaxmppException {
 				notificationUpdateFail(be.getSessionObject(), "Invalid JID or password", null);
-				stopSelf();
+				disable(be.getSessionObject(), true);
 			}
 		};
 
@@ -748,7 +748,7 @@ public class JaxmppService extends Service {
 		intent.putExtra("message", message);
 		// intent.putExtra("details", message);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("error:" + account.getUserBareJid().toString(), NOTIFICATION_ID, notification);
@@ -929,6 +929,13 @@ public class JaxmppService extends Service {
 			int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
 			sendAutoPresence(Show.away, "Auto away", pr, true);
 		}
+	}
+
+	@Override
+	public void onStart(Intent intent, int startId) {
+		super.onStart(intent, startId);
+		if (DEBUG)
+			Log.i(TAG, "onStart()");
 	}
 
 	@Override

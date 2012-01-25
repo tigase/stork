@@ -207,6 +207,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onCreate()");
 
 		super.onCreate(savedInstanceState);
+
+		Bundle bundle = getIntent().getExtras();
+		if (bundle != null && bundle.getBoolean("error", false)) {
+			String account = bundle.getString("account");
+			String message = bundle.getString("message");
+
+			ErrorDialog newFragment = ErrorDialog.newInstance(account, message);
+			newFragment.show(getSupportFragmentManager(), "dialog");
+		}
+
 		if (savedInstanceState != null && currentPage == -1) {
 			currentPage = savedInstanceState.getInt("currentPage", -1);
 		}
@@ -414,9 +424,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent()");
 		this.currentPage = findChatPage(intent.getExtras());
-		if (intent != null && intent.getBooleanExtra("error", false)) {
 
-		}
 	}
 
 	@Override
