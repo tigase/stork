@@ -97,16 +97,22 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				try {
 					BareJID buddyJid = be.getJid().getBareJid();
 					JaxmppCore jaxmpp = multiJaxmpp.get(be.getSessionObject());
-					if (jaxmpp == null)
+					if (jaxmpp == null) {
+						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = no jaxmpp for session object");
 						continue;
+					}
 
 					RosterItem ri = jaxmpp.getRoster().get(buddyJid);
-					if (ri == null)
+					if (ri == null) {
+						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = no roster item");
 						continue;
+					}
 
 					long rawContactId = lookupRawContact(resolver, ri.getId());
-					if (rawContactId == 0 || buddyJid.equals(be.getSessionObject().getUserBareJid()))
+					if (rawContactId == 0 || buddyJid.equals(be.getSessionObject().getUserBareJid())) {
+						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = contact not synchronized");
 						continue;
+					}
 
 					Presence p = jaxmpp.getPresence().getBestPresence(buddyJid);
 
@@ -115,8 +121,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 					// counter++;
 					// if (counter >= 1) {
-					// Log.v(TAG,
-					// "updating contact "+buddyJid.toString()+"");
+					Log.v(TAG, "updating status for "+buddyJid.toString()+"");
 					// batchOperation.execute();
 					// counter = 0;
 					// }
