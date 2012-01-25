@@ -556,12 +556,12 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private Integer getActiveNetworkConnectionType() {
+	private int getActiveNetworkConnectionType() {
 		NetworkInfo info = connManager.getActiveNetworkInfo();
 		if (info == null)
-			return null;
+			return -1;
 		if (!info.isConnected())
-			return null;
+			return -1;
 		return info.getType();
 	}
 
