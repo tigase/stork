@@ -31,6 +31,7 @@ import android.content.SyncResult;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
@@ -121,7 +122,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 					// counter++;
 					// if (counter >= 1) {
-					Log.v(TAG, "updating status for "+buddyJid.toString()+"");
+					Log.v(TAG, "updating status for " + buddyJid.toString() + "");
 					// batchOperation.execute();
 					// counter = 0;
 					// }
@@ -426,19 +427,24 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 		try {
 			BatchOperation batchOperation = new BatchOperation(context, context.getContentResolver());
+			int added = 0;
+			int updated = 0;
 			while (c.moveToNext()) {
 				long userId = c.getInt(c.getColumnIndex(RosterCacheTableMetaData.FIELD_ID));
 				long id = lookupRawContact(context.getContentResolver(), userId);
 				String group = null;
-				String groupsStr = c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_GROUP_NAME));
-				if (groupsStr != null && !TextUtils.isEmpty(groupsStr)) {
-					String[] groups = groupsStr.split(";");
-					if (groups != null) {
-						group = groups[0];
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+					String groupsStr = c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_GROUP_NAME));
+					if (groupsStr != null && !TextUtils.isEmpty(groupsStr)) {
+						String[] groups = groupsStr.split(";");
+						if (groups != null) {
+							group = groups[0];
+						}
 					}
 				}
 				BareJID jid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_JID)));
 				if (id == 0) {
+					added++;
 					final ContactOperations contactOps = ContactOperations.createNewContact(context, userId, account.name,
 							true, batchOperation);
 					contactOps.addName(c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)), null, null).addJID(
@@ -465,8 +471,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 							c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)),
 							c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)), group, true, id, batchOperation);
 				}
+
+				if (batchOperation.size() >= 50) {
+					// added to split sync
+					batchOperation.execute();
+				}
 			}
 			batchOperation.execute();
+			Log.v(TAG, "added " + added + " contacts");
+			Log.v(TAG, "updated " + updated + " contacts");
 		} finally {
 			c.close();
 		}
@@ -484,6 +497,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		//
 		// }
 		deleteContacts(context.getContentResolver(), account, batchOperation);
+		Log.v(TAG, "deleting " + batchOperation.size() + " contacts");
 		batchOperation.execute();
 		setSyncMarker(account, newMarker);
 		Log.i(TAG, "finished contacts synchronization for account = " + account.name);
