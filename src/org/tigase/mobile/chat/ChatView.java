@@ -126,11 +126,11 @@ public class ChatView extends LinearLayout {
 				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
 
 				ContentValues values = new ContentValues();
-				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, chat.getSessionObject().getUserJid().getBareJid().toString());
+				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, chat.getSessionObject().getUserBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 				values.put(ChatTableMetaData.FIELD_BODY, t);
-				values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserJid().getBareJid().toString());
+				values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_STATE, state);
 
 				getContext().getContentResolver().insert(uri, values);
@@ -150,7 +150,7 @@ public class ChatView extends LinearLayout {
 				chat.getSessionObject());
 
 		if (jaxmpp == null)
-			throw new RuntimeException("Account " + chat.getSessionObject().getUserJid() + " is unknown!");
+			throw new RuntimeException("Account " + chat.getSessionObject().getUserBareJid() + " is unknown!");
 
 		RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
 		t.setText("Chat with "

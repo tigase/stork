@@ -25,8 +25,6 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.AuthRequestActivity;
-import org.tigase.mobile.sync.BatchOperation;
-import org.tigase.mobile.sync.ContactOperations;
 import org.tigase.mobile.sync.SyncAdapter;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -88,6 +86,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class JaxmppService extends Service {
@@ -191,7 +190,7 @@ public class JaxmppService extends Service {
 
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jc : multi.get()) {
-			accountsJids.add(jc.getSessionObject().getUserJid().getBareJid());
+			accountsJids.add(jc.getSessionObject().getUserBareJid());
 		}
 		// final Cursor c =
 		// contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY),
@@ -210,13 +209,14 @@ public class JaxmppService extends Service {
 				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
 				// String hostname =
 				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
-				JID jid = JID.jidInstance(account.name);
+				BareJID jid = BareJID.bareJIDInstance(account.name);
 				String password = accountManager.getPassword(account);
 				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
 				String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
+				String resource = accountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 				hostname = hostname == null ? null : hostname.trim();
 
-				if (!accountsJids.contains(jid.getBareJid())) {
+				if (!accountsJids.contains(jid)) {
 					SessionObject sessionObject = new DefaultSessionObject();
 					sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 					sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
@@ -224,7 +224,7 @@ public class JaxmppService extends Service {
 					sessionObject.setUserProperty("ID", (long) account.hashCode());
 					sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 					sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
-					sessionObject.setUserProperty(SessionObject.USER_JID, JID.jidInstance(jid.getBareJid()));
+					sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
 					sessionObject.setUserProperty(SessionObject.PASSWORD, password);
 					sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
 					if (hostname != null && hostname.trim().length() > 0)
@@ -232,15 +232,15 @@ public class JaxmppService extends Service {
 					else
 						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
 
-					if (jid.getResource() != null)
-						sessionObject.setUserProperty(SessionObject.RESOURCE, jid.getResource());
+					if (!TextUtils.isEmpty(resource))
+						sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
 					else
 						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
 					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
 					multi.add(jaxmpp);
 				} else {
-					SessionObject sessionObject = multi.get(jid.getBareJid()).getSessionObject();
+					SessionObject sessionObject = multi.get(jid).getSessionObject();
 
 					sessionObject.setUserProperty(SessionObject.PASSWORD, password);
 					sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
@@ -249,13 +249,13 @@ public class JaxmppService extends Service {
 					else
 						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
 
-					if (jid.getResource() != null)
-						sessionObject.setUserProperty(SessionObject.RESOURCE, jid.getResource());
+					if (!TextUtils.isEmpty(resource))
+						sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
 					else
 						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
 				}
-				accountsJids.remove(jid.getBareJid());
+				accountsJids.remove(jid);
 			}
 		} finally {
 			// c.close();
@@ -359,7 +359,7 @@ public class JaxmppService extends Service {
 					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
 					values.put(ChatTableMetaData.FIELD_STATE, 0);
-					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserJid().getBareJid().toString());
+					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
 
 					getContentResolver().insert(uri, values);
 
@@ -400,7 +400,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(AuthEvent be) throws JaxmppException {
-				notificationUpdateFail("Invalid JID or password");
+				notificationUpdateFail(be.getSessionObject(), "Invalid JID or password", null);
 				stopSelf();
 			}
 		};
@@ -410,7 +410,7 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(final Connector.ConnectorEvent be) throws JaxmppException {
 				if (getState(be.getSessionObject()) == State.connected)
-					setConnectionError(be.getSessionObject().getUserJid().getBareJid(), 0);
+					setConnectionError(be.getSessionObject().getUserBareJid(), 0);
 				if (getState(be.getSessionObject()) == State.disconnected)
 					reconnectIfAvailable(be.getSessionObject());
 				notificationUpdate();
@@ -423,11 +423,11 @@ public class JaxmppService extends Service {
 			public void handleEvent(ConnectorEvent be) throws JaxmppException {
 				if (DEBUG) {
 					if (be.getType() == Connector.Error) {
-						Log.d(TAG, "Connection error (" + be.getSessionObject().getUserJid() + ") " + be.getCaught() + "  "
+						Log.d(TAG, "Connection error (" + be.getSessionObject().getUserBareJid() + ") " + be.getCaught() + "  "
 								+ be.getStreamError());
 						onConnectorError(be);
 					} else if (be.getType() == Connector.StreamTerminated) {
-						Log.d(TAG, "Stream terminated (" + be.getSessionObject().getUserJid() + ") " + be.getStreamError());
+						Log.d(TAG, "Stream terminated (" + be.getSessionObject().getUserBareJid() + ") " + be.getStreamError());
 					}
 				}
 			}
@@ -478,11 +478,11 @@ public class JaxmppService extends Service {
 
 	private void connectJaxmpp(final Jaxmpp jaxmpp, final Date delay) {
 		if (DEBUG)
-			Log.d(TAG, "Preparing to start account " + jaxmpp.getSessionObject().getUserJid());
+			Log.d(TAG, "Preparing to start account " + jaxmpp.getSessionObject().getUserBareJid());
 
 		if (isLocked(jaxmpp.getSessionObject())) {
 			if (DEBUG)
-				Log.d(TAG, "Skip connection for account " + jaxmpp.getSessionObject().getUserJid() + ". Locked.");
+				Log.d(TAG, "Skip connection for account " + jaxmpp.getSessionObject().getUserBareJid() + ". Locked.");
 			return;
 		}
 
@@ -492,11 +492,11 @@ public class JaxmppService extends Service {
 			public void run() {
 				if (isDisabled(jaxmpp.getSessionObject())) {
 					if (DEBUG)
-						Log.d(TAG, "Account" + jaxmpp.getSessionObject().getUserJid() + " disabled. Connection skipped.");
+						Log.d(TAG, "Account" + jaxmpp.getSessionObject().getUserBareJid() + " disabled. Connection skipped.");
 					return;
 				}
 				if (DEBUG)
-					Log.d(TAG, "Start connection for account " + jaxmpp.getSessionObject().getUserJid());
+					Log.d(TAG, "Start connection for account " + jaxmpp.getSessionObject().getUserBareJid());
 				lock(jaxmpp.getSessionObject(), false);
 				usedNetworkType = getActiveNetworkConnectionType();
 				if (usedNetworkType != -1) {
@@ -508,8 +508,8 @@ public class JaxmppService extends Service {
 								try {
 									jaxmpp.login(false);
 								} catch (Exception e) {
-									incrementConnectionError(jaxmpp.getSessionObject().getUserJid().getBareJid());
-									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserJid(), e);
+									incrementConnectionError(jaxmpp.getSessionObject().getUserBareJid());
+									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
 								}
 							}
 						}).start();
@@ -522,7 +522,7 @@ public class JaxmppService extends Service {
 			r.run();
 		else {
 			if (DEBUG)
-				Log.d(TAG, "Shedule (time=" + delay + ") connection for account " + jaxmpp.getSessionObject().getUserJid());
+				Log.d(TAG, "Shedule (time=" + delay + ") connection for account " + jaxmpp.getSessionObject().getUserBareJid());
 			timer.schedule(new TimerTask() {
 
 				@Override
@@ -546,7 +546,7 @@ public class JaxmppService extends Service {
 					try {
 						((Jaxmpp) j).disconnect(false);
 					} catch (Exception e) {
-						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserJid(), e);
+						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserBareJid(), e);
 					}
 				}
 			}).start();
@@ -715,12 +715,18 @@ public class JaxmppService extends Service {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	private void notificationUpdateFail(String message) {
+	private void notificationUpdateFail(SessionObject account, String message, Throwable cause) {
 		// notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected",
 		// "Connection impossible");
 
-		String notiticationTitle = "Connection error";
-		String expandedNotificationText = message == null ? notiticationTitle : message;
+		String notiticationTitle = "Error";
+		String expandedNotificationText;
+		if (message == null && cause != null) {
+			expandedNotificationText = cause.getMessage();
+		} else if (message != null) {
+			expandedNotificationText = message;
+		} else
+			expandedNotificationText = notiticationTitle;
 
 		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
@@ -737,11 +743,15 @@ public class JaxmppService extends Service {
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("error", true);
+		intent.putExtra("account", account.getUserBareJid().toString());
+		intent.putExtra("message", message);
+		// intent.putExtra("details", message);
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
-		notificationManager.notify("error", NOTIFICATION_ID, notification);
+		notificationManager.notify("error:" + account.getUserBareJid().toString(), NOTIFICATION_ID, notification);
 
 	}
 
@@ -764,17 +774,18 @@ public class JaxmppService extends Service {
 
 	protected void onConnectorError(final ConnectorEvent be) {
 		if (be.getStreamError() == StreamError.host_unknown) {
-			notificationUpdateFail("Connection error: unknown host " + be.getSessionObject().getUserJid().getDomain());
+			notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host "
+					+ be.getSessionObject().getUserBareJid().getDomain(), null);
 			disable(be.getSessionObject(), true);
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
 			if (throwable instanceof UnknownHostException) {
-				notificationUpdateFail("Connection error: unknown host " + throwable.getMessage());
+				notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host " + throwable.getMessage(), null);
 				disable(be.getSessionObject(), true);
 			} else if (throwable instanceof SocketException) {
 
 			} else {
-				notificationUpdateFail("Error: " + throwable.getClass().getName() + " - " + throwable.getMessage());
+				notificationUpdateFail(be.getSessionObject(), null, throwable);
 				disable(be.getSessionObject(), true);
 			}
 		}
@@ -962,7 +973,7 @@ public class JaxmppService extends Service {
 		Intent intent = new Intent(context, AuthRequestActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("jid", "" + be.getJid());
-		intent.putExtra("account", "" + be.getSessionObject().getUserJid());
+		intent.putExtra("account", "" + be.getSessionObject().getUserBareJid());
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
@@ -975,15 +986,15 @@ public class JaxmppService extends Service {
 			return;
 
 		if (DEBUG)
-			Log.d(TAG, "Preparing for reconnect " + sessionObject.getUserJid());
+			Log.d(TAG, "Preparing for reconnect " + sessionObject.getUserBareJid());
 
 		final Jaxmpp j = getMulti().get(sessionObject);
 
-		int connectionErrors = getConnectionError(j.getSessionObject().getUserJid().getBareJid());
+		int connectionErrors = getConnectionError(j.getSessionObject().getUserBareJid());
 
 		if (connectionErrors > 50) {
 			disable(sessionObject, true);
-			notificationUpdateFail("Too many connection errors. Account disabled.");
+			notificationUpdateFail(sessionObject, "Too many connection errors. Account disabled.", null);
 		} else
 			connectJaxmpp(j, calculateNextRestart(5, connectionErrors));
 
@@ -1055,8 +1066,8 @@ public class JaxmppService extends Service {
 									byte[] buffer = Base64.decode(vcard.getPhotoVal());
 
 									values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
-									getContentResolver().insert(Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())),
-											values);
+									getContentResolver().insert(
+											Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), values);
 
 									if (rosterItem != null) {
 										Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI),

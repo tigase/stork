@@ -50,7 +50,7 @@ public class DBChatManager extends AbstractChatManager {
 		if (threadId != null)
 			values.put(OpenChatsTableMetaData.FIELD_THREAD_ID, threadId);
 		values.put(OpenChatsTableMetaData.FIELD_TIMESTAMP, (new Date()).getTime());
-		values.put(OpenChatsTableMetaData.FIELD_ACCOUNT, sessionObject.getUserJid().getBareJid().toString());
+		values.put(OpenChatsTableMetaData.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 
 		long rowId = db.insert(OpenChatsTableMetaData.TABLE_NAME, null, values);
 
@@ -68,7 +68,7 @@ public class DBChatManager extends AbstractChatManager {
 		String sql = "SELECT " + OpenChatsTableMetaData.FIELD_ID + ", " + OpenChatsTableMetaData.FIELD_JID + ", "
 				+ OpenChatsTableMetaData.FIELD_RESOURCE + ", " + OpenChatsTableMetaData.FIELD_THREAD_ID + ", "
 				+ OpenChatsTableMetaData.FIELD_TIMESTAMP + " FROM " + OpenChatsTableMetaData.TABLE_NAME + " WHERE "
-				+ OpenChatsTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserJid().getBareJid() + "'";
+				+ OpenChatsTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserBareJid() + "'";
 		final Cursor c = db.rawQuery(sql, null);
 		try {
 			while (c.moveToNext()) {

@@ -26,7 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 public class DBRosterCacheProvider implements RosterCacheProvider {
 
 	private static String createKey(SessionObject sessionObject) {
-		return Preferences.ROSTER_VERSION_KEY + "." + sessionObject.getUserJid().getBareJid();
+		return Preferences.ROSTER_VERSION_KEY + "." + sessionObject.getUserBareJid();
 	}
 
 	private final Context context;
@@ -51,8 +51,8 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 	public Collection<RosterItem> loadCachedRoster(final SessionObject sessionObject) {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		String where = null;
-		if (sessionObject.getUserJid() != null)
-			where = RosterCacheTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserJid().getBareJid() + "'";
+		if (sessionObject.getUserBareJid() != null)
+			where = RosterCacheTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserBareJid() + "'";
 		final Cursor c = db.query(RosterCacheTableMetaData.TABLE_NAME, new String[] { RosterCacheTableMetaData.FIELD_ID,
 				RosterCacheTableMetaData.FIELD_ACCOUNT, RosterCacheTableMetaData.FIELD_JID,
 				RosterCacheTableMetaData.FIELD_NAME, RosterCacheTableMetaData.FIELD_GROUP_NAME,
@@ -107,13 +107,13 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 		db.beginTransaction();
 		try {
 			db.execSQL("DELETE FROM " + RosterCacheTableMetaData.TABLE_NAME + " WHERE "
-					+ RosterCacheTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserJid().getBareJid().toString() + "'");
+					+ RosterCacheTableMetaData.FIELD_ACCOUNT + "='" + sessionObject.getUserBareJid().toString() + "'");
 			for (RosterItem rosterItem : items) {
 				ContentValues v = new ContentValues();
 
 				v.put(RosterCacheTableMetaData.FIELD_ID, rosterItem.getId());
 				v.put(RosterCacheTableMetaData.FIELD_JID, rosterItem.getJid().toString());
-				v.put(RosterCacheTableMetaData.FIELD_ACCOUNT, sessionObject.getUserJid().getBareJid().toString());
+				v.put(RosterCacheTableMetaData.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 				v.put(RosterCacheTableMetaData.FIELD_NAME, rosterItem.getName());
 				v.put(RosterCacheTableMetaData.FIELD_GROUP_NAME, serializeGroups(rosterItem.getGroups()));
 				v.put(RosterCacheTableMetaData.FIELD_SUBSCRIPTION, rosterItem.getSubscription().name());

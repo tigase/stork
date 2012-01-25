@@ -117,7 +117,7 @@ public class RosterProvider extends ContentProvider {
 		final int indicator = uriMatcher.match(uri);
 		if (indicator == VCARD_URI_INDICATOR) {
 			String jid = uri.getLastPathSegment();
-			Log.v(TAG, "inserting vcard for = "+jid);
+			Log.v(TAG, "inserting vcard for = " + jid);
 			// final Jaxmpp jaxmpp = ((MessengerApplication)
 			// getContext().getApplicationContext()).getJaxmpp();
 			// RosterItem rosterItem =

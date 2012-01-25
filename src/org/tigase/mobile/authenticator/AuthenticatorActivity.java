@@ -4,6 +4,7 @@ import org.tigase.mobile.Constants;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
 
+import tigase.jaxmpp.core.client.BareJID;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
@@ -82,6 +83,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	protected boolean mRequestNewAccount = false;
 
+	private String mResource;
+
+	private EditText mResourceEdit;
+
 	private String mUsername;
 
 	private boolean mUsernameChanged = false;
@@ -94,6 +99,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		mAccountManager.setPassword(account, mPassword);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_NICKNAME, mNickname);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_HOSTNAME, mHostname);
+		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_RESOURCE, mResource);
 		final Intent intent = new Intent();
 		intent.putExtra(AccountManager.KEY_BOOLEAN_RESULT, result);
 		setAccountAuthenticatorResult(intent.getExtras());
@@ -119,6 +125,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_NICKNAME, mNickname);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_HOSTNAME, mHostname);
+		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_RESOURCE, mResource);
 		final Intent intent = new Intent();
 		intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
 		intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
@@ -146,7 +153,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	public void handleLogin(View view) {
-		if (!mRequestNewAccount && !TextUtils.isEmpty(mUsername) && !mUsername.equals(mUsernameEdit.getText().toString())) {
+		String username = mUsernameEdit.getText().toString();
+		if (!TextUtils.isEmpty(mUsername)) {
+			username = BareJID.bareJIDInstance(username).toString();
+		}
+
+		if (!mRequestNewAccount && !TextUtils.isEmpty(mUsername) && !mUsername.equals(username)) {
 			final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
 			mAccountManager.removeAccount(account, null, null);
 			mRequestNewAccount = true;
@@ -154,12 +166,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 
 		if (mRequestNewAccount) {
-			mUsername = mUsernameEdit.getText().toString();
+			mUsername = username;
 		}
 
 		mPassword = mPasswordEdit.getText().toString();
 		mNickname = mNicknameEdit.getText().toString();
 		mHostname = mHostnameEdit.getText().toString();
+		mResource = mResourceEdit.getText().toString();
 		if (TextUtils.isEmpty(mUsername) || TextUtils.isEmpty(mPassword)) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Please set login data").setCancelable(true).setIcon(android.R.drawable.ic_dialog_alert);
@@ -231,6 +244,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mPassword = mAccountManager.getPassword(account);
 			mNickname = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
 			mHostname = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
+			mResource = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 		}
 		mRequestNewAccount = mUsername == null;
 		mConfirmCredentials = intent.getBooleanExtra(PARAM_CONFIRM_CREDENTIALS, false);
@@ -239,6 +253,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		setContentView(R.layout.account_edit_dialog);
 		mUsernameEdit = (EditText) findViewById(R.id.newAccountJID);
 		mPasswordEdit = (EditText) findViewById(R.id.newAccountPassowrd);
+		mResourceEdit = (EditText) findViewById(R.id.newAccountResource);
 		mNicknameEdit = (EditText) findViewById(R.id.newAccountNickname);
 		mHostnameEdit = (EditText) findViewById(R.id.newAccountHostname);
 		if (!TextUtils.isEmpty(mUsername))
@@ -249,7 +264,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mNicknameEdit.setText(mNickname);
 		if (!TextUtils.isEmpty(mHostname))
 			mHostnameEdit.setText(mHostname);
-
+		if (!TextUtils.isEmpty(mResource))
+			mResourceEdit.setText(mResource);
 		// Disable posibility to change username of existing account
 		// because after editing account settings we are back to account
 		// page with old username presented as account name!!

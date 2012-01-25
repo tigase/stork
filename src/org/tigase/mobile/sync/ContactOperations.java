@@ -27,33 +27,29 @@ public class ContactOperations {
 
 	private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
 		if (isSyncOperation) {
-			return uri.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
-					.build();
+			return uri.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 		}
 		return uri;
 	}
 
-	public static ContactOperations createNewContact(Context context, long userId, String accountName,
-			boolean isSyncOperation, BatchOperation batchOperation) {
+	public static ContactOperations createNewContact(Context context, long userId, String accountName, boolean isSyncOperation,
+			BatchOperation batchOperation) {
 		return new ContactOperations(context, userId, accountName, isSyncOperation, batchOperation);
 	}
 
-	public static ContentProviderOperation.Builder newDeleteCpo(Uri uri, boolean isSyncOperation,
-			boolean isYieldAllowed) {
-		return ContentProviderOperation.newDelete(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-				.withYieldAllowed(isYieldAllowed);
+	public static ContentProviderOperation.Builder newDeleteCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newDelete(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
 	}
 
-	public static ContentProviderOperation.Builder newInsertCpo(Uri uri, boolean isSyncOperation,
-			boolean isYieldAllowed) {
-		return ContentProviderOperation.newInsert(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-				.withYieldAllowed(isYieldAllowed);
+	public static ContentProviderOperation.Builder newInsertCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newInsert(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
 	}
 
-	public static ContentProviderOperation.Builder newUpdateCpo(Uri uri, boolean isSyncOperation,
-			boolean isYieldAllowed) {
-		return ContentProviderOperation.newUpdate(addCallerIsSyncAdapterParameter(uri, isSyncOperation))
-				.withYieldAllowed(isYieldAllowed);
+	public static ContentProviderOperation.Builder newUpdateCpo(Uri uri, boolean isSyncOperation, boolean isYieldAllowed) {
+		return ContentProviderOperation.newUpdate(addCallerIsSyncAdapterParameter(uri, isSyncOperation)).withYieldAllowed(
+				isYieldAllowed);
 	}
 
 	public static void syncStatus(Context context, String account, BareJID buddyJid,
@@ -88,15 +84,14 @@ public class ContactOperations {
 			values.put(StatusUpdates.STATUS_ICON, R.drawable.icon);
 			values.put(StatusUpdates.STATUS_LABEL, R.string.app_name);
 
-			batchOperation.add(ContactOperations.newInsertCpo(StatusUpdates.CONTENT_URI, true, true)
-					.withValues(values).build());
+			batchOperation.add(ContactOperations.newInsertCpo(StatusUpdates.CONTENT_URI, true, true).withValues(values).build());
 		} catch (XMLException e) {
 			Log.e(TAG, "WTF??", e);
 		}
 	}
 
-	public static ContactOperations updateExistingContact(Context context, long rawContactId,
-			boolean isSyncOperation, BatchOperation batchOperation) {
+	public static ContactOperations updateExistingContact(Context context, long rawContactId, boolean isSyncOperation,
+			BatchOperation batchOperation) {
 		return new ContactOperations(context, rawContactId, isSyncOperation, batchOperation);
 	}
 
@@ -123,8 +118,7 @@ public class ContactOperations {
 		mBatchOperation = batchOperation;
 	}
 
-	public ContactOperations(Context context, long rawContactId, boolean isSyncOperation,
-			BatchOperation batchOperation) {
+	public ContactOperations(Context context, long rawContactId, boolean isSyncOperation, BatchOperation batchOperation) {
 		this(context, isSyncOperation, batchOperation);
 		mIsNewContact = false;
 		mRawContactId = rawContactId;
@@ -138,8 +132,8 @@ public class ContactOperations {
 		mValues.put(RawContacts.SOURCE_ID, userId);
 		mValues.put(RawContacts.ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
 		mValues.put(RawContacts.ACCOUNT_NAME, accountName);
-		ContentProviderOperation.Builder builder = newInsertCpo(RawContacts.CONTENT_URI, mIsSyncOperation, true)
-				.withValues(mValues);
+		ContentProviderOperation.Builder builder = newInsertCpo(RawContacts.CONTENT_URI, mIsSyncOperation, true).withValues(
+				mValues);
 		mBatchOperation.add(builder.build());
 	}
 
@@ -167,8 +161,7 @@ public class ContactOperations {
 		if (!mIsNewContact) {
 			mValues.put(Phone.RAW_CONTACT_ID, mRawContactId);
 		}
-		ContentProviderOperation.Builder builder = newInsertCpo(Data.CONTENT_URI, mIsSyncOperation,
-				mIsYieldAllowed);
+		ContentProviderOperation.Builder builder = newInsertCpo(Data.CONTENT_URI, mIsSyncOperation, mIsYieldAllowed);
 		builder.withValues(mValues);
 		if (mIsNewContact) {
 			builder.withValueBackReference(Data.RAW_CONTACT_ID, mBackReference);
@@ -227,8 +220,7 @@ public class ContactOperations {
 	}
 
 	private void addUpdateOp(Uri uri) {
-		ContentProviderOperation.Builder builder = newUpdateCpo(uri, mIsSyncOperation, mIsYieldAllowed)
-				.withValues(mValues);
+		ContentProviderOperation.Builder builder = newUpdateCpo(uri, mIsSyncOperation, mIsYieldAllowed).withValues(mValues);
 		mIsYieldAllowed = false;
 		mBatchOperation.add(builder.build());
 	}
@@ -253,8 +245,8 @@ public class ContactOperations {
 		return this;
 	}
 
-	public ContactOperations updateName(Uri uri, String existingFirstName, String existingLastName,
-			String existingFullName, String firstName, String lastName, String fullName) {
+	public ContactOperations updateName(Uri uri, String existingFirstName, String existingLastName, String existingFullName,
+			String firstName, String lastName, String fullName) {
 
 		mValues.clear();
 		if (TextUtils.isEmpty(fullName)) {

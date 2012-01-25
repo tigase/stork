@@ -1,7 +1,6 @@
 package org.tigase.mobile.db.providers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +11,7 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.roster.CPresence;
 
-import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -109,8 +108,8 @@ public class RosterCursor extends AbstractCursor {
 		}
 		case 10: {
 			RosterItem item = items.get(mPos);
-			JID jid = item.getSessionObject().getUserJid();
-			return jid == null ? null : jid.getBareJid().toString();
+			BareJID jid = item.getSessionObject().getUserBareJid();
+			return jid == null ? null : jid.toString();
 		}
 		default:
 			throw new CursorIndexOutOfBoundsException("Unknown column!");
@@ -187,9 +186,8 @@ public class RosterCursor extends AbstractCursor {
 		for (JaxmppCore jaxmpp : multi.get()) {
 			r.addAll(jaxmpp.getRoster().getAll(predicate));
 		}
-		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
-		Collections.sort(r, new Comparator<RosterItem>() {
+		MergeSort.sort(r, new Comparator<RosterItem>() {
 
 			@Override
 			public int compare(RosterItem object1, RosterItem object2) {

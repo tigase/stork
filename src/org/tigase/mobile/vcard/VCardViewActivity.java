@@ -74,7 +74,8 @@ public class VCardViewActivity extends Activity {
 
 				ContentValues values = new ContentValues();
 				values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
-				contentResolver.insert(Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), values);
+				contentResolver.insert(Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())),
+						values);
 			} else {
 				bmp = null;
 			}

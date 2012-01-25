@@ -280,8 +280,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				} else {
 					final Chat chat = getChatList().get(i - (!isXLarge() ? 1 : 0));
-					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserJid().getBareJid().toString(),
-							chat.getId());
+					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserBareJid().toString(), chat.getId());
 				}
 			}
 
@@ -415,6 +414,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent()");
 		this.currentPage = findChatPage(intent.getExtras());
+		if (intent != null && intent.getBooleanExtra("error", false)) {
+
+		}
 	}
 
 	@Override

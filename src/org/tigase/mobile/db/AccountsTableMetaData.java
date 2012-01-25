@@ -22,6 +22,8 @@ public class AccountsTableMetaData /* implements BaseColumns */{
 
 	public static final String FIELD_PORT = "port";
 
+	public static final String FIELD_RESOURCE = "resource";
+
 	public static final String FIELD_ROSTER_VERSION = "roster_version";
 
 }
