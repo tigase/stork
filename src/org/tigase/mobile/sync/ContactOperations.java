@@ -52,7 +52,7 @@ public class ContactOperations {
 				isYieldAllowed);
 	}
 
-	public static void syncStatus(Context context, String account, BareJID buddyJid,
+	public static void syncStatus(Context context, String account, long rawContactId, BareJID buddyJid,
 			tigase.jaxmpp.core.client.xmpp.stanzas.Presence p, BatchOperation batchOperation) {
 		try {
 			String status = null;
@@ -74,6 +74,9 @@ public class ContactOperations {
 
 			final ContentValues values = new ContentValues();
 
+			// this should fix use of incorrect contact
+			// or it will create problem - insert failure
+			// values.put(StatusUpdates.DATA_ID, rawContactId);
 			values.put(StatusUpdates.PRESENCE, state);
 			values.put(StatusUpdates.STATUS, status);
 			values.put(StatusUpdates.PROTOCOL, Im.PROTOCOL_JABBER);
@@ -278,4 +281,12 @@ public class ContactOperations {
 		}
 		return this;
 	}
+
+	public ContactOperations updateServerId(long serverId, Uri uri) {
+		mValues.clear();
+		mValues.put(RawContacts.SOURCE_ID, serverId);
+		addUpdateOp(uri);
+		return this;
+	}
+
 }

@@ -45,6 +45,8 @@ import android.util.Log;
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
+	public static final boolean DEBUG = false;
+
 	final private static class DataQuery {
 
 		public static final int COLUMN_DATA1 = 3;
@@ -99,37 +101,42 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 					BareJID buddyJid = be.getJid().getBareJid();
 					JaxmppCore jaxmpp = multiJaxmpp.get(be.getSessionObject());
 					if (jaxmpp == null) {
-						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = no jaxmpp for session object");
+						if (DEBUG)
+							Log.v(TAG, "not setting status for " + buddyJid.toString()
+									+ ", reason = no jaxmpp for session object");
 						continue;
 					}
 
 					RosterItem ri = jaxmpp.getRoster().get(buddyJid);
 					if (ri == null) {
-						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = no roster item");
+						if (DEBUG)
+							Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = no roster item");
 						continue;
 					}
 
 					long rawContactId = lookupRawContact(resolver, ri.getId());
 					if (rawContactId == 0 || buddyJid.equals(be.getSessionObject().getUserBareJid())) {
-						Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = contact not synchronized");
+						if (DEBUG)
+							Log.v(TAG, "not setting status for " + buddyJid.toString() + ", reason = contact not synchronized");
 						continue;
 					}
 
 					Presence p = jaxmpp.getPresence().getBestPresence(buddyJid);
 
-					ContactOperations.syncStatus(context, be.getSessionObject().getUserBareJid().toString(), buddyJid, p,
-							batchOperation);
+					ContactOperations.syncStatus(context, be.getSessionObject().getUserBareJid().toString(), rawContactId,
+							buddyJid, p, batchOperation);
 
 					// counter++;
 					// if (counter >= 1) {
-					Log.v(TAG, "updating status for " + buddyJid.toString() + "");
+					if (DEBUG)
+						Log.v(TAG, "updating status for " + buddyJid.toString() + "");
 					// batchOperation.execute();
 					// counter = 0;
 					// }
 					if (batchOperation.size() >= 50) {
 						int counter = batchOperation.size();
 						batchOperation.execute();
-						Log.v(TAG, "updated " + counter + " contacts at once");
+						Log.d(TAG, "updated " + counter + " contacts at once");
 					}
 				} catch (XMLException e) {
 					Log.e(TAG, "WTF??", e);
@@ -138,7 +145,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 			int counter = batchOperation.size();
 			batchOperation.execute();
-			Log.v(TAG, "updated " + counter + " contacts at once");
+			Log.d(TAG, "updated " + counter + " contacts at once");
 		}
 
 		public void setScheduled(boolean value) {
@@ -229,11 +236,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	}
 
 	private static void updateContact(Context context, ContentResolver resolver, Account account, String jid, String fullName,
-			byte[] avatar, String group, boolean inSync, long rawContactId, BatchOperation batchOperation) {
+			byte[] avatar, String group, boolean inSync, long rawContactId, long userId, BatchOperation batchOperation) {
 
 		boolean existingAvatar = false;
 		boolean existingGroup = false;
-		// boolean existingProfile = false;
+		boolean existingProfile = false;
 
 		final Cursor c = resolver.query(DataQuery.CONTENT_URI, DataQuery.PROJECTION, DataQuery.SELECTION,
 				new String[] { String.valueOf(rawContactId) }, null);
@@ -246,6 +253,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			// with the information we received from the server.
 			while (c.moveToNext()) {
 				final long id = c.getLong(DataQuery.COLUMN_ID);
+				final long serverId = c.getLong(DataQuery.COLUMN_SERVER_ID);
 				final String mimeType = c.getString(DataQuery.COLUMN_MIMETYPE);
 				final Uri uri = ContentUris.withAppendedId(Data.CONTENT_URI, id);
 				if (mimeType.equals(StructuredName.CONTENT_ITEM_TYPE)) {
@@ -261,15 +269,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 					if (groupId != 0) {
 						contactOp.updateGroupMembership(uri, groupId);
 					}
+				} else if (mimeType.equals(Constants.PROFILE_MIMETYPE)) {
+					existingProfile = true;
+					contactOp.updateProfile(uri, jid);
 				}
-				// we do not use profile for now
-				// else if
-				// (mimeType.equals(Constants.PROFILE_MIMETYPE))
-				// {
-				// existingProfile = true;
-				// contactOp.updateProfile(uri, jid);
-				// }
 			} // while
+				// always true for now
+			if (/* userId != serverId */true) {
+				Uri rawUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId);
+				contactOp.updateServerId(userId, rawUri);
+			}
 		} finally {
 			c.close();
 		}
@@ -283,10 +292,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				contactOp.addGroupMembership(groupId);
 			}
 		}
-		// we do not use profile for now
-		// if (!existingProfile) {
-		// contactOp.addProfile(jid);
-		// }
+		if (!existingProfile) {
+			contactOp.addProfile(jid);
+		}
 	}
 
 	private final AccountManager accountManager;
@@ -304,34 +312,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	}
 
 	private void deleteContacts(ContentResolver resolver, Account account, BatchOperation batchOperation) {
-		// final Cursor c = resolver.query(RawContacts.CONTENT_URI, new
-		// String[]
-		// {RawContacts._ID, RawContacts.SOURCE_ID},
-		// RawContacts.ACCOUNT_TYPE+"='"+Constants.ACCOUNT_TYPE+"'",
-		// null,
-		// null);
-		// StringBuilder builder = new StringBuilder(1024);
-		// builder.append("(");
-		// HashMap<Long,Long> map = new HashMap<Long,Long>();
-		// boolean first = true;
-		// try {
-		// while (c.moveToNext()) {
-		// map.put(c.getLong(1), c.getLong(0));
-		// if (first) {
-		// first = false;
-		// }
-		// else {
-		// builder.append(",");
-		// }
-		// builder.append(c.getLong(1));
-		// }
-		// }
-		// finally {
-		// if (c != null) {
-		// c.close();
-		// }
-		// }
-		// builder.append(")");
 
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
 		final Cursor c = db.rawQuery("SELECT roster." + RosterCacheTableMetaData.FIELD_ID + " FROM "
@@ -340,17 +320,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 		StringBuilder builder = new StringBuilder(1024);
 		builder.append("(0");
-		// boolean first = true;
-		// boolean exit = true;
 		try {
 			while (c.moveToNext()) {
-				// exit = false;
-				// if (first) {
-				// first = false;
-				// }
-				// else {
 				builder.append(",");
-				// }
 				builder.append(c.getLong(0));
 			}
 		} finally {
@@ -359,10 +331,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			}
 		}
 		builder.append(")");
-
-		// if (exit) {
-		// return;
-		// }
 
 		final Cursor c1 = resolver.query(RawContacts.CONTENT_URI, new String[] { BaseColumns._ID }, RawContacts.ACCOUNT_TYPE
 				+ "='" + Constants.ACCOUNT_TYPE + "' AND " + RawContacts.SOURCE_ID + " NOT IN " + builder.toString(), null,
@@ -397,13 +365,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		long newMarker = new Date().getTime();
 		long oldMarker = getSyncMarker(account);
 		// final MultiJaxmpp multiJaxmpp = ((MessengerApplication)
-		// context.getApplicationContext()).getMultiJaxmpp();
 
-		// BareJID bareAccountJid =
-		// BareJID.bareJIDInstance(account.name);
-		// JaxmppCore jaxmpp = multiJaxmpp.get(bareAccountJid);
-
-		Log.v(TAG, "getting items in roster of account = " + account.name);
+		Log.d(TAG, "getting items in roster of account = " + account.name);
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
 		final Cursor c = db.rawQuery("SELECT roster." + RosterCacheTableMetaData.FIELD_ID + ", roster."
 				+ RosterCacheTableMetaData.FIELD_JID + "," + " roster." + RosterCacheTableMetaData.FIELD_NAME + ", roster."
@@ -414,16 +377,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				+ RosterCacheTableMetaData.FIELD_TIMESTAMP + ">?" + " OR vcard." + VCardsCacheTableMetaData.FIELD_TIMESTAMP
 				+ ">?)", new String[] { account.name, String.valueOf(oldMarker), String.valueOf(oldMarker) });
 
-		// Cursor c =
-		// context.getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI),
-		// new String[] {
-		// RosterTableMetaData.FIELD_ID,
-		// RosterTableMetaData.FIELD_JID,
-		// RosterTableMetaData.FIELD_NAME,
-		// RosterTableMetaData.FIELD_AVATAR
-		// }, RosterTableMetaData.FIELD_ACCOUNT + "=?", new String[] {
-		// account.name }, null);
-		Log.v(TAG, "adding or updating in contacts based on roster of account = " + account.name);
+		Log.d(TAG, "adding or updating in contacts based on roster of account = " + account.name);
 
 		try {
 			BatchOperation batchOperation = new BatchOperation(context, context.getContentResolver());
@@ -455,21 +409,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 						contactOps.addGroupMembership(groupId);
 					}
 				} else {
-					// final Uri uri =
-					// ContentUris.withAppendedId(Data.CONTENT_URI,
-					// id);
-					// final ContactOperations contactOps =
-					// ContactOperations.updateExistingContact(context,
-					// id,
-					// true, batchOperation);
-					// contactOps.updateName(uri,
-					// c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)),
-					// null, null)
-					// .updateAvatar(uri,
-					// c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)));
+					updated++;
 					updateContact(context, context.getContentResolver(), account, jid.toString(),
 							c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)),
-							c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)), group, true, id, batchOperation);
+							c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)), group, true, id, userId,
+							batchOperation);
 				}
 
 				if (batchOperation.size() >= 50) {
@@ -478,26 +422,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				}
 			}
 			batchOperation.execute();
-			Log.v(TAG, "added " + added + " contacts");
-			Log.v(TAG, "updated " + updated + " contacts");
+			if (DEBUG) {
+				Log.v(TAG, "added " + added + " contacts");
+				Log.v(TAG, "updated " + updated + " contacts");
+			}
 		} finally {
 			c.close();
 		}
 
-		Log.v(TAG, "deleting in contacts removed from roster of account = " + account.name);
+		Log.d(TAG, "deleting in contacts removed from roster of account = " + account.name);
 		BatchOperation batchOperation = new BatchOperation(context, context.getContentResolver());
-		// for (RosterItem ri : jaxmpp.getRoster().getAll()) {
-		// // lets synchronize item with contact for account
-		// final ContactOperations contactOps =
-		// ContactOperations.createNewContact(context, ri.getId(),
-		// account.name,
-		// true, batchOperation);
-		// contactOps.addName(ri.getName(), null,
-		// null).addJID(ri.getJid());
-		//
-		// }
 		deleteContacts(context.getContentResolver(), account, batchOperation);
-		Log.v(TAG, "deleting " + batchOperation.size() + " contacts");
+		if (DEBUG) {
+			Log.v(TAG, "deleting " + batchOperation.size() + " contacts");
+		}
 		batchOperation.execute();
 		setSyncMarker(account, newMarker);
 		Log.i(TAG, "finished contacts synchronization for account = " + account.name);
