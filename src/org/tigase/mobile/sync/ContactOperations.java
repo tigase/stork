@@ -5,6 +5,7 @@ import org.tigase.mobile.R;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Context;
@@ -70,6 +71,9 @@ public class ContactOperations {
 				}
 
 				status = p.getStatus();
+				if (status != null) {
+					status = EscapeUtils.unescape(status);
+				}
 			}
 
 			final ContentValues values = new ContentValues();

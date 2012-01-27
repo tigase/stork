@@ -19,6 +19,7 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
@@ -390,6 +391,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
 					String groupsStr = c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_GROUP_NAME));
 					if (groupsStr != null && !TextUtils.isEmpty(groupsStr)) {
+						groupsStr = EscapeUtils.unescape(groupsStr);
 						String[] groups = groupsStr.split(";");
 						if (groups != null) {
 							group = groups[0];
@@ -401,8 +403,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 					added++;
 					final ContactOperations contactOps = ContactOperations.createNewContact(context, userId, account.name,
 							true, batchOperation);
-					contactOps.addName(c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)), null, null).addJID(
-							jid).addAvatar(c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)));
+					contactOps.addName(
+							EscapeUtils.unescape(c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME))), null,
+							null).addJID(jid).addAvatar(c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)));
 					contactOps.addProfile(jid.toString());
 					if (group != null) {
 						long groupId = ensureGroupExists(context, account.name, group);
@@ -411,7 +414,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				} else {
 					updated++;
 					updateContact(context, context.getContentResolver(), account, jid.toString(),
-							c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME)),
+							EscapeUtils.unescape(c.getString(c.getColumnIndex(RosterCacheTableMetaData.FIELD_NAME))),
 							c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA)), group, true, id, userId,
 							batchOperation);
 				}
