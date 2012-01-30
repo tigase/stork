@@ -5,7 +5,11 @@
 
 	<ImageView android:id="@+id/imageView1" android:src="@drawable/user_avatar" 
  		android:layout_width="fill_parent" 
- 		android:layout_height="wrap_content" android:minHeight="60sp"></ImageView>
+ 		 android:maxHeight="60sp" android:minHeight="60sp"
+ 		android:layout_height="60sp" 
+ 		android:minWidth="60sp"
+ 		android:maxWidth="60sp"
+ 		></ImageView>
 	
 	<ImageView android:id="@+id/imageView2" android:src="@drawable/user_offline" 
  		android:layout_width="wrap_content"  android:layout_alignRight="@+id/imageView1"
