@@ -130,6 +130,8 @@ public class JaxmppService extends Service {
 
 	public static final int NOTIFICATION_ID = 5398777;
 
+	public static final int ERROR_NOTIFICATION_ID = 5398717;
+
 	private static boolean serviceActive = false;
 
 	private static final String TAG = "tigase";
@@ -705,6 +707,7 @@ public class JaxmppService extends Service {
 
 		// notification.flags = Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		Context context = getApplicationContext();
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
@@ -731,6 +734,7 @@ public class JaxmppService extends Service {
 		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		notification.defaults |= Notification.DEFAULT_SOUND;
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
@@ -742,16 +746,17 @@ public class JaxmppService extends Service {
 
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("error", true);
 		intent.putExtra("account", account.getUserBareJid().toString());
 		intent.putExtra("message", message);
 		// intent.putExtra("details", message);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
-		notificationManager.notify("error:" + account.getUserBareJid().toString(), NOTIFICATION_ID, notification);
+		notificationManager.notify("error:" + account.getUserBareJid().toString(), ERROR_NOTIFICATION_ID, notification);
 
 	}
 
@@ -1108,7 +1113,8 @@ public class JaxmppService extends Service {
 					try {
 						for (JaxmppCore jaxmpp : getMulti().get()) {
 							final PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
-							presenceModule.setPresence(show, status, priority);
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected)
+								presenceModule.setPresence(show, status, priority);
 						}
 					} catch (Exception e) {
 						Log.e(TAG, "Can't send auto presence!", e);
@@ -1123,7 +1129,8 @@ public class JaxmppService extends Service {
 					try {
 						for (JaxmppCore jaxmpp : getMulti().get()) {
 							final PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
-							presenceModule.setPresence(show, status, priority);
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected)
+								presenceModule.setPresence(show, status, priority);
 						}
 					} catch (Exception e) {
 						Log.e(TAG, "Can't send auto presence!", e);

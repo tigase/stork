@@ -210,6 +210,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		Bundle bundle = getIntent().getExtras();
 		if (bundle != null && bundle.getBoolean("error", false)) {
+			bundle.putBoolean("error", false);
 			String account = bundle.getString("account");
 			String message = bundle.getString("message");
 
@@ -425,6 +426,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onNewIntent()");
 		this.currentPage = findChatPage(intent.getExtras());
 
+		
 	}
 
 	@Override
