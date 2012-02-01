@@ -1,32 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:padding="5px" android:layout_width="wrap_content"
-	android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5px" >
 
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/icon" />
 
-	<ImageView android:id="@+id/image" android:layout_width="wrap_content"
-		android:src="@drawable/icon" android:layout_height="wrap_content"
-		android:layout_marginRight="10dp" />
+    <TextView
+        android:id="@+id/appNameText"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/image"
+        android:gravity="center"
+        android:text="@string/app_name"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/appVersionText"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/appNameText"
+        android:layout_toRightOf="@+id/image"
+        android:gravity="center"
+        android:text="@string/app_version" />
 
-	<TextView android:text="@string/app_name" android:id="@+id/appNameText"
-		android:textColor="#FFF" android:layout_width="fill_parent"
-		android:gravity="center" android:layout_height="wrap_content"
-		android:layout_toRightOf="@+id/image" android:textSize="20sp"
-		android:textStyle="bold" />
-
-	<TextView android:text="@string/app_version" android:id="@+id/appVersionText"
-		android:layout_below="@+id/appNameText" android:textColor="#FFF"
-		android:gravity="center" android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:layout_toRightOf="@+id/image" />
-
-	<Button android:layout_height="wrap_content" 
-	android:text="@android:string/ok" 
-	android:layout_width="120sp" 
-	android:id="@+id/okButton" 
-	android:layout_below="@+id/appVersionText"
-	android:layout_marginTop="15sp" 
-	android:layout_centerHorizontal="true"></Button>
-
+    <Button
+        android:id="@+id/okButton"
+        android:layout_width="120sp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/appVersionText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15sp"
+        android:text="@android:string/ok" >
+    </Button>
 
 </RelativeLayout>
