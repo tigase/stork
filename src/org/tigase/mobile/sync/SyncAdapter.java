@@ -46,8 +46,6 @@ import android.util.Log;
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
-	public static final boolean DEBUG = false;
-
 	final private static class DataQuery {
 
 		public static final int COLUMN_DATA1 = 3;
@@ -154,6 +152,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		}
 
 	}
+
+	public static final boolean DEBUG = false;
 
 	private static BlockingQueue<PresenceEvent> presenceEventQueue = null;
 

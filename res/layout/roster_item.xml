@@ -1,41 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:padding="5px" android:layout_width="wrap_content"
-	android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5px" >
 
-	<FrameLayout android:id="@+id/openChatNotifier"
-		android:layout_height="fill_parent" android:layout_width="fill_parent"
-		android:background="#ADD8E6" android:layout_alignBottom="@+id/roster_item_precence">
+    <FrameLayout
+        android:id="@+id/openChatNotifier"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignBottom="@+id/roster_item_precence"
+        android:background="#ADD8E6" >
+    </FrameLayout>
 
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="50sp"
+        android:layout_height="50sp"
+        android:layout_alignBottom="@+id/openChatNotifier"
+        android:layout_alignTop="@+id/openChatNotifier"
+        android:src="@drawable/user_avatar" >
+    </ImageView>
 
-	</FrameLayout>
+    <ImageView
+        android:id="@+id/roster_item_precence"
+        android:layout_width="26sp"
+        android:layout_height="55sp"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/roster_item_jid"
+        android:adjustViewBounds="true"
+        android:cropToPadding="true"
+        android:gravity="center"
+        android:scaleType="centerInside"
+        android:src="@drawable/user_offline"
+        android:textSize="16sp" />
 
-	<ImageView
-	    android:id="@+id/imageView1"
-	    android:layout_width="50sp"
-	    android:layout_height="50sp"
-	    android:layout_alignBottom="@+id/openChatNotifier"
-	    android:layout_alignTop="@+id/openChatNotifier"
-	    android:src="@drawable/user_avatar" >
+    <TextView
+        android:id="@+id/roster_item_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/roster_item_jid"
+        android:layout_below="@+id/roster_item_jid"
+        android:layout_toLeftOf="@+id/roster_item_precence"
+        android:paddingLeft="10sp"
+        android:singleLine="true"
+        android:text="TextView"
+        android:textSize="14sp" >
+    </TextView>
 
-</ImageView>
-	<ImageView android:id="@+id/roster_item_precence"
-		android:src="@drawable/user_offline" android:textSize="16sp"
-		android:gravity="center" android:scaleType="centerInside"
-		android:layout_alignParentRight="true" android:adjustViewBounds="true"
-		android:cropToPadding="true" android:layout_alignTop="@+id/roster_item_jid"
-		android:layout_height="55sp" android:layout_width="26sp" />
-	<TextView android:id="@+id/roster_item_description"
-	    android:singleLine="true"
-		android:layout_height="wrap_content" android:text="TextView"
-		android:layout_width="wrap_content" android:layout_below="@+id/roster_item_jid"
-		android:layout_alignLeft="@+id/roster_item_jid"
-		android:layout_toLeftOf="@+id/roster_item_precence" android:textSize="14sp"
-		android:paddingLeft="10sp"></TextView>
-	<TextView android:textSize="18sp" android:id="@+id/roster_item_jid"
-		android:layout_width="fill_parent" android:textStyle="bold"
-		android:layout_alignParentTop="true" android:layout_toRightOf="@+id/imageView1"
-		android:layout_toLeftOf="@+id/roster_item_precence"
-		android:layout_height="wrap_content" android:text="Buddy name"
-		android:paddingLeft="10sp"></TextView>
+    <TextView
+        android:id="@+id/roster_item_jid"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/roster_item_precence"
+        android:layout_toRightOf="@+id/imageView1"
+        android:paddingLeft="10sp"
+        android:text="Buddy name"
+        android:textSize="18sp"
+        android:textStyle="bold" >
+    </TextView>
+
 </RelativeLayout>

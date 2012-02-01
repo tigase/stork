@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5px" >
+
+    <FrameLayout
+        android:id="@+id/frameLayout1"
+        android:layout_width="26sp"
+        android:layout_height="50sp" >
+
+        <ImageView
+            android:id="@+id/account_status"
+            android:layout_width="26sp"
+            android:layout_height="50sp"
+            android:src="@drawable/user_offline" >
+        </ImageView>
+
+        <ProgressBar
+            android:id="@+id/account_status_progress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="26sp"
+            android:layout_height="50sp"
+             />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/account_item_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/account_name"
+        android:layout_below="@+id/account_name"
+        android:paddingLeft="10sp"
+        android:singleLine="true"
+        android:text="TextView"
+        android:textSize="14sp" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/account_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/frameLayout1"
+        android:paddingLeft="10sp"
+        android:text="Buddy name"
+        android:textSize="18sp"
+        android:textStyle="bold" >
+    </TextView>
+
+</RelativeLayout>

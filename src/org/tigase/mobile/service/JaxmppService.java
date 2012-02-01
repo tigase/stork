@@ -126,11 +126,11 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = true;
-
-	public static final int NOTIFICATION_ID = 5398777;
+	private static final boolean DEBUG = false;
 
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
+
+	public static final int NOTIFICATION_ID = 5398777;
 
 	private static boolean serviceActive = false;
 
@@ -440,6 +440,7 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
+				notificationUpdate();
 			}
 		};
 
@@ -508,6 +509,7 @@ public class JaxmppService extends Service {
 							@Override
 							public void run() {
 								try {
+									jaxmpp.getSessionObject().setProperty("messenger#error", null);
 									jaxmpp.login(false);
 								} catch (Exception e) {
 									incrementConnectionError(jaxmpp.getSessionObject().getUserBareJid());
@@ -617,9 +619,10 @@ public class JaxmppService extends Service {
 			int disabledCount = 0;
 			for (JaxmppCore jaxmpp : getMulti().get()) {
 				State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+				boolean established = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 				if (isDisabled(jaxmpp.getSessionObject()))
 					++disabledCount;
-				else if (state == State.connected)
+				else if (state == State.connected && established)
 					++onlineCount;
 				else if (state == null || state == State.disconnected)
 					++offlineCount;
@@ -707,7 +710,6 @@ public class JaxmppService extends Service {
 
 		// notification.flags = Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		Context context = getApplicationContext();
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
@@ -755,6 +757,8 @@ public class JaxmppService extends Service {
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		account.setProperty("messenger#error", message);
 
 		notificationManager.notify("error:" + account.getUserBareJid().toString(), ERROR_NOTIFICATION_ID, notification);
 

@@ -10,19 +10,19 @@ import java.util.Map;
  * 
  */
 public enum CPresence {
-	away(99),
+	away(98),
 	chat(101),
-	dnd(97),
+	dnd(99),
 	error(50),
 	invisible(1),
-
 	notinroster(0),
 	offline(80),
-	offline_nonauth(70),
 
+	offline_nonauth(70),
 	online(100),
 	requested(75),
-	xa(98);
+
+	xa(97);
 
 	private static Map<Integer, CPresence> cache = null;
 

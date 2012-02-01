@@ -399,9 +399,10 @@ public class RosterFragment extends Fragment {
 		int disabledCount = 0;
 		for (JaxmppCore jaxmpp : getMulti().get()) {
 			State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+			boolean established = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 			if (isDisabled(jaxmpp.getSessionObject()))
 				++disabledCount;
-			else if (state == State.connected)
+			else if (state == State.connected && established)
 				++onlineCount;
 			else if (state == null || state == State.disconnected)
 				++offlineCount;
