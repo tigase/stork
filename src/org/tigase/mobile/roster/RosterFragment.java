@@ -348,16 +348,22 @@ public class RosterFragment extends Fragment {
 		final JID jid = JID.jidInstance(rosterItem.getJid());
 		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 				rosterItem.getSessionObject());
+		Runnable r = new Runnable() {
 
-		try {
-			jaxmpp.getModulesManager().getModule(PresenceModule.class).unsubscribed(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-					rosterItem.getSessionObject(), jid.getBareJid());
-			String txt = String.format(getActivity().getString(R.string.auth_removed), name, jid.getBareJid().toString());
-			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
-		} catch (JaxmppException e) {
-			Log.w(TAG, "Can't remove auth", e);
-		}
+			@Override
+			public void run() {
+				try {
+					jaxmpp.getModulesManager().getModule(PresenceModule.class).unsubscribed(jid);
+				} catch (JaxmppException e) {
+					Log.w(TAG, "Can't remove auth", e);
+				}
+			}
+		};
+		(new Thread(r)).start();
+		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+				rosterItem.getSessionObject(), jid.getBareJid());
+		String txt = String.format(getActivity().getString(R.string.auth_removed), name, jid.getBareJid().toString());
+		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 	}
 
 	private void sendAuthRerequest(long id) {
@@ -365,15 +371,23 @@ public class RosterFragment extends Fragment {
 		final JID jid = JID.jidInstance(rosterItem.getJid());
 		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 
-		try {
-			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-					rosterItem.getSessionObject(), jid.getBareJid());
-			String txt = String.format(getActivity().getString(R.string.auth_rerequested), name, jid.getBareJid().toString());
-			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
-		} catch (JaxmppException e) {
-			Log.w(TAG, "Can't rerequest subscription", e);
-		}
+		Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(jid);
+				} catch (JaxmppException e) {
+					Log.w(TAG, "Can't rerequest subscription", e);
+				}
+			}
+		};
+		(new Thread(r)).start();
+		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+				rosterItem.getSessionObject(), jid.getBareJid());
+		String txt = String.format(getActivity().getString(R.string.auth_rerequested), name, jid.getBareJid().toString());
+		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
+
 	}
 
 	private void sendAuthResend(long id) {
@@ -381,15 +395,23 @@ public class RosterFragment extends Fragment {
 		final JID jid = JID.jidInstance(rosterItem.getJid());
 		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 
-		try {
-			jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribed(jid);
-			final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-					rosterItem.getSessionObject(), jid.getBareJid());
-			String txt = String.format(getActivity().getString(R.string.auth_resent), name, jid.getBareJid().toString());
-			Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
-		} catch (JaxmppException e) {
-			Log.w(TAG, "Can't resend subscription", e);
-		}
+		Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribed(jid);
+				} catch (JaxmppException e) {
+					Log.w(TAG, "Can't resend subscription", e);
+				}
+			}
+		};
+		(new Thread(r)).start();
+		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
+				rosterItem.getSessionObject(), jid.getBareJid());
+		String txt = String.format(getActivity().getString(R.string.auth_resent), name, jid.getBareJid().toString());
+		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
+
 	}
 
 	private void updateConnectionStatus() {

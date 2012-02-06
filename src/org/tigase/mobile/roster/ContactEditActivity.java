@@ -65,6 +65,9 @@ public class ContactEditActivity extends FragmentActivity {
 			}
 			this.jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
 			rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
+		} else {
+			account = BareJID.bareJIDInstance(getIntent().getStringExtra("account"));
+			this.jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
 		}
 
 		this.jabberIdEdit = (EditText) findViewById(R.id.ce_jabberid);
@@ -129,7 +132,7 @@ public class ContactEditActivity extends FragmentActivity {
 
 	protected void updateItem() {
 		final BareJID jid = BareJID.bareJIDInstance(jabberIdEdit.getText().toString());
-		String name = nameEdit.getText().toString();
+		final String name = nameEdit.getText().toString();
 		final ArrayList<String> g = new ArrayList<String>();
 		int p = groupEdit.getSelectedItemPosition();
 		if (p > 0) {
@@ -152,35 +155,44 @@ public class ContactEditActivity extends FragmentActivity {
 		}
 
 		final ProgressDialog dialog = ProgressDialog.show(ContactEditActivity.this, "", "Updating. Please wait...", true);
-		try {
-			jaxmpp.getRoster().add(jid, name, g, new AsyncCallback() {
+		Runnable r = new Runnable() {
 
-				@Override
-				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-					dialog.cancel();
-					showWarning(error == null ? "unkown" : error.name());
-				}
+			@Override
+			public void run() {
 
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-					if (requestAuth.getVisibility() == View.VISIBLE && requestAuth.isChecked()) {
-						jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(JID.jidInstance(jid));
-					}
-					dialog.cancel();
-					finish();
-				}
+				try {
+					jaxmpp.getRoster().add(jid, name, g, new AsyncCallback() {
 
-				@Override
-				public void onTimeout() throws JaxmppException {
+						@Override
+						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+							dialog.cancel();
+							showWarning(error == null ? "unkown" : error.name());
+						}
+
+						@Override
+						public void onSuccess(Stanza responseStanza) throws JaxmppException {
+							if (requestAuth.getVisibility() == View.VISIBLE && requestAuth.isChecked()) {
+								jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(JID.jidInstance(jid));
+							}
+							dialog.cancel();
+							finish();
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+							dialog.cancel();
+							showWarning("Timeout");
+						}
+					});
+				} catch (JaxmppException e) {
 					dialog.cancel();
-					showWarning("Timeout");
+					Log.e(TAG, "Can't add buddy", e);
+					showWarning(e.getMessage());
 				}
-			});
-		} catch (Exception e) {
-			dialog.cancel();
-			Log.e(TAG, "Can't add buddy", e);
-			showWarning(e.getMessage());
-		}
+			}
+		};
+
+		(new Thread(r)).start();
 
 	}
 }

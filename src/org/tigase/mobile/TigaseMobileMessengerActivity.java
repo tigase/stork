@@ -8,6 +8,7 @@ import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.preferences.MessengerPreferenceActivity;
+import org.tigase.mobile.roster.AccountSelectorDialogFragment;
 import org.tigase.mobile.roster.ContactEditActivity;
 import org.tigase.mobile.roster.RosterFragment;
 import org.tigase.mobile.service.JaxmppService;
@@ -25,6 +26,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -37,6 +40,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
@@ -437,8 +441,23 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.contactAdd: {
-			Intent intent = new Intent(this.getApplicationContext(), ContactEditActivity.class);
-			this.startActivityForResult(intent, 0);
+			AccountManager accountManager = AccountManager.get(this);
+			final Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
+
+			if (accounts != null && accounts.length > 1) {
+				FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+				Fragment prev = getSupportFragmentManager().findFragmentByTag("account:select:dialog");
+				if (prev != null) {
+					ft.remove(prev);
+				}
+				ft.addToBackStack(null);
+				AccountSelectorDialogFragment newFragment = AccountSelectorDialogFragment.newInstance();
+				newFragment.show(ft, "account:select:dialog");
+			} else if (accounts != null && accounts.length == 1) {
+				Intent intent = new Intent(this, ContactEditActivity.class);
+				intent.putExtra("account", accounts[0]);
+				startActivityForResult(intent, 0);
+			}
 			break;
 		}
 		case R.id.aboutButton: {

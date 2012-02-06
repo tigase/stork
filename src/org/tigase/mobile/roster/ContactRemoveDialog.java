@@ -52,11 +52,19 @@ public class ContactRemoveDialog extends DialogFragment {
 				new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int whichButton) {
-						try {
-							jaxmpp.getRoster().remove(rosterItem.getJid());
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+						final Runnable r = new Runnable() {
+							@Override
+							public void run() {
+
+								try {
+									jaxmpp.getRoster().remove(rosterItem.getJid());
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						};
+						(new Thread(r)).start();
+
 					}
 				}).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 			@Override
