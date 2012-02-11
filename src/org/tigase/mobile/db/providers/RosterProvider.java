@@ -209,6 +209,12 @@ public class RosterProvider extends ContentProvider {
 		case GROUPS_URI_INDICATOR:
 			c = new GroupsCursor(getContext());
 			break;
+			
+		// case for VCard?
+		case VCARD_URI_INDICATOR:
+			c = dbHelper.getReadableDatabase().query(VCardsCacheTableMetaData.TABLE_NAME, new String[] { VCardsCacheTableMetaData.FIELD_JID, VCardsCacheTableMetaData.FIELD_DATA },
+					VCardsCacheTableMetaData.FIELD_JID+"=?", new String[] {uri.getLastPathSegment()}, null, null, null);
+			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}

@@ -1,0 +1,479 @@
+package org.tigase.mobile.vcard;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.R;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
+import org.tigase.mobile.db.providers.RosterProvider;
+
+import tigase.jaxmpp.core.client.AsyncCallback;
+import tigase.jaxmpp.core.client.Base64;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
+import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
+import tigase.jaxmpp.j2se.Jaxmpp;
+
+import android.accounts.Account;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class VCardEditorActivity extends Activity {
+
+	private static final String TAG = "VCardEditorActivity";
+
+	private static final int PICK_IMAGE = 1;
+
+	private static final int PUBLISHED_TOAST = 1;
+	private static final int TIMEOUT_TOAST = 2;
+	private static final int ERROR_TOAST = 3;
+
+	private Bitmap bitmap = null;
+	private ImageButton avatar;
+
+	private JID jid;
+	private VCard vcard;
+
+	/**
+	 * Fill activity for editing vcard from vcard instance
+	 * 
+	 * @param activity
+	 * @param contentResolver
+	 * @param resources
+	 * @param jid
+	 * @param vcard
+	 */
+	public static void fillFields(final Activity activity,
+			final ContentResolver contentResolver, final Resources resources,
+			final JID jid, final VCard vcard) {
+		((TextView) activity.findViewById(R.id.fullname)).setText(vcard
+				.getFullName());
+		((TextView) activity.findViewById(R.id.nickname)).setText(vcard
+				.getNickName());
+		((TextView) activity.findViewById(R.id.birthday)).setText(vcard
+				.getBday());
+		((TextView) activity.findViewById(R.id.email)).setText(vcard
+				.getHomeEmail());
+
+		ImageView avatar = (ImageView) activity.findViewById(R.id.avatarButton);
+		Bitmap bmp;
+		try {
+			if (vcard.getPhotoVal() != null && vcard.getPhotoVal().length() > 0) {
+				String val = vcard.getPhotoVal();
+				byte[] buffer = Base64.decode(val);
+
+				bmp = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
+				((VCardEditorActivity) activity).bitmap = bmp;
+				ContentValues values = new ContentValues();
+				values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
+				contentResolver.insert(
+						Uri.parse(RosterProvider.VCARD_URI + "/"
+								+ Uri.encode(jid.getBareJid().toString())),
+						values);
+			} else {
+				bmp = null;
+			}
+		} catch (Exception e) {
+			Log.e("tigase", "WTF?", e);
+			bmp = null;
+		}
+
+		Bitmap x = BitmapFactory.decodeResource(resources,
+				R.drawable.user_avatar);
+		if (bmp != null) {
+			x = bmp;
+		}
+		avatar.setImageBitmap(x);
+	}
+
+	/**
+	 * Create progress dialog based on id of resource string
+	 * 
+	 * @param resourceString
+	 * @return
+	 */
+	private ProgressDialog createProgress(int resourceString) {
+		final ProgressDialog dialog = ProgressDialog.show(
+				VCardEditorActivity.this, "",
+				getResources().getString(resourceString), true);
+		dialog.setCancelable(true);
+		dialog.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				Intent result = new Intent();
+				setResult(Activity.RESULT_CANCELED, result);
+				finish();
+			}
+		});
+		return dialog;
+	}
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.vcard_editor);
+
+		avatar = (ImageButton) findViewById(R.id.avatarButton);
+		avatar.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				chooseAvatar();
+			}
+		});
+
+		final Account account = (Account) getIntent().getExtras()
+				.get("account");
+		jid = JID.jidInstance(account.name);
+
+		final Cursor cursor = getContentResolver().query(
+				Uri.parse(RosterProvider.VCARD_URI + "/"
+						+ Uri.encode(jid.getBareJid().toString())), null, null,
+				null, null);
+		try {
+			cursor.moveToNext();
+			byte[] buffer = cursor.getBlob(cursor
+					.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+			Bitmap bmp = BitmapFactory
+					.decodeByteArray(buffer, 0, buffer.length);
+			avatar.setImageBitmap(bmp);
+		} catch (Exception ex) {
+
+		} finally {
+			cursor.close();
+		}
+
+		downloadVCard();
+
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext())
+				.getMultiJaxmpp().get(jid.getBareJid());
+		boolean enabled = jaxmpp.isConnected();
+		((TextView) findViewById(R.id.fullname)).setEnabled(enabled);
+		((TextView) findViewById(R.id.nickname)).setEnabled(enabled);
+		((TextView) findViewById(R.id.birthday)).setEnabled(enabled);
+		((TextView) findViewById(R.id.email)).setEnabled(enabled);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_IMAGE && data != null && data.getData() != null) {
+			Uri _uri = data.getData();
+
+			if (_uri != null) {
+				// User had pick an image.
+				Cursor cursor = getContentResolver()
+						.query(_uri,
+								new String[] { android.provider.MediaStore.Images.ImageColumns.DATA },
+								null, null, null);
+				cursor.moveToFirst();
+
+				// Link to the image
+				final String imageFilePath = cursor.getString(0);
+				Log.v(TAG, "image choosen = " + imageFilePath);
+				// avatarButton.setImageURI(Uri.parse("file://"+imageFilePath));
+				Bitmap bmp = getScaledImage(imageFilePath);
+				avatar.setImageBitmap(bmp);
+
+				byte[] buffer = bitmapToByteArray(bmp);
+				bitmap = bmp;
+				ContentValues values = new ContentValues();
+				values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
+				getContentResolver().insert(
+						Uri.parse(RosterProvider.VCARD_URI + "/"
+								+ Uri.encode(jid.getBareJid().toString())),
+						values);
+
+				cursor.close();
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
+	/**
+	 * Starts activity to select picture for avatar
+	 */
+	private void chooseAvatar() {
+		Intent intent = new Intent();
+		intent.setType("image/*");
+		intent.setAction(Intent.ACTION_GET_CONTENT);
+		startActivityForResult(Intent.createChooser(intent, "Select picture"),
+				PICK_IMAGE);
+	}
+
+	/**
+	 * Starts requesting vcard
+	 */
+	private void downloadVCard() {
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext())
+				.getMultiJaxmpp().get(jid.getBareJid());
+		final VCardModule module = jaxmpp.getModulesManager().getModule(
+				VCardModule.class);
+
+		if (jaxmpp.isConnected()) {
+			final TextView fullName = (TextView) findViewById(R.id.fullname);
+
+			final ProgressDialog dialog = createProgress(R.string.vcard_retrieving);
+
+			(new Thread() {
+				@Override
+				public void run() {
+					try {
+						module.retrieveVCard(jid, new VCardAsyncCallback() {
+
+							@Override
+							public void onError(Stanza responseStanza,
+									final ErrorCondition error)
+									throws JaxmppException {
+								dialog.dismiss();
+								showToast(ERROR_TOAST);
+							}
+
+							@Override
+							public void onTimeout() throws JaxmppException {
+								dialog.dismiss();
+								showToast(TIMEOUT_TOAST);
+							}
+
+							@Override
+							protected void onVCardReceived(final VCard vcard)
+									throws XMLException {
+								fullName.post(new Runnable() {
+
+									@Override
+									public void run() {
+										dialog.dismiss();
+										VCardEditorActivity.this.vcard = vcard;
+										fillFields(VCardEditorActivity.this,
+												getContentResolver(),
+												getResources(), jid, vcard);
+									}
+								});
+							}
+						});
+					} catch (JaxmppException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}).start();
+			dialog.show();
+		}
+
+	}
+
+	/**
+	 * Starts publishing vcard
+	 */
+	private void publishVCard() {
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext())
+				.getMultiJaxmpp().get(jid.getBareJid());
+
+		if (jaxmpp.isConnected()) {
+			String fullname = ((TextView) findViewById(R.id.fullname))
+					.getText().toString();
+			String nick = ((TextView) findViewById(R.id.nickname)).getText()
+					.toString();
+			String bday = ((TextView) findViewById(R.id.birthday)).getText()
+					.toString();
+			String email = ((TextView) findViewById(R.id.email)).getText()
+					.toString();
+			vcard.setFullName(fullname);
+			vcard.setNickName(nick);
+			vcard.setHomeEmail(email);
+			vcard.setBday(bday);
+
+			byte[] buffer = bitmap == null ? null : bitmapToByteArray(bitmap);
+			if (buffer != null) {
+				vcard.setPhotoVal(Base64.encode(buffer));
+				vcard.setPhotoType("image/png");
+			} else {
+				vcard.setPhotoVal(null);
+				vcard.setPhotoType(null);
+			}
+
+			final ProgressDialog dialog = createProgress(R.string.vcard_publishing);
+
+			(new Thread() {
+				@Override
+				public void run() {
+
+					try {
+						final IQ iq = IQ.create();
+						iq.setType(StanzaType.set);
+						iq.addChild(vcard.makeElement());
+
+						jaxmpp.send(iq, new AsyncCallback() {
+
+							@Override
+							public void onError(Stanza responseStanza,
+									ErrorCondition error)
+									throws JaxmppException {
+								dialog.dismiss();
+								showToast(ERROR_TOAST);
+							}
+
+							@Override
+							public void onSuccess(Stanza responseStanza)
+									throws JaxmppException {
+								dialog.dismiss();
+								showToast(PUBLISHED_TOAST);
+							}
+
+							@Override
+							public void onTimeout() throws JaxmppException {
+								dialog.dismiss();
+								showToast(TIMEOUT_TOAST);
+							}
+
+						});
+					} catch (Exception ex) {
+						Log.v(TAG, "problems with publishing vcard", ex);
+					}
+				}
+			}).start();
+
+			dialog.show();
+		}
+	}
+
+	/**
+	 * Show toast based on type
+	 * 
+	 * @param type - type of message to present
+	 */
+	protected void showToast(final int type) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				Context context = getApplicationContext();
+				CharSequence text = null;
+				switch (type) {
+				case PUBLISHED_TOAST:
+					text = getResources().getString(
+							R.string.vcard_published_toast);
+					break;
+				case TIMEOUT_TOAST:
+					text = getResources().getString(
+							R.string.vcard_timeout_toast);
+					break;
+				case ERROR_TOAST:
+					text = getResources().getString(R.string.vcard_error_toast);
+					break;
+				}
+				int duration = Toast.LENGTH_SHORT;
+
+				Toast toast = Toast.makeText(context, text, duration);
+				toast.show();
+			}
+		});
+	}
+
+	/**
+	 * Returns image loaded from file and scaled to 128
+	 * 
+	 * @param path - path to image
+	 * @return scaled image
+	 */
+	private Bitmap getScaledImage(String path) {
+		try {
+			File f = new File(path);
+			// Decode image size
+			BitmapFactory.Options o = new BitmapFactory.Options();
+			o.inJustDecodeBounds = true;
+			BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+
+			// The new size we want to scale to
+			final int REQUIRED_SIZE = 128;
+
+			// Find the correct scale value. It should be the power of 2.
+			int scale = 1;
+			while (o.outWidth / scale / 2 >= REQUIRED_SIZE
+					&& o.outHeight / scale / 2 >= REQUIRED_SIZE)
+				scale *= 2;
+
+			// Decode with inSampleSize
+			BitmapFactory.Options o2 = new BitmapFactory.Options();
+			o2.inSampleSize = scale;
+			return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+		} catch (FileNotFoundException e) {
+		}
+		return null;
+	}
+		
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		menu.clear();
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext())
+				.getMultiJaxmpp().get(jid.getBareJid());
+		if (jaxmpp.isConnected()) {
+			inflater.inflate(R.menu.vcard_editor_menu, menu);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.vcard_editor_refresh: {
+			Log.v(TAG, "downloading vcard");
+			downloadVCard();
+			break;
+		}
+		case R.id.vcard_editor_publish: {
+			Log.v(TAG, "publishing vcard");
+			publishVCard();
+			break;
+		}
+		default:
+			break;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Serialize bitmap instance to byte array encoded in PNG format
+	 * 
+	 * @param bmp
+	 * @return
+	 */
+	private byte[] bitmapToByteArray(Bitmap bmp) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		bmp.compress(CompressFormat.PNG, 0 /* ignored for PNG */, bos);
+		return bos.toByteArray();
+	}
+}

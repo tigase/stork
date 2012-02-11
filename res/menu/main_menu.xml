@@ -9,6 +9,7 @@
     <item
         android:id="@+id/contactAdd"
         android:icon="@android:drawable/ic_menu_add"
+        android:showAsAction="ifRoom"
         android:title="@string/contact_add">
     </item>
     <item
@@ -19,6 +20,7 @@
     <item
         android:id="@+id/showChatsButton"
         android:icon="@drawable/ic_menu_chatswitch"
+        android:showAsAction="ifRoom"
         android:title="@string/showChatsButton">
     </item>
     <item

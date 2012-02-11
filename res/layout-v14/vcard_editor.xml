@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <ImageButton
+        android:id="@+id/avatarButton"
+        style="@style/XTheme.Light"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_margin="3dp"
+        android:background="@color/message_his_text"
+        android:src="@drawable/user_avatar" />
+
+    <GridLayout
+        android:id="@+id/gridLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="fill"
+        android:columnCount="2"
+        android:rowCount="4" >
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_gravity="left"
+            android:layout_row="0"
+            android:layout_rowSpan="1"
+            android:text="@string/vcard_fullname"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/fullname"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_gravity="left"
+            android:layout_row="0"
+            android:layout_rowSpan="1"
+            android:inputType="textPersonName" />
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_gravity="left"
+            android:layout_row="1"
+            android:layout_rowSpan="1"
+            android:text="@string/vcard_nickname"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/nickname"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_gravity="left"
+            android:layout_row="1"
+            android:layout_rowSpan="1"
+            android:inputType="textPersonName" />
+        
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_gravity="left"
+            android:layout_row="2"
+            android:layout_rowSpan="1"
+            android:text="@string/vcard_email"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/email"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_gravity="left"
+            android:layout_row="2"
+            android:layout_rowSpan="1"
+            android:inputType="textEmailAddress|textPersonName" >
+
+            <requestFocus />
+        </EditText>
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_gravity="left"
+            android:layout_row="3"
+            android:layout_rowSpan="1"
+            android:text="@string/vcard_birthday"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/birthday"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_gravity="left"
+            android:layout_row="3"
+            android:layout_rowSpan="1"
+            android:inputType="date" />
+    </GridLayout>
+
+
+<!--         <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="fill"
+            android:layout_weight="1" >
+
+            <Button
+                android:id="@+id/refresh"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/vcard_refresh" />
+
+            <Button
+                android:id="@+id/publish"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:text="@string/vcard_publish" />
+        </TableRow>
+ -->
+</LinearLayout>

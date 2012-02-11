@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -186,6 +187,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 
 		sendBroadcast(intent);
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+			invalidateOptionsMenu();
+		}
 	}
 
 	@Override
@@ -533,6 +538,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			dcon.setVisible(serviceActive);
 
 			MenuItem add = menu.findItem(R.id.contactAdd);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+				add.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+			}	
 			add.setVisible(serviceActive);
 
 		} else {

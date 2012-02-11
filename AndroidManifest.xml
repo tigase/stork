@@ -61,7 +61,7 @@
             android:name=".authenticator.AuthenticatorActivity"
             android:configChanges="orientation"
             android:excludeFromRecents="true"
-            android:label="@string/ui_activity_title"
+            android:label="@string/ui_authenticator_activity_title"
             android:theme="@style/XTheme" >
             <intent-filter>
                 <action android:name="org.tigase.mobile.account.preference.MAIN" />
@@ -69,7 +69,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-         
+        <activity
+            android:name=".vcard.VCardEditorActivity"
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:label="@string/vcard_editor_activity_title"
+            android:theme="@style/XTheme" >
+            <intent-filter>
+                <action android:name="org.tigase.mobile.account.personalInfo.EDIT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        
         <!-- The authenticator service -->
         <service
             android:name=".authenticator.AuthenticationService"

@@ -7,5 +7,12 @@
                 android:action="org.tigase.mobile.account.preference.MAIN" 
                 android:targetClass="authenticator.AuthenticatorActivity.class" />
     </PreferenceScreen>    
-
+    <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
+        android:title="@string/accountVCard" android:enabled="true" 
+        android:key="key">
+            <intent
+                android:action="org.tigase.mobile.account.personalInfo.EDIT" 
+                android:targetClass="vcard.VCardEditorActivity.class" />
+    </PreferenceScreen>    
+    
 </PreferenceScreen>

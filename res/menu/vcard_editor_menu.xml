@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/vcard_editor_refresh"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:showAsAction="ifRoom"
+        android:title="@string/vcard_editor_refresh">        
+    </item>
+    
+    <item android:id="@+id/vcard_editor_publish"
+        android:icon="@android:drawable/ic_menu_save"
+        android:showAsAction="ifRoom"
+        android:title="@string/vcard_editor_publish">        
+    </item>
+    
+</menu>

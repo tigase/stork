@@ -21,6 +21,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,6 +93,8 @@ public class ChatListActivity extends Activity {
 			try {
 				cursor.moveToNext();
 				avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
+			} catch (Exception ex) {
+				Log.v("ChatListActivity", "no avatar for "+chat.getJid().getBareJid().toString());
 			} finally {
 				cursor.close();
 			}

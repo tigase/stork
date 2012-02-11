@@ -44,7 +44,7 @@
     <string
         name="label">Tigase XMPP</string>    
     <string
-        name="ui_activity_title">Sign-in</string>
+        name="ui_authenticator_activity_title">Sign-in</string>
     <!-- Message shown in progress dialog while app connects to the server -->
     <string
         name="ui_activity_authenticating">Authenticating\u2026</string>
@@ -64,5 +64,22 @@
         activity.
     -->
     <string
-        name="login_activity_newaccount_text">Sign in to your XMPP account. </string>    
+        name="login_activity_newaccount_text">Sign in to your XMPP account. </string>
+    
+    <string name="vcard_editor_activity_title">Personal informations</string>
+    <string name="accountVCard">Personal informations</string>    
+    <string name="vcard_fullname">Full name</string>
+    <string name="vcard_nickname">Nick</string>        
+    <string name="vcard_email">Email</string>
+    <string name="vcard_birthday">Birthday</string>
+    <string name="vcard_editor_refresh">Refresh</string>
+    <string name="vcard_editor_publish">Publish</string>
+    
+    <string name="vcard_published_toast">Informations published</string>
+    <string name="vcard_timeout_toast">Operation timed out</string>
+    <string name="vcard_error_toast">Operation failed</string>
+    
+    <string name="vcard_retrieving">Loading. Please wait...</string>
+    <string name="vcard_publishing">Publishing. Please wait...</string>
+    
 </resources>
