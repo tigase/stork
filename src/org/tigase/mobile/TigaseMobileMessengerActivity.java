@@ -187,7 +187,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 
 		sendBroadcast(intent);
-		
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			invalidateOptionsMenu();
 		}
@@ -540,7 +540,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			MenuItem add = menu.findItem(R.id.contactAdd);
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 				add.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-			}	
+			}
 			add.setVisible(serviceActive);
 
 		} else {

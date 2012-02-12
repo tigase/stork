@@ -22,6 +22,7 @@ import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
+import org.tigase.mobile.db.providers.CapabilitiesDBCache;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.AuthRequestActivity;
@@ -48,8 +49,10 @@ import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindE
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -223,6 +226,11 @@ public class JaxmppService extends Service {
 					sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 					sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
 					sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
+
+					sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_CATEGORY_KEY, "client");
+					sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_TYPE_KEY, "phone");
+					sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
+
 					sessionObject.setUserProperty("ID", (long) account.hashCode());
 					sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 					sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
@@ -240,6 +248,10 @@ public class JaxmppService extends Service {
 						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
 					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
+					CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+					if (capabilitiesModule != null) {
+						capabilitiesModule.setCache(new CapabilitiesDBCache(context));
+					}
 					multi.add(jaxmpp);
 				} else {
 					SessionObject sessionObject = multi.get(jid).getSessionObject();

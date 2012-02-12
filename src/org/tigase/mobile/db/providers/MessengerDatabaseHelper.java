@@ -1,6 +1,8 @@
 package org.tigase.mobile.db.providers;
 
 //import org.tigase.mobile.db.AccountsTableMetaData;
+import org.tigase.mobile.db.CapsFeaturesTableMetaData;
+import org.tigase.mobile.db.CapsIdentitiesTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
@@ -15,7 +17,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 15;
+	public static final Integer DATABASE_VERSION = 16;
 
 	private static final String TAG = "tigase";
 
@@ -70,6 +72,22 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += VCardsCacheTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 		sql += ");";
 		db.execSQL(sql);
+
+		sql = "CREATE TABLE " + CapsIdentitiesTableMetaData.TABLE_NAME + " (";
+		sql += CapsIdentitiesTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += CapsIdentitiesTableMetaData.FIELD_NODE + " TEXT, ";
+		sql += CapsIdentitiesTableMetaData.FIELD_NAME + " TEXT, ";
+		sql += CapsIdentitiesTableMetaData.FIELD_CATEGORY + " TEXT, ";
+		sql += CapsIdentitiesTableMetaData.FIELD_TYPE + " TEXT";
+		sql += ");";
+		db.execSQL(sql);
+
+		sql = "CREATE TABLE " + CapsFeaturesTableMetaData.TABLE_NAME + " (";
+		sql += CapsFeaturesTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += CapsFeaturesTableMetaData.FIELD_NODE + " TEXT, ";
+		sql += CapsFeaturesTableMetaData.FIELD_FEATURE + " TEXT";
+		sql += ");";
+		db.execSQL(sql);
 	}
 
 	@Override
@@ -79,6 +97,8 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + RosterCacheTableMetaData.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + VCardsCacheTableMetaData.TABLE_NAME);
+		db.execSQL("DROP TABLE IF EXISTS " + CapsFeaturesTableMetaData.TABLE_NAME);
+		db.execSQL("DROP TABLE IF EXISTS " + CapsIdentitiesTableMetaData.TABLE_NAME);
 		onCreate(db);
 	}
 

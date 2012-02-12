@@ -94,7 +94,7 @@ public class ChatListActivity extends Activity {
 				cursor.moveToNext();
 				avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
 			} catch (Exception ex) {
-				Log.v("ChatListActivity", "no avatar for "+chat.getJid().getBareJid().toString());
+				Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
 			} finally {
 				cursor.close();
 			}

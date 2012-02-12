@@ -6,7 +6,10 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
 import android.database.Cursor;
@@ -63,10 +66,40 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 		BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 
+		final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
 		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 
-		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(
-				BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID))));
+		final ImageView clientTypeIndicator = (ImageView) view.findViewById(R.id.client_type_indicator);
+		clientTypeIndicator.setVisibility(View.INVISIBLE);
+
+		CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+		try {
+			final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
+			for (Presence p : jaxmpp.getPresence().getPresences(jid).values()) {
+				if (p.getType() != null)
+					continue;
+				Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+				if (c == null)
+					continue;
+				String node = c.getAttribute("node");
+				String ver = c.getAttribute("ver");
+
+				String id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
+				if (id != null && id.equals("client/phone") && node.equals(nodeName)) {
+					clientTypeIndicator.setImageResource(R.drawable.messenger_client);
+					clientTypeIndicator.setVisibility(View.VISIBLE);
+					break;
+				} else if (id != null && id.equals("client/phone")) {
+					clientTypeIndicator.setImageResource(R.drawable.mobile_client);
+					clientTypeIndicator.setVisibility(View.VISIBLE);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(jid);
 		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
 		Integer p = cursor.getInt(cursor.getColumnIndex(RosterTableMetaData.FIELD_PRESENCE));
