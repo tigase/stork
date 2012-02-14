@@ -81,32 +81,38 @@ public class AuthRequestActivity extends FragmentActivity {
 			}
 		});
 
-		try {
-			module.retrieveVCard(jid, new VCardAsyncCallback() {
-
-				@Override
-				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-				}
-
-				@Override
-				protected void onVCardReceived(final VCard vcard) throws XMLException {
-					jidTextView.post(new Runnable() {
+		(new Thread() {
+			@Override
+			public void run() {
+				try {
+					module.retrieveVCard(jid, new VCardAsyncCallback() {
 
 						@Override
-						public void run() {
-							VCardViewActivity.fillFields(AuthRequestActivity.this, getContentResolver(), getResources(), jid,
-									vcard, null);
+						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+						}
+
+						@Override
+						public void onTimeout() throws JaxmppException {
+						}
+
+						@Override
+						protected void onVCardReceived(final VCard vcard) throws XMLException {
+							jidTextView.post(new Runnable() {
+
+								@Override
+								public void run() {
+									VCardViewActivity.fillFields(AuthRequestActivity.this, getContentResolver(),
+											getResources(), jid, vcard, null);
+								}
+							});
 						}
 					});
+				} catch (JaxmppException e) {
+					e.printStackTrace();
 				}
-			});
-		} catch (JaxmppException e) {
-			e.printStackTrace();
-		}
+			}
+		}).start();
+
 	}
 
 	private void showWarning(String message) {
