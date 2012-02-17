@@ -9,7 +9,6 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
-import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.vcard.VCardViewActivity;
@@ -41,6 +40,7 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
@@ -76,6 +76,11 @@ public class RosterFragment extends Fragment {
 	private static boolean isDisabled(SessionObject jaxmpp) {
 		Boolean x = jaxmpp.getProperty("CC:DISABLED");
 		return x == null ? false : x;
+	}
+
+	private static boolean isSessionEstablished(SessionObject o) {
+		return o != null && o.getProperty(Connector.CONNECTOR_STAGE_KEY) == State.connected
+				&& o.getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 	}
 
 	public static RosterFragment newInstance() {
@@ -171,12 +176,13 @@ public class RosterFragment extends Fragment {
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.startChat: {
-			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
-			prepareResources(item, info.id);
-
-			return true;
-		}
+		// case R.id.startChat: {
+		// ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo)
+		// item.getMenuInfo();
+		// prepareResources(item.get, info.id);
+		//
+		// return true;
+		// }
 		case R.id.contactDetails: {
 			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 			Intent intent = new Intent(getActivity().getApplicationContext(), VCardViewActivity.class);
@@ -221,11 +227,22 @@ public class RosterFragment extends Fragment {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
 
-		final boolean sessionEstablished = true;
+		RosterItem r = getJid(info.id);
+
+		final boolean sessionEstablished = r != null && isSessionEstablished(r.getSessionObject());
 
 		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
 		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+
 			MenuInflater m = new MenuInflater(getActivity());
+			try {
+				Presence p = r.getSessionObject().getPresence().getBestPresence(r.getJid());
+				if (p != null && p.getType() == null) {
+					SubMenu sm = menu.addSubMenu(R.id.contactsOnlineGroup, Menu.NONE, Menu.NONE, "Chat with…");
+					prepareResources(sm, info.id);
+				}
+			} catch (Exception e) {
+			}
 			m.inflate(R.menu.roster_context_menu, menu);
 
 			menu.setGroupVisible(R.id.contactsOnlineGroup, sessionEstablished);
@@ -343,15 +360,13 @@ public class RosterFragment extends Fragment {
 			Log.d(TAG + "_rf", "onViewCreated()");
 	}
 
-	private void prepareResources(final MenuItem item, final long id) {
+	private boolean prepareResources(final SubMenu sm, final long id) {
 		final RosterItem rosterItem = getJid(id);
 		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(rosterItem.getJid());
 
 		final CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
 		final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
-
-		SubMenu sm = item.getSubMenu();
 
 		boolean added = false;
 
@@ -361,11 +376,6 @@ public class RosterFragment extends Fragment {
 					if (entry.getValue().getType() != null)
 						continue;
 					MenuItem i = sm.add(entry.getKey());
-
-					Integer ic = ChatView.getResourceImage(entry.getValue(), capabilitiesModule, nodeName);
-					if (ic != null) {
-						i.setIcon(ic);
-					}
 
 					added = true;
 					i.setOnMenuItemClickListener(new OnMenuItemClickListener() {
@@ -387,14 +397,14 @@ public class RosterFragment extends Fragment {
 			Log.e(TAG, "Problem on resources menu", e);
 		}
 
-		if (!added) {
-			Intent intent = new Intent();
-			intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
-			intent.putExtra("id", id);
-
-			getActivity().getApplicationContext().sendBroadcast(intent);
-		}
-
+		// if (!added) {
+		// Intent intent = new Intent();
+		// intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
+		// intent.putExtra("id", id);
+		//
+		// getActivity().getApplicationContext().sendBroadcast(intent);
+		// }
+		return added;
 	}
 
 	private void restoreExpandedState(long[] expandedIds) {

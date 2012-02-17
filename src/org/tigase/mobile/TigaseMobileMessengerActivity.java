@@ -619,6 +619,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 						int i = getChatList().size() + (isXLarge() ? 1 : 2);
 						viewPager.setCurrentItem(i);
 					} else {
+						Chat t;
+						t.setJid(jid)
 						viewPager.setCurrentItem(idx + (isXLarge() ? 1 : 2));
 					}
 

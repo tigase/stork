@@ -46,6 +46,8 @@ public class ChatView extends LinearLayout {
 		if (presence == null)
 			return null;
 		Element c = presence.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		if (c == null)
+			return null;
 		final String node = c.getAttribute("node");
 		final String ver = c.getAttribute("ver");
 		final Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
