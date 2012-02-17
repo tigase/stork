@@ -414,7 +414,8 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(AuthEvent be) throws JaxmppException {
-				notificationUpdateFail(be.getSessionObject(), "Invalid JID or password", null);
+				notificationUpdateFail(be.getSessionObject(), "Invalid JID or password", "Invalid password for "
+						+ be.getSessionObject().getUserBareJid(), null);
 				disable(be.getSessionObject(), true);
 			}
 		};
@@ -732,13 +733,15 @@ public class JaxmppService extends Service {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	private void notificationUpdateFail(SessionObject account, String message, Throwable cause) {
+	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
 		// notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected",
 		// "Connection impossible");
 
 		String notiticationTitle = "Error";
 		String expandedNotificationText;
-		if (message == null && cause != null) {
+		if (notificationMessage != null)
+			expandedNotificationText = notificationMessage;
+		else if (message == null && cause != null) {
 			expandedNotificationText = cause.getMessage();
 		} else if (message != null) {
 			expandedNotificationText = message;
@@ -796,17 +799,18 @@ public class JaxmppService extends Service {
 	protected void onConnectorError(final ConnectorEvent be) {
 		if (be.getStreamError() == StreamError.host_unknown) {
 			notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host "
-					+ be.getSessionObject().getUserBareJid().getDomain(), null);
+					+ be.getSessionObject().getUserBareJid().getDomain(), null, null);
 			disable(be.getSessionObject(), true);
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
 			if (throwable instanceof UnknownHostException) {
-				notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host " + throwable.getMessage(), null);
+				notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host " + throwable.getMessage(), null,
+						null);
 				disable(be.getSessionObject(), true);
 			} else if (throwable instanceof SocketException) {
 
 			} else {
-				notificationUpdateFail(be.getSessionObject(), null, throwable);
+				notificationUpdateFail(be.getSessionObject(), null, null, throwable);
 				disable(be.getSessionObject(), true);
 			}
 		}
@@ -1022,7 +1026,7 @@ public class JaxmppService extends Service {
 
 		if (connectionErrors > 50) {
 			disable(sessionObject, true);
-			notificationUpdateFail(sessionObject, "Too many connection errors. Account disabled.", null);
+			notificationUpdateFail(sessionObject, "Too many connection errors. Account disabled.", null, null);
 		} else
 			connectJaxmpp(j, calculateNextRestart(5, connectionErrors));
 
