@@ -9,6 +9,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.Context;
@@ -84,15 +85,18 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 				String node = c.getAttribute("node");
 				String ver = c.getAttribute("ver");
 
-				String id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
-				if (id != null && id.equals("client/phone") && node.equals(nodeName)) {
-					clientTypeIndicator.setImageResource(R.drawable.messenger_client);
-					clientTypeIndicator.setVisibility(View.VISIBLE);
-					break;
-				} else if (id != null && id.equals("client/phone")) {
-					clientTypeIndicator.setImageResource(R.drawable.mobile_client);
-					clientTypeIndicator.setVisibility(View.VISIBLE);
-					break;
+				Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
+				if (id != null) {
+					String tmp = id.getCategory() + "/" + id.getType();
+					if (tmp.equals("client/phone") && node.equals(nodeName)) {
+						clientTypeIndicator.setImageResource(R.drawable.client_messenger);
+						clientTypeIndicator.setVisibility(View.VISIBLE);
+						break;
+					} else if (tmp.equals("client/phone")) {
+						clientTypeIndicator.setImageResource(R.drawable.client_mobile);
+						clientTypeIndicator.setVisibility(View.VISIBLE);
+						break;
+					}
 				}
 			}
 		} catch (Exception e) {

@@ -21,7 +21,6 @@
             android:textColor="@color/title_bar_text_color"
             android:textSize="14dp"
             android:textStyle="bold" />
-
         <ImageView
             android:id="@+id/user_presence"
             android:layout_width="wrap_content"
@@ -34,6 +33,19 @@
             android:scaleType="centerInside"
             android:src="@drawable/user_offline" >
         </ImageView>
+
+        <ImageView
+            android:id="@+id/client_type_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignRight="@+id/textView1"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:paddingRight="5dp"
+            android:scaleType="centerInside"
+            android:visibility="invisible"/>
+
     </RelativeLayout>
 
     <ListView

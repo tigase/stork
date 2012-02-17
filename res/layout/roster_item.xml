@@ -64,7 +64,7 @@
         android:id="@+id/client_type_indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/openChatNotifier"
+        android:layout_alignBottom="@+id/roster_item_precence"
         android:layout_toLeftOf="@+id/roster_item_precence"
         android:visibility="invisible" />
 

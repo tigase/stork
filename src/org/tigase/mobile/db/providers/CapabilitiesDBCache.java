@@ -8,6 +8,7 @@ import org.tigase.mobile.db.CapsFeaturesTableMetaData;
 import org.tigase.mobile.db.CapsIdentitiesTableMetaData;
 
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -43,18 +44,22 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 	}
 
 	@Override
-	public String getIdentity(String node) {
+	public Identity getIdentity(String node) {
 		SQLiteDatabase db = this.helper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT * FROM " + CapsIdentitiesTableMetaData.TABLE_NAME + " WHERE "
 				+ CapsIdentitiesTableMetaData.FIELD_NODE + "=?", new String[] { node });
 		try {
 			if (c.moveToNext()) {
-				// String name =
-				// c.getString(c.getColumnIndex(CapsIdentitiesTableMetaData.FIELD_NAME));
+				String name = c.getString(c.getColumnIndex(CapsIdentitiesTableMetaData.FIELD_NAME));
 				String category = c.getString(c.getColumnIndex(CapsIdentitiesTableMetaData.FIELD_CATEGORY));
 				String type = c.getString(c.getColumnIndex(CapsIdentitiesTableMetaData.FIELD_TYPE));
 
-				return category + "/" + type;
+				Identity n = new Identity();
+				n.setCategory(category);
+				n.setName(name);
+				n.setType(type);
+
+				return n;
 			}
 		} finally {
 			c.close();

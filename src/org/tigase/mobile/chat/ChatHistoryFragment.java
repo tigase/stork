@@ -15,6 +15,8 @@ import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import android.app.Dialog;
@@ -62,6 +64,8 @@ public class ChatHistoryFragment extends Fragment {
 
 	private Chat chat;
 
+	private Listener<MessageEvent> chatUpdateListener;
+
 	private ChatView layout;
 
 	private final Listener<PresenceEvent> presenceListener;
@@ -77,6 +81,13 @@ public class ChatHistoryFragment extends Fragment {
 				if (ChatHistoryFragment.this.chat != null
 						&& ChatHistoryFragment.this.chat.getJid().getBareJid().equals(be.getJid().getBareJid()))
 					updatePresence();
+			}
+		};
+		this.chatUpdateListener = new Listener<MessageModule.MessageEvent>() {
+
+			@Override
+			public void handleEvent(MessageEvent be) throws JaxmppException {
+				layout.updateClientIndicator();
 			}
 		};
 	}
@@ -216,6 +227,7 @@ public class ChatHistoryFragment extends Fragment {
 		super.onResume();
 
 		updatePresence();
+		layout.updateClientIndicator();
 	}
 
 	@Override
@@ -236,9 +248,13 @@ public class ChatHistoryFragment extends Fragment {
 		jaxmpp.addListener(PresenceModule.ContactAvailable, this.presenceListener);
 		jaxmpp.addListener(PresenceModule.ContactUnavailable, this.presenceListener);
 		jaxmpp.addListener(PresenceModule.ContactChangedPresence, this.presenceListener);
+
+		jaxmpp.addListener(MessageModule.ChatUpdated, this.chatUpdateListener);
+
 		super.onStart();
 
 		updatePresence();
+		layout.updateClientIndicator();
 	}
 
 	@Override
@@ -246,6 +262,8 @@ public class ChatHistoryFragment extends Fragment {
 		if (DEBUG)
 			Log.d(TAG, "Stop ChatFragment");
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+
+		jaxmpp.removeListener(MessageModule.ChatUpdated, this.chatUpdateListener);
 
 		jaxmpp.removeListener(PresenceModule.ContactAvailable, this.presenceListener);
 		jaxmpp.removeListener(PresenceModule.ContactUnavailable, this.presenceListener);
@@ -317,9 +335,11 @@ public class ChatHistoryFragment extends Fragment {
 
 	protected void updatePresence() {
 		if (chat != null) {
+
 			CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getSessionObject(),
 					chat.getJid().getBareJid());
 			System.out.println("Updating presence to " + cp);
+			// ((MessengerApplication)getActivity().getApplication()).getMultiJaxmpp().get(chat.getSessionObject());
 			layout.setImagePresence(cp);
 		}
 	}

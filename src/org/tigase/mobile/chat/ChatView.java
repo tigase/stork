@@ -10,9 +10,15 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.roster.CPresence;
 
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -34,6 +40,35 @@ public class ChatView extends LinearLayout {
 	private static final boolean DEBUG = false;
 
 	private static final String TAG = "tigase";
+
+	public static Integer getResourceImage(final Presence presence, CapabilitiesModule capabilitiesModule, String nodeName)
+			throws XMLException {
+		if (presence == null)
+			return null;
+		Element c = presence.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		final String node = c.getAttribute("node");
+		final String ver = c.getAttribute("ver");
+		final Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
+
+		if (id == null)
+			return null;
+
+		String cc = id.getCategory() + "/" + id.getType();
+		if (id.getName() != null && id.getName().equalsIgnoreCase("kopete")) {
+			return R.drawable.client_kopete;
+		} else if (id.getName() != null && id.getName().equalsIgnoreCase("Google Talk User Account")) {
+			return R.drawable.client_gtalk;
+		} else if (id.getName() != null && id.getName().equalsIgnoreCase("adium")) {
+			return R.drawable.client_adium;
+		} else if (id.getName() != null && id.getName().equalsIgnoreCase("psi")) {
+			return R.drawable.client_psi;
+		} else if (nodeName != null && cc.equals("client/phone") && node.equals(nodeName)) {
+			return R.drawable.client_messenger;
+		} else if (cc.equals("client/phone")) {
+			return R.drawable.client_mobile;
+		} else
+			return null;
+	}
 
 	private Chat chat;
 
@@ -159,7 +194,6 @@ public class ChatView extends LinearLayout {
 	}
 
 	public void setImagePresence(final CPresence cp) {
-
 		final ImageView itemPresence = (ImageView) findViewById(R.id.user_presence);
 
 		itemPresence.post(new Runnable() {
@@ -201,6 +235,37 @@ public class ChatView extends LinearLayout {
 			}
 		});
 
+	}
+
+	public void updateClientIndicator() {
+		final ImageView clientTypeIndicator = (ImageView) findViewById(R.id.client_type_indicator);
+		clientTypeIndicator.setVisibility(View.INVISIBLE);
+		if (chat != null) {
+			try {
+				final String nodeName = chat.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
+				JID jid = chat.getJid();
+				final Presence p = chat.getSessionObject().getPresence().getPresence(jid);
+				final CapabilitiesModule capabilitiesModule = ((MessengerApplication) (getContext().getApplicationContext())).getMultiJaxmpp().get(
+						chat.getSessionObject()).getModulesManager().getModule(CapabilitiesModule.class);
+
+				final Integer pp = getResourceImage(p, capabilitiesModule, nodeName);
+
+				if (pp != null) {
+					Runnable r = new Runnable() {
+
+						@Override
+						public void run() {
+							clientTypeIndicator.setImageResource(pp);
+							clientTypeIndicator.setVisibility(View.VISIBLE);
+						}
+					};
+
+					clientTypeIndicator.post(r);
+
+				}
+			} catch (Exception e) {
+			}
+		}
 	}
 
 }

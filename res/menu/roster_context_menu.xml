@@ -3,6 +3,11 @@
 
     <group android:id="@+id/contactsOnlineGroup" >
         <item
+            android:id="@+id/startChat"
+            android:title="@string/contact_start_chat">
+            <menu />
+        </item>
+        <item
             android:id="@+id/contactDetails"
             android:title="@string/contact_details">
         </item>

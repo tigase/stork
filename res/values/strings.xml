@@ -6,6 +6,7 @@
     <string name="auth_resent">Sent authorization to %1$s (%2$s)</string>
     <string name="contact_edit">Edit</string>
     <string name="contact_remove">Remove</string>
+    <string name="contact_start_chat">Chat with</string>
     <string name="contact_add">Add</string>
     <string name="contact_editor">Edit contact</string>
     <string name="contact_details">Contact details</string>
@@ -20,7 +21,7 @@
     <string name="logoutButton">Disconnect</string>
     <string name="propertiesButton">Settings</string>
     <string name="preferencesTitle">Settings</string>
-    <string name="app_version">0.0.22 (2012–02–12)</string>
+    <string name="app_version">0.0.22+ (2012–02–14)</string>
     <string name="closeChatButton">Close chat</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>

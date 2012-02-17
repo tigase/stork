@@ -94,7 +94,7 @@ public class DBChatManager extends AbstractChatManager {
 	}
 
 	@Override
-	protected boolean update(Chat chat, JID fromJid, String threadId) {
+	protected boolean update(Chat chat, JID fromJid, String threadId) throws JaxmppException {
 		boolean x = super.update(chat, fromJid, threadId);
 		if (x) {
 			SQLiteDatabase db = helper.getWritableDatabase();

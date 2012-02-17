@@ -61,6 +61,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// if (!active)
 			// return;
 			final long id = intent.getLongExtra("id", -1);
+			final String resource = intent.getStringExtra("resource");
 
 			final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null, null,
 					null, null);
@@ -79,7 +80,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			for (RosterItem i : jaxmpp.getRoster().getAll()) {
 				if (id == i.getId()) {
-					openChatWith(i);
+					openChatWith(i, resource);
 					break;
 				}
 			}
@@ -101,6 +102,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
 
+	private final static String STATE_CURRENT_PAGE_KEY = "currentPage";
+
 	private static final String TAG = "tigase";
 
 	private MyFragmentPageAdapter adapter;
@@ -110,8 +113,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private int currentPage = -1;
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
-
 	private ViewPager viewPager;
+
 	private ViewPager viewRoster;
 
 	public TigaseMobileMessengerActivity() {
@@ -229,7 +232,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 
 		if (savedInstanceState != null && currentPage == -1) {
-			currentPage = savedInstanceState.getInt("currentPage", -1);
+			currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE_KEY, -1);
 		}
 		if (isXLarge()) {
 			setContentView(R.layout.all);
@@ -337,11 +340,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			if (DEBUG)
 				Log.d(TAG, "onCreate(" + uri + ")");
 
-			BareJID jid = BareJID.bareJIDInstance(uri.getPath().substring(1));
+			JID jid = JID.jidInstance(uri.getPath().substring(1));
 			for (JaxmppCore jaxmpp : ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get()) {
-				RosterItem ri = jaxmpp.getRoster().get(jid);
+				RosterItem ri = jaxmpp.getRoster().get(jid.getBareJid());
 				if (ri != null) {
-					openChatWith(ri);
+					openChatWith(ri, jid.getResource());
 				}
 			}
 		}
@@ -374,13 +377,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		default:
 			return null;
 		}
-	}
-
-	@Override
-	public void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-		if (DEBUG)
-			Log.d(TAG, "onDetachedFromWindow()");
 	}
 
 	// @Override
@@ -416,6 +412,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	//
 	// }
 	// }
+
+	@Override
+	public void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		if (DEBUG)
+			Log.d(TAG, "onDetachedFromWindow()");
+	}
 
 	protected void onMessageEvent(final MessageEvent be) {
 		Runnable action = new Runnable() {
@@ -555,6 +558,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onResume()");
 
+		int tmp = findChatPage(getIntent().getExtras());
+		if (tmp != -1) {
+			this.currentPage = tmp;
+		}
+
 		registerReceiver(rosterClickReceiver, new IntentFilter(ROSTER_CLICK_MSG));
 
 		viewPager.getAdapter().notifyDataSetChanged();
@@ -581,7 +589,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putInt("currentPage", currentPage);
+		outState.putInt(STATE_CURRENT_PAGE_KEY, currentPage);
 		super.onSaveInstanceState(outState);
 	}
 
@@ -592,7 +600,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onStop()");
 	}
 
-	protected void openChatWith(final RosterItem rosterItem) {
+	protected void openChatWith(final RosterItem rosterItem, final String resource) {
 		Runnable r = new Runnable() {
 
 			@Override
@@ -607,7 +615,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					if (idx == null) {
 						final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
 								rosterItem.getSessionObject());
-						jaxmpp.createChat(JID.jidInstance(rosterItem.getJid()));
+						jaxmpp.createChat(JID.jidInstance(rosterItem.getJid(), resource));
 						int i = getChatList().size() + (isXLarge() ? 1 : 2);
 						viewPager.setCurrentItem(i);
 					} else {
