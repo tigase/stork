@@ -155,7 +155,8 @@ public class RosterFragment extends Fragment {
 				null, null, null, null);
 
 		try {
-			cursor.moveToNext();
+			if (!cursor.moveToNext())
+				return null;
 			JID jid = JID.jidInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
 			BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 
@@ -226,13 +227,10 @@ public class RosterFragment extends Fragment {
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-
-		RosterItem r = getJid(info.id);
-
-		final boolean sessionEstablished = r != null && isSessionEstablished(r.getSessionObject());
-
 		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
 		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+			RosterItem r = getJid(info.id);
+			final boolean sessionEstablished = r != null && isSessionEstablished(r.getSessionObject());
 
 			MenuInflater m = new MenuInflater(getActivity());
 			try {
