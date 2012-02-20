@@ -253,7 +253,7 @@ public class JaxmppService extends Service {
 					else
 						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
-					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) new Jaxmpp(sessionObject) {
+					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
     					@Override
     					public void modulesInit() {
             				super.modulesInit();

@@ -87,7 +87,7 @@ public class FileTransferUtility {
 		final List<JID> proxyComponents = Collections.synchronizedList(new ArrayList<JID>());
 		for (final Item item : items) {			
 			try {
-				discoInfoModule.getInfo(item.getJid(), new DiscoInfoAsyncCallback() {
+				discoInfoModule.getInfo(item.getJid(), new DiscoInfoAsyncCallback(null) {
 					
 					@Override
 					public void onError(Stanza responseStanza,
