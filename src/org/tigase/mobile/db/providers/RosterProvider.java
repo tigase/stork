@@ -4,7 +4,9 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.RosterTableMetaData;
@@ -13,7 +15,10 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.ContentProvider;
@@ -194,16 +199,57 @@ public class RosterProvider extends ContentProvider {
 							if (parent != null && !parent.match(item))
 								return false;
 							SessionObject session = item.getSessionObject();
-							if (session == null) 
+							if (session == null)
 								return false;
 							return session.getPresence().isAvailable(item.getJid());
 						} catch (XMLException e) {
 							return false;
 						}
-					}					
+					}
 				};
 			}
-			
+			if (selection != null && "feature".equals(selection)) {
+				final Predicate parent = p;
+				Iterator<JaxmppCore> jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get().iterator();
+				if (jaxmpp.hasNext()) {
+					CapabilitiesCache capsCache = jaxmpp.next().getModulesManager().getModule(CapabilitiesModule.class).getCache();
+					final Set<String> nodes = capsCache.getNodesWithFeature(selectionArgs[1]);
+					for (int i = 2; i < selectionArgs.length; i++) {
+						nodes.retainAll(capsCache.getNodesWithFeature(selectionArgs[i]));
+					}
+					p = new Predicate() {
+						@Override
+						public boolean match(RosterItem item) {
+							try {
+								if (parent != null && !parent.match(item))
+									return false;
+								SessionObject session = item.getSessionObject();
+								if (session == null)
+									return false;
+
+								boolean has = false;
+								Map<String, tigase.jaxmpp.core.client.xmpp.stanzas.Presence> presences = session.getPresence().getPresences(
+										item.getJid());
+								if (presences != null) {
+									for (Map.Entry<String, tigase.jaxmpp.core.client.xmpp.stanzas.Presence> entry : presences.entrySet()) {
+										Element c = entry.getValue().getChildrenNS("c", "http://jabber.org/protocol/caps");
+										if (c == null)
+											continue;
+
+										final String node = c.getAttribute("node");
+										final String ver = c.getAttribute("ver");
+
+										has |= nodes.contains(node + "#" + ver);
+									}
+								}
+								return has;
+							} catch (XMLException e) {
+								return false;
+							}
+						}
+					};
+				}
+			}
 
 			if (DEBUG)
 				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection

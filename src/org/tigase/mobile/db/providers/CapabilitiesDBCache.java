@@ -68,6 +68,25 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 	}
 
 	@Override
+	public Set<String> getNodesWithFeature(String feature) {
+		final Set<String> result = new HashSet<String>();
+		SQLiteDatabase db = this.helper.getReadableDatabase();
+		Cursor c = db.rawQuery("SELECT distinct(" + CapsFeaturesTableMetaData.FIELD_NODE + ") FROM "
+				+ CapsFeaturesTableMetaData.TABLE_NAME + " WHERE " + CapsFeaturesTableMetaData.FIELD_FEATURE + "=?",
+				new String[] { feature });
+		try {
+			while (c.moveToNext()) {
+				String f = c.getString(0);
+				result.add(f);
+			}
+		} finally {
+			c.close();
+		}
+
+		return result;
+	}
+
+	@Override
 	public boolean isCached(String node) {
 		SQLiteDatabase db = this.helper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + CapsIdentitiesTableMetaData.TABLE_NAME + " WHERE "
