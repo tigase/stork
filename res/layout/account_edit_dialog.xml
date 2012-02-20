@@ -24,14 +24,20 @@
                 android:text="Enter details of your XMPP account" />
 
             <EditText
-                android:id="@+id/newAccountJID"
+                android:id="@+id/newAccountUsername"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Jabber ID"
-                android:inputType="textEmailAddress" >
+                android:hint="Username"
+                android:inputType="textNoSuggestions" >
 
                 <requestFocus />
             </EditText>
+
+            <Spinner
+                android:id="@+id/newAccountHostnameSelector"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/free_account_hostnames" />
 
             <EditText
                 android:id="@+id/newAccountPassowrd"

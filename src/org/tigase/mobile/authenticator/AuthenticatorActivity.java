@@ -4,7 +4,7 @@ import org.tigase.mobile.Constants;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
 
-import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
@@ -25,6 +25,7 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 /**
  * Activity which displays login screen to the user.
@@ -54,9 +55,11 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
-	public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
+	private static final boolean FREE_VERSION = true;
 
+	public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
 	public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
+
 	private static final String TAG = "AuthenticatorActivity";
 
 	private AccountManager mAccountManager;
@@ -70,6 +73,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	private String mHostname;
 
 	private EditText mHostnameEdit;
+
+	private Spinner mHostnameSelector;
 
 	private String mNickname;
 
@@ -88,8 +93,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	private EditText mResourceEdit;
 
 	private String mUsername;
-
-	private boolean mUsernameChanged = false;
 
 	private EditText mUsernameEdit;
 
@@ -132,10 +135,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		setAccountAuthenticatorResult(intent.getExtras());
 		setResult(RESULT_OK, intent);
 		finish();
-		if (mUsernameChanged) {
-			// We should go back to accounts list not to account settings!
-			// If it will be fixed, username field can be editable again
-		}
 	}
 
 	private CharSequence getMessage() {
@@ -153,20 +152,25 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	public void handleLogin(View view) {
-		String username = mUsernameEdit.getText().toString();
-		if (!TextUtils.isEmpty(mUsername)) {
-			username = BareJID.bareJIDInstance(username).toString();
-		}
-
-		if (!mRequestNewAccount && !TextUtils.isEmpty(mUsername) && !mUsername.equals(username)) {
-			final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
-			mAccountManager.removeAccount(account, null, null);
-			mRequestNewAccount = true;
-			mUsernameChanged = true;
-		}
-
 		if (mRequestNewAccount) {
-			mUsername = username;
+			String username = mUsernameEdit.getText().toString();
+			if (FREE_VERSION) {
+				username += "@" + mHostnameSelector.getSelectedItem();
+			}
+			try {
+				JID j = JID.jidInstance(username);
+
+				if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
+						&& j.getDomain().length() > 0) {
+					mUsername = j.toString();
+				} else {
+					AlertDialog.Builder builder = new AlertDialog.Builder(this);
+					builder.setMessage("Enter correct username").setCancelable(true).setIcon(android.R.drawable.ic_dialog_alert);
+					builder.create();
+				}
+			} catch (Exception e) {
+			}
+
 		}
 
 		mPassword = mPasswordEdit.getText().toString();
@@ -251,7 +255,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		Log.i(TAG, "    request new: " + mRequestNewAccount);
 		requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.account_edit_dialog);
-		mUsernameEdit = (EditText) findViewById(R.id.newAccountJID);
+		mUsernameEdit = (EditText) findViewById(R.id.newAccountUsername);
+		mHostnameSelector = (Spinner) findViewById(R.id.newAccountHostnameSelector);
 		mPasswordEdit = (EditText) findViewById(R.id.newAccountPassowrd);
 		mResourceEdit = (EditText) findViewById(R.id.newAccountResource);
 		mNicknameEdit = (EditText) findViewById(R.id.newAccountNickname);
@@ -270,6 +275,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		// because after editing account settings we are back to account
 		// page with old username presented as account name!!
 		mUsernameEdit.setEnabled(mUsername == null);
+		mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ? View.VISIBLE : View.GONE);
+		mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE : View.GONE);
 
 		final Button addButton = (Button) findViewById(R.id.newAccountAddButton);
 		final Button cancelButton = (Button) findViewById(R.id.newAccountcancelButton);
