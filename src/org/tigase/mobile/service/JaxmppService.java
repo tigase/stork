@@ -25,6 +25,10 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.CapabilitiesDBCache;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.filetransfer.FileTransfer;
+import org.tigase.mobile.filetransfer.FileTransferModule;
+import org.tigase.mobile.filetransfer.FileTransferModule.FileTransferProgressEvent;
+import org.tigase.mobile.net.SocketThread;
 import org.tigase.mobile.roster.AuthRequestActivity;
 import org.tigase.mobile.sync.SyncAdapter;
 
@@ -128,6 +132,8 @@ public class JaxmppService extends Service {
 	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
+	
+	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
 
 	private static final boolean DEBUG = false;
 
@@ -247,11 +253,18 @@ public class JaxmppService extends Service {
 					else
 						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
-					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
+					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) new Jaxmpp(sessionObject) {
+    					@Override
+    					public void modulesInit() {
+            				super.modulesInit();
+            				getModulesManager().register(new FileTransferModule(observable, sessionObject, writer));
+    					}		
+					};
 					CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
 					if (capabilitiesModule != null) {
 						capabilitiesModule.setCache(new CapabilitiesDBCache(context));
 					}
+
 					multi.add(jaxmpp);
 				} else {
 					SessionObject sessionObject = multi.get(jid).getSessionObject();
@@ -323,6 +336,8 @@ public class JaxmppService extends Service {
 
 	private Listener<PresenceEvent> subscribeRequestListener;
 
+	private final Listener<FileTransferModule.FileTransferProgressEvent> fileTransferProgressListener;
+	
 	private final Timer timer = new Timer();
 
 	private int usedNetworkType = -1;
@@ -457,6 +472,19 @@ public class JaxmppService extends Service {
 			}
 		};
 
+		this.fileTransferProgressListener = new Listener<FileTransferModule.FileTransferProgressEvent>() {
+
+			@Override
+			public void handleEvent(FileTransferProgressEvent be)
+					throws JaxmppException {
+				
+				FileTransfer ft = be.getFileTransfer();
+				if (ft != null) {
+					notificationUpdateFileTransferProgress(ft);
+				}
+			}
+			
+		};
 	}
 
 	protected synchronized void changeRosterItem(RosterEvent be) {
@@ -733,6 +761,53 @@ public class JaxmppService extends Service {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
+	private void notificationUpdateFileTransferProgress(FileTransfer ft) {
+		long whenNotify = System.currentTimeMillis();
+		String tag = ft.toString();
+		
+		int ico = ft.outgoing ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
+		String notificationTitle = (ft.outgoing ? "Sending file " + ft.filename + " to " : "Receiving file " + ft.filename + " from ") + ((ft.buddyName != null) ? ft.buddyName : ft.buddyJid.toString());
+		String notificationText = "";
+				
+		Notification notification = new Notification(ico, notificationTitle, whenNotify);
+		
+		switch (ft.getState()) {
+			case error:
+				ico = android.R.drawable.stat_notify_error;
+				notificationText = ft.errorMessage;
+				break;
+		
+			case negotiating:
+				notification.flags |= Notification.FLAG_ONGOING_EVENT;
+				notificationText = "negotiating...";
+				break;
+
+			case connecting:
+				notification.flags |= Notification.FLAG_ONGOING_EVENT;
+				notificationText = "connecting...";
+				break;
+				
+			case active:
+				notification.flags |= Notification.FLAG_ONGOING_EVENT;
+				notificationText = "progress " + ft.getProgress() + "%...";
+				break;
+
+			case finished:
+				notificationText = "transfer finished";
+				break;
+			default:
+				break;						
+		}
+
+		String expandedNotificationTitle = notificationTitle;
+		Context context = getApplicationContext();
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
+		
+		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
+	}
+	
 	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
 		// notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected",
 		// "Connection impossible");
@@ -862,6 +937,7 @@ public class JaxmppService extends Service {
 		getMulti().addListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
+		getMulti().addListener(FileTransferModule.FileTransferProgressEventType, this.fileTransferProgressListener);
 
 		getMulti().addListener(PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 
@@ -909,12 +985,15 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
+		getMulti().removeListener(FileTransferModule.FileTransferProgressEventType, this.fileTransferProgressListener);
 
 		getMulti().removeListener(Connector.Error, this.connectorListener);
 		getMulti().removeListener(Connector.StreamTerminated, this.connectorListener);
 
 		notificationCancel();
 
+		SocketThread.stopThreads();
+		
 		super.onDestroy();
 	}
 
@@ -967,6 +1046,9 @@ public class JaxmppService extends Service {
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)
 			Log.i(TAG, "onStartCommand()");
+		
+		SocketThread.startTreads();
+		
 		if (intent != null) {
 			// Log.i(TAG, intent.getExtras().toString());
 			if (DEBUG)

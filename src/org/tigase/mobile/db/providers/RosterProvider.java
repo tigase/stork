@@ -12,6 +12,8 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.ContentProvider;
@@ -183,6 +185,25 @@ public class RosterProvider extends ContentProvider {
 					}
 				};
 			}
+			if (selection != null && "status".equals(selection)) {
+				final Predicate parent = p;
+				p = new Predicate() {
+					@Override
+					public boolean match(RosterItem item) {
+						try {
+							if (parent != null && !parent.match(item))
+								return false;
+							SessionObject session = item.getSessionObject();
+							if (session == null) 
+								return false;
+							return session.getPresence().isAvailable(item.getJid());
+						} catch (XMLException e) {
+							return false;
+						}
+					}					
+				};
+			}
+			
 
 			if (DEBUG)
 				Log.d(TAG, "Querying " + uri + " projection=" + Arrays.toString(projection) + "; selection=" + selection
