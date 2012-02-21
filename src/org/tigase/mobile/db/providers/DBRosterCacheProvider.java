@@ -147,8 +147,6 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 
 	@Override
 	public void updateReceivedVersion(SessionObject sessionObject, String ver) {
-		if (ver.equals(getCachedVersion(sessionObject)))
-			return;
 		storeCache(sessionObject, ver);
 	}
 
