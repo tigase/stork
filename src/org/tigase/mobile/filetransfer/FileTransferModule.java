@@ -201,12 +201,13 @@ public class FileTransferModule implements XmppModule {
 	}
 
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
-	
 	private static final Criteria CRIT = ElementCriteria.name("iq").add(ElementCriteria.name("query", XMLNS_BS));
 	private static final String[] FEATURES = new String[] { XMLNS_BS };
+
 	public static final EventType FileTransferProgressEventType = new EventType();
 
 	public static final EventType HostsEvent = new EventType();
+
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());
 
 	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
@@ -306,8 +307,7 @@ public class FileTransferModule implements XmppModule {
 		Element activate = new DefaultElement("activate", jid, null);
 		query.addChild(activate);
 
-		session.registerResponseHandler(iq, callback);
-		writer.write(iq);
+		writer.write(iq, callback);
 	}
 
 	public void requestStreamhosts(JID host, StreamhostsCallback callback) throws XMLException, JaxmppException {
@@ -318,8 +318,7 @@ public class FileTransferModule implements XmppModule {
 		Element query = new DefaultElement("query", null, XMLNS_BS);
 		iq.addChild(query);
 
-		session.registerResponseHandler(iq, callback);
-		writer.write(iq);
+		writer.write(iq, callback);
 	}
 
 	public void sendStreamhosts(JID recipient, String sid, List<Host> hosts, AsyncCallback callback) throws XMLException,
@@ -340,8 +339,7 @@ public class FileTransferModule implements XmppModule {
 			query.addChild(streamhost);
 		}
 
-		session.registerResponseHandler(iq, callback);
-		writer.write(iq);
+		writer.write(iq, callback);
 	}
 
 	public void sendStreamhostUsed(JID to, String id, String sid, Host streamhost) throws XMLException, JaxmppException {
@@ -398,7 +396,6 @@ public class FileTransferModule implements XmppModule {
 		Element value = new DefaultElement("value", XMLNS_BS, null);
 		option.addChild(value);
 
-		session.registerResponseHandler(iq, callback);
-		writer.write(iq);
+		writer.write(iq, callback);
 	}
 }
