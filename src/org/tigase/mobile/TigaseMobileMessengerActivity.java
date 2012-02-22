@@ -221,6 +221,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		super.onCreate(savedInstanceState);
 
+		AccountManager accountManager = AccountManager.get(this);
+		Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
+
+		if (accounts == null || accounts.length == 0) {
+			Intent intent = new Intent(this, WelcomeActivity.class);
+			intent.putExtra("new", true);
+			startActivity(intent);
+			finish();
+		}
+
 		Bundle bundle = getIntent().getExtras();
 		if (bundle != null && bundle.getBoolean("error", false)) {
 			bundle.putBoolean("error", false);

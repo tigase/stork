@@ -274,7 +274,7 @@ public class RosterProvider extends ContentProvider {
 			c = new RosterCursor(getContext(), dbHelper.getReadableDatabase(), p);
 			break;
 		case GROUPS_URI_INDICATOR:
-			c = new GroupsCursor(getContext());
+			c = new GroupsCursor(getContext(), null);
 			break;
 
 		// case for VCard?

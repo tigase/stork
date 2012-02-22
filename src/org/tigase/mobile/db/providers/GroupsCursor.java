@@ -10,6 +10,8 @@ import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -25,8 +27,11 @@ public class GroupsCursor extends AbstractCursor {
 
 	private final ArrayList<String> items = new ArrayList<String>();
 
-	public GroupsCursor(Context ctx) {
+	private final Predicate predicate;
+
+	public GroupsCursor(Context ctx, Predicate predicate) {
 		this.context = ctx;
+		this.predicate = predicate;
 		loadData();
 	}
 
@@ -111,7 +116,10 @@ public class GroupsCursor extends AbstractCursor {
 
 			final HashSet<String> tmp = new HashSet<String>();
 			for (JaxmppCore j : multi.get()) {
-				tmp.addAll(j.getRoster().getGroups());
+				List<RosterItem> al = j.getRoster().getAll(predicate);
+				for (RosterItem rosterItem : al) {
+					tmp.addAll(rosterItem.getGroups());
+				}
 			}
 
 			this.items.clear();

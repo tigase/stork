@@ -56,7 +56,12 @@ public class ChatView extends LinearLayout {
 			return null;
 
 		String cc = id.getCategory() + "/" + id.getType();
-		if (id.getName() != null && id.getName().equalsIgnoreCase("kopete")) {
+
+		if (node != null && node.equals("http://gajim.org")) {
+			return null;
+		} else if (node != null && node.equals("http://telepathy.freedesktop.org/caps")) {
+			return null;
+		} else if (id.getName() != null && id.getName().equalsIgnoreCase("kopete")) {
 			return R.drawable.client_kopete;
 		} else if (id.getName() != null && id.getName().equalsIgnoreCase("Google Talk User Account")) {
 			return R.drawable.client_gtalk;

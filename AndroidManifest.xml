@@ -33,6 +33,11 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
+            android:name=".WelcomeActivity"
+            android:label="Welcome"
+            android:theme="@style/XTheme.Light" >
+        </activity>
+        <activity
             android:name=".TigaseMobileMessengerActivity"
             android:label="@string/app_name"
             android:theme="@style/XTheme.Light.NoTitleBar" >

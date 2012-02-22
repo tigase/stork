@@ -242,7 +242,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		mAccountManager = AccountManager.get(this);
 		Log.i(TAG, "loading data from Intent");
 		final Intent intent = getIntent();
-		final Account account = (Account) intent.getExtras().get("account");
+		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
 			mUsername = account.name;
 			mPassword = mAccountManager.getPassword(account);
