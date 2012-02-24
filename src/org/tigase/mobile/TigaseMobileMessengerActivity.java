@@ -7,6 +7,8 @@ import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
+import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.preferences.MessengerPreferenceActivity;
 import org.tigase.mobile.roster.AccountSelectorDialogFragment;
 import org.tigase.mobile.roster.ContactEditActivity;
@@ -20,6 +22,7 @@ import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.BaseEvent;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
@@ -98,9 +101,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final int REQUEST_CHAT = 1;
 
+	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
+
 	// private ListView rosterList;
 
-	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
+	public static final int SELECT_FOR_SHARE = 2;
 
 	private final static String STATE_CURRENT_PAGE_KEY = "currentPage";
 
@@ -202,6 +207,21 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onActivityResult()");
 		if (requestCode == REQUEST_CHAT && resultCode == Activity.RESULT_OK) {
 			this.currentPage = findChatPage(data.getExtras());
+		} else if (requestCode == SELECT_FOR_SHARE && resultCode == Activity.RESULT_OK) {
+			Uri selected = data.getData();
+			String mimetype = data.getType();
+			final int p = this.currentPage;
+			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
+			JID jid = chat.getJid();
+			if (jid.getResource() == null) {
+				final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+						ri.getSessionObject());
+				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+			}
+			if (jid != null) {
+				AndroidFileTransferUtility.startFileTransfer(this, ri, chat.getJid(), selected, mimetype);
+			}
 		}
 	}
 
@@ -502,6 +522,26 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			viewPager.setCurrentItem(1);
 			break;
 		}
+		case R.id.shareImageButton: {
+			final int p = this.currentPage;
+			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Log.v(TAG, "share selected for = " + chat.getJid().toString());
+			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
+			pickerIntent.setType("image/*");
+			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+			startActivityForResult(pickerIntent, SELECT_FOR_SHARE);
+			break;
+		}
+		case R.id.shareVideoButton: {
+			final int p = this.currentPage;
+			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Log.v(TAG, "share selected for = " + chat.getJid().toString());
+			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
+			pickerIntent.setType("video/*");
+			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+			startActivityForResult(pickerIntent, SELECT_FOR_SHARE);
+			break;
+		}
 		case R.id.propertiesButton: {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
@@ -558,6 +598,24 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		} else {
 			inflater.inflate(R.menu.chat_main_menu, menu);
+
+			// Share button support
+			MenuItem share = menu.findItem(R.id.shareButton);
+			Chat chat = getChatList().get(this.currentPage - (isXLarge() ? 1 : 2));
+			final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+					chat.getSessionObject());
+			try {
+				JID jid = chat.getJid();
+				boolean visible = false;
+				if (jid.getResource() == null) {
+					jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+				}
+				if (jid != null) {
+					visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
+				}
+				share.setVisible(visible);
+			} catch (XMLException e) {
+			}
 		}
 		return true;
 	}

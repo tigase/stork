@@ -1,74 +1,66 @@
 package org.tigase.mobile.filetransfer;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
-import org.tigase.mobile.filetransfer.FileTransferModule.StreamInitiationOfferAsyncCallback;
 import org.tigase.mobile.roster.RosterAdapter;
+import org.tigase.mobile.ui.IconContextMenu;
+import org.tigase.mobile.ui.IconContextMenu.IconContextItemSelectedListener;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnCreateContextMenuListener;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 
 public class SendFileActivity extends Activity {
 
 	private static final String TAG = "SendFileActivity";
 
-	private static JID getBestJidForFeatures(Jaxmpp jaxmpp, BareJID jid, String[] features) {
+	private Jaxmpp getJaxmpp(BareJID account) {
+		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
+	}
+
+	private RosterItem getRosterItem(long itemId) {
+		final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + itemId), null, null,
+				null, null);
+
 		try {
-			CapabilitiesCache capsCache = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class).getCache();
-			Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
+			if (!cursor.moveToNext())
+				return null;
+			BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
+			BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 
-			for (int i = 1; i < features.length; i++) {
-				nodes.retainAll(capsCache.getNodesWithFeature(features[i]));
+			if (account != null && jid != null) {
+				return getJaxmpp(account).getRoster().get(jid);
 			}
 
-			Presence current = null;
-			Map<String, Presence> allPresences = jaxmpp.getPresence().getPresences(jid);
-			if (allPresences != null) {
-				for (Presence p : allPresences.values()) {
-					Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
-					if (c == null)
-						continue;
-
-					final String node = c.getAttribute("node");
-					final String ver = c.getAttribute("ver");
-
-					if (nodes.contains(node + "#" + ver)) {
-						if (current == null || current.getPriority() < p.getPriority())
-							current = p;
-					}
-				}
-			}
-
-			return (current != null) ? current.getFrom() : null;
-		} catch (XMLException ex) {
-			return null;
+		} finally {
+			cursor.close();
 		}
+		return null;
 	}
 
 	@Override
@@ -80,12 +72,6 @@ public class SendFileActivity extends Activity {
 
 		ExpandableListView listView = (ExpandableListView) findViewById(R.id.sendFileContacts);
 		Cursor c = getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
-		// listView.setAdapter(new SimpleCursorAdapter(this,
-		// R.layout.roster_item, c, new String[] {
-		// RosterTableMetaData.FIELD_DISPLAY_NAME,
-		// RosterTableMetaData.FIELD_STATUS_MESSAGE,
-		// RosterTableMetaData.FIELD_AVATAR }, new int[] { R.id.roster_item_jid,
-		// R.id.roster_item_description, R.id.imageView1}));
 		listView.setAdapter(new RosterAdapter(this, c) {
 			@Override
 			protected Cursor getChildrenCursor(Cursor groupCursor) {
@@ -103,95 +89,75 @@ public class SendFileActivity extends Activity {
 
 		if (Intent.ACTION_SEND.equals(action) && mimetype != null) {
 			final Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-			final String filename = uri != null ? uri.getLastPathSegment() : "";
 			if (uri != null) {
 				Log.v(TAG, "received input uri = " + uri.toString() + " for path = " + uri.getLastPathSegment());
 			}
-			// if ("text/plain".equals(type)) {
-			// handleSendText(intent); // Handle text being sent
-			// } else if (type.startsWith("image/")) {
-			// handleSendImage(intent); // Handle single image being sent
-			// }
-			// } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type !=
-			// null) {
-			// if (type.startsWith("image/")) {
-			// handleSendMultipleImages(intent); // Handle multiple images being
-			// sent
-			// }
-			// } else {
-			// // Handle other intents, such as being started from the home
-			// screen
-			// }
 
-			final ContentResolver cr = getContentResolver();
 			listView.setOnChildClickListener(new OnChildClickListener() {
 
 				@Override
 				public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-					final Cursor cursor = getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + id), null,
-							null, null, null);
-					try {
-						cursor.moveToNext();
-						final BareJID bareJid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
-						final String name = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_DISPLAY_NAME));
-						final BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
-
-						new Thread() {
-							@Override
-							public void run() {
-
-								try {
-									final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
-											account);
-									final JID jid = getBestJidForFeatures(jaxmpp, bareJid, new String[] {
-											Features.FILE_TRANSFER, Features.BYTESTREAMS });
-									if (jid == null)
-										return;
-									final FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(
-											FileTransferModule.class);
-									final InputStream is = cr.openInputStream(uri);
-									final long size = is.available();
-									final FileTransfer ft = new FileTransfer(jaxmpp, jid, name, filename, is, size);
-									ftModule.sendStreamInitiationOffer(jid, uri.getLastPathSegment(), mimetype, size,
-											new StreamInitiationOfferAsyncCallback() {
-												@Override
-												public void onAccept(String sid) {
-													Log.v(TAG, "stream initiation accepted by " + jid.toString());
-													ft.setSid(sid);
-													FileTransferUtility.onStreamAccepted(ft);
-												}
-
-												@Override
-												public void onError() {
-													Log.v(TAG, "stream initiation failed for " + jid.toString());
-													ft.transferError("transfer initiation failed");
-												}
-
-												@Override
-												public void onReject() {
-													Log.v(TAG, "stream initiation rejected by " + jid.toString());
-													ft.transferError("transfer rejected");
-												}
-											});
-								} catch (XMLException e) {
-									Log.e(TAG, "WTF?", e);
-								} catch (JaxmppException e) {
-									Log.e(TAG, "WTF?", e);
-								} catch (FileNotFoundException e) {
-									Log.e(TAG, "WTF?", e);
-								} catch (IOException e) {
-									Log.e(TAG, "WTF?", e);
-								}
-							}
-						}.start();
-					} finally {
-						cursor.close();
-						finish();
-					}
+					RosterItem item = getRosterItem(id);
+					final Jaxmpp jaxmpp = getJaxmpp(item.getSessionObject().getUserBareJid());
+					final JID jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(),
+							FileTransferUtility.FEATURES);
+					AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, item, jid, uri, mimetype);
+					finish();
 					return true;
+				}
+			});
+
+			listView.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+				@Override
+				public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+					ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+					int type = ExpandableListView.getPackedPositionType(info.packedPosition);
+					if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+						final RosterItem r = getRosterItem(info.id);
+						try {
+							Presence p = r.getSessionObject().getPresence().getBestPresence(r.getJid());
+							if (p != null && p.getType() == null) {
+								prepareResources(menu, r);
+							}
+						} catch (Exception e) {
+						}
+
+						IconContextMenu imenu = new IconContextMenu(SendFileActivity.this, menu, r.getJid().toString(),
+								IconContextMenu.ICON_RIGHT);
+						imenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+
+							@Override
+							public void onIconContextItemSelected(MenuItem item, Object info) {
+								String resource = item.getTitle().toString();
+								JID jid = JID.jidInstance(r.getJid(), resource);
+								AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, r, jid, uri, mimetype);
+								finish();
+							}
+
+						});
+						imenu.show();
+					}
 				}
 			});
 
 		}
 	}
+
+	private void prepareResources(ContextMenu menu, RosterItem ri) throws XMLException {
+		final Jaxmpp jaxmpp = getJaxmpp(ri.getSessionObject().getUserBareJid());
+		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(ri.getJid());
+
+		final CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+		final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
+
+		for (Entry<String, Presence> entry : all.entrySet()) {
+			MenuItem mitem = menu.add(entry.getKey());
+			int iconRes = ChatView.getResourceImage(entry.getValue(), capabilitiesModule, nodeName);
+			boolean enabled = FileTransferUtility.resourceContainsFeatures(jaxmpp, entry.getValue().getFrom(),
+					FileTransferUtility.FEATURES);
+			mitem.setEnabled(enabled);
+			mitem.setIcon(iconRes);
+		}
+	}
+
 }

@@ -23,6 +23,9 @@
     <string name="preferencesTitle">Settings</string>
     <string name="app_version">0.0.24 (2012–02–20)</string>
     <string name="closeChatButton">Close chat</string>
+    <string name="shareButton">Share</string>
+    <string name="shareImageButton">Photo</string>
+    <string name="shareVideoButton">Video</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>
     <string name="pref_login_section_title">Login data</string>

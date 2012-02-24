@@ -202,10 +202,10 @@ public class FileTransferModule implements XmppModule {
 
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
 	private static final Criteria CRIT = ElementCriteria.name("iq").add(ElementCriteria.name("query", XMLNS_BS));
+
 	private static final String[] FEATURES = new String[] { XMLNS_BS };
 
 	public static final EventType FileTransferProgressEventType = new EventType();
-
 	public static final EventType HostsEvent = new EventType();
 
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());
@@ -339,7 +339,7 @@ public class FileTransferModule implements XmppModule {
 			query.addChild(streamhost);
 		}
 
-		writer.write(iq, callback);
+		writer.write(iq, (long) (3 * 60 * 1000), callback);
 	}
 
 	public void sendStreamhostUsed(JID to, String id, String sid, Host streamhost) throws XMLException, JaxmppException {
@@ -396,6 +396,6 @@ public class FileTransferModule implements XmppModule {
 		Element value = new DefaultElement("value", XMLNS_BS, null);
 		option.addChild(value);
 
-		writer.write(iq, callback);
+		writer.write(iq, (long) (10 * 60 * 1000), callback);
 	}
 }

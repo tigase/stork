@@ -4,18 +4,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.tigase.mobile.Features;
 import org.tigase.mobile.filetransfer.FileTransferModule.Host;
 import org.tigase.mobile.filetransfer.FileTransferModule.StreamhostsCallback;
 
 import tigase.jaxmpp.core.client.AsyncCallback;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.DiscoInfoAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
@@ -23,6 +29,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule.DiscoItemsAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule.Item;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.util.Log;
@@ -49,6 +56,8 @@ public class FileTransferUtility {
 			this.hosts = hosts;
 		}
 	}
+
+	public static final String[] FEATURES = { Features.BYTESTREAMS, Features.FILE_TRANSFER };
 
 	private static final String TAG = "FileTransferUtility";
 
@@ -151,6 +160,39 @@ public class FileTransferUtility {
 		}
 	}
 
+	public static JID getBestJidForFeatures(Jaxmpp jaxmpp, BareJID jid, String[] features) {
+		try {
+			CapabilitiesCache capsCache = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class).getCache();
+			Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
+
+			for (int i = 1; i < features.length; i++) {
+				nodes.retainAll(capsCache.getNodesWithFeature(features[i]));
+			}
+
+			Presence current = null;
+			Map<String, Presence> allPresences = jaxmpp.getPresence().getPresences(jid);
+			if (allPresences != null) {
+				for (Presence p : allPresences.values()) {
+					Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+					if (c == null)
+						continue;
+
+					final String node = c.getAttribute("node");
+					final String ver = c.getAttribute("ver");
+
+					if (nodes.contains(node + "#" + ver)) {
+						if (current == null || current.getPriority() < p.getPriority())
+							current = p;
+					}
+				}
+			}
+
+			return (current != null) ? current.getFrom() : null;
+		} catch (XMLException ex) {
+			return null;
+		}
+	}
+
 	// public static void onStreamAccepted(final Jaxmpp jaxmpp, final JID
 	// recipient, final Uri uri, final String sid) {
 	public static void onStreamAccepted(final FileTransfer ft) {
@@ -218,16 +260,21 @@ public class FileTransferUtility {
 				IQ iq = (IQ) responseStanza;
 				Element query = iq.getChildrenNS("query", FileTransferModule.XMLNS_BS);
 				String streamhostUsed = query.getFirstChild().getAttribute("jid");
+				boolean connected = false;
 				for (Host host : getHosts()) {
 					if (streamhostUsed.equals(host.getJid())) {
 						try {
 							ft.connectToProxy(host);
+							connected = true;
+							break;
 						} catch (Exception ex) {
 							Log.e(TAG, "exception connecting to proxy", ex);
-							ft.transferError("connection error");
 							// stop();
 						}
 					}
+				}
+				if (!connected) {
+					ft.transferError("connection error");					
 				}
 			}
 
@@ -248,6 +295,28 @@ public class FileTransferUtility {
 			Log.e(TAG, "WTF?", e);
 			ft.transferError("internal error");
 		}
+	}
+
+	public static boolean resourceContainsFeatures(Jaxmpp jaxmpp, JID jid, String[] features) throws XMLException {
+		CapabilitiesCache capsCache = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class).getCache();
+		Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
+
+		for (int i = 1; i < features.length; i++) {
+			nodes.retainAll(capsCache.getNodesWithFeature(features[i]));
+		}
+
+		Presence p = jaxmpp.getPresence().getPresence(jid);
+		if (p == null)
+			return false;
+
+		Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		if (c == null)
+			return false;
+
+		final String node = c.getAttribute("node");
+		final String ver = c.getAttribute("ver");
+
+		return nodes.contains(node + "#" + ver);
 	}
 
 }

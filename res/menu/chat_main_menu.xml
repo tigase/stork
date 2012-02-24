@@ -8,6 +8,24 @@
         android:title="@string/closeChatButton">
     </item>
     <item
+        android:id="@+id/shareButton"
+        android:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_share"        
+        android:title="@string/shareButton">
+        <menu>
+    		<item
+        		android:id="@+id/shareImageButton"
+        		android:icon="@android:drawable/ic_menu_gallery"
+        		android:title="@string/shareImageButton">
+    		</item>
+    		<item
+        		android:id="@+id/shareVideoButton"
+        		android:icon="@android:drawable/ic_menu_slideshow"
+        		android:title="@string/shareVideoButton">
+    		</item>
+    	</menu>
+    </item>
+    <item
         android:id="@+id/showChatsButton"
         android:icon="@drawable/ic_menu_chatswitch"
         android:showAsAction="ifRoom"
