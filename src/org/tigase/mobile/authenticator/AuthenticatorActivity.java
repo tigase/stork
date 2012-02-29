@@ -37,6 +37,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 /**
@@ -238,6 +239,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private String mUsername;
 
+	private TextView screenTitle;
+
 	private void finishConfirmCredentials(boolean result) {
 		Log.i(TAG, "finishConfirmCredentials()");
 		final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
@@ -390,6 +393,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.account_add_screen);
 
+		this.screenTitle = (TextView) findViewById(R.id.screenTitle);
 		this.flipper = (ViewFlipper) findViewById(R.id.accounts_flipper);
 		final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -400,6 +404,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final Intent intent = getIntent();
 		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
+			screenTitle.setText("Account edit");
 			flipper.setDisplayedChild(1);
 		}
 
@@ -571,6 +576,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onClick(View v) {
+				screenTitle.setText("Login");
 				flipper.setDisplayedChild(1);
 			}
 		});
@@ -579,6 +585,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onClick(View v) {
+				screenTitle.setText("Create account");
 				flipper.setDisplayedChild(2);
 			}
 		});
