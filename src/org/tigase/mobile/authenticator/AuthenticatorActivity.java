@@ -4,10 +4,16 @@ import org.tigase.mobile.Constants;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
 
+import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
+import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule.RegistrationEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
@@ -40,18 +46,91 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public class UserCreateAccountTask extends AsyncTask<String, Void, String> {
 
+		private final Jaxmpp contact = new Jaxmpp();
+
+		private String errorMessage;
+
+		private String token;
+
 		/**
 		 * @param params
-		 *            mUsername, mPassword, mHostname
+		 *            mUsername, mPassword, mHostname, email
 		 */
 		@Override
-		protected String doInBackground(String... params) {
-			final Jaxmpp contact = new Jaxmpp();
-			contact.getProperties().setUserProperty(SessionObject.USER_BARE_JID, BareJID.bareJIDInstance(params[0]));
-			contact.getProperties().setUserProperty(SessionObject.PASSWORD, params[1]);
+		protected String doInBackground(final String... params) {
+
+			final InBandRegistrationModule reg = contact.getModulesManager().getModule(InBandRegistrationModule.class);
+			contact.getProperties().setUserProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
+			contact.getProperties().setUserProperty(SessionObject.SERVER_NAME, BareJID.bareJIDInstance(params[0]).getDomain());
+
+			reg.addListener(new Listener<RegistrationEvent>() {
+
+				@Override
+				public void handleEvent(RegistrationEvent be) throws JaxmppException {
+					if (be.getType() == InBandRegistrationModule.NotSupportedError) {
+						token = null;
+						errorMessage = "Registration not supported!";
+						wakeup();
+					} else if (be.getType() == InBandRegistrationModule.ReceivedError) {
+						final ErrorCondition error = be.getStanza().getErrorCondition();
+						if (error == null)
+							errorMessage = "Registration error";
+						else
+							switch (error) {
+							default:
+								errorMessage = error.name();
+								break;
+							}
+						wakeup();
+					} else if (be.getType() == InBandRegistrationModule.ReceivedTimeout) {
+						errorMessage = "Server doesn't responses";
+						wakeup();
+					}
+				}
+			});
+			reg.addListener(InBandRegistrationModule.ReceivedRequestedFields,
+					new Listener<InBandRegistrationModule.RegistrationEvent>() {
+
+						@Override
+						public void handleEvent(RegistrationEvent be) throws JaxmppException {
+							reg.register(params[0], params[1], params[3], new AsyncCallback() {
+
+								@Override
+								public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+									token = null;
+									if (error == null)
+										errorMessage = "Registration error";
+									else
+										switch (error) {
+										case conflict:
+											errorMessage = "Username is not available. Choose another one.";
+											break;
+										default:
+											errorMessage = error.name();
+											break;
+										}
+									wakeup();
+								}
+
+								@Override
+								public void onSuccess(Stanza responseStanza) throws JaxmppException {
+									token = params[1];
+									wakeup();
+								}
+
+								@Override
+								public void onTimeout() throws JaxmppException {
+									token = null;
+									errorMessage = "Server doesn't responses";
+									wakeup();
+								}
+							});
+						}
+					});
+
 			try {
 				contact.login(true);
-				return params[1];
+				return token;
 			} catch (JaxmppException e) {
 				Log.e(TAG, "Problem on password check", e);
 				return null;
@@ -72,7 +151,16 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		@Override
 		protected void onPostExecute(final String authToken) {
-			onAuthenticationResult(authToken);
+			if (errorMessage != null)
+				onCreationError(errorMessage);
+			else
+				onAuthenticationResult(authToken);
+		}
+
+		private void wakeup() {
+			synchronized (contact) {
+				contact.notify();
+			}
 		}
 	}
 
@@ -113,6 +201,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			onAuthenticationResult(authToken);
 		}
 	}
+
+	private static final int CREATION_ERROR_DIALOG = 3;
 
 	private static final boolean FREE_VERSION = true;
 
@@ -192,9 +282,11 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
+		EditText mPasswordConfirmEdit = (EditText) v.findViewById(R.id.newAccountPassowrdConfirm);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
 		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
+		EditText mEmailEdit = (EditText) v.findViewById(R.id.newAccountEmail);
 
 		if (requestNewAccount) {
 			if (TextUtils.isEmpty(mUsernameEdit.getText().toString())) {
@@ -221,8 +313,20 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			}
 		} else
 			mUsername = mUsernameEdit.getText().toString();
+
+		if (mPasswordConfirmEdit != null
+				&& !TextUtils.equals(mPasswordEdit.getText().toString(), mPasswordConfirmEdit.getText().toString())) {
+			mPasswordConfirmEdit.setError("Passwords are not match");
+			return;
+		}
+
 		if (TextUtils.isEmpty(mPasswordEdit.getText().toString())) {
 			mPasswordEdit.setError("Field can't be empty");
+			return;
+		}
+
+		if (mEmailEdit != null && TextUtils.isEmpty(mEmailEdit.getText().toString())) {
+			mEmailEdit.setError("Field can't be empty");
 			return;
 		}
 
@@ -230,11 +334,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		mNickname = mNicknameEdit.getText().toString();
 		mHostname = mHostnameEdit.getText().toString();
 		mResource = mResourceEdit.getText().toString();
+		final String mEmail = mEmailEdit == null ? null : mEmailEdit.getText().toString();
 
 		showDialog(PROGRESS_DIALOG);
 
 		mAuthTask = authTask;
-		mAuthTask.execute(mUsername, mPassword, mHostname);
+		mAuthTask.execute(mUsername, mPassword, mHostname, mEmail);
 	}
 
 	private void hideProgress() {
@@ -301,8 +406,23 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	@Override
-	protected Dialog onCreateDialog(int id) {
+	protected Dialog onCreateDialog(int id, Bundle args) {
 		switch (id) {
+		case CREATION_ERROR_DIALOG: {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(args.getString("msg", "unknown")).setCancelable(true);
+			builder.setIcon(android.R.drawable.ic_dialog_alert);
+			builder.setTitle("Error");
+			builder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			return builder.create();
+
+		}
 		case LOGIN_ERROR_DIALOG: {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Invalid username or password.").setCancelable(true);
@@ -339,6 +459,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			return null;
 		}
 
+	}
+
+	protected void onCreationError(String errorMessage) {
+		Bundle b = new Bundle();
+		b.putString("msg", errorMessage);
+		hideProgress();
+		showDialog(CREATION_ERROR_DIALOG, b);
 	}
 
 	private View prepareAddAccount(final LayoutInflater inflater) {
@@ -399,7 +526,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	private View prepareCreateAccount(LayoutInflater inflater) {
-		final View v = inflater.inflate(R.layout.account_edit_dialog, null);
+		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
 		mRequestNewAccount = true;
 

@@ -174,10 +174,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return -1;
 	}
 
-	protected List<Chat> getChatList() {
-		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
-	}
-
 	protected Chat getChatByPageIndex(int page) {
 		int x = page - (isXLarge() ? 1 : 2);
 		if (x < 0)
@@ -186,6 +182,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (x >= chats.size())
 			return null;
 		return chats.get(x);
+	}
+
+	protected List<Chat> getChatList() {
+		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
 	}
 
 	protected boolean isXLarge() {

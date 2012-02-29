@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="5px" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:padding="5px" >
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter details of your XMPP account" />
+
+            <EditText
+                android:id="@+id/newAccountUsername"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Username"
+                android:inputType="textNoSuggestions" >
+
+                <requestFocus />
+            </EditText>
+
+            <Spinner
+                android:id="@+id/newAccountHostnameSelector"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/free_account_hostnames" />
+
+            <EditText
+                android:id="@+id/newAccountPassowrd"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:inputType="textPassword" />
+
+            <EditText
+                android:id="@+id/newAccountPassowrdConfirm"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Confirm password"
+                android:inputType="textPassword" />
+
+            <EditText
+                android:id="@+id/newAccountEmail"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:inputType="textEmailAddress" />
+
+            <EditText
+                android:id="@+id/newAccountNickname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nickname" />
+
+            <EditText
+                android:id="@+id/newAccountResource"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Resource" />
+
+            <EditText
+                android:id="@+id/newAccountHostname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Alternative hostname" />
+        </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="52dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:gravity="center" >
+
+        <Button
+            android:id="@+id/newAccountAddButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:text="@android:string/ok" />
+
+        <Button
+            android:id="@+id/newAccountcancelButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/newAccountAddButton"
+            android:text="@android:string/cancel" />
+    </RelativeLayout>
+
+</LinearLayout>
