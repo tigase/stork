@@ -3,6 +3,7 @@ package org.tigase.mobile;
 import java.util.List;
 
 import org.tigase.mobile.accountstatus.AccountsStatusFragment;
+import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.RosterTableMetaData;
@@ -177,6 +178,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
 	}
 
+	protected Chat getChatByPageIndex(int page) {
+		int x = page - (isXLarge() ? 1 : 2);
+		if (x < 0)
+			return null;
+		List<Chat> chats = getChatList();
+		if (x >= chats.size())
+			return null;
+		return chats.get(x);
+	}
+
 	protected boolean isXLarge() {
 		return false;
 		// return getResources().getConfiguration().screenLayout >= 0x04 &&
@@ -189,7 +200,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		intent.putExtra("page", msg);
 
 		if (msg > 1) {
-			final Chat chat = getChatList().get(msg - (isXLarge() ? 1 : 2));
+			final Chat chat = getChatByPageIndex(msg);
 			if (chat != null)
 				intent.putExtra("chatId", chat.getId());
 		}
@@ -211,7 +222,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Uri selected = data.getData();
 			String mimetype = data.getType();
 			final int p = this.currentPage;
-			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Chat chat = getChatByPageIndex(p);
 			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
 			JID jid = chat.getJid();
 			if (jid.getResource() == null) {
@@ -245,7 +256,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
 
 		if (accounts == null || accounts.length == 0) {
-			Intent intent = new Intent(this, WelcomeActivity.class);
+			Intent intent = new Intent(this, AuthenticatorActivity.class);
 			intent.putExtra("new", true);
 			startActivity(intent);
 			finish();
@@ -263,6 +274,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		if (savedInstanceState != null && currentPage == -1) {
 			currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE_KEY, -1);
+			if (getChatByPageIndex(currentPage) == null)
+				currentPage = -1;
 		}
 		if (isXLarge()) {
 			setContentView(R.layout.all);
@@ -354,7 +367,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				else if (index == 1)
 					return "android:switcher:" + viewId + ":roster";
 				else {
-					Chat chat = getChatList().get(index - 2);
+					Chat chat = getChatByPageIndex(index);
 					String name = "android:switcher:" + viewId + ":" + chat;
 					if (DEBUG)
 						Log.d(TAG, "Chat page name: " + name);
@@ -509,7 +522,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		case R.id.closeChatButton: {
 			final int p = this.currentPage;
-			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Chat chat = getChatByPageIndex(p);
 			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(chat.getSessionObject());
 			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
 			try {
@@ -524,7 +537,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		case R.id.shareImageButton: {
 			final int p = this.currentPage;
-			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Chat chat = getChatByPageIndex(p);
 			Log.v(TAG, "share selected for = " + chat.getJid().toString());
 			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
 			pickerIntent.setType("image/*");
@@ -534,7 +547,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 		case R.id.shareVideoButton: {
 			final int p = this.currentPage;
-			Chat chat = getChatList().get(p - (isXLarge() ? 1 : 2));
+			Chat chat = getChatByPageIndex(p);
 			Log.v(TAG, "share selected for = " + chat.getJid().toString());
 			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
 			pickerIntent.setType("video/*");
@@ -601,7 +614,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			// Share button support
 			MenuItem share = menu.findItem(R.id.shareButton);
-			Chat chat = getChatList().get(this.currentPage - (isXLarge() ? 1 : 2));
+			Chat chat = getChatByPageIndex(this.currentPage);
+			if (chat == null)
+				return false;
 			final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
 					chat.getSessionObject());
 			try {

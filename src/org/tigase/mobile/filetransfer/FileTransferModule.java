@@ -201,11 +201,13 @@ public class FileTransferModule implements XmppModule {
 	}
 
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
+
 	private static final Criteria CRIT = ElementCriteria.name("iq").add(ElementCriteria.name("query", XMLNS_BS));
 
 	private static final String[] FEATURES = new String[] { XMLNS_BS };
 
 	public static final EventType FileTransferProgressEventType = new EventType();
+
 	public static final EventType HostsEvent = new EventType();
 
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());

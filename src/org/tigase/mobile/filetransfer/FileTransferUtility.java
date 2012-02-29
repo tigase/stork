@@ -274,7 +274,7 @@ public class FileTransferUtility {
 					}
 				}
 				if (!connected) {
-					ft.transferError("connection error");					
+					ft.transferError("connection error");
 				}
 			}
 

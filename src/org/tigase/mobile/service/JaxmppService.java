@@ -53,6 +53,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindE
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
@@ -429,7 +430,11 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(AuthEvent be) throws JaxmppException {
-				notificationUpdateFail(be.getSessionObject(), "Invalid JID or password", "Invalid password for "
+				String msg = "Invalid JID or password";
+				if (be instanceof SaslEvent && ((SaslEvent) be).getError() != null) {
+					msg += " (" + ((SaslEvent) be).getError() + ")";
+				}
+				notificationUpdateFail(be.getSessionObject(), msg, "Invalid password for "
 						+ be.getSessionObject().getUserBareJid(), null);
 				disable(be.getSessionObject(), true);
 			}

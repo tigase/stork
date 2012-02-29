@@ -4,7 +4,11 @@ import org.tigase.mobile.Constants;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
@@ -12,36 +16,91 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.ViewFlipper;
 
 /**
  * Activity which displays login screen to the user.
  */
 public class AuthenticatorActivity extends AccountAuthenticatorActivity {
-	public class UserLoginTask extends AsyncTask<Void, Void, String> {
+
+	public class UserCreateAccountTask extends AsyncTask<String, Void, String> {
+
+		/**
+		 * @param params
+		 *            mUsername, mPassword, mHostname
+		 */
+		@Override
+		protected String doInBackground(String... params) {
+			final Jaxmpp contact = new Jaxmpp();
+			contact.getProperties().setUserProperty(SessionObject.USER_BARE_JID, BareJID.bareJIDInstance(params[0]));
+			contact.getProperties().setUserProperty(SessionObject.PASSWORD, params[1]);
+			try {
+				contact.login(true);
+				return params[1];
+			} catch (JaxmppException e) {
+				Log.e(TAG, "Problem on password check", e);
+				return null;
+			} finally {
+				try {
+					contact.disconnect();
+				} catch (Exception e) {
+					Log.e(TAG, "Disconnect problem on password check", e);
+				}
+			}
+
+		}
 
 		@Override
-		protected String doInBackground(Void... params) {
+		protected void onCancelled() {
+			onAuthenticationCancel();
+		}
+
+		@Override
+		protected void onPostExecute(final String authToken) {
+			onAuthenticationResult(authToken);
+		}
+	}
+
+	public class UserLoginTask extends AsyncTask<String, Void, String> {
+
+		/**
+		 * @param params
+		 *            mUsername, mPassword, mHostname
+		 */
+		@Override
+		protected String doInBackground(String... params) {
+			final Jaxmpp contact = new Jaxmpp();
+			contact.getProperties().setUserProperty(SessionObject.USER_BARE_JID, BareJID.bareJIDInstance(params[0]));
+			contact.getProperties().setUserProperty(SessionObject.PASSWORD, params[1]);
 			try {
-				return mPassword;
-			} catch (Exception ex) {
-				Log.e(TAG, "UserLoginTask.doInBackground: failed to authenticate");
-				Log.i(TAG, ex.toString());
+				contact.login(true);
+				return params[1];
+			} catch (JaxmppException e) {
+				Log.e(TAG, "Problem on password check", e);
 				return null;
+			} finally {
+				try {
+					contact.disconnect();
+				} catch (Exception e) {
+					Log.e(TAG, "Disconnect problem on password check", e);
+				}
 			}
+
 		}
 
 		@Override
@@ -57,44 +116,37 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private static final boolean FREE_VERSION = true;
 
+	private static final int LOGIN_ERROR_DIALOG = 2;
+
 	public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
+
 	public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
+
+	private final static int PROGRESS_DIALOG = 1;
 
 	private static final String TAG = "AuthenticatorActivity";
 
+	private ViewFlipper flipper;
+
 	private AccountManager mAccountManager;
 
-	private UserLoginTask mAuthTask = null;
+	private AsyncTask<String, Void, String> mAuthTask;
 
-	private Boolean mConfirmCredentials = false;
-
-	private final Handler mHandler = new Handler();
+	private boolean mConfirmCredentials;
 
 	private String mHostname;
 
-	private EditText mHostnameEdit;
-
-	private Spinner mHostnameSelector;
-
 	private String mNickname;
-
-	private EditText mNicknameEdit;
 
 	private String mPassword;
 
-	private EditText mPasswordEdit;
+	private ProgressDialog mProgressDialog;
 
-	private ProgressDialog mProgressDialog = null;
-
-	protected boolean mRequestNewAccount = false;
+	private boolean mRequestNewAccount;
 
 	private String mResource;
 
-	private EditText mResourceEdit;
-
 	private String mUsername;
-
-	private EditText mUsernameEdit;
 
 	private void finishConfirmCredentials(boolean result) {
 		Log.i(TAG, "finishConfirmCredentials()");
@@ -111,7 +163,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	private void finishLogin(String authToken) {
-
 		Log.i(TAG, "finishLogin()");
 		final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
 		if (mRequestNewAccount) {
@@ -137,22 +188,19 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		finish();
 	}
 
-	private CharSequence getMessage() {
-		getString(R.string.label);
-		if (TextUtils.isEmpty(mUsername)) {
-			// If no username, then we ask the user to log in using an
-			// appropriate service.
-			final CharSequence msg = getText(R.string.login_activity_newaccount_text);
-			return msg;
-		}
-		if (TextUtils.isEmpty(mPassword)) {
-			return getText(R.string.login_activity_loginfail_text_pwmissing);
-		}
-		return null;
-	}
+	protected void handleLogin(View v, boolean requestNewAccount, final AsyncTask<String, Void, String> authTask) {
+		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
+		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
+		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
+		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
+		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 
-	public void handleLogin(View view) {
-		if (mRequestNewAccount) {
+		if (requestNewAccount) {
+			if (TextUtils.isEmpty(mUsernameEdit.getText().toString())) {
+				mUsernameEdit.setError("Field can't be empty");
+				return;
+			}
 			String username = mUsernameEdit.getText().toString();
 			if (FREE_VERSION) {
 				username += "@" + mHostnameSelector.getSelectedItem();
@@ -164,28 +212,29 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 						&& j.getDomain().length() > 0) {
 					mUsername = j.toString();
 				} else {
-					AlertDialog.Builder builder = new AlertDialog.Builder(this);
-					builder.setMessage("Enter correct username").setCancelable(true).setIcon(android.R.drawable.ic_dialog_alert);
-					builder.create();
+					mUsernameEdit.setError("Invalid username");
+					return;
 				}
 			} catch (Exception e) {
+				mUsernameEdit.setError("Invalid username");
+				return;
 			}
-
+		} else
+			mUsername = mUsernameEdit.getText().toString();
+		if (TextUtils.isEmpty(mPasswordEdit.getText().toString())) {
+			mPasswordEdit.setError("Field can't be empty");
+			return;
 		}
 
 		mPassword = mPasswordEdit.getText().toString();
 		mNickname = mNicknameEdit.getText().toString();
 		mHostname = mHostnameEdit.getText().toString();
 		mResource = mResourceEdit.getText().toString();
-		if (TextUtils.isEmpty(mUsername) || TextUtils.isEmpty(mPassword)) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage("Please set login data").setCancelable(true).setIcon(android.R.drawable.ic_dialog_alert);
-			builder.create();
-		} else {
-			showProgress();
-			mAuthTask = new UserLoginTask();
-			mAuthTask.execute();
-		}
+
+		showDialog(PROGRESS_DIALOG);
+
+		mAuthTask = authTask;
+		mAuthTask.execute(mUsername, mPassword, mHostname);
 	}
 
 	private void hideProgress() {
@@ -195,7 +244,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
-	public void onAuthenticationCancel() {
+	protected void onAuthenticationCancel() {
 		Log.i(TAG, "onAuthenticationCancel()");
 
 		mAuthTask = null;
@@ -203,8 +252,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		hideProgress();
 	}
 
-	public void onAuthenticationResult(String authToken) {
-
+	protected void onAuthenticationResult(String authToken) {
 		boolean success = ((authToken != null) && (authToken.length() > 0));
 		Log.i(TAG, "onAuthenticationResult(" + success + ")");
 
@@ -222,11 +270,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			}
 		} else {
 			Log.e(TAG, "onAuthenticationResult: failed to authenticate");
-			if (mRequestNewAccount) {
-				// mMessage.setText(getText(R.string.login_activity_loginfail_text_both));
-			} else {
-				// mMessage.setText(getText(R.string.login_activity_loginfail_text_pwonly));
-			}
+			showDialog(LOGIN_ERROR_DIALOG);
 		}
 	}
 
@@ -235,12 +279,71 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	 */
 	@Override
 	public void onCreate(Bundle icicle) {
-
-		Log.i(TAG, "onCreate(" + icicle + ")");
 		super.onCreate(icicle);
-
 		mAccountManager = AccountManager.get(this);
-		Log.i(TAG, "loading data from Intent");
+
+		requestWindowFeature(Window.FEATURE_LEFT_ICON);
+		setContentView(R.layout.account_add_screen);
+
+		this.flipper = (ViewFlipper) findViewById(R.id.accounts_flipper);
+		final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		flipper.addView(prepareWelcomeScreen(inflater));
+		flipper.addView(prepareAddAccount(inflater));
+		flipper.addView(prepareCreateAccount(inflater));
+
+		final Intent intent = getIntent();
+		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
+		if (account != null) {
+			flipper.setDisplayedChild(1);
+		}
+
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case LOGIN_ERROR_DIALOG: {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage("Invalid username or password.").setCancelable(true);
+			builder.setIcon(android.R.drawable.ic_dialog_alert);
+			builder.setTitle("Error");
+			builder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			return builder.create();
+		}
+		case PROGRESS_DIALOG: {
+			final ProgressDialog dialog = new ProgressDialog(this);
+			dialog.setMessage(getText(R.string.ui_activity_authenticating));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(true);
+			dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					Log.i(TAG, "user cancelling authentication");
+					if (mAuthTask != null) {
+						mAuthTask.cancel(true);
+					}
+				}
+			});
+
+			mProgressDialog = dialog;
+			return dialog;
+		}
+		default:
+			return null;
+		}
+
+	}
+
+	private View prepareAddAccount(final LayoutInflater inflater) {
+		final View v = inflater.inflate(R.layout.account_edit_dialog, null);
+
 		final Intent intent = getIntent();
 		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
@@ -251,16 +354,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mResource = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 		}
 		mRequestNewAccount = mUsername == null;
-		mConfirmCredentials = intent.getBooleanExtra(PARAM_CONFIRM_CREDENTIALS, false);
-		Log.i(TAG, "    request new: " + mRequestNewAccount);
-		requestWindowFeature(Window.FEATURE_LEFT_ICON);
-		setContentView(R.layout.account_edit_dialog);
-		mUsernameEdit = (EditText) findViewById(R.id.newAccountUsername);
-		mHostnameSelector = (Spinner) findViewById(R.id.newAccountHostnameSelector);
-		mPasswordEdit = (EditText) findViewById(R.id.newAccountPassowrd);
-		mResourceEdit = (EditText) findViewById(R.id.newAccountResource);
-		mNicknameEdit = (EditText) findViewById(R.id.newAccountNickname);
-		mHostnameEdit = (EditText) findViewById(R.id.newAccountHostname);
+
+		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
+		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
+		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
+		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
+		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 		if (!TextUtils.isEmpty(mUsername))
 			mUsernameEdit.setText(mUsername);
 		if (!TextUtils.isEmpty(mPassword))
@@ -271,58 +371,92 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mHostnameEdit.setText(mHostname);
 		if (!TextUtils.isEmpty(mResource))
 			mResourceEdit.setText(mResource);
-		// Disable posibility to change username of existing account
-		// because after editing account settings we are back to account
-		// page with old username presented as account name!!
+
 		mUsernameEdit.setEnabled(mUsername == null);
+
 		mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ? View.VISIBLE : View.GONE);
 		mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE : View.GONE);
 
-		final Button addButton = (Button) findViewById(R.id.newAccountAddButton);
-		final Button cancelButton = (Button) findViewById(R.id.newAccountcancelButton);
-		addButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				handleLogin(v);
-			}
-		});
+		Button cancelButton = (Button) v.findViewById(R.id.newAccountcancelButton);
 		cancelButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
+				onAuthenticationCancel();
 				finish();
 			}
 		});
-	}
+		Button loginButton = (Button) v.findViewById(R.id.newAccountAddButton);
+		loginButton.setOnClickListener(new OnClickListener() {
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected Dialog onCreateDialog(int id, Bundle args) {
-		final ProgressDialog dialog = new ProgressDialog(this);
-		dialog.setMessage(getText(R.string.ui_activity_authenticating));
-		dialog.setIndeterminate(true);
-		dialog.setCancelable(true);
-		dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 			@Override
-			public void onCancel(DialogInterface dialog) {
-				Log.i(TAG, "user cancelling authentication");
-				if (mAuthTask != null) {
-					mAuthTask.cancel(true);
-				}
+			public void onClick(View vv) {
+				handleLogin(v, mRequestNewAccount, new UserLoginTask());
 			}
 		});
 
-		mProgressDialog = dialog;
-		return dialog;
+		return v;
 	}
 
-	private void showProgress() {
-		try {
-			showDialog(0);
-		} catch (Exception ex) {
-			// Error in Android SDK 7
-		}
+	private View prepareCreateAccount(LayoutInflater inflater) {
+		final View v = inflater.inflate(R.layout.account_edit_dialog, null);
+
+		mRequestNewAccount = true;
+
+		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
+		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
+		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
+		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
+		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
+
+		mUsernameEdit.setEnabled(mUsername == null);
+
+		mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ? View.VISIBLE : View.GONE);
+		mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE : View.GONE);
+
+		Button cancelButton = (Button) v.findViewById(R.id.newAccountcancelButton);
+		cancelButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				onAuthenticationCancel();
+				finish();
+			}
+		});
+		Button loginButton = (Button) v.findViewById(R.id.newAccountAddButton);
+		loginButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View vv) {
+				handleLogin(v, mRequestNewAccount, new UserCreateAccountTask());
+			}
+		});
+
+		return v;
 	}
+
+	private View prepareWelcomeScreen(final LayoutInflater inflater) {
+		View v = inflater.inflate(R.layout.welcome_screen, null);
+
+		Button b = (Button) v.findViewById(R.id.welcomeScreenAddAccountsButton);
+		b.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				flipper.setDisplayedChild(1);
+			}
+		});
+		b = (Button) v.findViewById(R.id.welcomeScreenCreateAccountsButton);
+		b.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				flipper.setDisplayedChild(2);
+			}
+		});
+
+		return v;
+	}
+
 }
