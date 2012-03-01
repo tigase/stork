@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:background="@android:drawable/title_bar_tall" android:padding="0dp"
+		android:layout_height="26dp">
+
+		<TextView  android:layout_width="fill_parent" android:textColor="@color/title_bar_text_color"
+			android:paddingLeft="5dp" android:layout_height="wrap_content"
+			android:text="@string/app_name" android:id="@+id/textView1"
+			android:textSize="14dp" android:layout_centerVertical="true"
+			android:layout_toLeftOf="@+id/connection_status" android:textStyle="bold" />
+		<ImageView android:layout_height="wrap_content" android:id="@+id/connection_status"
+			android:scaleType="centerInside" android:layout_width="wrap_content"
+			android:cropToPadding="true" android:src="@drawable/user_offline"
+			android:adjustViewBounds="true" android:layout_centerVertical="true"
+			android:padding="2dp"
+			android:layout_alignParentRight="true" android:paddingRight="5dp"></ImageView>
+
+		<ProgressBar
+		    android:id="@+id/progressBar1"
+		    style="?android:attr/progressBarStyleSmall"
+		    android:layout_width="26dp" android:padding="3dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentBottom="true"
+		    android:layout_alignParentTop="true"
+		    android:layout_alignParentRight="true" />
+
+	</RelativeLayout>
+
+
+	<ListView android:saveEnabled="true"
+		android:id="@+id/rosterList" android:divider="#e5e4e5"
+		android:dividerHeight="1px" android:layout_height="fill_parent"
+		android:layout_width="fill_parent" />
+
+</LinearLayout>

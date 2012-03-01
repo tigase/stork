@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
@@ -30,7 +31,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -47,10 +50,14 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -96,7 +103,7 @@ public class RosterFragment extends Fragment {
 		return ret;
 	}
 
-	private RosterAdapter adapter;
+	private Object adapter;
 
 	private Listener<ResourceBindEvent> bindListener;
 
@@ -108,9 +115,11 @@ public class RosterFragment extends Fragment {
 
 	private long[] expandedIds;
 
-	private ExpandableListContextMenuInfo lastMenuInfo;
+	private ContextMenuInfo lastMenuInfo;
 
-	private ExpandableListView listView;
+	private ListView listView;
+
+	private SharedPreferences mPreferences;
 
 	private ProgressBar progressBar;
 
@@ -136,12 +145,12 @@ public class RosterFragment extends Fragment {
 	}
 
 	private long[] getExpandedIds() {
-		if (adapter != null) {
-			int length = adapter.getGroupCount();
+		if (listView instanceof ExpandableListView && adapter != null) {
+			int length = ((GroupsRosterAdapter) adapter).getGroupCount();
 			ArrayList<Long> expandedIds = new ArrayList<Long>();
 			for (int i = 0; i < length; i++) {
-				if (listView.isGroupExpanded(i)) {
-					expandedIds.add(adapter.getGroupId(i));
+				if (((ExpandableListView) listView).isGroupExpanded(i)) {
+					expandedIds.add(((GroupsRosterAdapter) adapter).getGroupId(i));
 				}
 			}
 			return toLongArray(expandedIds);
@@ -176,6 +185,14 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
+		long lastId;
+		if (lastMenuInfo instanceof ExpandableListContextMenuInfo) {
+			lastId = ((ExpandableListContextMenuInfo) lastMenuInfo).id;
+		} else if (lastMenuInfo instanceof AdapterContextMenuInfo) {
+			lastId = ((AdapterContextMenuInfo) lastMenuInfo).id;
+		} else {
+			lastId = -1;
+		}
 		switch (item.getItemId()) {
 		// case R.id.startChat: {
 		// ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo)
@@ -206,17 +223,17 @@ public class RosterFragment extends Fragment {
 			return true;
 		}
 		case R.id.contactAuthorization: {
-			this.lastMenuInfo = (ExpandableListContextMenuInfo) item.getMenuInfo();
+			this.lastMenuInfo = item.getMenuInfo();
 			return true;
 		}
 		case R.id.contactAuthResend:
-			sendAuthResend(lastMenuInfo.id);
+			sendAuthResend(lastId);
 			return true;
 		case R.id.contactAuthRerequest:
-			sendAuthRerequest(lastMenuInfo.id);
+			sendAuthRerequest(lastId);
 			return true;
 		case R.id.contactAuthRemove:
-			sendAuthRemove(lastMenuInfo.id);
+			sendAuthRemove(lastId);
 			return true;
 		default:
 			return super.onContextItemSelected(item);
@@ -251,35 +268,58 @@ public class RosterFragment extends Fragment {
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onCreateView()");
-		View layout = inflater.inflate(R.layout.roster_list, null);
-		this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
-		getActivity().startManagingCursor(c);
-		RosterAdapter.staticContext = inflater.getContext();
-		this.adapter = new RosterAdapter(inflater.getContext(), c);
+		this.mPreferences = inflater.getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 
-		listView = (ExpandableListView) layout.findViewById(R.id.rosterList);
-		listView.setSaveEnabled(true);
+		String rosterLayoutType = mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups");
+		View layout;
+		if ("groups".equals(rosterLayoutType)) {
+			layout = inflater.inflate(R.layout.roster_list, null);
+		} else if ("flat".equals(rosterLayoutType)) {
+			layout = inflater.inflate(R.layout.roster_list_flat, null);
+		} else {
+			throw new RuntimeException("Unknown roster layout");
+		}
+
+		listView = (ListView) layout.findViewById(R.id.rosterList);
 		listView.setTextFilterEnabled(true);
-
-		listView.setAdapter(adapter);
 		registerForContextMenu(listView);
 
-		listView.setOnChildClickListener(new OnChildClickListener() {
+		if (listView instanceof ExpandableListView) {
+			this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null,
+					null);
+			getActivity().startManagingCursor(c);
+			GroupsRosterAdapter.staticContext = inflater.getContext();
 
-			@Override
-			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+			this.adapter = new GroupsRosterAdapter(inflater.getContext(), c);
 
-				Log.i(TAG, "Clicked on id=" + id);
+			((ExpandableListView) listView).setAdapter((ExpandableListAdapter) adapter);
+			((ExpandableListView) listView).setOnChildClickListener(new OnChildClickListener() {
 
-				Intent intent = new Intent();
-				intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
-				intent.putExtra("id", id);
+				@Override
+				public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 
-				getActivity().getApplicationContext().sendBroadcast(intent);
-				return true;
-			}
-		});
+					Log.i(TAG, "Clicked on id=" + id);
 
+					Intent intent = new Intent();
+					intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
+					intent.putExtra("id", id);
+
+					getActivity().getApplicationContext().sendBroadcast(intent);
+					return true;
+				}
+			});
+		} else if (listView instanceof ListView) {
+			this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null,
+					null);
+
+			getActivity().startManagingCursor(c);
+			// FlatRosterAdapter.staticContext = inflater.getContext();
+
+			this.adapter = new FlatRosterAdapter(inflater.getContext(), c);
+
+			listView.setAdapter((ListAdapter) adapter);
+
+		}
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
 		this.progressBar = (ProgressBar) layout.findViewById(R.id.progressBar1);
 
@@ -406,13 +446,13 @@ public class RosterFragment extends Fragment {
 	}
 
 	private void restoreExpandedState(long[] expandedIds) {
-		this.expandedIds = expandedIds;
-		if (expandedIds != null) {
-			if (adapter != null) {
-				for (int i = 0; i < adapter.getGroupCount(); i++) {
-					long id = adapter.getGroupId(i);
+		if (listView instanceof ExpandableListView) {
+			this.expandedIds = expandedIds;
+			if (expandedIds != null && adapter != null) {
+				for (int i = 0; i < ((GroupsRosterAdapter) adapter).getGroupCount(); i++) {
+					long id = ((GroupsRosterAdapter) adapter).getGroupId(i);
 					if (inArray(expandedIds, id))
-						listView.expandGroup(i);
+						((ExpandableListView) listView).expandGroup(i);
 				}
 			}
 		}

@@ -24,7 +24,7 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorTreeAdapter;
 import android.widget.TextView;
 
-public class RosterAdapter extends SimpleCursorTreeAdapter {
+public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
 			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR };
@@ -38,7 +38,7 @@ public class RosterAdapter extends SimpleCursorTreeAdapter {
 
 	private int resource;
 
-	public RosterAdapter(Context context, Cursor c) {
+	public GroupsRosterAdapter(Context context, Cursor c) {
 		// Context context, Cursor cursor, int groupLayout, String[] groupFrom,
 		// int[] groupTo, int childLayout, String[] childFrom, int[] childTo
 		super(context, c, R.layout.roster_group_item, new String[] { RosterTableMetaData.FIELD_GROUP_NAME },

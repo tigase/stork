@@ -16,6 +16,8 @@ public final class Preferences {
 
 	public static final String RECONNECT_TIME_KEY = "reconnect_time";
 
+	public static final String ROSTER_LAYOUT_KEY = "roster_layout";
+
 	public static final String ROSTER_VERSION_KEY = "roster_version";
 
 	private Preferences() {

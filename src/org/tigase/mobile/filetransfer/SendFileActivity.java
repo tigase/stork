@@ -9,7 +9,7 @@ import org.tigase.mobile.R;
 import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
-import org.tigase.mobile.roster.RosterAdapter;
+import org.tigase.mobile.roster.GroupsRosterAdapter;
 import org.tigase.mobile.ui.IconContextMenu;
 import org.tigase.mobile.ui.IconContextMenu.IconContextItemSelectedListener;
 
@@ -72,7 +72,7 @@ public class SendFileActivity extends Activity {
 
 		ExpandableListView listView = (ExpandableListView) findViewById(R.id.sendFileContacts);
 		Cursor c = getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null, null);
-		listView.setAdapter(new RosterAdapter(this, c) {
+		listView.setAdapter(new GroupsRosterAdapter(this, c) {
 			@Override
 			protected Cursor getChildrenCursor(Cursor groupCursor) {
 				String group = groupCursor.getString(1);

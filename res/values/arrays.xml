@@ -13,6 +13,14 @@
         <item>only_disconnected</item>
         <item>none</item>
     </string-array>
+    <string-array name="roster_layout_options">
+        <item>Flat</item>
+        <item>With groups</item>
+    </string-array>
+    <string-array name="roster_layout_options_values">
+        <item>flat</item>
+        <item>groups</item>
+    </string-array>
     <string-array name="free_account_hostnames">
         <item>sure.im</item>
         <item>jabber.me</item>
