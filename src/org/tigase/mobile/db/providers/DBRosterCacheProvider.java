@@ -101,7 +101,8 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 
 	private void storeCache(SessionObject sessionObject, final String receivedVersion) {
 		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(sessionObject);
-
+		if (jaxmpp == null)
+			return;
 		final List<RosterItem> items = jaxmpp.getRoster().getAll();
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();

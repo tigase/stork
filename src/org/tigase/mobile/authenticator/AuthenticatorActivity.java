@@ -203,9 +203,11 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
+	public static final String ACCOUNT_MODIFIED_MSG = "org.tigase.mobile.ACCOUNT_MODIFIED_MSG";
+
 	private static final int CREATION_ERROR_DIALOG = 3;
 
-	private static final boolean FREE_VERSION = true;
+	private static final boolean FREE_VERSION = false;
 
 	private static final int LOGIN_ERROR_DIALOG = 2;
 
@@ -278,6 +280,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
 		setAccountAuthenticatorResult(intent.getExtras());
 		setResult(RESULT_OK, intent);
+
+		Intent i = new Intent();
+		i.setAction(ACCOUNT_MODIFIED_MSG);
+		i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
+		sendBroadcast(i);
+
 		finish();
 	}
 

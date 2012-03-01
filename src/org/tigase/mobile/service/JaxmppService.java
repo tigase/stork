@@ -99,6 +99,20 @@ import android.util.Log;
 
 public class JaxmppService extends Service {
 
+	private class AccountModifyReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			updateJaxmppInstances(getMulti(), getContentResolver(), getResources(), getApplicationContext());
+			for (JaxmppCore j : getMulti().get()) {
+				State st = getState(j.getSessionObject());
+				if (st == State.disconnected || st == null) {
+					connectJaxmpp((Jaxmpp) j, (Long) null);
+				}
+			}
+		}
+	}
+
 	private class ClientFocusReceiver extends BroadcastReceiver {
 
 		@Override
@@ -134,7 +148,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
@@ -199,101 +213,98 @@ public class JaxmppService extends Service {
 
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
-
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jc : multi.get()) {
 			accountsJids.add(jc.getSessionObject().getUserBareJid());
 		}
-		// final Cursor c =
-		// contentResolver.query(Uri.parse(AccountsProvider.ACCOUNTS_LIST_KEY),
-		// null, null, null, null);
-		try {
-			// while (c.moveToNext()) {
-			AccountManager accountManager = AccountManager.get(context);
-			for (Account account : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
-				// long id =
-				// c.getLong(c.getColumnIndex(AccountsTableMetaData.FIELD_ID));
-				// JID jid =
-				// JID.jidInstance(c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_JID)));
-				// String password =
-				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_PASSWORD));
-				// String nickname =
-				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_NICKNAME));
-				// String hostname =
-				// c.getString(c.getColumnIndex(AccountsTableMetaData.FIELD_HOSTNAME));
-				BareJID jid = BareJID.bareJIDInstance(account.name);
-				String password = accountManager.getPassword(account);
-				String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
-				String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
-				String resource = accountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
-				hostname = hostname == null ? null : hostname.trim();
 
-				if (!accountsJids.contains(jid)) {
-					SessionObject sessionObject = new DefaultSessionObject();
-					sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
-					sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
-					sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
+		AccountManager accountManager = AccountManager.get(context);
+		for (Account account : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+			BareJID jid = BareJID.bareJIDInstance(account.name);
+			String password = accountManager.getPassword(account);
+			String nickname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_NICKNAME);
+			String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
+			String resource = accountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
+			hostname = hostname == null ? null : hostname.trim();
 
-					sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_CATEGORY_KEY, "client");
-					sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_TYPE_KEY, "phone");
-					sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
+			if (!accountsJids.contains(jid)) {
+				SessionObject sessionObject = new DefaultSessionObject();
+				sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
+				sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, "Tigase Mobile Messenger");
+				sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
-					sessionObject.setUserProperty("ID", (long) account.hashCode());
-					sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
-					sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
-					sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
-					sessionObject.setUserProperty(SessionObject.PASSWORD, password);
-					sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
-					if (hostname != null && hostname.trim().length() > 0)
-						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, hostname);
-					else
-						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
+				sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_CATEGORY_KEY, "client");
+				sessionObject.setUserProperty(DiscoInfoModule.IDENTITY_TYPE_KEY, "phone");
+				sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
 
-					if (!TextUtils.isEmpty(resource))
-						sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
-					else
-						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
+				sessionObject.setUserProperty("ID", (long) account.hashCode());
+				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
+				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
+				sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
+				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
+				sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
+				if (hostname != null && hostname.trim().length() > 0)
+					sessionObject.setUserProperty(SocketConnector.SERVER_HOST, hostname);
+				else
+					sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
 
-					final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
-						@Override
-						public void modulesInit() {
-							super.modulesInit();
-							getModulesManager().register(new FileTransferModule(observable, sessionObject, writer));
-						}
-					};
-					CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
-					if (capabilitiesModule != null) {
-						capabilitiesModule.setCache(new CapabilitiesDBCache(context));
+				if (!TextUtils.isEmpty(resource))
+					sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
+				else
+					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
+
+				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
+					@Override
+					public void modulesInit() {
+						super.modulesInit();
+						getModulesManager().register(new FileTransferModule(observable, sessionObject, writer));
 					}
-
-					multi.add(jaxmpp);
-				} else {
-					SessionObject sessionObject = multi.get(jid).getSessionObject();
-
-					sessionObject.setUserProperty(SessionObject.PASSWORD, password);
-					sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
-					if (hostname != null && hostname.trim().length() > 0)
-						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, hostname);
-					else
-						sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
-
-					if (!TextUtils.isEmpty(resource))
-						sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
-					else
-						sessionObject.setUserProperty(SessionObject.RESOURCE, null);
-
+				};
+				CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+				if (capabilitiesModule != null) {
+					capabilitiesModule.setCache(new CapabilitiesDBCache(context));
 				}
-				accountsJids.remove(jid);
+
+				multi.add(jaxmpp);
+			} else {
+				SessionObject sessionObject = multi.get(jid).getSessionObject();
+
+				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
+				sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
+				if (hostname != null && hostname.trim().length() > 0)
+					sessionObject.setUserProperty(SocketConnector.SERVER_HOST, hostname);
+				else
+					sessionObject.setUserProperty(SocketConnector.SERVER_HOST, null);
+
+				if (!TextUtils.isEmpty(resource))
+					sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
+				else
+					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
+
 			}
-		} finally {
-			// c.close();
+			accountsJids.remove(jid);
 		}
+
 		for (BareJID jid : accountsJids) {
-			JaxmppCore jaxmpp = multi.get(jid);
-			if (jaxmpp != null)
+			final JaxmppCore jaxmpp = multi.get(jid);
+			if (jaxmpp != null) {
 				multi.remove(jaxmpp);
+
+				(new Thread() {
+					@Override
+					public void run() {
+						try {
+							jaxmpp.disconnect();
+						} catch (Exception e) {
+							Log.e(TAG, "Can't disconnect", e);
+						}
+					}
+				}).start();
+			}
 		}
 	}
+
+	private AccountModifyReceiver accountModifyReceiver;
 
 	private TimerTask autoPresenceTask;
 
@@ -923,10 +934,12 @@ public class JaxmppService extends Service {
 		this.myConnReceiver = new ConnReceiver();
 		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		registerReceiver(myConnReceiver, filter);
-
 		this.focusChangeReceiver = new ClientFocusReceiver();
 		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
 		registerReceiver(focusChangeReceiver, filter);
+		this.accountModifyReceiver = new AccountModifyReceiver();
+		filter = new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
+		registerReceiver(accountModifyReceiver, filter);
 
 		getMulti().addListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
@@ -969,6 +982,8 @@ public class JaxmppService extends Service {
 
 		if (focusChangeReceiver != null)
 			unregisterReceiver(focusChangeReceiver);
+
+		unregisterReceiver(accountModifyReceiver);
 
 		Log.i(TAG, "Stopping service");
 		reconnect = false;

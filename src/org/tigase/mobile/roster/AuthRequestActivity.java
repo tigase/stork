@@ -48,12 +48,17 @@ public class AuthRequestActivity extends FragmentActivity {
 
 			@Override
 			public void onClick(View v) {
-				try {
-					presenceModule.subscribed(jid);
-					presenceModule.subscribe(jid);
-				} catch (Exception e) {
-					showWarning("Can't accept subscription");
-				}
+				(new Thread() {
+					@Override
+					public void run() {
+						try {
+							presenceModule.subscribed(jid);
+							presenceModule.subscribe(jid);
+						} catch (Exception e) {
+							showWarning("Can't accept subscription");
+						}
+					}
+				}).start();
 				finish();
 			}
 		});
@@ -63,12 +68,17 @@ public class AuthRequestActivity extends FragmentActivity {
 
 			@Override
 			public void onClick(View v) {
-				try {
-					presenceModule.unsubscribe(jid);
-					presenceModule.unsubscribed(jid);
-				} catch (Exception e) {
-					showWarning("Can't deny subscription");
-				}
+				(new Thread() {
+					@Override
+					public void run() {
+						try {
+							presenceModule.unsubscribe(jid);
+							presenceModule.unsubscribed(jid);
+						} catch (Exception e) {
+							showWarning("Can't deny subscription");
+						}
+					}
+				}).start();
 				finish();
 			}
 		});

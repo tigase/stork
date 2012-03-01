@@ -13,6 +13,11 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.accounts.AccountManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -32,6 +37,21 @@ public class AccountsStatusFragment extends Fragment {
 
 		return f;
 	}
+
+	private final BroadcastReceiver accountModifiedReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (view != null && adapter != null)
+				view.post(new Runnable() {
+
+					@Override
+					public void run() {
+						adapter.notifyDataSetChanged();
+					}
+				});
+		}
+	};
 
 	private ArrayAdapter<Jaxmpp> adapter;
 
@@ -53,7 +73,8 @@ public class AccountsStatusFragment extends Fragment {
 
 		@Override
 		public void handleEvent(ConnectorEvent be) throws JaxmppException {
-			final MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+			// final MultiJaxmpp multi = ((MessengerApplication)
+			// getActivity().getApplicationContext()).getMultiJaxmpp();
 
 			// int p = adapter.getPosition((Jaxmpp)
 			// multi.get(be.getSessionObject()));
@@ -144,12 +165,16 @@ public class AccountsStatusFragment extends Fragment {
 
 		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
+
+		getActivity().registerReceiver(this.accountModifiedReceiver,
+				new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION));
 	}
 
 	@Override
 	public void onStop() {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
+		getActivity().unregisterReceiver(this.accountModifiedReceiver);
 		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 

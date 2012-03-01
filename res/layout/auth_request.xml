@@ -42,21 +42,21 @@
             android:id="@+id/req_yesButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
-            android:text="@android:string/yes" />
+            android:text="Yes" />
 
         <Button
             android:id="@+id/req_noButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_yesButton"
-            android:text="@android:string/no" />
+            android:text="No" />
 
         <Button
             android:id="@+id/req_cancelButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_noButton"
-            android:text="@android:string/cancel" />
+            android:text="Cancel" />
     </RelativeLayout>
 
 </RelativeLayout>
