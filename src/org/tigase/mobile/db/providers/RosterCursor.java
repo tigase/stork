@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -14,6 +15,8 @@ import org.tigase.mobile.roster.CPresence;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
@@ -175,10 +178,31 @@ public class RosterCursor extends AbstractCursor {
 
 	private final void loadData() {
 		final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
+		final boolean showOffline = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).getBoolean(
+				Preferences.SHOW_OFFLINE, Boolean.TRUE);
+
+		Predicate pr = predicate;
+		if (!showOffline) {
+			pr = new Predicate() {
+				@Override
+				public boolean match(RosterItem item) {
+					try {
+						if (predicate != null && !predicate.match(item))
+							return false;
+						SessionObject session = item.getSessionObject();
+						if (session == null)
+							return false;
+						return session.getPresence().isAvailable(item.getJid());
+					} catch (XMLException e) {
+						return false;
+					}
+				}
+			};
+		}
 
 		ArrayList<RosterItem> r = new ArrayList<RosterItem>();
 		for (JaxmppCore jaxmpp : multi.get()) {
-			r.addAll(jaxmpp.getRoster().getAll(predicate));
+			r.addAll(jaxmpp.getRoster().getAll(pr));
 		}
 
 		MergeSort.sort(r, new Comparator<RosterItem>() {

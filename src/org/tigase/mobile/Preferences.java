@@ -20,6 +20,8 @@ public final class Preferences {
 
 	public static final String ROSTER_VERSION_KEY = "roster_version";
 
+	public static final String SHOW_OFFLINE = "show_offline";
+
 	private Preferences() {
 	}
 }

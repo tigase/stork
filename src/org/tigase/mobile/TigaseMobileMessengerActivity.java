@@ -39,6 +39,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.Cursor;
 import android.net.Uri;
@@ -514,6 +515,19 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.showHideOffline: {
+			boolean x = mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE);
+			Editor editor = mPreferences.edit();
+			editor.putBoolean(Preferences.SHOW_OFFLINE, !x);
+			editor.apply();
+			Uri insertedItem = Uri.parse(RosterProvider.CONTENT_URI);
+			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+			// insertedItem =
+			// Uri.parse("content://org.tigase.mobile.db.providers.RosterProvider");
+			// getApplicationContext().getContentResolver().notifyChange(insertedItem,
+			// null);
+			break;
+		}
 		case R.id.contactAdd: {
 			AccountManager accountManager = AccountManager.get(this);
 			final Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
@@ -625,6 +639,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			MenuItem dcon = menu.findItem(R.id.disconnectButton);
 			dcon.setVisible(serviceActive);
+
+			MenuItem showOffline = menu.findItem(R.id.showHideOffline);
+			showOffline.setCheckable(true);
+			showOffline.setChecked(mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE));
 
 			MenuItem add = menu.findItem(R.id.contactAdd);
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
