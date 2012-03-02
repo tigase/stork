@@ -28,12 +28,6 @@ public class RosterCursor extends AbstractCursor {
 
 	private final static boolean DEBUG = false;
 
-	private static final String createComparable(String name, CPresence p) {
-		String r = "000" + (1000 - p.getId());
-		r = r.substring(r.length() - 5) + ":" + name.toLowerCase();
-		return r;
-	}
-
 	private HashMap<RosterItem, byte[]> avatarCache = new HashMap<RosterItem, byte[]>();
 
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
@@ -192,15 +186,17 @@ public class RosterCursor extends AbstractCursor {
 			@Override
 			public int compare(RosterItem object1, RosterItem object2) {
 				try {
-					String n1 = rdt.getDisplayName(object1);
-					String n2 = rdt.getDisplayName(object2);
-
 					CPresence s1 = rdt.getShowOf(object1);
 					CPresence s2 = rdt.getShowOf(object2);
 
-					return createComparable(n1, s1).compareTo(createComparable(n2, s2));
+					int sc = s2.getId().compareTo(s1.getId());
+					if (sc != 0)
+						return sc;
 
-					// return n1.compareTo(n2);
+					String n1 = rdt.getDisplayName(object1);
+					String n2 = rdt.getDisplayName(object2);
+
+					return n1.compareTo(n2);
 				} catch (Exception e) {
 					return 0;
 				}
