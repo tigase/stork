@@ -1,5 +1,7 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.roster.RosterFragment;
+
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -18,6 +20,8 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 	private Fragment mCurrentPrimaryItem = null;
 	private FragmentTransaction mCurTransaction = null;
 	private final FragmentManager mFragmentManager;
+
+	private boolean refreshRoster;
 
 	public MyFragmentPageAdapter(FragmentManager fm) {
 		mFragmentManager = fm;
@@ -56,6 +60,13 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 		// Do we already have this fragment?
 		String name = makeFragmentName(container.getId(), position);
 		Fragment fragment = mFragmentManager.findFragmentByTag(name);
+
+		if (refreshRoster && fragment instanceof RosterFragment) {
+			refreshRoster = false;
+			mCurTransaction.detach(fragment);
+			fragment = null;
+		}
+
 		if (fragment != null) {
 			if (DEBUG)
 				Log.v(TAG, "Attaching item #" + position + ": f=" + fragment);
@@ -72,6 +83,10 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 		}
 
 		return fragment;
+	}
+
+	public boolean isRefreshRoster() {
+		return refreshRoster;
 	}
 
 	@Override
@@ -106,6 +121,10 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 			}
 			mCurrentPrimaryItem = fragment;
 		}
+	}
+
+	public void setRefreshRoster(boolean refreshRoster) {
+		this.refreshRoster = refreshRoster;
 	}
 
 	@Override

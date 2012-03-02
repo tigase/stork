@@ -38,6 +38,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -98,7 +100,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -118,10 +120,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private int currentPage = -1;
 
+	private SharedPreferences mPreferences;
+	private OnSharedPreferenceChangeListener prefChangeListener;
+
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
+
 	private ViewPager viewPager;
 
-	private ViewPager viewRoster;
+	private ViewPager viewRoster;;
 
 	public TigaseMobileMessengerActivity() {
 		this.chatListener = new Listener<BaseEvent>() {
@@ -130,6 +136,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public void handleEvent(BaseEvent be) throws JaxmppException {
 				if (be instanceof MessageEvent)
 					onMessageEvent((MessageEvent) be);
+			}
+		};
+		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
+
+			@Override
+			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+				if (Preferences.ROSTER_LAYOUT_KEY.equals(key)) {
+					((MyFragmentPageAdapter) viewPager.getAdapter()).setRefreshRoster(true);
+					viewPager.getAdapter().notifyDataSetChanged();
+				}
 			}
 		};
 	}
@@ -251,6 +267,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onCreate()");
 
 		super.onCreate(savedInstanceState);
+		this.mPreferences = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.mPreferences.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
 		AccountManager accountManager = AccountManager.get(this);
 		Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
@@ -320,7 +338,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				@Override
 				public Fragment getItem(int i) {
-					return RosterFragment.newInstance();
+					return RosterFragment.newInstance(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
 				}
 			});
 		}
@@ -342,7 +360,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (i == 0) {
 					return AccountsStatusFragment.newInstance();
 				} else if (!isXLarge() && i == 1) {
-					Fragment f = RosterFragment.newInstance();
+					Fragment f = RosterFragment.newInstance(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
 					if (DEBUG)
 						Log.d(TAG, "Created roster with FragmentManager " + f.getFragmentManager());
 					return f;
@@ -355,13 +373,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public int getItemPosition(Object object) {
-				if (DEBUG)
-					Log.i(TAG, "FragmentPagerAdapter.getItemPosition()");
-				return -1000;
+				return POSITION_NONE;
 			}
 
 			@Override
 			protected String makeFragmentName(int viewId, int index) {
+				viewId = 1;
 				if (index == 0)
 					return "android:switcher:" + viewId + ":accounts";
 				else if (index == 1)
@@ -420,6 +437,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		this.mPreferences.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
+		super.onDestroy();
 	}
 
 	// @Override

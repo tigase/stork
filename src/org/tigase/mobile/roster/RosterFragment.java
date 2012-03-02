@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.tigase.mobile.MessengerApplication;
-import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
@@ -31,9 +30,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,7 +47,9 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
@@ -90,8 +89,13 @@ public class RosterFragment extends Fragment {
 				&& o.getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 	}
 
-	public static RosterFragment newInstance() {
+	public static RosterFragment newInstance(String layout) {
 		RosterFragment f = new RosterFragment();
+
+		Bundle args = new Bundle();
+		args.putString("layout", layout);
+		f.setArguments(args);
+
 		return f;
 	}
 
@@ -119,9 +123,9 @@ public class RosterFragment extends Fragment {
 
 	private ListView listView;
 
-	private SharedPreferences mPreferences;
-
 	private ProgressBar progressBar;
+
+	private String rosterLayout;
 
 	public RosterFragment() {
 		super();
@@ -241,12 +245,34 @@ public class RosterFragment extends Fragment {
 	}
 
 	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		if (getArguments() != null) {
+			this.rosterLayout = getArguments().getString("layout", null);
+		}
+
+	}
+
+	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-		int type = ExpandableListView.getPackedPositionType(info.packedPosition);
-		if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-			RosterItem r = getJid(info.id);
+
+		final Long id;
+		if (menuInfo instanceof ExpandableListContextMenuInfo) {
+			int type = ExpandableListView.getPackedPositionType(((ExpandableListContextMenuInfo) menuInfo).packedPosition);
+			if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+				id = ((ExpandableListContextMenuInfo) lastMenuInfo).id;
+			} else
+				id = null;
+		} else if (menuInfo instanceof AdapterContextMenuInfo) {
+			id = ((AdapterContextMenuInfo) menuInfo).id;
+		} else {
+			id = null;
+		}
+
+		if (id != null) {
+			RosterItem r = getJid(id);
 			final boolean sessionEstablished = r != null && isSessionEstablished(r.getSessionObject());
 
 			MenuInflater m = new MenuInflater(getActivity());
@@ -254,7 +280,7 @@ public class RosterFragment extends Fragment {
 				Presence p = r.getSessionObject().getPresence().getBestPresence(r.getJid());
 				if (p != null && p.getType() == null) {
 					SubMenu sm = menu.addSubMenu(R.id.contactsOnlineGroup, Menu.NONE, Menu.NONE, "Chat with…");
-					prepareResources(sm, info.id);
+					prepareResources(sm, id);
 				}
 			} catch (Exception e) {
 			}
@@ -268,13 +294,11 @@ public class RosterFragment extends Fragment {
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onCreateView()");
-		this.mPreferences = inflater.getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
 
-		String rosterLayoutType = mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups");
 		View layout;
-		if ("groups".equals(rosterLayoutType)) {
+		if ("groups".equals(this.rosterLayout)) {
 			layout = inflater.inflate(R.layout.roster_list, null);
-		} else if ("flat".equals(rosterLayoutType)) {
+		} else if ("flat".equals(this.rosterLayout)) {
 			layout = inflater.inflate(R.layout.roster_list_flat, null);
 		} else {
 			throw new RuntimeException("Unknown roster layout");
@@ -316,8 +340,20 @@ public class RosterFragment extends Fragment {
 			// FlatRosterAdapter.staticContext = inflater.getContext();
 
 			this.adapter = new FlatRosterAdapter(inflater.getContext(), c);
-
 			listView.setAdapter((ListAdapter) adapter);
+			listView.setOnItemClickListener(new OnItemClickListener() {
+
+				@Override
+				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+					Log.i(TAG, "Clicked on id=" + id);
+
+					Intent intent = new Intent();
+					intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
+					intent.putExtra("id", id);
+
+					getActivity().getApplicationContext().sendBroadcast(intent);
+				}
+			});
 
 		}
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
