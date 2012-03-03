@@ -217,13 +217,12 @@ public class VCardEditorActivity extends Activity {
 	 *            - path to image
 	 * @return scaled image
 	 */
-	private Bitmap getScaledImage(String path) {
+	private Bitmap getScaledImage(Uri uri) {
 		try {
-			File f = new File(path);
 			// Decode image size
 			BitmapFactory.Options o = new BitmapFactory.Options();
 			o.inJustDecodeBounds = true;
-			BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+			BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, o);
 
 			// The new size we want to scale to
 			final int REQUIRED_SIZE = 128;
@@ -236,7 +235,7 @@ public class VCardEditorActivity extends Activity {
 			// Decode with inSampleSize
 			BitmapFactory.Options o2 = new BitmapFactory.Options();
 			o2.inSampleSize = scale;
-			return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+			return BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, o2);
 		} catch (FileNotFoundException e) {
 		}
 		return null;
@@ -248,15 +247,8 @@ public class VCardEditorActivity extends Activity {
 			Uri _uri = data.getData();
 
 			if (_uri != null) {
-				// User had pick an image.
-				Cursor cursor = getContentResolver().query(_uri, new String[] { MediaColumns.DATA }, null, null, null);
-				cursor.moveToFirst();
-
 				// Link to the image
-				final String imageFilePath = cursor.getString(0);
-				Log.v(TAG, "image choosen = " + imageFilePath);
-				// avatarButton.setImageURI(Uri.parse("file://"+imageFilePath));
-				Bitmap bmp = getScaledImage(imageFilePath);
+				Bitmap bmp = getScaledImage(_uri);
 				avatar.setImageBitmap(bmp);
 
 				byte[] buffer = bitmapToByteArray(bmp);
@@ -265,8 +257,6 @@ public class VCardEditorActivity extends Activity {
 				values.put(VCardsCacheTableMetaData.FIELD_DATA, buffer);
 				getContentResolver().insert(
 						Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), values);
-
-				cursor.close();
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);
