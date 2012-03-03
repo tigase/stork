@@ -1,11 +1,18 @@
 package org.tigase.mobile.filetransfer;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
-import org.tigase.mobile.filetransfer.FileTransferModule.StreamInitiationOfferAsyncCallback;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -17,6 +24,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -24,8 +32,59 @@ public class AndroidFileTransferUtility {
 
 	private static final String TAG = "AndroidFileTransferUtility";
 
+	private static final Timer timer = new Timer(true);
+	private static final Map<String, FileTransfer> waitingForStreamhosts = Collections.synchronizedMap(new HashMap<String, FileTransfer>());
+
+	public static void fileTransferHostsEventReceived(Jaxmpp jaxmpp, StreamhostsEvent be) {
+		FileTransfer ft = getFileTransferForStreamhost(be.getSid());
+		if (ft == null) {
+			Log.w(TAG, "file transfer for sid = " + be.getSid() + " not found!");
+			return;
+		}
+		File file = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download"
+				+ File.separator + ft.filename);
+		boolean connected = false;
+		for (Streamhost streamhost : be.getHosts()) {
+			try {
+				ft.connectToProxy(streamhost, be.getId());
+				if (!file.exists()) {
+					try {
+						file.createNewFile();
+					} catch (IOException ex) {
+						Log.v(TAG, "could not create file = " + file.getAbsolutePath());
+						throw ex;
+					}
+				}
+				connected = true;
+				ft.setOutputStream(new FileOutputStream(file));
+				break;
+			} catch (IOException ex) {
+				Log.v(TAG, "could not connect to streamhost = " + streamhost.getAddress() + ":" + streamhost.getPort(), ex);
+			}
+		}
+		if (!connected) {
+			ft.transferError("could not connect to any streamhost");
+		}
+	}
+
+	public static FileTransfer getFileTransferForStreamhost(final String id) {
+		return waitingForStreamhosts.get(id);
+	}
+
 	public static Jaxmpp getJaxmpp(Activity activity, BareJID account) {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
+	}
+
+	public static void registerFileTransferForStreamhost(final String id, FileTransfer ft) {
+		waitingForStreamhosts.put(id, ft);
+		timer.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				waitingForStreamhosts.remove(id);
+			}
+
+		}, 5L * 60 * 1000);
 	}
 
 	public static String resolveFilename(Activity activity, Uri uri, String mimetype) {
@@ -71,26 +130,27 @@ public class AndroidFileTransferUtility {
 					final InputStream is = cr.openInputStream(uri);
 					final long size = is.available();
 					final FileTransfer ft = new FileTransfer(jaxmpp, jid, name, filename, is, size);
-					ftModule.sendStreamInitiationOffer(jid, filename, mimetype, size, new StreamInitiationOfferAsyncCallback() {
-						@Override
-						public void onAccept(String sid) {
-							Log.v(TAG, "stream initiation accepted by " + jid.toString());
-							ft.setSid(sid);
-							FileTransferUtility.onStreamAccepted(ft);
-						}
+					ftModule.sendStreamInitiationOffer(jid, filename, mimetype, size, new String[] { Features.BYTESTREAMS },
+							new StreamInitiationOfferAsyncCallback() {
+								@Override
+								public void onAccept(String sid) {
+									Log.v(TAG, "stream initiation accepted by " + jid.toString());
+									ft.setSid(sid);
+									FileTransferUtility.onStreamAccepted(ft);
+								}
 
-						@Override
-						public void onError() {
-							Log.v(TAG, "stream initiation failed for " + jid.toString());
-							ft.transferError("transfer initiation failed");
-						}
+								@Override
+								public void onError() {
+									Log.v(TAG, "stream initiation failed for " + jid.toString());
+									ft.transferError("transfer initiation failed");
+								}
 
-						@Override
-						public void onReject() {
-							Log.v(TAG, "stream initiation rejected by " + jid.toString());
-							ft.transferError("transfer rejected");
-						}
-					});
+								@Override
+								public void onReject() {
+									Log.v(TAG, "stream initiation rejected by " + jid.toString());
+									ft.transferError("transfer rejected");
+								}
+							});
 				} catch (XMLException e) {
 					Log.e(TAG, "WTF?", e);
 				} catch (JaxmppException e) {
@@ -103,5 +163,4 @@ public class AndroidFileTransferUtility {
 			}
 		}.start();
 	}
-
 }

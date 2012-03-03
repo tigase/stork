@@ -15,6 +15,8 @@ import org.tigase.mobile.ui.IconContextMenu.IconContextItemSelectedListener;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -98,9 +100,30 @@ public class SendFileActivity extends Activity {
 				@Override
 				public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 					RosterItem item = getRosterItem(id);
+					final String nodeName = item.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
 					final Jaxmpp jaxmpp = getJaxmpp(item.getSessionObject().getUserBareJid());
-					final JID jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(),
-							FileTransferUtility.FEATURES);
+					JID jid = null;
+					// try to find resource with messenger
+					if (nodeName != null) {
+						Map<String,Presence> presences = jaxmpp.getPresence().getPresences(item.getJid());
+						for (Presence p : presences.values()) {
+							try {
+								Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+								if (c == null)
+									continue;
+								if (nodeName.equals(c.getAttribute("node"))) {
+									jid = p.getFrom();
+								}
+							}
+							catch (JaxmppException ex) {
+								Log.v(TAG, "WTF?", ex);
+							}
+						}
+					}
+					if (jid == null) {
+						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(),
+								FileTransferUtility.FEATURES);
+					}
 					AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, item, jid, uri, mimetype);
 					finish();
 					return true;

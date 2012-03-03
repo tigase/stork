@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.tigase.mobile.Constants;
+import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
@@ -25,9 +26,13 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.CapabilitiesDBCache;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransfer;
 import org.tigase.mobile.filetransfer.FileTransferModule;
-import org.tigase.mobile.filetransfer.FileTransferModule.FileTransferProgressEvent;
+import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
+import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
+import org.tigase.mobile.filetransfer.StreamhostsEvent;
+import org.tigase.mobile.filetransfer.IncomingFileActivity;
 import org.tigase.mobile.net.SocketThread;
 import org.tigase.mobile.roster.AuthRequestActivity;
 import org.tigase.mobile.sync.SyncAdapter;
@@ -316,7 +321,11 @@ public class JaxmppService extends Service {
 
 	private long currentChatIdFocus = -1;
 
-	private final Listener<FileTransferModule.FileTransferProgressEvent> fileTransferProgressListener;
+	private final Listener<FileTransferProgressEvent> fileTransferProgressListener;
+
+	private final Listener<FileTransferRequestEvent> fileTransferRequestListener;
+
+	private final Listener<StreamhostsEvent> fileTransferStreamhostsListener;
 
 	private ClientFocusReceiver focusChangeReceiver;
 
@@ -488,7 +497,7 @@ public class JaxmppService extends Service {
 			}
 		};
 
-		this.fileTransferProgressListener = new Listener<FileTransferModule.FileTransferProgressEvent>() {
+		this.fileTransferProgressListener = new Listener<FileTransferProgressEvent>() {
 
 			@Override
 			public void handleEvent(FileTransferProgressEvent be) throws JaxmppException {
@@ -500,6 +509,34 @@ public class JaxmppService extends Service {
 			}
 
 		};
+
+		this.fileTransferRequestListener = new Listener<FileTransferRequestEvent>() {
+
+			@Override
+			public void handleEvent(FileTransferRequestEvent be) throws JaxmppException {
+				// if there is no stream-method supported by us we return error
+				if (be.getStreamMethods() == null || !be.getStreamMethods().contains(Features.BYTESTREAMS)) {
+					FileTransferModule ftModule = getMulti().get(be.getSessionObject()).getModulesManager().getModule(
+							FileTransferModule.class);
+					ftModule.sendNoValidStreams(be);
+					return;
+				}
+
+				notificationFileTransferRequest(be);
+			}
+
+		};
+
+		this.fileTransferStreamhostsListener = new Listener<StreamhostsEvent>() {
+
+			@Override
+			public void handleEvent(StreamhostsEvent be) throws JaxmppException {
+				Jaxmpp jaxmpp = getMulti().get(be.getSessionObject());
+				AndroidFileTransferUtility.fileTransferHostsEventReceived(jaxmpp, be);
+			}
+
+		};
+
 	}
 
 	protected synchronized void changeRosterItem(RosterEvent be) {
@@ -653,6 +690,43 @@ public class JaxmppService extends Service {
 
 	private void notificationCancel() {
 		notificationManager.cancel(NOTIFICATION_ID);
+	}
+
+	private void notificationFileTransferRequest(FileTransferRequestEvent ev) {
+		long whenNotify = System.currentTimeMillis();
+		String tag = ev.getSender().toString() + ":" + ev.getSid();
+
+		Jaxmpp jaxmpp = getMulti().get(ev.getSessionObject());
+		RosterItem ri = jaxmpp.getRoster().get(ev.getSender().getBareJid());
+
+		int ico = android.R.drawable.stat_sys_download;
+		String notificationTitle = "Incoming file " + ev.getFilename() + " from "
+				+ (ri != null && ri.getName() != null ? ri.getName() : ev.getSender().getBareJid().toString());
+		String notificationText = "";
+
+		Notification notification = new Notification(ico, notificationTitle, whenNotify);
+		notification.flags |= Notification.FLAG_AUTO_CANCEL;
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		// notification.defaults |= Notification.DEFAULT_SOUND;
+
+		String expandedNotificationTitle = notificationTitle;
+		Context context = getApplicationContext();
+		Intent intent = new Intent(context, IncomingFileActivity.class);
+		intent.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+		intent.putExtra("sender", ev.getSender().toString());
+		intent.putExtra("id", ev.getId());
+		intent.putExtra("sid", ev.getSid());
+		intent.putExtra("filename", ev.getFilename());
+		if (ev.getFilesize() != null) {
+			intent.putExtra("filesize", ev.getFilesize());
+		}
+		intent.putExtra("mimetype", ev.getMimetype());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT
+				| PendingIntent.FLAG_ONE_SHOT);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
+
+		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
 	}
 
 	private void notificationUpdate() {
@@ -956,7 +1030,9 @@ public class JaxmppService extends Service {
 		getMulti().addListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
-		getMulti().addListener(FileTransferModule.FileTransferProgressEventType, this.fileTransferProgressListener);
+		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
+		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
+		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
 
 		getMulti().addListener(PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 
@@ -1006,7 +1082,9 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
-		getMulti().removeListener(FileTransferModule.FileTransferProgressEventType, this.fileTransferProgressListener);
+		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
+		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
+		getMulti().removeListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
 
 		getMulti().removeListener(Connector.Error, this.connectorListener);
 		getMulti().removeListener(Connector.StreamTerminated, this.connectorListener);

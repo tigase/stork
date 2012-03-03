@@ -76,4 +76,13 @@
     <string name="vcard_retrieving">Loading. Please wait…</string>
     <string name="vcard_publishing">Publishing. Please wait…</string>
 
+    <string name="incoming_file">Incoming file</string>
+    <string name="incoming_file_from">From</string>
+    <string name="incoming_file_filename">Name</string>
+    <string name="incoming_file_mimetype">Kind</string>
+    <string name="incoming_file_filesize">Size</string>
+    <string name="incoming_file_description">Description</string>
+       
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
 </resources>

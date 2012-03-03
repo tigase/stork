@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.tigase.mobile.Features;
-import org.tigase.mobile.filetransfer.FileTransferModule.Host;
-import org.tigase.mobile.filetransfer.FileTransferModule.StreamhostsCallback;
 
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
@@ -46,13 +44,13 @@ public class FileTransferUtility {
 
 	public static abstract class StreamhostUsedCallback implements AsyncCallback {
 
-		private List<Host> hosts;
+		private List<Streamhost> hosts;
 
-		public List<Host> getHosts() {
+		public List<Streamhost> getHosts() {
 			return this.hosts;
 		}
 
-		public void setHosts(List<Host> hosts) {
+		public void setHosts(List<Streamhost> hosts) {
 			this.hosts = hosts;
 		}
 	}
@@ -215,7 +213,7 @@ public class FileTransferUtility {
 						}
 
 						@Override
-						public void onStreamhosts(List<Host> hosts) {
+						public void onStreamhosts(List<Streamhost> hosts) {
 							// TODO Auto-generated method stub
 							Log.v(TAG, "streamhost request succeeded for " + proxyJid.toString());
 							ft.setProxyJid(JID.jidInstance(hosts.get(0).getJid()));
@@ -245,7 +243,7 @@ public class FileTransferUtility {
 	// public static void onStreamhostsReceived(final Jaxmpp jaxmpp, final JID
 	// recipient, final Uri uri, final String sid, final JID proxyJid, final
 	// List<Host> hosts) {
-	public static void onStreamhostsReceived(final FileTransfer ft, final List<Host> hosts) {
+	public static void onStreamhostsReceived(final FileTransfer ft, final List<Streamhost> hosts) {
 		final FileTransferModule ftModule = ft.jaxmpp.getModulesManager().getModule(FileTransferModule.class);
 
 		final StreamhostUsedCallback streamused = new StreamhostUsedCallback() {
@@ -261,10 +259,10 @@ public class FileTransferUtility {
 				Element query = iq.getChildrenNS("query", FileTransferModule.XMLNS_BS);
 				String streamhostUsed = query.getFirstChild().getAttribute("jid");
 				boolean connected = false;
-				for (Host host : getHosts()) {
+				for (Streamhost host : getHosts()) {
 					if (streamhostUsed.equals(host.getJid())) {
 						try {
-							ft.connectToProxy(host);
+							ft.connectToProxy(host, null);
 							connected = true;
 							break;
 						} catch (Exception ex) {

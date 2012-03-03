@@ -98,7 +98,12 @@
         		<data android:mimeType="audio/*" />
     		</intent-filter>
     	</activity>        
-        
+        <activity
+            android:name=".filetransfer.IncomingFileActivity"
+            android:label="@string/incoming_file"
+            android:theme="@style/XTheme.Light" >
+        </activity>
+		
         <!-- The authenticator service -->
         <service
             android:name=".authenticator.AuthenticationService"
@@ -164,5 +169,5 @@
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 </manifest>

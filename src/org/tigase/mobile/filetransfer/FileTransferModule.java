@@ -10,10 +10,10 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.PacketWriter;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.XmppModule;
 import tigase.jaxmpp.core.client.criteria.Criteria;
 import tigase.jaxmpp.core.client.criteria.ElementCriteria;
+import tigase.jaxmpp.core.client.criteria.Or;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.EventType;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -30,191 +30,22 @@ public class FileTransferModule implements XmppModule {
 	public static abstract class ActivateCallback implements AsyncCallback {
 
 	}
-
-	public static class FileTransferProgressEvent extends FileTransferEvent {
-
-		private final FileTransfer fileTransfer;
-
-		public FileTransferProgressEvent(EventType type, SessionObject sessionObject, FileTransfer fileTransfer) {
-			super(type, sessionObject);
-			this.fileTransfer = fileTransfer;
-		}
-
-		public FileTransfer getFileTransfer() {
-			return fileTransfer;
-		}
-	}
-
-	public static class Host {
-
-		private String address;
-		private String jid;
-		private Integer port;
-
-		public Host(String jid, String address, Integer port) {
-			this.jid = jid;
-			this.address = address;
-			this.port = port;
-		}
-
-		public String getAddress() {
-			return address;
-		}
-
-		public String getJid() {
-			return jid;
-		}
-
-		public Integer getPort() {
-			return port;
-		}
-
-	}
-
-	public static class HostsEvent extends FileTransferEvent {
-
-		private JID from;
-		private List<Host> hosts;
-		private String id;
-		private String sid;
-
-		public HostsEvent(EventType eventType, SessionObject sessionObject) {
-			super(eventType, sessionObject);
-
-			hosts = new ArrayList<Host>();
-		}
-
-		public JID getFrom() {
-			return from;
-		}
-
-		public List<Host> getHosts() {
-			return hosts;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public String getSid() {
-			return sid;
-		}
-
-		public void setFrom(JID from) {
-			this.from = from;
-		}
-
-		public void setHosts(List<Host> hosts) {
-			this.hosts = hosts;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public void setSid(String sid) {
-			this.sid = sid;
-		}
-	}
-
-	public static abstract class StreamhostsCallback implements AsyncCallback {
-
-		private FileTransferModule ftManager;
-
-		public StreamhostsCallback(FileTransferModule ftManager) {
-			this.ftManager = ftManager;
-		}
-
-		public abstract void onStreamhosts(List<Host> hosts);
-
-		@Override
-		public void onSuccess(Stanza stanza) throws JaxmppException {
-			List<Host> hosts = ftManager.processStreamhosts(stanza);
-			if (hosts != null) {
-				onStreamhosts(hosts);
-			}
-		}
-
-	}
-
-	public static abstract class StreamInitiationOfferAsyncCallback implements AsyncCallback {
-
-		private String sid = null;
-
-		public abstract void onAccept(String sid);
-
-		public abstract void onError();
-
-		@Override
-		public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-			if (error == ErrorCondition.forbidden) {
-				onReject();
-			} else {
-				onError();
-			}
-		}
-
-		public abstract void onReject();
-
-		@Override
-		public void onSuccess(Stanza stanza) throws JaxmppException {
-			boolean ok = false;
-			String sid = null;
-
-			Element si = stanza.getChildrenNS("si", XMLNS_SI);
-			if (si != null) {
-				sid = si.getAttribute("id");
-				Element feature = si.getChildrenNS("feature", "http://jabber.org/protocol/feature-neg");
-				if (feature != null) {
-					Element x = feature.getChildrenNS("x", "jabber:x:data");
-					if (x != null) {
-						Element field = x.getFirstChild();
-						if (field != null) {
-							Element value = field.getFirstChild();
-							if (value != null) {
-								ok = XMLNS_BS.equals(value.getValue());
-							}
-						}
-					}
-				}
-			}
-
-			if (sid == null) {
-				sid = this.sid;
-			}
-
-			if (ok) {
-				onAccept(sid);
-			} else {
-				onError();
-			}
-		}
-
-		@Override
-		public void onTimeout() {
-			onError();
-		}
-
-		public void setSid(String sid) {
-			this.sid = sid;
-		}
-	}
-
+	
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
+	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
+	public static final String XMLNS_SI_FILE = "http://jabber.org/protocol/si/profile/file-transfer";
 
-	private static final Criteria CRIT = ElementCriteria.name("iq").add(ElementCriteria.name("query", XMLNS_BS));
+	private static final Criteria CRIT = ElementCriteria.name("iq").add(
+			new Or(ElementCriteria.name("query", XMLNS_BS), ElementCriteria.name("si", new String[] { "xmlns", "profile" },
+					new String[] { XMLNS_SI, XMLNS_SI_FILE })));
 
-	private static final String[] FEATURES = new String[] { XMLNS_BS };
-
-	public static final EventType FileTransferProgressEventType = new EventType();
-
-	public static final EventType HostsEvent = new EventType();
+	private static final String[] FEATURES = new String[] { XMLNS_BS, XMLNS_SI, XMLNS_SI_FILE };
 
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());
 
-	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
-
-	public static final String XMLNS_SI_FILE = "http://jabber.org/protocol/si/profile/file-transfer";
+	public static final EventType ProgressEventType = new EventType();
+	public static final EventType RequestEventType = new EventType();
+	public static final EventType StreamhostsEventType = new EventType();
 
 	private final Observable observable;
 
@@ -228,12 +59,38 @@ public class FileTransferModule implements XmppModule {
 		writer = packetWriter;
 	}
 
+	public void acceptStreamInitiation(JID to, String id, String streamMethod) throws JaxmppException {
+		Element iq = new DefaultElement("iq");
+		iq.setAttribute("type", "result");
+		iq.setAttribute("to", to.toString());
+		iq.setAttribute("id", id);
+
+		Element si = new DefaultElement("si", null, XMLNS_SI);
+		iq.addChild(si);
+
+		Element feature = new DefaultElement("feature", null, "http://jabber.org/protocol/feature-neg");
+		si.addChild(feature);
+
+		Element x = new DefaultElement("x", null, "jabber:x:data");
+		x.setAttribute("type", "submit");
+		feature.addChild(x);
+
+		Element field = new DefaultElement("field");
+		field.setAttribute("var", "stream-method");
+		x.addChild(field);
+
+		Element value = new DefaultElement("value", streamMethod, null);
+		field.addChild(value);
+
+		writer.write(iq);
+	}
+
 	public void addListener(EventType eventType, Listener listener) {
 		observable.addListener(eventType, listener);
 	}
 
 	public void fileTransferProgressUpdated(FileTransfer ft) {
-		FileTransferEvent event = new FileTransferProgressEvent(FileTransferProgressEventType, session, ft);
+		FileTransferEvent event = new FileTransferProgressEvent(ProgressEventType, session, ft);
 		try {
 			observable.fireEvent(event);
 		} catch (JaxmppException e) {
@@ -259,37 +116,98 @@ public class FileTransferModule implements XmppModule {
 	}
 
 	public void process(IQ iq) throws XMLException, JaxmppException {
-		List hosts = processStreamhosts(iq);
-		if (hosts != null) {
-			HostsEvent event = new HostsEvent(HostsEvent, this.session);
-			event.setId(iq.getId());
-			event.setSid(iq.getChildrenNS("query", XMLNS_BS).getAttribute("sid"));
-			event.setFrom(iq.getFrom());
-			event.setHosts(hosts);
+		Element query = iq.getChildrenNS("query", XMLNS_BS);
+		if (query != null) {
+			List<Streamhost> hosts = processStreamhosts(iq);
+			if (hosts != null) {
+				StreamhostsEvent event = new StreamhostsEvent(StreamhostsEventType, this.session);
+				event.setId(iq.getId());
+				event.setSid(iq.getChildrenNS("query", XMLNS_BS).getAttribute("sid"));
+				event.setFrom(iq.getFrom());
+				event.setHosts(hosts);
 
-			observable.fireEvent(event);
-			return;
+				observable.fireEvent(event);
+				return;
+			}
+		}
+		query = iq.getChildrenNS("si", XMLNS_SI);
+		if (query != null) {
+			processStreamInitiationRequest(iq);
 		}
 	}
 
-	private List<Host> processStreamhosts(Stanza iq) throws XMLException {
+	List<Streamhost> processStreamhosts(Stanza iq) throws XMLException {
 		Element query = iq.getChildrenNS("query", XMLNS_BS);
 		List<Element> el_hosts = query.getChildren("streamhost");
 
 		if (el_hosts == null)
 			return null;
 
-		List<Host> hosts = new ArrayList<Host>();
+		List<Streamhost> hosts = new ArrayList<Streamhost>();
 
 		if (el_hosts != null) {
-			HostsEvent event = new HostsEvent(HostsEvent, this.session);
+			StreamhostsEvent event = new StreamhostsEvent(StreamhostsEventType, this.session);
 			for (Element el_host : el_hosts) {
 				String jid = el_host.getAttribute("jid");
-				hosts.add(new Host(jid, el_host.getAttribute("host"), Integer.parseInt(el_host.getAttribute("port"))));
+				hosts.add(new Streamhost(jid, el_host.getAttribute("host"), Integer.parseInt(el_host.getAttribute("port"))));
 			}
 		}
 
 		return hosts;
+	}
+
+	private void processStreamInitiationRequest(IQ iq) throws JaxmppException {
+		if (iq.getType() != StanzaType.set)
+			return;
+
+		Element si = iq.getChildrenNS("si", XMLNS_SI);
+		Element file = si.getChildrenNS("file", XMLNS_SI_FILE);
+		if (file == null)
+			return;
+
+		Element feature = si.getChildrenNS("feature", "http://jabber.org/protocol/feature-neg");
+		if (feature == null) {
+			returnErrorBadRequest(iq);
+			return;
+		}
+		Element x = feature.getChildrenNS("x", "jabber:x:data");
+		if (x == null) {
+			returnErrorBadRequest(iq);
+			return;
+		}
+		Element field = x.getFirstChild();
+		if (field == null) {
+			returnErrorBadRequest(iq);
+			return;
+		}
+		List<String> streamMethods = new ArrayList<String>();
+		List<Element> options = field.getChildren("option");
+		if (options != null) {
+			for (Element option : options) {
+				Element value = option.getFirstChild();
+				if (value != null) {
+					if (value.getValue() != null) {
+						streamMethods.add(value.getValue());
+					}
+				}
+			}
+		}
+
+		Long filesize = null;
+		if (file.getAttribute("size") != null) {
+			filesize = Long.parseLong(file.getAttribute("size"));
+		}
+
+		FileTransferRequestEvent event = new FileTransferRequestEvent(RequestEventType, this.session, iq.getFrom(),
+				iq.getAttribute("id"), si.getAttribute("id"), file.getAttribute("name"), filesize, streamMethods,
+				si.getAttribute("mimetype"));
+
+		observable.fireEvent(event);
+	}
+
+	public void rejectStreamInitiation(JID to, String id) throws JaxmppException {
+		returnError(to.toString(), id, "cancel", new String[] { "forbidden" },
+				new String[] { "urn:ietf:params:xml:ns:xmpp-stanzas" });
 	}
 
 	public void removeListener(Listener listener) {
@@ -323,7 +241,33 @@ public class FileTransferModule implements XmppModule {
 		writer.write(iq, callback);
 	}
 
-	public void sendStreamhosts(JID recipient, String sid, List<Host> hosts, AsyncCallback callback) throws XMLException,
+	private void returnError(String to, String id, String type, String[] names, String[] xmlnss) throws JaxmppException {
+		Element result = new DefaultElement("iq");
+		result.setAttribute("id", id);
+		result.setAttribute("to", to);
+		result.setAttribute("type", "error");
+
+		Element error = new DefaultElement("error");
+		error.setAttribute("type", type);
+		for (int i = 0; i < names.length; i++) {
+			Element err = new DefaultElement(names[i], null, xmlnss[i]);
+			error.addChild(err);
+		}
+		result.addChild(error);
+		writer.write(result);
+	}
+
+	private void returnErrorBadRequest(IQ iq) throws JaxmppException {
+		returnError(iq.getAttribute("from"), iq.getAttribute("id"), "cancel", new String[] { "bad-request" },
+				new String[] { "urn:ietf:params:xml:ns:xmpp-stanzas" });
+	}
+
+	public void sendNoValidStreams(FileTransferRequestEvent be) throws JaxmppException {
+		returnError(be.getSender().toString(), be.getId(), "cancel", new String[] { "bad-request", "no-valid-streams" },
+				new String[] { XMLNS_BS, XMLNS_SI });
+	}
+
+	public void sendStreamhosts(JID recipient, String sid, List<Streamhost> hosts, AsyncCallback callback) throws XMLException,
 			JaxmppException {
 		IQ iq = IQ.create();
 		iq.setTo(recipient);
@@ -333,7 +277,7 @@ public class FileTransferModule implements XmppModule {
 		iq.addChild(query);
 		query.setAttribute("sid", sid);
 
-		for (Host host : hosts) {
+		for (Streamhost host : hosts) {
 			Element streamhost = new DefaultElement("streamhost");
 			streamhost.setAttribute("jid", host.getJid());
 			streamhost.setAttribute("host", host.getAddress());
@@ -344,13 +288,14 @@ public class FileTransferModule implements XmppModule {
 		writer.write(iq, (long) (3 * 60 * 1000), callback);
 	}
 
-	public void sendStreamhostUsed(JID to, String id, String sid, Host streamhost) throws XMLException, JaxmppException {
+	public void sendStreamhostUsed(JID to, String id, String sid, Streamhost streamhost) throws XMLException, JaxmppException {
 		IQ iq = IQ.create();
 		iq.setTo(to);
 		iq.setId(id);
 		iq.setType(StanzaType.result);
 
 		Element query = new DefaultElement("query", null, XMLNS_BS);
+		query.setAttribute("sid", sid);
 		iq.addChild(query);
 
 		Element streamhostUsed = new DefaultElement("streamhost-used");
@@ -362,7 +307,7 @@ public class FileTransferModule implements XmppModule {
 	}
 
 	public void sendStreamInitiationOffer(JID recipient, String filename, String mimetype, long filesize,
-			StreamInitiationOfferAsyncCallback callback) throws XMLException, JaxmppException {
+			String[] streamMethods, StreamInitiationOfferAsyncCallback callback) throws XMLException, JaxmppException {
 		IQ iq = IQ.create();
 		iq.setTo(recipient);
 		iq.setType(StanzaType.set);
@@ -393,10 +338,12 @@ public class FileTransferModule implements XmppModule {
 		field.setAttribute("var", "stream-method");
 		field.setAttribute("type", "list-single");
 		x.addChild(field);
-		Element option = new DefaultElement("option");
-		field.addChild(option);
-		Element value = new DefaultElement("value", XMLNS_BS, null);
-		option.addChild(value);
+		for (String streamMethod : streamMethods) {
+			Element option = new DefaultElement("option");
+			field.addChild(option);
+			Element value = new DefaultElement("value", streamMethod, null);
+			option.addChild(value);
+		}
 
 		writer.write(iq, (long) (10 * 60 * 1000), callback);
 	}

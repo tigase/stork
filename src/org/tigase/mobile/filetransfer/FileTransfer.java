@@ -2,6 +2,7 @@ package org.tigase.mobile.filetransfer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -10,7 +11,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.tigase.mobile.filetransfer.FileTransferModule.ActivateCallback;
-import org.tigase.mobile.filetransfer.FileTransferModule.Host;
 import org.tigase.mobile.net.SocketThread;
 
 import tigase.jaxmpp.core.client.JID;
@@ -39,21 +39,23 @@ public class FileTransfer {
 	// private final Uri uri;
 	public final String filename;
 	public final FileTransferModule ftModule;
-	// private FileChannel inputChannel = null;
 	private InputStream inputStream = null;
 	public final Jaxmpp jaxmpp;
 	public final JID jid;
 	public final boolean outgoing;
-
 	private ByteBuffer outgoingBuffer = null;
+
+	private OutputStream outputStream = null;
 	private JID proxyJid;
 	private long read = 0;
 
+	private String responseId = null;
 	private Socks5IOService service;
 	public String sid;
-
 	private long size = 0;
+
 	private State state = null;
+	private Streamhost streamhost = null;
 
 	private long wrote = 0;
 
@@ -63,7 +65,6 @@ public class FileTransfer {
 		this.ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
 		this.buddyJid = buddyJid;
 		this.buddyName = buddyName;
-		// this.uri = uri;
 		this.filename = filename;
 		this.inputStream = is;
 		this.outgoing = true;
@@ -73,51 +74,44 @@ public class FileTransfer {
 		this.updateProgress();
 	}
 
+	public FileTransfer(Jaxmpp jaxmpp, JID buddyJid, String buddyName, String filename, long size) {
+		this.jaxmpp = jaxmpp;
+		this.jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
+		this.ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		this.buddyJid = buddyJid;
+		this.buddyName = buddyName;
+		this.filename = filename;
+		this.outgoing = false;
+		this.size = size;
+
+		this.state = State.negotiating;
+		this.updateProgress();
+	}
+
 	public void connectedToProxy() {
 		final FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
 		try {
-			ftModule.requestActivate(proxyJid, sid, buddyJid.toString(), new ActivateCallback() {
-
-				@Override
-				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-					Log.e(TAG, "activation for " + buddyJid.toString() + " resulted in error = " + error.getElementName());
-					stop();
-				}
-
-				@Override
-				public void onSuccess(Stanza responseStanza) throws JaxmppException {
-					Log.v(TAG, "activation for " + buddyJid.toString() + " succeeded");
-					state = State.active;
-					updateProgress();
-					try {
-						// inputChannel = new
-						// FileInputStream(uri.getPath()).getChannel();
-						outgoingBuffer = readData();
-						service.sendData(outgoingBuffer);
-					} catch (Exception ex) {
-						stop();
-					}
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					Log.e(TAG, "stream activation for " + buddyJid.toString() + " timed out");
-					stop();
-				}
-			});
+			if (outgoing) {
+				outgoingConnectedToProxy(ftModule);
+			} else {
+				Log.v(TAG, "connection to host " + streamhost.getJid() + " for " + buddyJid.toString() + " succeeded");
+				state = State.active;
+				updateProgress();
+				ftModule.sendStreamhostUsed(buddyJid, responseId, sid, streamhost);
+			}
 		} catch (XMLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			stop();
 		} catch (JaxmppException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			stop();
 		}
 	}
 
-	public void connectToProxy(Host streamhost) throws IOException {
+	public void connectToProxy(Streamhost streamhost, String responseId) throws IOException {
 		state = State.connecting;
+		this.responseId = responseId;
+		this.streamhost = streamhost;
 		SocketAddress address = new InetSocketAddress(streamhost.getAddress(), streamhost.getPort());
 		final SocketChannel channel = SocketChannel.open(address);
 		this.service = new Socks5IOService(channel, this);
@@ -126,7 +120,7 @@ public class FileTransfer {
 
 	public String getAuthString() {
 		try {
-			String data = sid + jid.toString() + buddyJid.toString();
+			String data = outgoing ? sid + jid.toString() + buddyJid.toString() : sid + buddyJid.toString() + jid.toString();
 			MessageDigest md = MessageDigest.getInstance("SHA-1");
 			md.update(data.getBytes());
 			byte[] buff = md.digest();
@@ -156,6 +150,36 @@ public class FileTransfer {
 		return state;
 	}
 
+	private void outgoingConnectedToProxy(final FileTransferModule ftModule) throws JaxmppException {
+		ftModule.requestActivate(proxyJid, sid, buddyJid.toString(), new ActivateCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+				Log.e(TAG, "activation for " + buddyJid.toString() + " resulted in error = " + error.getElementName());
+				stop();
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+				Log.v(TAG, "activation for " + buddyJid.toString() + " succeeded");
+				state = State.active;
+				updateProgress();
+				try {
+					outgoingBuffer = readData();
+					service.sendData(outgoingBuffer);
+				} catch (Exception ex) {
+					stop();
+				}
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				Log.e(TAG, "stream activation for " + buddyJid.toString() + " timed out");
+				stop();
+			}
+		});
+	}
+
 	private ByteBuffer readData() throws IOException {
 		if (outgoingBuffer == null) {
 			outgoingBuffer = ByteBuffer.allocate(64 * 1024);
@@ -163,8 +187,6 @@ public class FileTransfer {
 
 		outgoingBuffer.clear();
 
-		// TODO - Read from file here!!
-		// inputChannel.read(outgoingBuffer);
 		byte[] data = new byte[64 * 1024];
 		int read = inputStream.read(data);
 		if (read != -1) {
@@ -179,8 +201,22 @@ public class FileTransfer {
 	}
 
 	public void receivedData(ByteBuffer buf) {
-		// TODO Auto-generated method stub
 		read += buf.remaining();
+
+		if (outputStream != null) {
+			if (read == size) {
+				this.state = State.finished;
+				updateProgress();
+			}
+			byte[] data = new byte[buf.remaining()];
+			buf.get(data);
+			try {
+				outputStream.write(data, 0, data.length);
+			} catch (IOException ex) {
+				stop();
+			}
+		}
+
 		updateProgress();
 	}
 
@@ -196,6 +232,10 @@ public class FileTransfer {
 		}
 	}
 
+	public void setOutputStream(OutputStream outputStream) {
+		this.outputStream = outputStream;
+	}
+
 	public void setProxyJid(JID jid) {
 		this.proxyJid = jid;
 	}
@@ -206,12 +246,25 @@ public class FileTransfer {
 
 	public void stop() {
 		Log.v(TAG, "stopped");
+		try {
+			if (outgoing) {
+				if (inputStream != null) {
+					inputStream.close();
+				}
+			} else {
+				if (outputStream != null) {
+					outputStream.close();
+				}
+			}
+		} catch (Exception ex) {
+			Log.v(TAG, "exception while closing local io stream", ex);
+		}
+
 		if (service != null) {
 			try {
 				service.forceStop();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Log.v(TAG, "WTF?", e);
 			}
 		}
 		updateProgress();
@@ -235,7 +288,6 @@ public class FileTransfer {
 	}
 
 	public void transferFinished() {
-		// TODO Auto-generated method stub
 		if (state != State.finished) {
 			state = State.finished;
 		}
