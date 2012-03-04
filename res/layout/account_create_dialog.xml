@@ -37,7 +37,7 @@
                 android:id="@+id/newAccountHostnameSelector"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:entries="@array/free_account_hostnames" />
+                android:entries="@array/free_account_create_hostnames" />
 
             <EditText
                 android:id="@+id/newAccountPassowrd"

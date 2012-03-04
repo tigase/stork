@@ -26,5 +26,8 @@
         <item>jabber.me</item>
         <item>tigase.im</item>
     </string-array>
-
+    <string-array name="free_account_create_hostnames">
+        <item>sure.im</item>
+    </string-array>
+    
 </resources>
