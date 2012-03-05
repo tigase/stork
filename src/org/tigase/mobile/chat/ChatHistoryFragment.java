@@ -285,7 +285,13 @@ public class ChatHistoryFragment extends Fragment {
 				return;
 			}
 		}
-		throw new RuntimeException("Chat not found!");
+
+		String ids = "";
+		for (int i = 0; i < l.size(); i++) {
+			Chat c = l.get(i);
+			ids += c.getId() + " ";
+		}
+		throw new RuntimeException("Chat (id:" + chatId + ", account:" + account + ")  not found! Available ids=" + ids);
 	}
 
 	private void showMessageDetails(final long id) {
