@@ -70,6 +70,20 @@ public class RosterFragment extends Fragment {
 
 	static final int TOKEN_GROUP = 0;
 
+	private static long extractId(ContextMenuInfo menuInfo) {
+		if (menuInfo instanceof ExpandableListContextMenuInfo) {
+			int type = ExpandableListView.getPackedPositionType(((ExpandableListContextMenuInfo) menuInfo).packedPosition);
+			if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+				return ((ExpandableListContextMenuInfo) menuInfo).id;
+			} else
+				return -1;
+		} else if (menuInfo instanceof AdapterContextMenuInfo) {
+			return ((AdapterContextMenuInfo) menuInfo).id;
+		} else {
+			return -1;
+		}
+	}
+
 	private static boolean inArray(long[] array, long element) {
 		for (long l : array) {
 			if (l == element) {
@@ -189,14 +203,7 @@ public class RosterFragment extends Fragment {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		long lastId;
-		if (lastMenuInfo instanceof ExpandableListContextMenuInfo) {
-			lastId = ((ExpandableListContextMenuInfo) lastMenuInfo).id;
-		} else if (lastMenuInfo instanceof AdapterContextMenuInfo) {
-			lastId = ((AdapterContextMenuInfo) lastMenuInfo).id;
-		} else {
-			lastId = -1;
-		}
+		long lastId = extractId(lastMenuInfo);
 		switch (item.getItemId()) {
 		// case R.id.startChat: {
 		// ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo)
@@ -206,23 +213,23 @@ public class RosterFragment extends Fragment {
 		// return true;
 		// }
 		case R.id.contactDetails: {
-			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+			Long infoId = extractId(item.getMenuInfo());
 			Intent intent = new Intent(getActivity().getApplicationContext(), VCardViewActivity.class);
-			intent.putExtra("itemId", info.id);
+			intent.putExtra("itemId", infoId);
 			this.startActivityForResult(intent, 0);
 			return true;
 		}
 		case R.id.contactEdit: {
-			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+			Long infoId = extractId(item.getMenuInfo());
 			Intent intent = new Intent(getActivity().getApplicationContext(), ContactEditActivity.class);
-			intent.putExtra("itemId", info.id);
+			intent.putExtra("itemId", infoId);
 			this.startActivityForResult(intent, 0);
 
 			return true;
 		}
 		case R.id.contactRemove: {
-			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
-			DialogFragment newFragment = ContactRemoveDialog.newInstance(info.id);
+			Long infoId = extractId(item.getMenuInfo());
+			DialogFragment newFragment = ContactRemoveDialog.newInstance(infoId);
 			newFragment.show(getFragmentManager(), "dialog");
 			return true;
 		}
@@ -258,20 +265,9 @@ public class RosterFragment extends Fragment {
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
 
-		final Long id;
-		if (menuInfo instanceof ExpandableListContextMenuInfo) {
-			int type = ExpandableListView.getPackedPositionType(((ExpandableListContextMenuInfo) menuInfo).packedPosition);
-			if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-				id = ((ExpandableListContextMenuInfo) menuInfo).id;
-			} else
-				id = null;
-		} else if (menuInfo instanceof AdapterContextMenuInfo) {
-			id = ((AdapterContextMenuInfo) menuInfo).id;
-		} else {
-			id = null;
-		}
+		final Long id = extractId(menuInfo);
 
-		if (id != null) {
+		if (id != null && id != -1) {
 			RosterItem r = getJid(id);
 			final boolean sessionEstablished = r != null && isSessionEstablished(r.getSessionObject());
 
