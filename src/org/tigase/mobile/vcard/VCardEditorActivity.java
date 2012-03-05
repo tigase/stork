@@ -1,8 +1,6 @@
 package org.tigase.mobile.vcard;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 import org.tigase.mobile.MessengerApplication;
@@ -39,7 +37,6 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore.MediaColumns;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;

@@ -105,7 +105,7 @@ public class SendFileActivity extends Activity {
 					JID jid = null;
 					// try to find resource with messenger
 					if (nodeName != null) {
-						Map<String,Presence> presences = jaxmpp.getPresence().getPresences(item.getJid());
+						Map<String, Presence> presences = jaxmpp.getPresence().getPresences(item.getJid());
 						for (Presence p : presences.values()) {
 							try {
 								Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
@@ -114,15 +114,13 @@ public class SendFileActivity extends Activity {
 								if (nodeName.equals(c.getAttribute("node"))) {
 									jid = p.getFrom();
 								}
-							}
-							catch (JaxmppException ex) {
+							} catch (JaxmppException ex) {
 								Log.v(TAG, "WTF?", ex);
 							}
 						}
 					}
 					if (jid == null) {
-						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(),
-								FileTransferUtility.FEATURES);
+						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(), FileTransferUtility.FEATURES);
 					}
 					AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, item, jid, uri, mimetype);
 					finish();

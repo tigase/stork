@@ -56,5 +56,5 @@ public class FileTransferRequestEvent extends FileTransferEvent {
 	public List<String> getStreamMethods() {
 		return streamMethods;
 	}
-		
+
 }
