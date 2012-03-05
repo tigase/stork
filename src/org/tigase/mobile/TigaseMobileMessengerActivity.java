@@ -35,6 +35,7 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -367,14 +368,26 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					return f;
 
 				} else {
-					final Chat chat = getChatList().get(i - (!isXLarge() ? 2 : 1));
-					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserBareJid().toString(), chat.getId());
+					int idx = i - (!isXLarge() ? 2 : 1);
+					final Chat chat = getChatList().get(idx);
+					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserBareJid().toString(), chat.getId(),
+							idx);
 				}
 			}
 
 			@Override
 			public int getItemPosition(Object object) {
-				return POSITION_NONE;
+				if (object instanceof AccountsStatusFragment) {
+					return 0;
+				} else if (object instanceof RosterFragment) {
+					return 1;
+				} else {
+					for (Chat t : getChatList()) {
+						if (t == object)
+							return 2 + findChat(t.getId());
+					}
+					return POSITION_NONE;
+				}
 			}
 
 			@Override
@@ -496,6 +509,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					viewPager.getAdapter().notifyDataSetChanged();
 				} else if (be.getType() == MessageModule.ChatClosed) {
 					viewPager.getAdapter().notifyDataSetChanged();
+				}
+				RosterItem it = be.getChat().getSessionObject().getRoster().get(be.getChat().getJid().getBareJid());
+				if (it != null) {
+					Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
+					getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
 				}
 			}
 		};

@@ -35,6 +35,7 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 		if (DEBUG)
 			Log.v(TAG, "Detaching item #" + position + ": f=" + object + " v=" + ((Fragment) object).getView());
 		mCurTransaction.detach((Fragment) object);
+		mCurTransaction.remove((Fragment) object);
 	}
 
 	@Override

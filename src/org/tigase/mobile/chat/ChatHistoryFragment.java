@@ -46,12 +46,13 @@ public class ChatHistoryFragment extends Fragment {
 
 	private static final String TAG = "tigase";
 
-	public static Fragment newInstance(String account, long chatId) {
+	public static Fragment newInstance(String account, long chatId, int pageIndex) {
 		ChatHistoryFragment f = new ChatHistoryFragment();
 
 		Bundle args = new Bundle();
 		args.putLong("chatId", chatId);
 		args.putString("account", account);
+		args.putInt("page", pageIndex);
 		f.setArguments(args);
 
 		if (DEBUG)
@@ -140,7 +141,13 @@ public class ChatHistoryFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
-			setChatId(BareJID.bareJIDInstance(getArguments().getString("account")), getArguments().getLong("chatId"));
+			int idx = getArguments().getInt("page");
+			Chat ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats().get(idx);
+
+			setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
+
+			// setChatId(BareJID.bareJIDInstance(getArguments().getString("account")),
+			// getArguments().getLong("chatId"));
 		}
 	}
 
