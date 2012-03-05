@@ -262,7 +262,7 @@ public class RosterFragment extends Fragment {
 		if (menuInfo instanceof ExpandableListContextMenuInfo) {
 			int type = ExpandableListView.getPackedPositionType(((ExpandableListContextMenuInfo) menuInfo).packedPosition);
 			if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-				id = ((ExpandableListContextMenuInfo) lastMenuInfo).id;
+				id = ((ExpandableListContextMenuInfo) menuInfo).id;
 			} else
 				id = null;
 		} else if (menuInfo instanceof AdapterContextMenuInfo) {
