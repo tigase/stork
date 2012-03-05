@@ -21,7 +21,7 @@
     <string name="logoutButton">Disconnect</string>
     <string name="propertiesButton">Settings</string>
     <string name="preferencesTitle">Settings</string>
-    <string name="app_version">1.0-RC2</string>
+    <string name="app_version">1.0-RC3</string>
     <string name="closeChatButton">Close chat</string>
     <string name="shareButton">Share</string>
     <string name="shareImageButton">Photo</string>
@@ -75,14 +75,13 @@
     <string name="vcard_error_toast">Operation failed</string>
     <string name="vcard_retrieving">Loading. Please wait…</string>
     <string name="vcard_publishing">Publishing. Please wait…</string>
-
     <string name="incoming_file">Incoming file</string>
     <string name="incoming_file_from">From</string>
     <string name="incoming_file_filename">Name</string>
     <string name="incoming_file_mimetype">Kind</string>
     <string name="incoming_file_filesize">Size</string>
     <string name="incoming_file_description">Description</string>
-       
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
+
 </resources>
