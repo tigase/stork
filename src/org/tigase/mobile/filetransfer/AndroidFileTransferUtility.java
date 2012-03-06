@@ -26,15 +26,30 @@ import android.content.Context;
 import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
 public class AndroidFileTransferUtility {
 
-	private static final String TAG = "AndroidFileTransferUtility";
+	private static final class MediaScannerConnectionRefreshClient implements
+			MediaScannerConnection.MediaScannerConnectionClient {
+		protected MediaScannerConnection mediaScanner;
+		protected String path;
 
+		@Override
+		public void onMediaScannerConnected() {
+			mediaScanner.scanFile(path, null);
+		}
+
+		@Override
+		public void onScanCompleted(String path, Uri uri) {
+			mediaScanner.disconnect();
+		}
+	}
+
+	private static final String TAG = "AndroidFileTransferUtility";
 	private static final Timer timer = new Timer(true);
+
 	private static final Map<String, FileTransfer> waitingForStreamhosts = Collections.synchronizedMap(new HashMap<String, FileTransfer>());
 
 	public static void fileTransferHostsEventReceived(Jaxmpp jaxmpp, StreamhostsEvent be) {
@@ -74,6 +89,13 @@ public class AndroidFileTransferUtility {
 
 	public static Jaxmpp getJaxmpp(Activity activity, BareJID account) {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
+	}
+
+	public static void refreshMediaScanner(Context context, File file) {
+		final MediaScannerConnectionRefreshClient client = new MediaScannerConnectionRefreshClient();
+		client.mediaScanner = new MediaScannerConnection(context, client);
+		client.path = file.getPath();
+		client.mediaScanner.connect();
 	}
 
 	public static void registerFileTransferForStreamhost(final String id, FileTransfer ft) {
@@ -163,25 +185,5 @@ public class AndroidFileTransferUtility {
 				}
 			}
 		}.start();
-	}
-	
-	public static void refreshMediaScanner(Context context, File file) {
-		final MediaScannerConnectionRefreshClient client = new MediaScannerConnectionRefreshClient();
-		client.mediaScanner = new MediaScannerConnection(context, client);
-		client.path = file.getPath();
-		client.mediaScanner.connect();		
-	}
-	
-	private static final class MediaScannerConnectionRefreshClient implements MediaScannerConnection.MediaScannerConnectionClient {
-		protected String path;
-		protected MediaScannerConnection mediaScanner;
-		@Override
-		public void onScanCompleted(String path, Uri uri) {
-			mediaScanner.disconnect();
-		}
-		@Override
-		public void onMediaScannerConnected() {			
-			mediaScanner.scanFile(path, null);
-		}		
 	}
 }

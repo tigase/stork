@@ -95,7 +95,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.media.MediaScannerConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -950,8 +949,7 @@ public class JaxmppService extends Service {
 			intent = new Intent();
 			intent.setAction(Intent.ACTION_VIEW);
 			intent.setDataAndType(Uri.fromFile(ft.destination), ft.mimetype);
-		}
-		else {
+		} else {
 			intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		}
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);

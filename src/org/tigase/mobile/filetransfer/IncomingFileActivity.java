@@ -1,13 +1,10 @@
 package org.tigase.mobile.filetransfer;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
 
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
-import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 
@@ -26,9 +23,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -49,7 +43,7 @@ public class IncomingFileActivity extends Activity {
 	private String senderName;
 	private String sid;
 	private String store = "Download";
-	
+
 	public void accept(View view) {
 		Log.v(TAG, "incoming file accepted");
 		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
@@ -77,12 +71,90 @@ public class IncomingFileActivity extends Activity {
 				}
 			}
 		}.start();
-		
-		finish();		
+
+		finish();
 	}
 
 	private Jaxmpp getJaxmpp(BareJID account) {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
+	}
+
+	private File getPathToSave(String filename) {
+		File path = null;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+			String type = Environment.DIRECTORY_DOWNLOADS;
+			if (store != null) {
+				if ("Pictures".equals(store)) {
+					type = Environment.DIRECTORY_PICTURES;
+				} else if ("Music".equals(store)) {
+					type = Environment.DIRECTORY_MUSIC;
+				} else if ("Movies".equals(store)) {
+					type = Environment.DIRECTORY_MOVIES;
+				}
+			}
+			path = Environment.getExternalStoragePublicDirectory(type);
+		}
+		if (path == null) {
+			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
+		}
+		return new File(path, filename);
+	}
+
+	// @Override
+	// public boolean onOptionsItemSelected(MenuItem item) {
+	// switch (item.getItemId()) {
+	// case R.id.incoming_file_accept: {
+	// accept(null);
+	// break;
+	// }
+	// case R.id.incoming_file_reject: {
+	// reject(null);
+	// break;
+	// }
+	// default:
+	// break;
+	// }
+	//
+	// return true;
+	// }
+
+	// @Override
+	// public boolean onPrepareOptionsMenu(Menu menu) {
+	// MenuInflater inflater = getMenuInflater();
+	// menu.clear();
+	// final Jaxmpp jaxmpp = ((MessengerApplication)
+	// getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
+	// if (jaxmpp.isConnected()) {
+	// inflater.inflate(R.menu.incoming_file_menu, menu);
+	// }
+	// return true;
+	// }
+
+	private String guessMimeType() {
+		int idx = filename.lastIndexOf(".");
+		if (idx == -1) {
+			return null;
+		}
+		String suffix = this.filename.substring(idx + 1).toLowerCase();
+		if (suffix.equals("png")) {
+			return "image/png";
+		} else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
+			return "image/jpeg";
+		} else if (suffix.equals("avi")) {
+			return "video/avi";
+		} else if (suffix.equals(".mkv")) {
+			return "video/x-matroska";
+		} else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
+			return "video/mpeg";
+		} else if (suffix.equals(".mp3")) {
+			return "audio/mpeg3";
+		} else if (suffix.equals(".ogg")) {
+			return "audio/ogg";
+		} else if (suffix.equals(".pdf")) {
+			return "application/pdf";
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -111,7 +183,7 @@ public class IncomingFileActivity extends Activity {
 			}
 		}
 		mimetype = intent.getStringExtra("mimetype");
-		if (mimetype == null) {		
+		if (mimetype == null) {
 			mimetype = guessMimeType();
 		}
 		Log.v(TAG, "got mimetype = " + mimetype);
@@ -120,16 +192,17 @@ public class IncomingFileActivity extends Activity {
 		RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
 
 		senderName = ri != null && ri.getName() != null ? ri.getName() : sender.toString();
-		
+
 		((TextView) findViewById(R.id.incoming_file_from_name)).setText(senderName);
-		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(sender.toString());
+		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(ri == null || ri.getName() == null ? ""
+				: sender.toString());
 		((TextView) findViewById(R.id.incoming_file_filename)).setText(filename);
 		((TextView) findViewById(R.id.incoming_file_filesize)).setText(filesize == null ? "unknown" : filesizeStr);
-		
+
 		ImageView itemAvatar = ((ImageView) findViewById(R.id.incoming_file_from_avatar));
 		byte[] avatar = null;
 		final Cursor cursor = getContentResolver().query(
-				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(sender.getBareJid().toString())), null, null, null, null);		
+				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(sender.getBareJid().toString())), null, null, null, null);
 		try {
 			cursor.moveToNext();
 			avatar = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
@@ -144,64 +217,36 @@ public class IncomingFileActivity extends Activity {
 		} else {
 			itemAvatar.setImageResource(R.drawable.user_avatar);
 		}
-		
-		
-		ArrayAdapter storeAdapter = ArrayAdapter.createFromResource(this, R.array.incoming_file_stores, android.R.layout.simple_spinner_item);
+
+		ArrayAdapter storeAdapter = ArrayAdapter.createFromResource(this, R.array.incoming_file_stores,
+				android.R.layout.simple_spinner_item);
 		storeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		Spinner storeSpinner =(Spinner) findViewById(R.id.incoming_file_store); 
+		Spinner storeSpinner = (Spinner) findViewById(R.id.incoming_file_store);
 		storeSpinner.setAdapter(storeAdapter);
 		storeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-		    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-		        store = (String) parent.getItemAtPosition(pos);
-		    }
-		    public void onNothingSelected(AdapterView<?> parent) {
-		    	parent.setSelection(0);
-		    }
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+				store = (String) parent.getItemAtPosition(pos);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+				parent.setSelection(0);
+			}
 		});
-		
+
 		int pos = 0;
 		if (mimetype != null) {
 			if (mimetype.startsWith("video/")) {
 				pos = storeAdapter.getPosition("Movies");
-			}
-			else if (mimetype.startsWith("audio/")) {
+			} else if (mimetype.startsWith("audio/")) {
 				pos = storeAdapter.getPosition("Music");
-			}
-			else if (mimetype.startsWith("image/")) {
+			} else if (mimetype.startsWith("image/")) {
 				pos = storeAdapter.getPosition("Pictures");
 			}
 		}
-		storeSpinner.setSelection(pos);		
+		storeSpinner.setSelection(pos);
 	}
-
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//		switch (item.getItemId()) {
-//		case R.id.incoming_file_accept: {
-//			accept(null);
-//			break;
-//		}
-//		case R.id.incoming_file_reject: {
-//			reject(null);
-//			break;
-//		}
-//		default:
-//			break;
-//		}
-//
-//		return true;
-//	}
-
-//	@Override
-//	public boolean onPrepareOptionsMenu(Menu menu) {
-//		MenuInflater inflater = getMenuInflater();
-//		menu.clear();
-//		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-//		if (jaxmpp.isConnected()) {
-//			inflater.inflate(R.menu.incoming_file_menu, menu);
-//		}
-//		return true;
-//	}
 
 	public void reject(View view) {
 		Log.v(TAG, "incoming file rejected");
@@ -217,65 +262,7 @@ public class IncomingFileActivity extends Activity {
 				}
 			}
 		}.start();
-		
+
 		finish();
-	}
-	
-	private File getPathToSave(String filename) {
-		File path = null;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-			String type = Environment.DIRECTORY_DOWNLOADS;
-			if (store != null) {
-				if ("Pictures".equals(store)) {
-					type = Environment.DIRECTORY_PICTURES;
-				}
-				else if ("Music".equals(store)) {
-					type = Environment.DIRECTORY_MUSIC;
-				}
-				else if ("Movies".equals(store)) {
-					type = Environment.DIRECTORY_MOVIES;
-				}
-			}
-			path = Environment.getExternalStoragePublicDirectory(type); 
-		}
-		if (path == null) {
-			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
-		}
-		return new File(path, filename);		
-	}
-	
-	private String guessMimeType() {
-		int idx = filename.lastIndexOf(".");
-		if (idx == -1) {
-			 return null;
-		}
-		String suffix = this.filename.substring(idx+1).toLowerCase();		
-		if (suffix.equals("png")) {
-			return "image/png";
-		}
-		else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
-			return "image/jpeg";
-		}
-		else if (suffix.equals("avi")) {
-			return "video/avi";
-		}
-		else if (suffix.equals(".mkv")) {
-			return "video/x-matroska";
-		}
-		else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
-			return "video/mpeg";
-		}
-		else if (suffix.equals(".mp3")) {
-			return "audio/mpeg3";
-		}
-		else if (suffix.equals(".ogg")) {
-			return "audio/ogg";
-		}
-		else if (suffix.equals(".pdf")) {
-			return "application/pdf";
-		}
-		else {
-			return null;
-		}
 	}
 }

@@ -39,7 +39,7 @@ public class FileTransfer {
 	public final File destination;
 	public String errorMessage = null;
 	// private final Uri uri;
-	public final String filename;	
+	public final String filename;
 	public final FileTransferModule ftModule;
 	private InputStream inputStream = null;
 	public final Jaxmpp jaxmpp;
