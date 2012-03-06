@@ -708,7 +708,10 @@ public class JaxmppService extends Service {
 		Notification notification = new Notification(ico, notificationTitle, whenNotify);
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		// notification.defaults |= Notification.DEFAULT_SOUND;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
 
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
