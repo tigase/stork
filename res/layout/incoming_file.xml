@@ -92,4 +92,12 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </LinearLayout>
 
+    <Spinner
+        android:id="@+id/incoming_file_store"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:padding="3dip"        
+        android:prompt="@string/incoming_file_store" />
+
 </LinearLayout>

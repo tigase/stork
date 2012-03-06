@@ -29,5 +29,11 @@
     <string-array name="free_account_create_hostnames">
         <item>sure.im</item>
     </string-array>
-    
+    <string-array name="incoming_file_stores">
+        <item>Download</item>
+        <item>Movies</item>
+        <item>Music</item>
+        <item>Pictures</item>
+    </string-array>
+        
 </resources>

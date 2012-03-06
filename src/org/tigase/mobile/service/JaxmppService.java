@@ -95,6 +95,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.media.MediaScannerConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -931,6 +932,9 @@ public class JaxmppService extends Service {
 
 		case finished:
 			notificationText = "transfer finished";
+			if (!ft.outgoing) {
+				AndroidFileTransferUtility.refreshMediaScanner(getApplicationContext(), ft.destination);
+			}
 			break;
 		default:
 			break;
@@ -938,7 +942,15 @@ public class JaxmppService extends Service {
 
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		Intent intent = null;
+		if (!ft.outgoing && ft.getState() == FileTransfer.State.finished && ft.mimetype != null) {
+			intent = new Intent();
+			intent.setAction(Intent.ACTION_VIEW);
+			intent.setDataAndType(Uri.fromFile(ft.destination), ft.mimetype);
+		}
+		else {
+			intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		}
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
 

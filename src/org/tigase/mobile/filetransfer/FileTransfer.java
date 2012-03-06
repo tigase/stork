@@ -1,5 +1,6 @@
 package org.tigase.mobile.filetransfer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,13 +36,15 @@ public class FileTransfer {
 	private static final String TAG = "FileTransfer";
 	public final JID buddyJid;
 	public final String buddyName;
+	public final File destination;
 	public String errorMessage = null;
 	// private final Uri uri;
-	public final String filename;
+	public final String filename;	
 	public final FileTransferModule ftModule;
 	private InputStream inputStream = null;
 	public final Jaxmpp jaxmpp;
 	public final JID jid;
+	public String mimetype;
 	public final boolean outgoing;
 	private ByteBuffer outgoingBuffer = null;
 
@@ -68,13 +71,14 @@ public class FileTransfer {
 		this.filename = filename;
 		this.inputStream = is;
 		this.outgoing = true;
+		this.destination = null;
 		this.size = size;
 
 		this.state = State.negotiating;
 		this.updateProgress();
 	}
 
-	public FileTransfer(Jaxmpp jaxmpp, JID buddyJid, String buddyName, String filename, long size) {
+	public FileTransfer(Jaxmpp jaxmpp, JID buddyJid, String buddyName, String filename, long size, File destination) {
 		this.jaxmpp = jaxmpp;
 		this.jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
 		this.ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
@@ -83,6 +87,7 @@ public class FileTransfer {
 		this.filename = filename;
 		this.outgoing = false;
 		this.size = size;
+		this.destination = destination;
 
 		this.state = State.negotiating;
 		this.updateProgress();

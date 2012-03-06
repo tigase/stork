@@ -22,7 +22,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -41,8 +43,7 @@ public class AndroidFileTransferUtility {
 			Log.w(TAG, "file transfer for sid = " + be.getSid() + " not found!");
 			return;
 		}
-		File file = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download"
-				+ File.separator + ft.filename);
+		File file = ft.destination;
 		boolean connected = false;
 		for (Streamhost streamhost : be.getHosts()) {
 			try {
@@ -162,5 +163,25 @@ public class AndroidFileTransferUtility {
 				}
 			}
 		}.start();
+	}
+	
+	public static void refreshMediaScanner(Context context, File file) {
+		final MediaScannerConnectionRefreshClient client = new MediaScannerConnectionRefreshClient();
+		client.mediaScanner = new MediaScannerConnection(context, client);
+		client.path = file.getPath();
+		client.mediaScanner.connect();		
+	}
+	
+	private static final class MediaScannerConnectionRefreshClient implements MediaScannerConnection.MediaScannerConnectionClient {
+		protected String path;
+		protected MediaScannerConnection mediaScanner;
+		@Override
+		public void onScanCompleted(String path, Uri uri) {
+			mediaScanner.disconnect();
+		}
+		@Override
+		public void onMediaScannerConnected() {			
+			mediaScanner.scanFile(path, null);
+		}		
 	}
 }
