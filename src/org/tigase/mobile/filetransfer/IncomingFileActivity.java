@@ -7,6 +7,9 @@ import java.util.Arrays;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.VCardsCacheTableMetaData;
+import org.tigase.mobile.db.providers.RosterProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -15,6 +18,10 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,6 +32,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -42,7 +50,7 @@ public class IncomingFileActivity extends Activity {
 	private String sid;
 	private String store = "Download";
 	
-	private void accept() {
+	public void accept(View view) {
 		Log.v(TAG, "incoming file accepted");
 		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
 		final JID sender = this.sender;
@@ -69,6 +77,8 @@ public class IncomingFileActivity extends Activity {
 				}
 			}
 		}.start();
+		
+		finish();		
 	}
 
 	private Jaxmpp getJaxmpp(BareJID account) {
@@ -110,11 +120,32 @@ public class IncomingFileActivity extends Activity {
 		RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
 
 		senderName = ri != null && ri.getName() != null ? ri.getName() : sender.toString();
-
-		((TextView) findViewById(R.id.incoming_file_from)).setText(senderName);
+		
+		((TextView) findViewById(R.id.incoming_file_from_name)).setText(senderName);
+		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(sender.toString());
 		((TextView) findViewById(R.id.incoming_file_filename)).setText(filename);
-		((TextView) findViewById(R.id.incoming_file_mimetype)).setText(mimetype);
 		((TextView) findViewById(R.id.incoming_file_filesize)).setText(filesize == null ? "unknown" : filesizeStr);
+		
+		ImageView itemAvatar = ((ImageView) findViewById(R.id.incoming_file_from_avatar));
+		byte[] avatar = null;
+		final Cursor cursor = getContentResolver().query(
+				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(sender.getBareJid().toString())), null, null, null, null);		
+		try {
+			cursor.moveToNext();
+			avatar = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+		} catch (Exception ex) {
+			avatar = null;
+		} finally {
+			cursor.close();
+		}
+		if (avatar != null) {
+			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
+			itemAvatar.setImageBitmap(bmp);
+		} else {
+			itemAvatar.setImageResource(R.drawable.user_avatar);
+		}
+		
+		
 		ArrayAdapter storeAdapter = ArrayAdapter.createFromResource(this, R.array.incoming_file_stores, android.R.layout.simple_spinner_item);
 		storeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		Spinner storeSpinner =(Spinner) findViewById(R.id.incoming_file_store); 
@@ -140,40 +171,39 @@ public class IncomingFileActivity extends Activity {
 				pos = storeAdapter.getPosition("Pictures");
 			}
 		}
-		storeSpinner.setSelection(pos);
+		storeSpinner.setSelection(pos);		
 	}
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.incoming_file_accept: {
-			accept();
-			break;
-		}
-		case R.id.incoming_file_reject: {
-			reject();
-			break;
-		}
-		default:
-			break;
-		}
+//	@Override
+//	public boolean onOptionsItemSelected(MenuItem item) {
+//		switch (item.getItemId()) {
+//		case R.id.incoming_file_accept: {
+//			accept(null);
+//			break;
+//		}
+//		case R.id.incoming_file_reject: {
+//			reject(null);
+//			break;
+//		}
+//		default:
+//			break;
+//		}
+//
+//		return true;
+//	}
 
-		finish();
-		return true;
-	}
+//	@Override
+//	public boolean onPrepareOptionsMenu(Menu menu) {
+//		MenuInflater inflater = getMenuInflater();
+//		menu.clear();
+//		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
+//		if (jaxmpp.isConnected()) {
+//			inflater.inflate(R.menu.incoming_file_menu, menu);
+//		}
+//		return true;
+//	}
 
-	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		menu.clear();
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-		if (jaxmpp.isConnected()) {
-			inflater.inflate(R.menu.incoming_file_menu, menu);
-		}
-		return true;
-	}
-
-	private void reject() {
+	public void reject(View view) {
 		Log.v(TAG, "incoming file rejected");
 		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
 		new Thread() {
@@ -187,6 +217,8 @@ public class IncomingFileActivity extends Activity {
 				}
 			}
 		}.start();
+		
+		finish();
 	}
 	
 	private File getPathToSave(String filename) {

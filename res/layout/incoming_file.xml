@@ -2,29 +2,45 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="10dip" >
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="3dip"
+        android:text="@string/incoming_file_from"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:gravity="right"
-            android:padding="3dip"
-            android:text="@string/incoming_file_from"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
+    <ImageView
+        android:id="@+id/incoming_file_from_avatar"
+        android:layout_width="200dip"
+        android:layout_height="0dip"
+        android:layout_weight=".35"
+        android:contentDescription="@string/avatar"
+        android:gravity="center"
+        android:padding="3dip" />
 
-        <TextView
-            android:id="@+id/incoming_file_from"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:gravity="left"
-            android:padding="3dip"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/incoming_file_from_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="3dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/incoming_file_from_jid"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="3dip"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,8 +52,7 @@
             android:gravity="right"
             android:padding="3dip"
             android:text="@string/incoming_file_filename"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/incoming_file_filename"
@@ -57,31 +72,8 @@
             android:layout_height="wrap_content"
             android:gravity="right"
             android:padding="3dip"
-            android:text="@string/incoming_file_mimetype"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/incoming_file_mimetype"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:gravity="left"
-            android:padding="3dip"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:gravity="right"
-            android:padding="3dip"
             android:text="@string/incoming_file_filesize"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold" />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
             android:id="@+id/incoming_file_filesize"
@@ -92,12 +84,36 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </LinearLayout>
 
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip"
+        android:text="@string/incoming_file_store"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
     <Spinner
         android:id="@+id/incoming_file_store"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:gravity="left"
-        android:padding="3dip"        
-        android:prompt="@string/incoming_file_store" />
+        android:padding="5dip"
+        android:prompt="@string/incoming_file_store"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    	<Button
+    	    android:layout_height="wrap_content"
+    	    android:layout_width="wrap_content"
+    	    android:layout_weight=".50"
+    	    android:onClick="reject"
+    	    android:text="@string/reject"></Button>
+        <Button
+    	    android:layout_height="wrap_content"
+    	    android:layout_width="wrap_content"
+    	    android:layout_weight=".50"
+    	    android:onClick="accept"
+    	    android:text="@string/accept"></Button>
+    </LinearLayout>
+    
 </LinearLayout>

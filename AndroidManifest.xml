@@ -101,7 +101,7 @@
         <activity
             android:name=".filetransfer.IncomingFileActivity"
             android:label="@string/incoming_file"
-            android:theme="@style/XTheme.Light" >
+            android:theme="@style/XTheme" >
         </activity>
 		
         <!-- The authenticator service -->
