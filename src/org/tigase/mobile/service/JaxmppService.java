@@ -1466,12 +1466,29 @@ public class JaxmppService extends Service {
 			if (x != null) {
 				for (Element c : x.getChildren()) {
 					if (c.getName().equals("photo") && c.getValue() != null) {
-						String sha = c.getValue();
-						String isha = it.getData("photo");
-						if (sha != null && (isha == null || !isha.equalsIgnoreCase(sha))) {
-							retrieveVCard(be.getSessionObject(), it.getJid());
+						boolean retrieve = false;
+						final String sha = c.getValue();
+						if (sha == null)
+							continue;
+						final Cursor cursor = getContentResolver().query(
+								Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(it.getJid().toString())), null, null,
+								null, null);
+						try {
+							boolean isInCahe = cursor.moveToNext();
+
+							if (isInCahe) {
+								String hash = cursor.getString(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_HASH));
+								retrieve = !hash.equalsIgnoreCase(sha);
+							} else
+								retrieve = true;
+
+						} finally {
+							cursor.close();
 						}
-					} else if (c.getName().equals("photo") && c.getValue() == null) {
+
+						if (retrieve)
+							retrieveVCard(be.getSessionObject(), it.getJid());
+
 					}
 				}
 			}
