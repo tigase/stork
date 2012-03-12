@@ -187,7 +187,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			contentValues.put(Groups.ACCOUNT_NAME, account);
 			contentValues.put(Groups.ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
 			contentValues.put(Groups.TITLE, group);
-			contentValues.put(Groups.GROUP_IS_READ_ONLY, true);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+				contentValues.put(Groups.GROUP_IS_READ_ONLY, true);
+			}
 
 			final Uri newGroupUri = resolver.insert(Groups.CONTENT_URI, contentValues);
 			groupId = ContentUris.parseId(newGroupUri);

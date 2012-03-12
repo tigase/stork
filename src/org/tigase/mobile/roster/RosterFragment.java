@@ -256,7 +256,7 @@ public class RosterFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
-			this.rosterLayout = getArguments().getString("layout", null);
+			this.rosterLayout = getArguments().getString("layout");
 		}
 
 	}

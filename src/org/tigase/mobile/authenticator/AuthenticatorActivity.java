@@ -423,7 +423,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		switch (id) {
 		case CREATION_ERROR_DIALOG: {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage(args.getString("msg", "unknown")).setCancelable(true);
+			String msg = args.getString("msg");
+			if (msg == null)
+				msg = "unknown";
+			builder.setMessage(msg).setCancelable(true);
 			builder.setIcon(android.R.drawable.ic_dialog_alert);
 			builder.setTitle("Error");
 			builder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
