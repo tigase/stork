@@ -68,6 +68,12 @@
             android:key="away_priority"
             android:summary="@string/pref_auto_away_priority_summary"
             android:title="@string/pref_auto_away_priority_title" />
-    </PreferenceScreen>
+        <org.tigase.mobile.preferences.EditIntegerPreference
+            android:defaultValue="3"
+            android:dialogTitle="@string/pref_keepalive_time_dialog"
+            android:key="keepalive_time"
+            android:summary="@string/pref_keepalive_time_summary"
+            android:title="@string/pref_keepalive_time_title" />
+        </PreferenceScreen>
 
 </PreferenceScreen>

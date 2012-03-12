@@ -38,6 +38,9 @@
     <string name="pref_auto_away_priority_summary">Auto away priority</string>
     <string name="pref_auto_away_priority_title">Auto away priority</string>
     <string name="pref_auto_away_priority_dialog">Enter auto away priority</string>
+    <string name="pref_keepalive_time_summary">Keep alive timeout</string>
+    <string name="pref_keepalive_time_title">Keep alive timeout</string>
+    <string name="pref_keepalive_time_dialog">Enter keep alive timeout</string>
     <string name="pref_reconnect_time_summary">Reconnect delay</string>
     <string name="pref_reconnect_time_title">Reconnect delay</string>
     <string name="pref_reconnect_time_dialog">Enter reconnect delay</string>

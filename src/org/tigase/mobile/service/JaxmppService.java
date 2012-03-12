@@ -79,6 +79,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -148,6 +149,8 @@ public class JaxmppService extends Service {
 		only_connected,
 		only_disconnected
 	}
+
+	private static final String ACTION_KEEPALIVE = "org.tigase.mobile.service.JaxmppService.KEEP_ALIVE";
 
 	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
 
@@ -245,6 +248,7 @@ public class JaxmppService extends Service {
 				sessionObject.setUserProperty("ID", (long) account.hashCode());
 				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
+				sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
 				sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
 				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
 				sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
@@ -332,6 +336,8 @@ public class JaxmppService extends Service {
 	private boolean focused;
 
 	private Listener<AuthEvent> invalidAuthListener;
+
+	private long keepaliveInterval = 3 * 60 * 1000;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
@@ -688,6 +694,24 @@ public class JaxmppService extends Service {
 		}
 	}
 
+	private void keepAlive() {
+		new Thread() {
+			@Override
+			public void run() {
+				for (JaxmppCore jaxmpp : getMulti().get()) {
+					try {
+						if (jaxmpp.isConnected()) {
+							jaxmpp.getConnector().keepalive();
+						}
+					} catch (JaxmppException ex) {
+						Log.e(TAG, "error sending keep alive for = " + jaxmpp.getSessionObject().getUserBareJid().toString(),
+								ex);
+					}
+				}
+			}
+		}.start();
+	}
+
 	private void notificationCancel() {
 		notificationManager.cancel(NOTIFICATION_ID);
 	}
@@ -1011,9 +1035,18 @@ public class JaxmppService extends Service {
 					notificationVariant = NotificationVariant.valueOf(sharedPreferences.getString(key, "always"));
 					notificationUpdate();
 				}
+				Log.v(TAG, "key = " + key);
+				if (Preferences.KEEPALIVE_TIME_KEY.equals(key)) {
+					Log.v(TAG, "keepalive timout changed");
+					keepaliveInterval = 1000 * 60 * sharedPreferences.getInt(key, 3);
+					stopKeepAlive();
+					keepAlive();
+					startKeepAlive();
+				}
 			}
 		};
 
+		keepaliveInterval = 1000 * 60 * this.prefs.getInt(Preferences.KEEPALIVE_TIME_KEY, 3);
 		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -1052,6 +1085,8 @@ public class JaxmppService extends Service {
 		getMulti().addListener(Connector.Error, this.connectorListener);
 		getMulti().addListener(Connector.StreamTerminated, this.connectorListener);
 
+		startKeepAlive();
+
 		updateJaxmppInstances(getMulti(), getContentResolver(), getResources(), getApplicationContext());
 
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1077,6 +1112,7 @@ public class JaxmppService extends Service {
 		Log.i(TAG, "Stopping service");
 		reconnect = false;
 		disconnectAllJaxmpp();
+		stopKeepAlive();
 		usedNetworkType = -1;
 
 		getMulti().removeListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
@@ -1159,22 +1195,29 @@ public class JaxmppService extends Service {
 		if (DEBUG)
 			Log.i(TAG, "onStartCommand()");
 
-		SocketThread.startTreads();
+		if (intent.getAction() != null) {
+			if (intent.getAction().equals(ACTION_KEEPALIVE)) {
+				keepAlive();
+			}
+		} else {
 
-		if (intent != null) {
-			// Log.i(TAG, intent.getExtras().toString());
-			if (DEBUG)
-				Log.i(TAG, "Found intent! focused=" + intent.getBooleanExtra("focused", false));
-			this.focused = intent.getBooleanExtra("focused", false);
+			SocketThread.startTreads();
+
+			if (intent != null) {
+				// Log.i(TAG, intent.getExtras().toString());
+				if (DEBUG)
+					Log.i(TAG, "Found intent! focused=" + intent.getBooleanExtra("focused", false));
+				this.focused = intent.getBooleanExtra("focused", false);
+			}
+
+			serviceActive = true;
+
+			notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
+
+			notificationUpdate();
+
+			connectAllJaxmpp(null);
 		}
-
-		serviceActive = true;
-
-		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
-
-		notificationUpdate();
-
-		connectAllJaxmpp(null);
 
 		return START_STICKY;
 	}
@@ -1454,6 +1497,24 @@ public class JaxmppService extends Service {
 		if (currentChatIdFocus != event.getChat().getId())
 			notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 
+	}
+
+	private void startKeepAlive() {
+		Intent i = new Intent();
+		i.setClass(this, JaxmppService.class);
+		i.setAction(ACTION_KEEPALIVE);
+		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
+		alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval, keepaliveInterval, pi);
+	}
+
+	private void stopKeepAlive() {
+		Intent i = new Intent();
+		i.setClass(this, JaxmppService.class);
+		i.setAction(ACTION_KEEPALIVE);
+		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
+		alarmMgr.cancel(pi);
 	}
 
 	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {
