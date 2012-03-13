@@ -1195,7 +1195,7 @@ public class JaxmppService extends Service {
 		if (DEBUG)
 			Log.i(TAG, "onStartCommand()");
 
-		if (intent.getAction() != null) {
+		if (intent != null && intent.getAction() != null) {
 			if (intent.getAction().equals(ACTION_KEEPALIVE)) {
 				keepAlive();
 			}
@@ -1505,7 +1505,7 @@ public class JaxmppService extends Service {
 		i.setAction(ACTION_KEEPALIVE);
 		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
-		alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval, keepaliveInterval, pi);
+		alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval, keepaliveInterval, pi);
 	}
 
 	private void stopKeepAlive() {
