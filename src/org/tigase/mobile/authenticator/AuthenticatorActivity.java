@@ -189,7 +189,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 					Log.e(TAG, "Disconnect problem on password check", e);
 				}
 			}
-
 		}
 
 		@Override
@@ -496,7 +495,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mHostname = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
 			mResource = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 		}
-		mRequestNewAccount = mUsername == null;
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
@@ -544,8 +542,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	private View prepareCreateAccount(LayoutInflater inflater) {
 		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
-		mRequestNewAccount = true;
-
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
@@ -588,6 +584,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			@Override
 			public void onClick(View v) {
 				screenTitle.setText("Login");
+				mRequestNewAccount = mUsername == null;
 				flipper.setDisplayedChild(1);
 			}
 		});
@@ -597,6 +594,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			@Override
 			public void onClick(View v) {
 				screenTitle.setText("Create account");
+				mRequestNewAccount = true;
 				flipper.setDisplayedChild(2);
 			}
 		});
