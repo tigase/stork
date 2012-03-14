@@ -886,8 +886,9 @@ public class JaxmppService extends Service {
 		if (notificationMessage != null)
 			expandedNotificationText = notificationMessage;
 		else if (message == null && cause != null) {
-			expandedNotificationText = cause.getMessage();
-		} else if (message != null) {
+			message = cause.getMessage();
+		}
+		if (message != null) {
 			expandedNotificationText = message;
 		} else
 			expandedNotificationText = notiticationTitle;
@@ -1011,8 +1012,9 @@ public class JaxmppService extends Service {
 						null);
 				disable(be.getSessionObject(), true);
 			} else if (throwable instanceof SocketException) {
-
+				Log.w(TAG, "Skiped exception", throwable);
 			} else {
+				Log.e(TAG, "Connection error!", throwable);
 				notificationUpdateFail(be.getSessionObject(), null, null, throwable);
 				disable(be.getSessionObject(), true);
 			}
@@ -1505,7 +1507,8 @@ public class JaxmppService extends Service {
 		i.setAction(ACTION_KEEPALIVE);
 		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
-		alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval, keepaliveInterval, pi);
+		alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval,
+				keepaliveInterval, pi);
 	}
 
 	private void stopKeepAlive() {
