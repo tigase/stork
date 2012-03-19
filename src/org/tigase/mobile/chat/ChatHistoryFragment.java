@@ -142,9 +142,14 @@ public class ChatHistoryFragment extends Fragment {
 
 		if (getArguments() != null) {
 			int idx = getArguments().getInt("page");
-			Chat ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats().get(idx);
-
-			setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
+			List<Chat> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats(); 
+			if (idx < chats.size()) {
+				Chat ch = chats.get(idx);
+				setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
+			}
+			else {
+				Log.v(TAG, "got request for page = " + idx + " but we have only " + chats.size() + " open");
+			}
 
 			// setChatId(BareJID.bareJIDInstance(getArguments().getString("account")),
 			// getArguments().getLong("chatId"));
