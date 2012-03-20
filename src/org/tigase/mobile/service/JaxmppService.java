@@ -137,7 +137,9 @@ public class JaxmppService extends Service {
 	private class ConnReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+			// EXTRA_NETWORK_INFO - This constant is deprecated 
+			//NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+			NetworkInfo netInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 			onNetworkChanged(netInfo);
 		}
 
@@ -1150,8 +1152,12 @@ public class JaxmppService extends Service {
 	public void onNetworkChanged(final NetworkInfo netInfo) {
 		if (DEBUG)
 			Log.d(TAG,
-					"Network " + netInfo == null ? null : netInfo.getTypeName() + " (" + netInfo == null ? null
-							: netInfo.getType() + ") state changed! Currently used=" + usedNetworkType);
+					"Network " + netInfo == null ? null : ( netInfo.getTypeName() + " (" + (netInfo == null ? null
+							: netInfo.getType()) + ") state changed! Currently used=" + usedNetworkType));
+		Log.v(TAG,
+				"Network " + netInfo == null ? null : ( netInfo.getTypeName() + " (" + (netInfo == null ? null
+						: netInfo.getType()) + ") state changed! Currently used=" + usedNetworkType 
+						+ " detailed state = " + netInfo.getDetailedState()));
 		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
 				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
