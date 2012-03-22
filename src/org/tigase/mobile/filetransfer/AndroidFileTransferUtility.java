@@ -13,6 +13,7 @@ import java.util.TimerTask;
 
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.filetransfer.FileTransfer.State;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -104,7 +105,11 @@ public class AndroidFileTransferUtility {
 
 			@Override
 			public void run() {
-				waitingForStreamhosts.remove(id);
+				FileTransfer ft = waitingForStreamhosts.remove(id);
+				if (ft != null && ft.getState() == State.negotiating) {
+					ft.transferError("negotiation timed out");
+				}
+					
 			}
 
 		}, 5L * 60 * 1000);
