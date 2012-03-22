@@ -1150,14 +1150,12 @@ public class JaxmppService extends Service {
 	}
 
 	public void onNetworkChanged(final NetworkInfo netInfo) {
-		if (DEBUG)
+		if (DEBUG) {
 			Log.d(TAG,
-					"Network " + netInfo == null ? null : ( netInfo.getTypeName() + " (" + (netInfo == null ? null
-							: netInfo.getType()) + ") state changed! Currently used=" + usedNetworkType));
-		Log.v(TAG,
-				"Network " + netInfo == null ? null : ( netInfo.getTypeName() + " (" + (netInfo == null ? null
+				"Network " + (netInfo == null ? null : netInfo.getTypeName()) + " (" + (netInfo == null ? null
 						: netInfo.getType()) + ") state changed! Currently used=" + usedNetworkType 
-						+ " detailed state = " + netInfo.getDetailedState()));
+						+ " detailed state = " + (netInfo != null ? netInfo.getDetailedState() : null));
+		}
 		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
 				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
@@ -1166,9 +1164,9 @@ public class JaxmppService extends Service {
 				connectionErrorsCounter.clear();
 			}
 			connectAllJaxmpp(5000l);
-		} else if (netInfo != null && !netInfo.isConnected() && netInfo.getType() == usedNetworkType) {
+		} else if (netInfo == null || (!netInfo.isConnected() && netInfo.getType() == usedNetworkType)) {
 			if (DEBUG)
-				Log.d(TAG, "currently used network disconnected" + netInfo.getTypeName());
+				Log.d(TAG, "currently used network disconnected" + (netInfo == null ? null : netInfo.getTypeName()));
 			reconnect = false;
 			disconnectAllJaxmpp();
 		}
