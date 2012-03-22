@@ -51,11 +51,13 @@ import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.connector.StreamError;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xml.DefaultElement;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
+import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule.SaslEvent;
@@ -71,6 +73,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
+import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -374,6 +377,8 @@ public class JaxmppService extends Service {
 	private String userStatusMessage = null;
 
 	private Show userStatusShow = Show.online;
+
+	private TimerTask setMobileModeTask;
 
 	public JaxmppService() {
 		super();
@@ -1179,12 +1184,14 @@ public class JaxmppService extends Service {
 			focused = true;
 			int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
 
+			setMobileMode(false);
 			sendAutoPresence(userStatusShow, userStatusMessage, pr, false);
 		} else if (focused && pageIndex == -1) {
 			if (DEBUG)
 				Log.d(TAG, "Sending auto-away presence");
 			focused = false;
 			int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
+			setMobileMode(true);
 			sendAutoPresence(Show.away, "Auto away", pr, true);
 		}
 	}
@@ -1361,6 +1368,77 @@ public class JaxmppService extends Service {
 		}
 	}
 
+	private void setMobileMode(final boolean enable) {
+		if (setMobileModeTask != null) {
+			setMobileModeTask.cancel();
+			setMobileModeTask = null;
+		}
+		
+		if (!enable) {
+			setMobileModeTask = new TimerTask() {
+
+				@Override
+				public void run() {
+					setMobileModeTask = null;
+					try {
+						for (JaxmppCore jaxmpp : getMulti().get()) {
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
+								if (sf == null)
+									continue;
+								
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
+								if (m == null)
+									continue;
+								
+								IQ iq = IQ.create();
+								iq.setType(StanzaType.set);
+								Element mobile = new DefaultElement("mobile");
+								mobile.setXMLNS(Features.MOBILE);
+								mobile.setAttribute("enable", String.valueOf(enable));
+								iq.addChild(mobile);
+								jaxmpp.send(iq);
+							}
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Can't set mobile mode!", e);
+					}
+				}
+			};
+			timer.schedule(setMobileModeTask, 1000 * 60);
+		}
+		else {
+			(new Thread() {
+				@Override
+				public void run() {
+					try {
+						for (JaxmppCore jaxmpp : getMulti().get()) {
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
+								if (sf == null)
+									continue;
+								
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
+								if (m == null)
+									continue;
+								
+								IQ iq = IQ.create();
+								iq.setType(StanzaType.set);
+								Element mobile = new DefaultElement("mobile");
+								mobile.setXMLNS(Features.MOBILE);
+								mobile.setAttribute("enable", String.valueOf(enable));
+								iq.addChild(mobile);
+								jaxmpp.send(iq);
+							}
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Can't set mobile mode!", e);
+					}
+				}
+			}).start();
+		}
+	}
+	
 	private void sendAutoPresence(final Show show, final String status, final int priority, final boolean delayed) {
 		if (autoPresenceTask != null) {
 			autoPresenceTask.cancel();
