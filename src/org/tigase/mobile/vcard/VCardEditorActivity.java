@@ -274,7 +274,12 @@ public class VCardEditorActivity extends Activity {
 		});
 
 		final Account account = (Account) getIntent().getExtras().get("account");
-		jid = JID.jidInstance(account.name);
+		if (account != null) {
+			jid = JID.jidInstance(account.name);
+		}
+		else {
+			jid = JID.jidInstance((String) getIntent().getExtras().get("account_jid"));
+		}
 
 		final Cursor cursor = getContentResolver().query(
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), null, null, null, null);

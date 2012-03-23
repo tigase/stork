@@ -2,6 +2,7 @@ package org.tigase.mobile.accountstatus;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
@@ -21,17 +22,25 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public class AccountsStatusFragment extends Fragment {
 
+	public static final String TAG = "AccountStatusFragment";
+	
 	public static AccountsStatusFragment newInstance() {
 		AccountsStatusFragment f = new AccountsStatusFragment();
 
@@ -154,6 +163,7 @@ public class AccountsStatusFragment extends Fragment {
 
 		ListView list = (ListView) view.findViewById(R.id.account_status_list);
 		list.setAdapter(adapter);
+		registerForContextMenu(list);
 
 		return view;
 	}
@@ -179,5 +189,74 @@ public class AccountsStatusFragment extends Fragment {
 		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 
 		super.onStop();
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+
+		if (!JaxmppService.isServiceActive()) {
+			return;
+		}			
+		
+		final int position = extractPosition(menuInfo);
+		Log.v(TAG, "position for context menu element is " + position);
+		if (position == -1) {
+			return;
+		}
+		
+		final Jaxmpp jaxmpp = adapter.getItem(position);
+		if (jaxmpp.isConnected()) {
+			menu.add(R.string.logoutButton).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				@Override
+				public boolean onMenuItemClick(MenuItem item) {
+					new Thread() {
+						public void run() {
+							try {
+								jaxmpp.disconnect();
+							} catch (JaxmppException ex) {
+								Log.e(TAG, "error manually disconnecting account "+jaxmpp.getSessionObject().getUserBareJid().toString(), ex);
+							}
+						}
+					}.start();
+					return true;
+				}
+			});
+			menu.add(R.string.accountVCard).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				@Override
+				public boolean onMenuItemClick(MenuItem item) {
+					Intent intent = new Intent();
+					intent.setAction("org.tigase.mobile.account.personalInfo.EDIT");
+					intent.putExtra("account_jid", jaxmpp.getSessionObject().getUserBareJid().toString());
+					startActivity(intent);
+					return true;
+				}
+			});
+		}
+		else {
+			menu.add(R.string.loginButton).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				@Override
+				public boolean onMenuItemClick(MenuItem item) {
+					new Thread() {
+						public void run() {
+							try {
+								jaxmpp.login();
+							} catch (JaxmppException ex) {
+								Log.e(TAG, "error manually connecting account "+jaxmpp.getSessionObject().getUserBareJid().toString(), ex);
+							}
+						}
+					}.start();
+					return true;
+				}
+			});
+		}
+	}
+
+	private int extractPosition(ContextMenuInfo menuInfo) {
+		if (menuInfo instanceof AdapterContextMenuInfo) {
+			return ((AdapterContextMenuInfo) menuInfo).position;
+		} else {
+			return -1;
+		}
 	}
 }
