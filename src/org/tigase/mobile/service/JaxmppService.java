@@ -13,6 +13,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import org.tigase.mobile.Constants;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
@@ -57,7 +59,6 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
-import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule.SaslEvent;
@@ -101,7 +102,10 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.SSLCertificateSocketFactory;
+import android.net.SSLSessionCache;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
@@ -140,8 +144,9 @@ public class JaxmppService extends Service {
 	private class ConnReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			// EXTRA_NETWORK_INFO - This constant is deprecated 
-			//NetworkInfo netInfo = (NetworkInfo) intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+			// EXTRA_NETWORK_INFO - This constant is deprecated
+			// NetworkInfo netInfo = (NetworkInfo)
+			// intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
 			NetworkInfo netInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 			onNetworkChanged(netInfo);
 		}
@@ -254,6 +259,15 @@ public class JaxmppService extends Service {
 				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 				sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+					// Android from API v8 contains optimized SSLSocketFactory
+					// which reduces network usage for handshake
+					SSLSessionCache sslSessionCache = new SSLSessionCache(context);
+					SSLSocketFactory sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
+					sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY, sslSocketFactory);
+				}
+
 				sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
 				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
 				sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
@@ -366,6 +380,8 @@ public class JaxmppService extends Service {
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
+	private TimerTask setMobileModeTask;
+
 	private final Listener<Connector.ConnectorEvent> stateChangeListener;
 
 	private Listener<PresenceEvent> subscribeRequestListener;
@@ -377,8 +393,6 @@ public class JaxmppService extends Service {
 	private String userStatusMessage = null;
 
 	private Show userStatusShow = Show.online;
-
-	private TimerTask setMobileModeTask;
 
 	public JaxmppService() {
 		super();
@@ -1157,9 +1171,9 @@ public class JaxmppService extends Service {
 	public void onNetworkChanged(final NetworkInfo netInfo) {
 		if (DEBUG) {
 			Log.d(TAG,
-				"Network " + (netInfo == null ? null : netInfo.getTypeName()) + " (" + (netInfo == null ? null
-						: netInfo.getType()) + ") state changed! Currently used=" + usedNetworkType 
-						+ " detailed state = " + (netInfo != null ? netInfo.getDetailedState() : null));
+					"Network " + (netInfo == null ? null : netInfo.getTypeName()) + " ("
+							+ (netInfo == null ? null : netInfo.getType()) + ") state changed! Currently used="
+							+ usedNetworkType + " detailed state = " + (netInfo != null ? netInfo.getDetailedState() : null));
 		}
 		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
@@ -1368,77 +1382,6 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private void setMobileMode(final boolean enable) {
-		if (setMobileModeTask != null) {
-			setMobileModeTask.cancel();
-			setMobileModeTask = null;
-		}
-		
-		if (!enable) {
-			setMobileModeTask = new TimerTask() {
-
-				@Override
-				public void run() {
-					setMobileModeTask = null;
-					try {
-						for (JaxmppCore jaxmpp : getMulti().get()) {
-							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
-								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-								if (sf == null)
-									continue;
-								
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
-								if (m == null)
-									continue;
-								
-								IQ iq = IQ.create();
-								iq.setType(StanzaType.set);
-								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(Features.MOBILE);
-								mobile.setAttribute("enable", String.valueOf(enable));
-								iq.addChild(mobile);
-								jaxmpp.send(iq);
-							}
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Can't set mobile mode!", e);
-					}
-				}
-			};
-			timer.schedule(setMobileModeTask, 1000 * 60);
-		}
-		else {
-			(new Thread() {
-				@Override
-				public void run() {
-					try {
-						for (JaxmppCore jaxmpp : getMulti().get()) {
-							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
-								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-								if (sf == null)
-									continue;
-								
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
-								if (m == null)
-									continue;
-								
-								IQ iq = IQ.create();
-								iq.setType(StanzaType.set);
-								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(Features.MOBILE);
-								mobile.setAttribute("enable", String.valueOf(enable));
-								iq.addChild(mobile);
-								jaxmpp.send(iq);
-							}
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Can't set mobile mode!", e);
-					}
-				}
-			}).start();
-		}
-	}
-	
 	private void sendAutoPresence(final Show show, final String status, final int priority, final boolean delayed) {
 		if (autoPresenceTask != null) {
 			autoPresenceTask.cancel();
@@ -1540,6 +1483,76 @@ public class JaxmppService extends Service {
 				connectionErrorsCounter.remove(jid);
 			else
 				connectionErrorsCounter.put(jid, count);
+		}
+	}
+
+	private void setMobileMode(final boolean enable) {
+		if (setMobileModeTask != null) {
+			setMobileModeTask.cancel();
+			setMobileModeTask = null;
+		}
+
+		if (!enable) {
+			setMobileModeTask = new TimerTask() {
+
+				@Override
+				public void run() {
+					setMobileModeTask = null;
+					try {
+						for (JaxmppCore jaxmpp : getMulti().get()) {
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
+								if (sf == null)
+									continue;
+
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
+								if (m == null)
+									continue;
+
+								IQ iq = IQ.create();
+								iq.setType(StanzaType.set);
+								Element mobile = new DefaultElement("mobile");
+								mobile.setXMLNS(Features.MOBILE);
+								mobile.setAttribute("enable", String.valueOf(enable));
+								iq.addChild(mobile);
+								jaxmpp.send(iq);
+							}
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Can't set mobile mode!", e);
+					}
+				}
+			};
+			timer.schedule(setMobileModeTask, 1000 * 60);
+		} else {
+			(new Thread() {
+				@Override
+				public void run() {
+					try {
+						for (JaxmppCore jaxmpp : getMulti().get()) {
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
+								if (sf == null)
+									continue;
+
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
+								if (m == null)
+									continue;
+
+								IQ iq = IQ.create();
+								iq.setType(StanzaType.set);
+								Element mobile = new DefaultElement("mobile");
+								mobile.setXMLNS(Features.MOBILE);
+								mobile.setAttribute("enable", String.valueOf(enable));
+								iq.addChild(mobile);
+								jaxmpp.send(iq);
+							}
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Can't set mobile mode!", e);
+					}
+				}
+			}).start();
 		}
 	}
 
