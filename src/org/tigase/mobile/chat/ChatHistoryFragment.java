@@ -61,7 +61,7 @@ public class ChatHistoryFragment extends Fragment {
 		return f;
 	}
 
-	private Cursor c;
+	//private Cursor c;
 
 	private Chat chat;
 
@@ -118,6 +118,11 @@ public class ChatHistoryFragment extends Fragment {
 		return cursor;
 	}
 
+	private Cursor getCursor() {
+		 return getActivity().getApplicationContext().getContentResolver().query(
+					Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);		
+	}
+	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -187,8 +192,7 @@ public class ChatHistoryFragment extends Fragment {
 			throw new RuntimeException("Chat not specified!");
 		}
 
-		this.c = getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+		Cursor c = getCursor();
 
 		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
 		registerForContextMenu(lv);
@@ -226,6 +230,7 @@ public class ChatHistoryFragment extends Fragment {
 
 	@Override
 	public void onDestroyView() {
+		Cursor c = getCursor();
 		if (c != null) {
 			if (DEBUG)
 				Log.d(TAG, "Closing cursor");
