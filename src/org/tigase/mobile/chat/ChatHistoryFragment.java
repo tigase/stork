@@ -61,7 +61,7 @@ public class ChatHistoryFragment extends Fragment {
 		return f;
 	}
 
-	//private Cursor c;
+	// private Cursor c;
 
 	private Chat chat;
 
@@ -119,10 +119,10 @@ public class ChatHistoryFragment extends Fragment {
 	}
 
 	private Cursor getCursor() {
-		 return getActivity().getApplicationContext().getContentResolver().query(
-					Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);		
+		return getActivity().getApplicationContext().getContentResolver().query(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
 	}
-	
+
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -147,12 +147,11 @@ public class ChatHistoryFragment extends Fragment {
 
 		if (getArguments() != null) {
 			int idx = getArguments().getInt("page");
-			List<Chat> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats(); 
+			List<Chat> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
 			if (idx < chats.size()) {
 				Chat ch = chats.get(idx);
 				setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
-			}
-			else {
+			} else {
 				Log.v(TAG, "got request for page = " + idx + " but we have only " + chats.size() + " open");
 			}
 
