@@ -381,11 +381,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					return 0;
 				} else if (object instanceof RosterFragment) {
 					return 1;
-				} else {
-					for (Chat t : getChatList()) {
-						if (t == object)
-							return 2 + findChat(t.getId());
+				} else if (object instanceof ChatHistoryFragment) {
+					Log.v(TAG, "got chat history fragment");
+					Chat chat = ((ChatHistoryFragment) object).getChat();
+					if (chat != null) {
+						Integer position = findChat(chat.getId());
+						if (position != null)
+							return 2 + position;
 					}
+					return POSITION_NONE;
+				} else {
 					return POSITION_NONE;
 				}
 			}
