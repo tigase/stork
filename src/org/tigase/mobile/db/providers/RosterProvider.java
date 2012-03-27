@@ -275,9 +275,13 @@ public class RosterProvider extends ContentProvider {
 			break;
 		case GROUPS_URI_INDICATOR:
 			c = new GroupsCursor(getContext(), null);
-			break;
+			// using CONTENT_URI for groups allows to update group visibility
+			// when contacts are offline
+			c.setNotificationUri(getContext().getContentResolver(), Uri.parse(CONTENT_URI));
+			return c;
+			// break;
 
-		// case for VCard?
+			// case for VCard?
 		case VCARD_URI_INDICATOR:
 			c = dbHelper.getReadableDatabase().query(
 					VCardsCacheTableMetaData.TABLE_NAME,

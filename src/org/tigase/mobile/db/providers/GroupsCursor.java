@@ -6,10 +6,13 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.Context;
@@ -114,9 +117,32 @@ public class GroupsCursor extends AbstractCursor {
 		synchronized (this.items) {
 			final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
 
+			final boolean showOffline = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).getBoolean(
+					Preferences.SHOW_OFFLINE, Boolean.TRUE);
+
+			Predicate pr = predicate;
+			if (!showOffline) {
+				pr = new Predicate() {
+					@Override
+					public boolean match(RosterItem item) {
+						if (predicate != null && !predicate.match(item)) {
+							return false;
+						}
+						SessionObject session = item.getSessionObject();
+						if (session == null)
+							return false;
+						try {
+							return session.getPresence().isAvailable(item.getJid());
+						} catch (XMLException e) {
+							return false;
+						}
+					}
+				};
+			}
+
 			final HashSet<String> tmp = new HashSet<String>();
 			for (JaxmppCore j : multi.get()) {
-				List<RosterItem> al = j.getRoster().getAll(predicate);
+				List<RosterItem> al = j.getRoster().getAll(pr);
 				for (RosterItem rosterItem : al) {
 					tmp.addAll(rosterItem.getGroups());
 				}
