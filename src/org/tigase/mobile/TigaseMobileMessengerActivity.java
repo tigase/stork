@@ -427,6 +427,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 		}
+
+		boolean autostart = mPreferences.getBoolean(Preferences.AUTOSTART_KEY, true);
+		if (autostart && !JaxmppService.isServiceActive()) {
+			Intent intent = new Intent(this, JaxmppService.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startService(intent);
+		}
+
 	}
 
 	@Override
