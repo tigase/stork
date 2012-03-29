@@ -35,5 +35,12 @@
         <item>Music</item>
         <item>Pictures</item>
     </string-array>
+    <string-array name="presence_queue_timeout">
+        <item>3 min</item>
+        <item>6 min</item>
+        <item>9 min</item>
+        <item>12 min</item>
+        <item>15 min</item>
+    </string-array>
         
 </resources>

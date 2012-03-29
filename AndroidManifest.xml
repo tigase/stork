@@ -81,7 +81,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-		<activity android:name=".filetransfer.SendFileActivity" >
+        <activity
+            android:name=".preferences.AccountAdvancedPreferencesActivity"
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:label="@string/account_advanced_preferences"
+            android:theme="@style/XTheme" >
+            <intent-filter>
+                <action android:name="org.tigase.mobile.account.advancedPreferences.EDIT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        		<activity android:name=".filetransfer.SendFileActivity" >
     		<intent-filter>
         		<action android:name="android.intent.action.SEND" />
         		<category android:name="android.intent.category.DEFAULT" />

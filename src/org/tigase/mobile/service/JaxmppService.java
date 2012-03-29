@@ -163,7 +163,6 @@ public class JaxmppService extends Service {
 	private static final String ACTION_KEEPALIVE = "org.tigase.mobile.service.JaxmppService.KEEP_ALIVE";
 
 	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
-
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
 	private static final boolean DEBUG = true;
@@ -171,6 +170,10 @@ public class JaxmppService extends Service {
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
 	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
+
+	public static final String MOBILE_OPTIMIZATIONS_ENABLED = Features.MOBILE + "#enabled";
+
+	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE + "#presence_queue_timeout";
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -280,6 +283,15 @@ public class JaxmppService extends Service {
 					sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
+
+				String value = AccountManager.get(context).getUserData(account, MOBILE_OPTIMIZATIONS_ENABLED);
+				boolean mobileOptimizations = value == null || Boolean.valueOf(value);
+				sessionObject.setUserProperty(MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
+
+				value = AccountManager.get(context).getUserData(account, MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
+				if (value != null) {
+					sessionObject.setUserProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT, Integer.parseInt(value));
+				}
 
 				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
 					@Override
@@ -1530,7 +1542,8 @@ public class JaxmppService extends Service {
 				public void run() {
 					try {
 						for (JaxmppCore jaxmpp : getMulti().get()) {
-							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected
+									&& ((Boolean) jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_ENABLED))) {
 								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
 								if (sf == null)
 									continue;
@@ -1544,6 +1557,11 @@ public class JaxmppService extends Service {
 								Element mobile = new DefaultElement("mobile");
 								mobile.setXMLNS(Features.MOBILE);
 								mobile.setAttribute("enable", String.valueOf(enable));
+								Integer timeout = jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
+								if (timeout != null) {
+									timeout = timeout * 60 * 1000;
+									mobile.setAttribute("timeout", String.valueOf(timeout));
+								}
 								iq.addChild(mobile);
 								jaxmpp.send(iq);
 							}
