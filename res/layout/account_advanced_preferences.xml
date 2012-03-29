@@ -14,6 +14,11 @@
         android:minHeight="40dp"
         android:text="@string/mobile_optimizations" />
 
+    <TextView 
+        android:text="@string/presence_queue_max_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    
     <Spinner
         android:id="@+id/presence_queue_timeout"
         android:prompt="@string/presence_queue_max_timeout"
