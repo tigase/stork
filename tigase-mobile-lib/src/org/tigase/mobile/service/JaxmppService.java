@@ -172,6 +172,10 @@ public class JaxmppService extends Service {
 
 	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
 
+	public static final String MOBILE_OPTIMIZATIONS_ENABLED = Features.MOBILE_V1 + "#enabled";
+
+	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE_V1 + "#presence_queue_timeout";
+
 	public static final int NOTIFICATION_ID = 5398777;
 
 	private static boolean serviceActive = false;
@@ -259,6 +263,7 @@ public class JaxmppService extends Service {
 				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 				sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
+				sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY, true);
 
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
 					// Android from API v8 contains optimized SSLSocketFactory
@@ -1492,7 +1497,7 @@ public class JaxmppService extends Service {
 			setMobileModeTask = null;
 		}
 
-		if (!enable) {
+		if (enable) {
 			setMobileModeTask = new TimerTask() {
 
 				@Override
@@ -1505,15 +1510,31 @@ public class JaxmppService extends Service {
 								if (sf == null)
 									continue;
 
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
-								if (m == null)
+								String xmlns = null;
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
+								if (m != null) {
+									xmlns = Features.MOBILE_V2;
+								} else {
+									m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
+									if (m != null) {
+										xmlns = Features.MOBILE_V1;
+									}
+								}
+								if (xmlns == null)
 									continue;
 
 								IQ iq = IQ.create();
 								iq.setType(StanzaType.set);
 								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(Features.MOBILE);
+								mobile.setXMLNS(xmlns);
 								mobile.setAttribute("enable", String.valueOf(enable));
+								if (Features.MOBILE_V1.equals(xmlns)) {
+									Integer timeout = jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
+									if (timeout != null) {
+										timeout = timeout * 60 * 1000;
+										mobile.setAttribute("timeout", String.valueOf(timeout));
+									}
+								}
 								iq.addChild(mobile);
 								jaxmpp.send(iq);
 							}
@@ -1535,14 +1556,23 @@ public class JaxmppService extends Service {
 								if (sf == null)
 									continue;
 
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE);
-								if (m == null)
+								String xmlns = null;
+								Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
+								if (m != null) {
+									xmlns = Features.MOBILE_V2;
+								} else {
+									m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
+									if (m != null) {
+										xmlns = Features.MOBILE_V1;
+									}
+								}
+								if (xmlns == null)
 									continue;
 
 								IQ iq = IQ.create();
 								iq.setType(StanzaType.set);
 								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(Features.MOBILE);
+								mobile.setXMLNS(xmlns);
 								mobile.setAttribute("enable", String.valueOf(enable));
 								iq.addChild(mobile);
 								jaxmpp.send(iq);
