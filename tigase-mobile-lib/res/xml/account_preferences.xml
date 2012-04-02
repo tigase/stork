@@ -14,5 +14,11 @@
                 android:action="org.tigase.mobile.account.personalInfo.EDIT" 
                 android:targetClass="vcard.VCardEditorActivity.class" />
     </PreferenceScreen>    
-    
+   <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
+        android:title="@string/account_advanced_preferences" android:enabled="true" 
+        android:key="key">
+            <intent
+                android:action="org.tigase.mobile.account.advancedPreferences.EDIT" 
+                android:targetClass="preferences.AccountAdvancedPreferencesActivity.class" />        
+    </PreferenceScreen>        
 </PreferenceScreen>

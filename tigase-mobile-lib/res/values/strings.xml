@@ -90,4 +90,7 @@
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
 
+    <string name="account_advanced_preferences">More settings&#8230;</string>
+    <string name="mobile_optimizations">Mobile optimizations</string>
+    <string name="presence_queue_max_timeout">Maximum presence queue timeout</string>    
 </resources>

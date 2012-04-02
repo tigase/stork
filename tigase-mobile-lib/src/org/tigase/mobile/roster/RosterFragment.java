@@ -279,6 +279,10 @@ public class RosterFragment extends Fragment {
 		if (DEBUG)
 			Log.d(TAG + "_rf", "onCreateView()");
 
+		if (getArguments() != null) {
+			this.rosterLayout = getArguments().getString("layout");
+		}
+		
 		View layout;
 		if ("groups".equals(this.rosterLayout)) {
 			layout = inflater.inflate(R.layout.roster_list, null);
