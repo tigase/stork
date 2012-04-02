@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="app_icon_options">
+        <item>Always</item>
+        <item>Only when connected</item>
+        <item>Only when disconnected</item>
+        <item>None</item>
+    </string-array>
+    <string-array name="app_icon_options_values">
+        <item>always</item>
+        <item>only_connected</item>
+        <item>only_disconnected</item>
+        <item>none</item>
+    </string-array>
+    <string-array name="roster_layout_options">
+        <item>Flat</item>
+        <item>With groups</item>
+    </string-array>
+    <string-array name="roster_layout_options_values">
+        <item>flat</item>
+        <item>groups</item>
+    </string-array>
+    <string-array name="free_account_hostnames">
+        <item>sure.im</item>
+        <item>jabber.me</item>
+        <item>tigase.im</item>
+    </string-array>
+    <string-array name="free_account_create_hostnames">
+        <item>sure.im</item>
+    </string-array>
+    <string-array name="incoming_file_stores">
+        <item>Download</item>
+        <item>Movies</item>
+        <item>Music</item>
+        <item>Pictures</item>
+    </string-array>
+        
+</resources>
