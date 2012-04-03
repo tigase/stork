@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -85,12 +86,12 @@ public class ChatView extends LinearLayout {
 
 	public ChatView(Context context) {
 		super(context);
-		this.prefs = getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 	}
 
 	public ChatView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		this.prefs = getContext().getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 	}
 
 	public Chat getChat() {

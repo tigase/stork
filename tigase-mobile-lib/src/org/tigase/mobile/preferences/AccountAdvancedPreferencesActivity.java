@@ -72,7 +72,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
 		final Account account = getAccount(accountManager);
 		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
-		
+
 		setContentView(R.layout.account_advanced_preferences);
 
 		mobileOptimizations = (Switch) findViewById(R.id.mobile_optimizations);

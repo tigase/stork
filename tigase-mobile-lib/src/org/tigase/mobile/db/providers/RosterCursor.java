@@ -25,6 +25,7 @@ import android.database.AbstractCursor;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class RosterCursor extends AbstractCursor {
@@ -178,8 +179,8 @@ public class RosterCursor extends AbstractCursor {
 
 	private final void loadData() {
 		final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
-		final boolean showOffline = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).getBoolean(
-				Preferences.SHOW_OFFLINE, Boolean.TRUE);
+		final boolean showOffline = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Preferences.SHOW_OFFLINE,
+				Boolean.TRUE);
 
 		Predicate pr = predicate;
 		if (!showOffline) {

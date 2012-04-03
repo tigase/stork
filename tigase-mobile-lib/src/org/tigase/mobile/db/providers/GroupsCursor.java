@@ -18,6 +18,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.Context;
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class GroupsCursor extends AbstractCursor {
@@ -117,7 +118,7 @@ public class GroupsCursor extends AbstractCursor {
 		synchronized (this.items) {
 			final MultiJaxmpp multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
 
-			final boolean showOffline = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE).getBoolean(
+			final boolean showOffline = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
 					Preferences.SHOW_OFFLINE, Boolean.TRUE);
 
 			Predicate pr = predicate;

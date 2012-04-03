@@ -3,7 +3,6 @@ package org.tigase.mobile.chat;
 import java.sql.Date;
 
 import org.tigase.mobile.MessengerApplication;
-import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
@@ -18,6 +17,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
@@ -38,7 +38,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		super(context, layout, c, cols, names);
 		this.rdt = new RosterDisplayTools(context);
 
-		SharedPreferences prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		String tmp = null;// prefs.getString(Preferences.NICKNAME_KEY, null);
 		nickname = tmp == null || tmp.length() == 0 ? null : tmp;
 	}

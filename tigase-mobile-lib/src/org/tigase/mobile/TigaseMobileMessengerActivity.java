@@ -46,6 +46,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -150,6 +151,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 		};
+	}
+
+	protected RosterFragment createRosterFragment(String string) {
+		return RosterFragment.newInstance(string);
 	}
 
 	protected Integer findChat(final long chatId) {
@@ -269,7 +274,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onCreate()");
 
 		super.onCreate(savedInstanceState);
-		this.mPreferences = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		this.mPreferences.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
 		AccountManager accountManager = AccountManager.get(this);
@@ -340,7 +345,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				@Override
 				public Fragment getItem(int i) {
-					return RosterFragment.newInstance(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
+					return createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
 				}
 			});
 		}
@@ -362,7 +367,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (i == 0) {
 					return AccountsStatusFragment.newInstance();
 				} else if (!isXLarge() && i == 1) {
-					Fragment f = RosterFragment.newInstance(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
+					Fragment f = createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
 					if (DEBUG)
 						Log.d(TAG, "Created roster with FragmentManager " + f.getFragmentManager());
 					return f;

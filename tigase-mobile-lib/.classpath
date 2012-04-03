@@ -3,9 +3,9 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-j2se"/>
 	<classpathentry kind="lib" path="libs/android-support-v4.jar"/>
 	<classpathentry kind="lib" path="libs/dnsjava-2.1.3.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>

@@ -107,6 +107,7 @@ import android.net.SSLSessionCache;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -1052,7 +1053,7 @@ public class JaxmppService extends Service {
 		if (DEBUG)
 			Log.i(TAG, "onCreate()");
 		clearLocalJaxmppProperties();
-		this.prefs = getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
 
 public class DBRosterCacheProvider implements RosterCacheProvider {
 
@@ -37,7 +38,7 @@ public class DBRosterCacheProvider implements RosterCacheProvider {
 	public DBRosterCacheProvider(Context context) {
 		this.context = context;
 		this.dbHelper = new MessengerDatabaseHelper(context);
-		this.prefs = context.getSharedPreferences(Preferences.NAME, Context.MODE_PRIVATE);
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
 	}
 

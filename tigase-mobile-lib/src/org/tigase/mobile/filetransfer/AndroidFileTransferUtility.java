@@ -109,7 +109,7 @@ public class AndroidFileTransferUtility {
 				if (ft != null && ft.getState() == State.negotiating) {
 					ft.transferError("negotiation timed out");
 				}
-					
+
 			}
 
 		}, 5L * 60 * 1000);
