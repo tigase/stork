@@ -33,7 +33,7 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
-            android:name=".TigaseMobileMessengerAdsActivity"
+            android:name="org.tigase.mobile.TigaseMobileMessengerActivity"
             android:label="@string/app_name"
             android:theme="@style/XTheme.Light.NoTitleBar" >
             <intent-filter>

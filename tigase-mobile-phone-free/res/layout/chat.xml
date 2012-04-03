@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.tigase.mobile.chat.ChatView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     class="org.tigase.mobile.chat.ChatView"
@@ -54,7 +55,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_above="@+id/chat_send_section"
-        android:layout_below="@+id/topBar"
+        android:layout_below="@+id/adLayout"
         android:layout_weight="1" >
     </ListView>
 
@@ -83,6 +84,34 @@
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:text="@string/chatSendButton" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/topBar"
+        android:gravity="center_horizontal"
+        android:orientation="vertical" >
+
+        <com.google.ads.AdView
+            android:id="@+id/ad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            ads:adSize="BANNER"
+            ads:adUnitId="@string/adUnitId"
+            ads:loadAdOnCreate="true"
+            ads:testDevices="@string/adTestDevices" />
+
+        <!-- <TextView -->
+        <!-- android:id="@+id/textView2" -->
+        <!-- android:layout_width="wrap_content" -->
+        <!-- android:layout_height="wrap_content" -->
+        <!-- android:text="Large Text" -->
+        <!-- android:textAppearance="?android:attr/textAppearanceLarge" /> -->
+
     </LinearLayout>
 
 </org.tigase.mobile.chat.ChatView>
