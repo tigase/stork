@@ -20,11 +20,10 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
-import android.widget.Switch;
 
 public class AccountAdvancedPreferencesActivity extends Activity {
 
-	private Switch mobileOptimizations;
+	private CompoundButton mobileOptimizations;
 	private Spinner presenceQueueTimeout;
 
 	private Account getAccount(final AccountManager accountManager) {
@@ -75,7 +74,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 
 		setContentView(R.layout.account_advanced_preferences);
 
-		mobileOptimizations = (Switch) findViewById(R.id.mobile_optimizations);
+		mobileOptimizations = (CompoundButton) findViewById(R.id.mobile_optimizations);
 		presenceQueueTimeout = (Spinner) findViewById(R.id.presence_queue_timeout);
 
 		boolean available_v1 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V1);
