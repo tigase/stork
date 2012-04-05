@@ -397,6 +397,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public int getItemPosition(Object object) {
 				if (object instanceof AccountsStatusFragment) {
 					return 0;
+				} else if (refreshRoster && object instanceof RosterFragment) {
+					return POSITION_NONE;
 				} else if (object instanceof RosterFragment) {
 					return 1;
 				} else if (object instanceof ChatHistoryFragment) {

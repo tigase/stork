@@ -21,7 +21,7 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 	private FragmentTransaction mCurTransaction = null;
 	private final FragmentManager mFragmentManager;
 
-	private boolean refreshRoster;
+	protected boolean refreshRoster;
 
 	public MyFragmentPageAdapter(FragmentManager fm) {
 		mFragmentManager = fm;
