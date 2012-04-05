@@ -27,17 +27,19 @@
                 android:id="@+id/newAccountUsername"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Username"
+                android:hint="User name"
                 android:inputType="textNoSuggestions" >
 
                 <requestFocus />
             </EditText>
 
-            <Spinner
+            <AutoCompleteTextView
                 android:id="@+id/newAccountHostnameSelector"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:entries="@array/free_account_hostnames" />
+                android:ems="10"
+                android:hint="Server name"
+                android:inputType="textNoSuggestions" />
 
             <EditText
                 android:id="@+id/newAccountPassowrd"
@@ -47,22 +49,23 @@
                 android:inputType="textPassword" />
 
             <EditText
-                android:id="@+id/newAccountNickname"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:hint="Nickname" />
-
-            <EditText
                 android:id="@+id/newAccountResource"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Resource" />
+                android:hint="Client description"
+                android:text="Tigase Messenger" />
 
             <EditText
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="Alternative hostname" />
+
+            <EditText
+                android:id="@+id/newAccountNickname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nickname" />
         </LinearLayout>
     </ScrollView>
 

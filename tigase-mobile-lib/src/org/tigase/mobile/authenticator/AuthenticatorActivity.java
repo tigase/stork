@@ -34,9 +34,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -206,8 +207,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private static final int CREATION_ERROR_DIALOG = 3;
 
-	private static final boolean FREE_VERSION = false;
-
 	private static final int LOGIN_ERROR_DIALOG = 2;
 
 	public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
@@ -290,7 +289,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	protected void handleLogin(View v, boolean requestNewAccount, final AsyncTask<String, Void, String> authTask) {
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mPasswordConfirmEdit = (EditText) v.findViewById(R.id.newAccountPassowrdConfirm);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
@@ -303,12 +302,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 				mUsernameEdit.setError("Field can't be empty");
 				return;
 			}
-			String username = mUsernameEdit.getText().toString();
-			if (FREE_VERSION) {
-				username += "@" + mHostnameSelector.getSelectedItem();
-			}
 			try {
-				JID j = JID.jidInstance(username);
+				JID j = JID.jidInstance(mUsernameEdit.getText().toString(), mHostnameSelector.getText().toString());
 
 				if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
 						&& j.getDomain().length() > 0) {
@@ -497,13 +492,20 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
+		String[] countries = getResources().getStringArray(R.array.free_account_hostnames);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.servers_list_item, countries);
+		mHostnameSelector.setAdapter(adapter);
+
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
 		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
-		if (!TextUtils.isEmpty(mUsername))
-			mUsernameEdit.setText(mUsername);
+		if (!TextUtils.isEmpty(mUsername)) {
+			BareJID j = BareJID.bareJIDInstance(mUsername);
+			mHostnameSelector.setText(j.getDomain());
+			mUsernameEdit.setText(j.getLocalpart());
+		}
 		if (!TextUtils.isEmpty(mPassword))
 			mPasswordEdit.setText(mPassword);
 		if (!TextUtils.isEmpty(mNickname))
@@ -514,9 +516,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mResourceEdit.setText(mResource);
 
 		mUsernameEdit.setEnabled(mUsername == null);
-
-		mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ? View.VISIBLE : View.GONE);
-		mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE : View.GONE);
+		mHostnameSelector.setEnabled(mUsername == null);
 
 		Button cancelButton = (Button) v.findViewById(R.id.newAccountcancelButton);
 		cancelButton.setOnClickListener(new OnClickListener() {
@@ -543,16 +543,23 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
+		String[] countries = getResources().getStringArray(R.array.free_account_hostnames);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.servers_list_item, countries);
+		mHostnameSelector.setAdapter(adapter);
+
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
 		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 
 		mUsernameEdit.setEnabled(mUsername == null);
+		mHostnameSelector.setEnabled(mUsername == null);
 
-		mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ? View.VISIBLE : View.GONE);
-		mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE : View.GONE);
+		// mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ?
+		// View.VISIBLE : View.GONE);
+		// mHostnameEdit.setVisibility(!FREE_VERSION ? View.VISIBLE :
+		// View.GONE);
 
 		Button cancelButton = (Button) v.findViewById(R.id.newAccountcancelButton);
 		cancelButton.setOnClickListener(new OnClickListener() {
