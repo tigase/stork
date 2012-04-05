@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">1.0-RC11</string>
+    <string name="app_version">1.0-RC14</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="TrackingID">UA-30622348-1</string>
     
