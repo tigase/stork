@@ -7,12 +7,17 @@ import org.tigase.mobile.service.JaxmppService;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
+import tigase.jaxmpp.core.client.xmpp.modules.PingModule.PingAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.AccountManager;
 import android.content.BroadcastReceiver;
@@ -36,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class AccountsStatusFragment extends Fragment {
 
@@ -155,6 +161,65 @@ public class AccountsStatusFragment extends Fragment {
 					return true;
 				}
 			});
+			menu.add(R.string.pingServer).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				@Override
+				public boolean onMenuItemClick(MenuItem item) {
+					new Thread() {
+						@Override
+						public void run() {
+							try {
+								PingModule.PingAsyncCallback pong = new PingAsyncCallback() {
+
+									@Override
+									public void onError(Stanza responseStanza, final ErrorCondition error)
+											throws JaxmppException {
+										getActivity().runOnUiThread(new Runnable() {
+
+											@Override
+											public void run() {
+												Toast toast = Toast.makeText(getActivity(), "Ping error: " + error,
+														Toast.LENGTH_LONG);
+												toast.show();
+											}
+										});
+									}
+
+									@Override
+									protected void onPong(final long time) {
+										getActivity().runOnUiThread(new Runnable() {
+
+											@Override
+											public void run() {
+												Toast toast = Toast.makeText(getActivity(), "Pong: " + time + "ms",
+														Toast.LENGTH_LONG);
+												toast.show();
+											}
+										});
+									}
+
+									@Override
+									public void onTimeout() throws JaxmppException {
+										getActivity().runOnUiThread(new Runnable() {
+
+											@Override
+											public void run() {
+												Toast toast = Toast.makeText(getActivity(), "Ping timeout", Toast.LENGTH_LONG);
+												toast.show();
+											}
+										});
+									}
+								};
+								jaxmpp.getModulesManager().getModule(PingModule.class).ping(
+										JID.jidInstance(jaxmpp.getSessionObject().getUserBareJid().getDomain()), pong);
+							} catch (Exception ex) {
+								Log.e(TAG, "error pinging server " + jaxmpp.getSessionObject().getUserBareJid().toString(), ex);
+							}
+						}
+					}.start();
+					return true;
+				}
+			});
+
 		} else {
 			menu.add(R.string.loginButton).setOnMenuItemClickListener(new OnMenuItemClickListener() {
 				@Override
