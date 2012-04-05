@@ -235,7 +235,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(msg != 1);
 		}
-		
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			invalidateOptionsMenu();
 		}
@@ -440,6 +440,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 
 		boolean autostart = mPreferences.getBoolean(Preferences.AUTOSTART_KEY, true);
+		autostart &= mPreferences.getBoolean(Preferences.SERVICE_ACTIVATED, false);
 		if (autostart && !JaxmppService.isServiceActive()) {
 			Intent intent = new Intent(this, JaxmppService.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -551,11 +552,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent()");
 		this.currentPage = findChatPage(intent.getExtras());
-		
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(currentPage != 1);
-		}		
+		}
 	}
 
 	@Override
@@ -630,8 +631,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
 		} else if (item.getItemId() == R.id.disconnectButton) {
+			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, false).apply();
 			stopService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
 		} else if (item.getItemId() == R.id.connectButton) {
+			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, true).apply();
+
 			Intent intent = new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class);
 			intent.putExtra("focused", true);
 			startService(intent);
