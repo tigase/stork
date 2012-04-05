@@ -35,6 +35,8 @@
         <activity
             android:name="org.tigase.mobile.TigaseMobileMessengerActivity"
             android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="stateHidden|adjustResize"           
             android:theme="@style/XTheme.Light.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
