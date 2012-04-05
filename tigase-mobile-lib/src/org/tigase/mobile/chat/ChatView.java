@@ -32,7 +32,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -183,6 +182,11 @@ public class ChatView extends RelativeLayout {
 			}
 		};
 		task.execute(t);
+		((MessengerApplication) getContext().getApplicationContext()).getTracker().trackEvent("ChatView", // Category
+				"Message", // Action
+				"Send", // Label
+				0);
+
 	}
 
 	public void setChat(Chat chat) {

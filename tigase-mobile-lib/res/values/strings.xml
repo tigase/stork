@@ -3,7 +3,9 @@
 
     <string name="app_version">1.0-RC11</string>
     <string name="app_name">Tigase Messenger</string>
-   
+    <string name="TrackingID">UA-30622348-1</string>
+    
+    <string name="pingServer">Ping</string>
     <string name="auth_rerequested">Rerequested authorization from %1$s (%2$s)</string>
     <string name="auth_removed">Removed authorization from %1$s (%2$s)</string>
     <string name="auth_resent">Sent authorization to %1$s (%2$s)</string>
@@ -89,8 +91,8 @@
     <string name="avatar">Avatar</string>
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
-
-    <string name="account_advanced_preferences">More settings&#8230;</string>
+    <string name="account_advanced_preferences">More settings…</string>
     <string name="mobile_optimizations">Mobile optimizations</string>
-    <string name="presence_queue_max_timeout">Maximum presence queue timeout</string>    
+    <string name="presence_queue_max_timeout">Maximum presence queue timeout</string>
+
 </resources>

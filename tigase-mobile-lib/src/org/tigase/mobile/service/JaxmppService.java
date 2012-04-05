@@ -264,7 +264,8 @@ public class JaxmppService extends Service {
 				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
 				sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
-//				sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY, true);
+				// sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY,
+				// true);
 
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
 					// Android from API v8 contains optimized SSLSocketFactory
@@ -643,6 +644,10 @@ public class JaxmppService extends Service {
 								}
 							}
 						}).start();
+					((MessengerApplication) getApplication()).getTracker().trackEvent("Service", // Category
+							"Account", // Action
+							"Login", // Label
+							0);
 				}
 			}
 		};
@@ -948,6 +953,11 @@ public class JaxmppService extends Service {
 		account.setProperty("messenger#error", message);
 
 		notificationManager.notify("error:" + account.getUserBareJid().toString(), ERROR_NOTIFICATION_ID, notification);
+
+		((MessengerApplication) getApplication()).getTracker().trackEvent("Service", // Category
+				"Account", // Action
+				"Error", // Label
+				0);
 
 	}
 

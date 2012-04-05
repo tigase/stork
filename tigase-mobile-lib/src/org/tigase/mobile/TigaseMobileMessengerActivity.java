@@ -223,7 +223,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		intent.setAction(CLIENT_FOCUS_MSG);
 		intent.putExtra("page", msg);
 
-		if (msg > 1) {
+		if (msg == -1) {
+			((MessengerApplication) getApplication()).getTracker().trackPageView("/off");
+		} else if (msg == 0) {
+			((MessengerApplication) getApplication()).getTracker().trackPageView("/accountsListPage");
+		} else if (msg == 1) {
+			((MessengerApplication) getApplication()).getTracker().trackPageView("/rosterPage");
+		} else if (msg > 1) {
+			((MessengerApplication) getApplication()).getTracker().trackPageView("/chatPage");
 			final Chat chat = getChatByPageIndex(msg);
 			if (chat != null)
 				intent.putExtra("chatId", chat.getId());

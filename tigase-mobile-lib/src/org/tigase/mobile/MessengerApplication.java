@@ -30,9 +30,13 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 public class MessengerApplication extends Application {
 
 	private MultiJaxmpp multiJaxmpp;
+
+	private GoogleAnalyticsTracker tracker;
 
 	public MessengerApplication() {
 		super();
@@ -126,6 +130,29 @@ public class MessengerApplication extends Application {
 	protected final State getState(SessionObject object) {
 		State state = multiJaxmpp.get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state == null ? State.disconnected : state;
+	}
+
+	public GoogleAnalyticsTracker getTracker() {
+		return this.tracker;
+	}
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+
+		tracker = GoogleAnalyticsTracker.getInstance();
+		tracker.startNewSession(getResources().getString(R.string.TrackingID), 300, this);
+
+		tracker.setCustomVar(1, "app-name", getResources().getString(R.string.app_name));
+		tracker.setCustomVar(2, "app-version", getResources().getString(R.string.app_version));
+	}
+
+	@Override
+	public void onTerminate() {
+		if (tracker != null)
+			tracker.stopSession();
+
+		super.onTerminate();
 	}
 
 }

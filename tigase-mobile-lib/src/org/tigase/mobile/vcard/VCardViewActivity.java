@@ -103,6 +103,8 @@ public class VCardViewActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.vcard);
 
+		((MessengerApplication) getApplication()).getTracker().trackPageView("/vcardViewPage");
+
 		final ProgressDialog dialog = ProgressDialog.show(VCardViewActivity.this, "", "Loading. Please wait...", true);
 		dialog.setCancelable(true);
 		dialog.setOnCancelListener(new OnCancelListener() {
@@ -203,8 +205,8 @@ public class VCardViewActivity extends Activity {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(true);
-		}				
-		
+		}
+
 		dialog.show();
 	}
 
@@ -237,15 +239,15 @@ public class VCardViewActivity extends Activity {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-	    switch (item.getItemId()) {
-	        case android.R.id.home:
-	        	finish();
-	            return true;
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
-	}	
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
 }
