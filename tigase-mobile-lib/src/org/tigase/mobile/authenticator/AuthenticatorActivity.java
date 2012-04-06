@@ -34,10 +34,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -287,9 +288,21 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		finish();
 	}
 
+	protected String getServerName(View v) {
+		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+
+		if (mHostnameSelector.getVisibility() == View.VISIBLE
+				&& mHostnameSelector.getSelectedItemPosition() < accounts.length - 1) {
+			return mHostnameSelector.getSelectedItem().toString();
+		}
+
+		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+		return mHostnameSelectorEdit.getText().toString();
+	}
+
 	protected void handleLogin(View v, boolean requestNewAccount, final AsyncTask<String, Void, String> authTask) {
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mPasswordConfirmEdit = (EditText) v.findViewById(R.id.newAccountPassowrdConfirm);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
@@ -297,27 +310,24 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 		EditText mEmailEdit = (EditText) v.findViewById(R.id.newAccountEmail);
 
-		if (requestNewAccount) {
-			if (TextUtils.isEmpty(mUsernameEdit.getText().toString())) {
-				mUsernameEdit.setError("Field can't be empty");
-				return;
-			}
-			try {
-				JID j = JID.jidInstance(mUsernameEdit.getText().toString(), mHostnameSelector.getText().toString());
+		if (TextUtils.isEmpty(mUsernameEdit.getText().toString())) {
+			mUsernameEdit.setError("Field can't be empty");
+			return;
+		}
+		try {
+			JID j = JID.jidInstance(mUsernameEdit.getText().toString(), getServerName(v));
 
-				if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
-						&& j.getDomain().length() > 0) {
-					mUsername = j.toString();
-				} else {
-					mUsernameEdit.setError("Invalid username");
-					return;
-				}
-			} catch (Exception e) {
+			if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
+					&& j.getDomain().length() > 0) {
+				mUsername = j.toString();
+			} else {
 				mUsernameEdit.setError("Invalid username");
 				return;
 			}
-		} else
-			mUsername = mUsernameEdit.getText().toString();
+		} catch (Exception e) {
+			mUsernameEdit.setError("Invalid username");
+			return;
+		}
 
 		if (mPasswordConfirmEdit != null
 				&& !TextUtils.equals(mPasswordEdit.getText().toString(), mPasswordConfirmEdit.getText().toString())) {
@@ -492,10 +502,24 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
-		String[] countries = getResources().getStringArray(R.array.free_account_hostnames);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.servers_list_item, countries);
-		mHostnameSelector.setAdapter(adapter);
+		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+		mHostnameSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+				if (position != accounts.length - 1) {
+					mHostnameSelectorEdit.setVisibility(View.GONE);
+				} else {
+					mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parentView) {
+			}
+
+		});
 
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
@@ -503,8 +527,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 		if (!TextUtils.isEmpty(mUsername)) {
 			BareJID j = BareJID.bareJIDInstance(mUsername);
-			mHostnameSelector.setText(j.getDomain());
+			mHostnameSelector.setVisibility(View.GONE);
+			mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+			mHostnameSelectorEdit.setText(j.getDomain());
+			mHostnameSelectorEdit.setEnabled(false);
 			mUsernameEdit.setText(j.getLocalpart());
+		} else {
+			mHostnameSelector.setVisibility(View.VISIBLE);
+			mHostnameSelectorEdit.setVisibility(View.GONE);
+			mHostnameSelectorEdit.setEnabled(true);
 		}
 		if (!TextUtils.isEmpty(mPassword))
 			mPasswordEdit.setText(mPassword);
@@ -543,18 +574,33 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
-		AutoCompleteTextView mHostnameSelector = (AutoCompleteTextView) v.findViewById(R.id.newAccountHostnameSelector);
-		String[] countries = getResources().getStringArray(R.array.free_account_hostnames);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.servers_list_item, countries);
-		mHostnameSelector.setAdapter(adapter);
+		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+		mHostnameSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+				if (position != accounts.length - 1) {
+					mHostnameSelectorEdit.setVisibility(View.GONE);
+				} else {
+					mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parentView) {
+			}
+
+		});
 
 		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
 		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
 		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
 		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
 
-		mUsernameEdit.setEnabled(mUsername == null);
-		mHostnameSelector.setEnabled(mUsername == null);
+		mHostnameSelector.setVisibility(View.VISIBLE);
+		mHostnameSelectorEdit.setVisibility(View.GONE);
+		mHostnameSelectorEdit.setEnabled(true);
 
 		// mHostnameSelector.setVisibility(FREE_VERSION && mUsername == null ?
 		// View.VISIBLE : View.GONE);

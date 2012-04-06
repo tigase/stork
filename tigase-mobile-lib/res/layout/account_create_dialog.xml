@@ -33,8 +33,14 @@
                 <requestFocus />
             </EditText>
 
-            <AutoCompleteTextView
+            <Spinner
                 android:id="@+id/newAccountHostnameSelector"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/free_account_hostnames" />
+
+            <EditText
+                android:id="@+id/newAccountHostnameSelectorEdit"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
