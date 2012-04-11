@@ -1,23 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:padding="2px" android:layout_width="wrap_content"
-	android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="2px" >
 
-	<ImageView android:id="@+id/imageView1" android:src="@drawable/user_avatar" 
- 		android:layout_width="fill_parent" 
- 		 android:maxHeight="60sp" android:minHeight="60sp"
- 		android:layout_height="60sp" 
- 		android:minWidth="60sp"
- 		android:maxWidth="60sp"
- 		></ImageView>
-	
-	<ImageView android:id="@+id/imageView2" android:src="@drawable/user_offline" 
- 		android:layout_width="wrap_content"  android:layout_alignRight="@+id/imageView1"
- 		android:layout_height="wrap_content" android:minHeight="60sp"/>
-	
-	    	<TextView android:id="@+id/chat_list_item_name"
-	 android:layout_width="fill_parent" 
-	 android:textSize="14sp" android:gravity="center" android:text="bmalkow@tigase.org" 
-	 android:layout_height="wrap_content"   android:layout_below="@+id/imageView1" android:lines="1" android:layout_centerInParent="true"></TextView>
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="60sp"
+        android:maxHeight="60sp"
+        android:maxWidth="60sp"
+        android:minHeight="60sp"
+        android:minWidth="60sp"
+        android:src="@drawable/user_avatar" >
+    </ImageView>
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/imageView1"
+        android:minHeight="60sp"
+        android:src="@drawable/user_offline" />
+
+    <TextView
+        android:id="@+id/chat_list_item_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imageView1"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:lines="1"
+        android:textSize="14sp" >
+    </TextView>
 
 </RelativeLayout>

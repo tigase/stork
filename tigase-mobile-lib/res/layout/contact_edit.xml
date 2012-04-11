@@ -71,14 +71,14 @@
             android:id="@+id/ce_saveButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
-            android:text="@android:string/ok" />
+            android:text="@string/ok" />
 
         <Button
             android:id="@+id/ce_cancelButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/ce_saveButton"
-            android:text="@android:string/cancel" />
+            android:text="@string/cancel" />
     </RelativeLayout>
 
 </RelativeLayout>

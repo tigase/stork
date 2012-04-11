@@ -75,13 +75,12 @@
                 android:layout_alignParentTop="true"
                 android:layout_centerVertical="true"
                 android:background="@color/account_dialog_separator" />
-            
+
             <EditText
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/account_dialog_alternative_hostname_hint" />
-
 
             <EditText
                 android:id="@+id/newAccountNickname"
@@ -110,14 +109,14 @@
             android:id="@+id/newAccountAddButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
-            android:text="@android:string/ok" />
+            android:text="@string/ok" />
 
         <Button
             android:id="@+id/newAccountcancelButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/newAccountAddButton"
-            android:text="@android:string/cancel" />
+            android:text="@string/cancel" />
     </RelativeLayout>
 
 </LinearLayout>

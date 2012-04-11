@@ -32,7 +32,6 @@
         android:layout_below="@+id/account_name"
         android:paddingLeft="10sp"
         android:singleLine="true"
-        android:text="TextView"
         android:textSize="14sp" >
     </TextView>
 
@@ -43,7 +42,6 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/frameLayout1"
         android:paddingLeft="10sp"
-        android:text="Buddy name"
         android:textSize="18sp"
         android:textStyle="bold" >
     </TextView>

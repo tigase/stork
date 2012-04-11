@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical" android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
 
-	<ExpandableListView android:saveEnabled="true"
-		android:id="@+id/sendFileContacts" android:divider="#e5e4e5"
-		android:dividerHeight="1px" android:layout_height="fill_parent"
-		android:layout_width="fill_parent" />
+    <ExpandableListView
+        android:id="@+id/sendFileContacts"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:divider="#e5e4e5"
+        android:dividerHeight="1px"
+        android:saveEnabled="true" />
 
 </LinearLayout>

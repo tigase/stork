@@ -15,7 +15,7 @@
             android:id="@+id/msgDetSender"
             android:gravity="right"
             android:padding="3dip"
-            android:text="Ctrl-O" />
+             />
     </TableRow>
 
     <TableRow >
@@ -29,7 +29,7 @@
             android:id="@+id/msgDetReceived"
             android:gravity="right"
             android:padding="3dip"
-            android:text="Ctrl-O" />
+            />
     </TableRow>
 
     <TableRow >
@@ -43,7 +43,7 @@
             android:id="@+id/msgDetState"
             android:gravity="right"
             android:padding="3dip"
-            android:text="Ctrl-O" />
+            />
     </TableRow>
 
 </TableLayout>
