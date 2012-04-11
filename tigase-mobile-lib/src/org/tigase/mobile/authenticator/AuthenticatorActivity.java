@@ -340,10 +340,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			return;
 		}
 
-		if (mEmailEdit != null && TextUtils.isEmpty(mEmailEdit.getText().toString())) {
-			mEmailEdit.setError("Field can't be empty");
-			return;
-		}
+//		if (mEmailEdit != null && TextUtils.isEmpty(mEmailEdit.getText().toString())) {
+//			mEmailEdit.setError("Field can't be empty");
+//			return;
+//		}
 
 		mPassword = mPasswordEdit.getText().toString();
 		mNickname = mNicknameEdit.getText().toString();
