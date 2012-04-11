@@ -19,7 +19,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="3dp"
-                android:text="This user wants to subscribe to your presence." />
+                android:text="@string/auth_request_info" />
 
             <include
                 android:id="@+id/include1"
@@ -42,21 +42,21 @@
             android:id="@+id/req_yesButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
-            android:text="Yes" />
+            android:text="@string/yes" />
 
         <Button
             android:id="@+id/req_noButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_yesButton"
-            android:text="No" />
+            android:text="@string/no" />
 
         <Button
             android:id="@+id/req_cancelButton"
             android:layout_width="100sp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/req_noButton"
-            android:text="Cancel" />
+            android:text="@string/cancel" />
     </RelativeLayout>
 
 </RelativeLayout>

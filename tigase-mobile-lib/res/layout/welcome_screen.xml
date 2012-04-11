@@ -29,7 +29,7 @@
         android:layout_below="@+id/appNameText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="19dp"
-        android:text="Hello world :-)" />
+        android:text="@string/account_add_description" />
 
     <Button
         android:id="@+id/welcomeScreenAddAccountsButton"
@@ -40,7 +40,7 @@
         android:layout_marginTop="59dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
-        android:text="Login" />
+        android:text="@string/account_add_login" />
 
     <Button
         android:id="@+id/welcomeScreenCreateAccountsButton"
@@ -51,6 +51,6 @@
         android:layout_marginTop="29dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
-        android:text="Create account" />
+        android:text="@string/account_add_create" />
 
 </RelativeLayout>

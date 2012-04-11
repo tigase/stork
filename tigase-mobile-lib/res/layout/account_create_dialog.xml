@@ -21,13 +21,13 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enter details of your XMPP account" />
+                android:text="@string/account_dialog_enter_details" />
 
             <EditText
                 android:id="@+id/newAccountUsername"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="User name"
+                android:hint="@string/account_dialog_username_hint"
                 android:inputType="textNoSuggestions" >
 
                 <requestFocus />
@@ -44,29 +44,29 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:hint="Server name"
+                android:hint="@string/account_dialog_hostname_hint"
                 android:inputType="textNoSuggestions" />
 
             <EditText
                 android:id="@+id/newAccountPassowrd"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
+                android:hint="@string/account_dialog_password_hint"
                 android:inputType="textPassword" />
 
             <EditText
                 android:id="@+id/newAccountPassowrdConfirm"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Confirm password"
+                android:hint="@string/account_dialog_password_confirm_hint"
                 android:inputType="textPassword" />
 
             <EditText
                 android:id="@+id/newAccountResource"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Client description"
-                android:text="Tigase Messenger" />
+                android:hint="@string/account_dialog_resource_hint"
+                android:text="@string/account_dialog_resource_default" />
 
             <View
                 android:id="@+id/view_separator"
@@ -74,26 +74,26 @@
                 android:layout_height="2dip"
                 android:layout_alignParentTop="true"
                 android:layout_centerVertical="true"
-                android:background="#4c4d4d" />
+                android:background="@color/account_dialog_separator" />
             
             <EditText
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Optional server address" />
+                android:hint="@string/account_dialog_alternative_hostname_hint" />
 
 
             <EditText
                 android:id="@+id/newAccountNickname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Optional nickname" />
+                android:hint="@string/account_dialog_nickname_hint" />
 
             <EditText
                 android:id="@+id/newAccountEmail"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Optional e-mail address"
+                android:hint="@string/account_dialog_email_hint"
                 android:inputType="textEmailAddress" />
         </LinearLayout>
     </ScrollView>

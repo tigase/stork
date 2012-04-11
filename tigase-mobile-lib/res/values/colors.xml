@@ -7,6 +7,8 @@
 
 	<color name="message_panel_background">#808080</color>
 
+	<color name="account_dialog_separator">#4c4d4d</color>
+		
 
 	<color name="message_mine_background">#ffffff</color>
 	<color name="message_his_background">#effbff</color>

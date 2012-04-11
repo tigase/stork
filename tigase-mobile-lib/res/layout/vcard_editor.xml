@@ -13,12 +13,14 @@
         android:background="@color/message_his_text"
         android:src="@drawable/user_avatar" />
 
-<LinearLayout android:id="@+id/linearLayout1" 
-android:layout_height="wrap_content" 
-android:layout_weight="1"
-android:layout_alignParentLeft="true" 
-android:layout_width="fill_parent"
-android:orientation="horizontal">
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_weight="1"
+        android:orientation="horizontal" >
+
         <TextView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -38,13 +40,16 @@ android:orientation="horizontal">
             android:layout_row="0"
             android:layout_rowSpan="1"
             android:inputType="textPersonName" />
-</LinearLayout>    
-<LinearLayout android:id="@+id/linearLayout2" 
-android:layout_height="wrap_content" 
-android:layout_weight="1"
-android:layout_alignParentLeft="true" 
-android:layout_width="fill_parent"
-android:orientation="horizontal">
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_weight="1"
+        android:orientation="horizontal" >
+
         <TextView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -64,13 +69,16 @@ android:orientation="horizontal">
             android:layout_row="1"
             android:layout_rowSpan="1"
             android:inputType="textPersonName" />
-</LinearLayout>
-<LinearLayout android:id="@+id/linearLayout3" 
-android:layout_height="wrap_content" 
-android:layout_weight="1"
-android:layout_alignParentLeft="true" 
-android:layout_width="fill_parent"
-android:orientation="horizontal">
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_weight="1"
+        android:orientation="horizontal" >
+
         <TextView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -93,14 +101,16 @@ android:orientation="horizontal">
 
             <requestFocus />
         </EditText>
-    
-</LinearLayout>
-<LinearLayout android:id="@+id/linearLayout4" 
-android:layout_height="wrap_content" 
-android:layout_weight="1"
-android:layout_alignParentLeft="true" 
-android:layout_width="fill_parent"
-android:orientation="horizontal">
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_weight="1"
+        android:orientation="horizontal" >
+
         <TextView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -120,6 +130,11 @@ android:orientation="horizontal">
             android:layout_row="3"
             android:layout_rowSpan="1"
             android:inputType="date" />
-</LinearLayout>
-<LinearLayout android:layout_height="200dp" android:layout_width="fill_parent"></LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" >
+    </LinearLayout>
+
 </LinearLayout>
