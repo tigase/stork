@@ -1045,15 +1045,20 @@ public class JaxmppService extends Service {
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
 			if (throwable instanceof UnknownHostException) {
-				notificationUpdateFail(be.getSessionObject(), "Connection error: unknown host " + throwable.getMessage(), null,
-						null);
-				disable(be.getSessionObject(), true);
+				Log.w(TAG, "Skiped exception", throwable);
+				// notificationUpdateFail(be.getSessionObject(),
+				// "Connection error: unknown host " + throwable.getMessage(),
+				// null,
+				// null);
+				// disable(be.getSessionObject(), true);
 			} else if (throwable instanceof SocketException) {
 				Log.w(TAG, "Skiped exception", throwable);
 			} else {
-				Log.e(TAG, "Connection error!", throwable);
-				notificationUpdateFail(be.getSessionObject(), null, null, throwable);
-				disable(be.getSessionObject(), true);
+				Log.w(TAG, "Skiped exception", throwable);
+				// Log.e(TAG, "Connection error!", throwable);
+				// notificationUpdateFail(be.getSessionObject(), null, null,
+				// throwable);
+				// disable(be.getSessionObject(), true);
 			}
 		}
 	}
