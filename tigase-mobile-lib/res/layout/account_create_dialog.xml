@@ -80,20 +80,20 @@
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Alternative hostname" />
+                android:hint="Optional server address" />
 
 
             <EditText
                 android:id="@+id/newAccountNickname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nickname" />
+                android:hint="Optional nickname" />
 
             <EditText
                 android:id="@+id/newAccountEmail"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="e-mail address"
+                android:hint="Optional e-mail address"
                 android:inputType="textEmailAddress" />
         </LinearLayout>
     </ScrollView>

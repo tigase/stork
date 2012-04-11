@@ -73,13 +73,13 @@
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Alternative hostname" />
+                android:hint="Optional server address" />
 
             <EditText
                 android:id="@+id/newAccountNickname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nickname" />
+                android:hint="Optional nickname" />
         </LinearLayout>
     </ScrollView>
 
