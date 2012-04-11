@@ -43,6 +43,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -213,7 +214,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected boolean isXLarge() {
-		return false;
+		return (getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == 4;
 		// return getResources().getConfiguration().screenLayout >= 0x04 &&
 		// Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
 	}
@@ -238,11 +239,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		sendBroadcast(intent);
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			ActionBar actionBar = getActionBar();
-			actionBar.setDisplayHomeAsUpEnabled(msg != 1);
-		}
-
+		updateActionBar();
+		
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			invalidateOptionsMenu();
 		}
@@ -406,8 +404,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					Chat chat = ((ChatHistoryFragment) object).getChat();
 					if (chat != null) {
 						Integer position = findChat(chat.getId());
-						if (position != null)
+						if (position != null) {
+							if (isXLarge())
+								return 1 + position;
 							return 2 + position;
+						}
 					}
 					return POSITION_NONE;
 				} else {
@@ -562,12 +563,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onNewIntent()");
 		this.currentPage = findChatPage(intent.getExtras());
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			ActionBar actionBar = getActionBar();
-			actionBar.setDisplayHomeAsUpEnabled(currentPage != 1);
-		}
+		updateActionBar();
 	}
-
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == android.R.id.home) {
@@ -669,7 +667,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		menu.clear();
-		if (currentPage == 0 || currentPage == 1) {
+		if (currentPage == 0 || currentPage == 1 || isXLarge()) {
 			inflater.inflate(R.menu.main_menu, menu);
 
 			final boolean serviceActive = JaxmppService.isServiceActive();
@@ -690,7 +688,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 			add.setVisible(serviceActive);
 
-		} else {
+		} 
+		if (currentPage > 1 || (currentPage > 0 && isXLarge())){
 			inflater.inflate(R.menu.chat_main_menu, menu);
 
 			// Share button support
@@ -712,6 +711,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				share.setVisible(visible);
 			} catch (XMLException e) {
 			}
+			
+			if (isXLarge())
+				menu.findItem(R.id.showChatsButton).setVisible(false);
 		}
 		return true;
 	}
@@ -793,5 +795,22 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		};
 		viewPager.postDelayed(r, 750);
+	}
+	
+	private void updateActionBar() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+			ActionBar actionBar = getActionBar();
+			actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 && !isXLarge());
+			
+//			Chat c = getChatByPageIndex(currentPage);
+//			if (c != null) {
+//				actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
+//				String subtitle = "Chat with " + c.getSessionObject().getRoster().get(c.getJid().getBareJid()).getName();
+//				actionBar.setSubtitle(subtitle);
+//			}			
+//			else {
+//				actionBar.setSubtitle(null);
+//			}
+		}		
 	}
 }
