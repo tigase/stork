@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="5px" >
+    android:padding="0sp" >
 
     <FrameLayout
         android:id="@+id/openChatNotifier"
@@ -24,9 +24,10 @@
     <ImageView
         android:id="@+id/roster_item_precence"
         android:layout_width="26sp"
-        android:layout_height="55sp"
+        android:layout_height="50sp"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@+id/roster_item_jid"
+        android:paddingRight="5sp"
         android:adjustViewBounds="true"
         android:cropToPadding="true"
         android:gravity="center"

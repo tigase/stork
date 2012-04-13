@@ -667,10 +667,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		menu.clear();
+		Log.v(TAG, "current page " + currentPage);
+		Log.v(TAG, "xlarge = " + isXLarge());
+		final boolean serviceActive = JaxmppService.isServiceActive();
 		if (currentPage == 0 || currentPage == 1 || isXLarge()) {
 			inflater.inflate(R.menu.main_menu, menu);
-
-			final boolean serviceActive = JaxmppService.isServiceActive();
 
 			MenuItem con = menu.findItem(R.id.connectButton);
 			con.setVisible(!serviceActive);
@@ -689,7 +690,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			add.setVisible(serviceActive);
 
 		} 
-		if (currentPage > 1 || (currentPage > 0 && isXLarge())){
+		if (currentPage > 1 || (currentPage > 0 && serviceActive && isXLarge())){
 			inflater.inflate(R.menu.chat_main_menu, menu);
 
 			// Share button support
