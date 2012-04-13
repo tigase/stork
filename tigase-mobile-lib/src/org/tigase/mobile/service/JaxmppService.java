@@ -154,6 +154,23 @@ public class JaxmppService extends Service {
 
 	}
 
+	private class ScreenStateReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Boolean screenOff = null;
+			if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+				screenOff = true;
+			}
+			else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+				screenOff = false;
+			}
+			
+			if (screenOff != null) {
+				setMobileMode(screenOff);
+			}
+		}
+	}
+	
 	private static enum NotificationVariant {
 		always,
 		none,
@@ -367,7 +384,11 @@ public class JaxmppService extends Service {
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
+	private boolean mobileModeEnabled = false;
+	
 	private ConnReceiver myConnReceiver;
+	
+	private ScreenStateReceiver myScreenStateReceiver;
 
 	private NotificationManager notificationManager;
 
@@ -527,6 +548,10 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
+				if (mobileModeEnabled) {
+					JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
+					setMobileMode(jaxmpp, mobileModeEnabled);
+				}
 				notificationUpdate();
 			}
 		};
@@ -1104,6 +1129,10 @@ public class JaxmppService extends Service {
 		this.accountModifyReceiver = new AccountModifyReceiver();
 		filter = new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
 		registerReceiver(accountModifyReceiver, filter);
+		this.myScreenStateReceiver = new ScreenStateReceiver();
+		filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(this.myScreenStateReceiver, filter);
 
 		getMulti().addListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
@@ -1219,14 +1248,14 @@ public class JaxmppService extends Service {
 			focused = true;
 			int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
 
-			setMobileMode(false);
+//			setMobileMode(false);
 			sendAutoPresence(userStatusShow, userStatusMessage, pr, false);
 		} else if (focused && pageIndex == -1) {
 			if (DEBUG)
 				Log.d(TAG, "Sending auto-away presence");
 			focused = false;
 			int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
-			setMobileMode(true);
+//			setMobileMode(true);
 			sendAutoPresence(Show.away, "Auto away", pr, true);
 		}
 	}
@@ -1513,6 +1542,10 @@ public class JaxmppService extends Service {
 			setMobileModeTask = null;
 		}
 
+		Log.v(TAG, "setting mobile mode to = " + enable);
+		
+		mobileModeEnabled = enable;
+		
 		if (enable) {
 			setMobileModeTask = new TimerTask() {
 
@@ -1521,39 +1554,7 @@ public class JaxmppService extends Service {
 					setMobileModeTask = null;
 					try {
 						for (JaxmppCore jaxmpp : getMulti().get()) {
-							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
-								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-								if (sf == null)
-									continue;
-
-								String xmlns = null;
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
-								if (m != null) {
-									xmlns = Features.MOBILE_V2;
-								} else {
-									m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
-									if (m != null) {
-										xmlns = Features.MOBILE_V1;
-									}
-								}
-								if (xmlns == null)
-									continue;
-
-								IQ iq = IQ.create();
-								iq.setType(StanzaType.set);
-								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(xmlns);
-								mobile.setAttribute("enable", String.valueOf(enable));
-								if (Features.MOBILE_V1.equals(xmlns)) {
-									Integer timeout = jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
-									if (timeout != null) {
-										timeout = timeout * 60 * 1000;
-										mobile.setAttribute("timeout", String.valueOf(timeout));
-									}
-								}
-								iq.addChild(mobile);
-								jaxmpp.send(iq);
-							}
+							setMobileMode(jaxmpp, enable);
 						}
 					} catch (Exception e) {
 						Log.e(TAG, "Can't set mobile mode!", e);
@@ -1567,32 +1568,7 @@ public class JaxmppService extends Service {
 				public void run() {
 					try {
 						for (JaxmppCore jaxmpp : getMulti().get()) {
-							if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
-								final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-								if (sf == null)
-									continue;
-
-								String xmlns = null;
-								Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
-								if (m != null) {
-									xmlns = Features.MOBILE_V2;
-								} else {
-									m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
-									if (m != null) {
-										xmlns = Features.MOBILE_V1;
-									}
-								}
-								if (xmlns == null)
-									continue;
-
-								IQ iq = IQ.create();
-								iq.setType(StanzaType.set);
-								Element mobile = new DefaultElement("mobile");
-								mobile.setXMLNS(xmlns);
-								mobile.setAttribute("enable", String.valueOf(enable));
-								iq.addChild(mobile);
-								jaxmpp.send(iq);
-							}
+							setMobileMode(jaxmpp, enable);
 						}
 					} catch (Exception e) {
 						Log.e(TAG, "Can't set mobile mode!", e);
@@ -1602,6 +1578,42 @@ public class JaxmppService extends Service {
 		}
 	}
 
+	protected void setMobileMode(JaxmppCore jaxmpp, boolean enable) throws JaxmppException {
+		if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
+			final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
+			if (sf == null)
+				return;
+
+			String xmlns = null;
+			Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
+			if (m != null) {
+				xmlns = Features.MOBILE_V2;
+			} else {
+				m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
+				if (m != null) {
+					xmlns = Features.MOBILE_V1;
+				}
+			}
+			if (xmlns == null)
+				return;
+
+			IQ iq = IQ.create();
+			iq.setType(StanzaType.set);
+			Element mobile = new DefaultElement("mobile");
+			mobile.setXMLNS(xmlns);
+			mobile.setAttribute("enable", String.valueOf(enable));
+			if (Features.MOBILE_V1.equals(xmlns)) {
+				Integer timeout = jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
+				if (timeout != null) {
+					timeout = timeout * 60 * 1000;
+					mobile.setAttribute("timeout", String.valueOf(timeout));
+				}
+			}
+			iq.addChild(mobile);
+			jaxmpp.send(iq);
+		}		
+	}
+	
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
