@@ -739,7 +739,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		multi.addListener(this.chatListener);
 
 		if (currentPage < 0) {
-			currentPage = 1;
+			currentPage = isXLarge() ? 0 : 1;
 		}
 		viewPager.post(new Runnable() {
 
