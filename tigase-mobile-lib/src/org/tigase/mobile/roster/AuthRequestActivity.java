@@ -55,7 +55,7 @@ public class AuthRequestActivity extends FragmentActivity {
 							presenceModule.subscribed(jid);
 							presenceModule.subscribe(jid);
 						} catch (Exception e) {
-							showWarning("Can't accept subscription");
+							showWarning(R.string.auth_request_cant_accept);
 						}
 					}
 				}).start();
@@ -75,7 +75,7 @@ public class AuthRequestActivity extends FragmentActivity {
 							presenceModule.unsubscribe(jid);
 							presenceModule.unsubscribed(jid);
 						} catch (Exception e) {
-							showWarning("Can't deny subscription");
+							showWarning(R.string.auth_request_cant_deny);
 						}
 					}
 				}).start();
@@ -125,7 +125,7 @@ public class AuthRequestActivity extends FragmentActivity {
 
 	}
 
-	private void showWarning(String message) {
+	private void showWarning(int message) {
 		DialogFragment newFragment = WarningDialog.newInstance(message);
 		newFragment.show(getSupportFragmentManager(), "dialog");
 	}

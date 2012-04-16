@@ -127,6 +127,11 @@ public class ContactEditActivity extends FragmentActivity {
 
 	}
 
+	private void showWarning(int message) {
+		DialogFragment newFragment = WarningDialog.newInstance(message);
+		newFragment.show(getSupportFragmentManager(), "dialog");
+	}
+
 	private void showWarning(String message) {
 		DialogFragment newFragment = WarningDialog.newInstance(message);
 		newFragment.show(getSupportFragmentManager(), "dialog");
@@ -142,21 +147,22 @@ public class ContactEditActivity extends FragmentActivity {
 		}
 
 		if (jid == null || jid.toString().length() == 0) {
-			showWarning("JID can't be empty");
+			showWarning(R.string.contact_edit_wrn_jid_cant_be_empty);
 			return;
 		}
 
 		if (jid.getLocalpart() == null || jid.getDomain() == null) {
-			showWarning("Wrong JabberID");
+			showWarning(R.string.contact_edit_wrn_wrong_jid);
 			return;
 		}
 
 		if (name == null || name.length() == 0) {
-			showWarning("Name can't be empty");
+			showWarning(R.string.contact_edit_wrn_name_cant_be_empty);
 			return;
 		}
 
-		final ProgressDialog dialog = ProgressDialog.show(ContactEditActivity.this, "", "Updating. Please wait...", true);
+		final ProgressDialog dialog = ProgressDialog.show(ContactEditActivity.this, "",
+				getResources().getString(R.string.contact_edit_info_updating), true);
 		Runnable r = new Runnable() {
 
 			@Override
@@ -168,7 +174,10 @@ public class ContactEditActivity extends FragmentActivity {
 						@Override
 						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
 							dialog.cancel();
-							showWarning(error == null ? "unkown" : error.name());
+							if (error == null)
+								showWarning(R.string.contact_edit_wrn_unkown);
+							else
+								showWarning(error.name());
 						}
 
 						@Override
@@ -183,7 +192,7 @@ public class ContactEditActivity extends FragmentActivity {
 						@Override
 						public void onTimeout() throws JaxmppException {
 							dialog.cancel();
-							showWarning("Timeout");
+							showWarning(R.string.contact_edit_wrn_timeout);
 						}
 					});
 				} catch (JaxmppException e) {

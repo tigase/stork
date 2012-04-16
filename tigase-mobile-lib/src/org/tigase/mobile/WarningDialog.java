@@ -32,7 +32,7 @@ public class WarningDialog extends DialogFragment {
 
 		Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setIcon(android.R.drawable.ic_dialog_alert);
-		builder.setTitle("Warning");
+		builder.setTitle(R.string.warning_dialog_title);
 		if (messageId != -1) {
 			builder.setMessage(messageId);
 		} else {

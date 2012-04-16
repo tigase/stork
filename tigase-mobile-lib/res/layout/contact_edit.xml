@@ -18,7 +18,7 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="JabberID" />
+                android:text="@string/contact_edit_jabberid" />
 
             <EditText
                 android:id="@+id/ce_jabberid"
@@ -30,7 +30,7 @@
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Name" />
+                android:text="@string/contact_edit_name" />
 
             <EditText
                 android:id="@+id/ce_name"
@@ -43,7 +43,7 @@
                 android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Group" />
+                android:text="@string/contact_edit_group" />
 
             <Spinner
                 android:id="@+id/ce_group"
@@ -54,7 +54,7 @@
                 android:id="@+id/authRequest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Request authorization" />
+                android:text="@string/contact_edit_request_authorization" />
         </LinearLayout>
     </ScrollView>
 
