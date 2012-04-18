@@ -1149,6 +1149,7 @@ public class JaxmppService extends Service {
 			unregisterReceiver(focusChangeReceiver);
 
 		unregisterReceiver(accountModifyReceiver);
+		unregisterReceiver(this.myScreenStateReceiver);
 
 		Log.i(TAG, "Stopping service");
 		reconnect = false;
