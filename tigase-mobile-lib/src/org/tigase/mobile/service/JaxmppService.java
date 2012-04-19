@@ -666,8 +666,8 @@ public class JaxmppService extends Service {
 				if (DEBUG)
 					Log.d(TAG, "Start connection for account " + jaxmpp.getSessionObject().getUserBareJid());
 				lock(jaxmpp.getSessionObject(), false);
-				usedNetworkType = getActiveNetworkConnectionType();
-				if (usedNetworkType != -1) {
+				setUsedNetworkType(getActiveNetworkConnectionType());
+				if (getUsedNetworkType() != -1) {
 					final State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 					if (state == null || state == State.disconnected)
 						(new Thread() {
@@ -711,7 +711,7 @@ public class JaxmppService extends Service {
 	}
 
 	private void disconnectAllJaxmpp() {
-		usedNetworkType = -1;
+		setUsedNetworkType(-1);
 		for (final JaxmppCore j : getMulti().get()) {
 			(new Thread() {
 				@Override
@@ -752,6 +752,10 @@ public class JaxmppService extends Service {
 	protected final State getState(SessionObject object) {
 		State state = getMulti().get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 		return state == null ? State.disconnected : state;
+	}
+
+	private int getUsedNetworkType() {
+		return usedNetworkType;
 	}
 
 	private int incrementConnectionError(final BareJID jid) {
@@ -839,7 +843,7 @@ public class JaxmppService extends Service {
 		String notiticationTitle = null;
 		String expandedNotificationText = null;
 
-		if (usedNetworkType == -1) {
+		if (getUsedNetworkType() == -1) {
 			ico = R.drawable.ic_stat_disconnected;
 			notiticationTitle = getResources().getString(R.string.service_disconnected_notification_title);
 			expandedNotificationText = getResources().getString(R.string.service_no_network_notification_text);
@@ -1082,6 +1086,8 @@ public class JaxmppService extends Service {
 	public void onCreate() {
 		if (DEBUG)
 			Log.i(TAG, "onCreate()");
+		setUsedNetworkType(-1);
+		setRecconnect(true);
 		clearLocalJaxmppProperties();
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
@@ -1177,7 +1183,7 @@ public class JaxmppService extends Service {
 		setRecconnect(false);
 		disconnectAllJaxmpp();
 		stopKeepAlive();
-		usedNetworkType = -1;
+		setUsedNetworkType(-1);
 
 		getMulti().removeListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
@@ -1214,9 +1220,10 @@ public class JaxmppService extends Service {
 			Log.d(TAG,
 					"Network " + (netInfo == null ? null : netInfo.getTypeName()) + " ("
 							+ (netInfo == null ? null : netInfo.getType()) + ") state changed! Currently used="
-							+ usedNetworkType + " detailed state = " + (netInfo != null ? netInfo.getDetailedState() : null));
+							+ getUsedNetworkType() + " detailed state = "
+							+ (netInfo != null ? netInfo.getDetailedState() : null));
 		}
-		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
+		if (getUsedNetworkType() == -1 && netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
 				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
 			setRecconnect(true);
@@ -1224,9 +1231,9 @@ public class JaxmppService extends Service {
 				connectionErrorsCounter.clear();
 			}
 			connectAllJaxmpp(5000l);
-		} else if (netInfo == null || (!netInfo.isConnected() && netInfo.getType() == usedNetworkType)) {
+		} else if (netInfo == null || (!netInfo.isConnected() && netInfo.getType() == getUsedNetworkType())) {
 			if (DEBUG)
-				Log.d(TAG, "currently used network disconnected" + (netInfo == null ? null : netInfo.getTypeName()));
+				Log.d(TAG, "currently used network disconnected " + (netInfo == null ? null : netInfo.getTypeName()));
 			setRecconnect(false);
 			disconnectAllJaxmpp();
 		}
@@ -1575,6 +1582,12 @@ public class JaxmppService extends Service {
 		if (DEBUG)
 			Log.d(TAG, "Reconnect is now set to " + reconnectAvailable, new Exception("TRACE"));
 		this.reconnect = reconnectAvailable;
+	}
+
+	private void setUsedNetworkType(int type) {
+		if (DEBUG)
+			Log.d(TAG, "Used NetworkType is now " + type, new Exception("TRACE"));
+		usedNetworkType = type;
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
