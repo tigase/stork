@@ -148,6 +148,7 @@ public class JaxmppService extends Service {
 			// EXTRA_NETWORK_INFO - This constant is deprecated
 			// NetworkInfo netInfo = (NetworkInfo)
 			// intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+
 			NetworkInfo netInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 			onNetworkChanged(netInfo);
 		}
@@ -1223,20 +1224,44 @@ public class JaxmppService extends Service {
 							+ getUsedNetworkType() + " detailed state = "
 							+ (netInfo != null ? netInfo.getDetailedState() : null));
 		}
-		if (getUsedNetworkType() == -1 && netInfo != null && netInfo.isConnected()) {
+
+		if (netInfo == null || !netInfo.isConnected()) {
 			if (DEBUG)
-				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
+				Log.d(TAG, "No internet connection");
+			setRecconnect(false);
+			disconnectAllJaxmpp();
+		} else if (netInfo.isConnected() && getUsedNetworkType() == -1) {
+			if (DEBUG)
+				Log.d(TAG, "Network became available");
 			setRecconnect(true);
 			synchronized (connectionErrorsCounter) {
 				connectionErrorsCounter.clear();
 			}
 			connectAllJaxmpp(5000l);
-		} else if (netInfo == null || (!netInfo.isConnected() && netInfo.getType() == getUsedNetworkType())) {
+		} else if (netInfo.isConnected() && netInfo.getType() != getUsedNetworkType()) {
 			if (DEBUG)
-				Log.d(TAG, "currently used network disconnected " + (netInfo == null ? null : netInfo.getTypeName()));
-			setRecconnect(false);
+				Log.d(TAG, "Changed internet connection. Reconnection needed.");
 			disconnectAllJaxmpp();
 		}
+
+		// if (getUsedNetworkType() == -1 && netInfo != null &&
+		// netInfo.isConnected()) {
+		// if (DEBUG)
+		// Log.d(TAG, "connect when network became available: " +
+		// netInfo.getTypeName());
+		// setRecconnect(true);
+		// synchronized (connectionErrorsCounter) {
+		// connectionErrorsCounter.clear();
+		// }
+		// connectAllJaxmpp(5000l);
+		// } else if (netInfo == null || (!netInfo.isConnected() &&
+		// netInfo.getType() == getUsedNetworkType())) {
+		// if (DEBUG)
+		// Log.d(TAG, "currently used network disconnected " + (netInfo == null
+		// ? null : netInfo.getTypeName()));
+		// setRecconnect(false);
+		// disconnectAllJaxmpp();
+		// }
 	}
 
 	protected void onPageChanged(int pageIndex) {
