@@ -1241,6 +1241,7 @@ public class JaxmppService extends Service {
 		} else if (netInfo.isConnected() && netInfo.getType() != getUsedNetworkType()) {
 			if (DEBUG)
 				Log.d(TAG, "Changed internet connection. Reconnection needed.");
+			setRecconnect(true);
 			disconnectAllJaxmpp();
 		}
 
