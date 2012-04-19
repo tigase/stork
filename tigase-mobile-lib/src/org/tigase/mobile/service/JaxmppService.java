@@ -768,6 +768,10 @@ public class JaxmppService extends Service {
 		}
 	}
 
+	private boolean isReconnect() {
+		return reconnect;
+	}
+
 	private void keepAlive() {
 		new Thread() {
 			@Override
@@ -1170,7 +1174,7 @@ public class JaxmppService extends Service {
 		unregisterReceiver(this.myScreenStateReceiver);
 
 		Log.i(TAG, "Stopping service");
-		reconnect = false;
+		setRecconnect(false);
 		disconnectAllJaxmpp();
 		stopKeepAlive();
 		usedNetworkType = -1;
@@ -1215,7 +1219,7 @@ public class JaxmppService extends Service {
 		if (usedNetworkType == -1 && netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
 				Log.d(TAG, "connect when network became available: " + netInfo.getTypeName());
-			reconnect = true;
+			setRecconnect(true);
 			synchronized (connectionErrorsCounter) {
 				connectionErrorsCounter.clear();
 			}
@@ -1223,7 +1227,7 @@ public class JaxmppService extends Service {
 		} else if (netInfo == null || (!netInfo.isConnected() && netInfo.getType() == usedNetworkType)) {
 			if (DEBUG)
 				Log.d(TAG, "currently used network disconnected" + (netInfo == null ? null : netInfo.getTypeName()));
-			reconnect = false;
+			setRecconnect(false);
 			disconnectAllJaxmpp();
 		}
 	}
@@ -1316,7 +1320,7 @@ public class JaxmppService extends Service {
 	}
 
 	protected void reconnectIfAvailable(final SessionObject sessionObject) {
-		if (!reconnect) {
+		if (!isReconnect()) {
 			if (DEBUG)
 				Log.d(TAG, "Reconnect disabled for: " + sessionObject.getUserBareJid());
 			return;
@@ -1565,6 +1569,12 @@ public class JaxmppService extends Service {
 			iq.addChild(mobile);
 			jaxmpp.send(iq);
 		}
+	}
+
+	private void setRecconnect(boolean reconnectAvailable) {
+		if (DEBUG)
+			Log.d(TAG, "Reconnect is now set to " + reconnectAvailable, new Exception("TRACE"));
+		this.reconnect = reconnectAvailable;
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
