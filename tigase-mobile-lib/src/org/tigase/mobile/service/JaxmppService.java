@@ -197,7 +197,7 @@ public class JaxmppService extends Service {
 
 	private static boolean serviceActive = false;
 
-	private static final String TAG = "tigase";
+	private static final String TAG = "JaxmppService";
 
 	private static Date calculateNextRestart(final int delayInSecs, final int errorCounter) {
 		long timeInSecs = delayInSecs;
@@ -214,6 +214,8 @@ public class JaxmppService extends Service {
 	}
 
 	private static void disable(SessionObject jaxmpp, boolean disabled) {
+		if (DEBUG)
+			Log.d(TAG, "Account " + jaxmpp.getUserBareJid() + " disabled=" + disabled);
 		jaxmpp.setProperty("CC:DISABLED", disabled);
 	}
 
@@ -247,6 +249,8 @@ public class JaxmppService extends Service {
 	}
 
 	private static void lock(SessionObject jaxmpp, boolean locked) {
+		if (DEBUG)
+			Log.d(TAG, "Account " + jaxmpp.getUserBareJid() + " locked=" + locked);
 		jaxmpp.setProperty("CC:LOCKED", locked);
 	}
 
@@ -524,9 +528,13 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(final Connector.ConnectorEvent be) throws JaxmppException {
-				if (getState(be.getSessionObject()) == State.connected)
+				State st = getState(be.getSessionObject());
+				if (DEBUG)
+					Log.d(TAG, "New connection state for " + be.getSessionObject().getUserBareJid() + ": " + st);
+
+				if (st == State.connected)
 					setConnectionError(be.getSessionObject().getUserBareJid(), 0);
-				if (getState(be.getSessionObject()) == State.disconnected)
+				if (st == State.disconnected)
 					reconnectIfAvailable(be.getSessionObject());
 				notificationUpdate();
 			}
@@ -752,6 +760,10 @@ public class JaxmppService extends Service {
 			int z = x == null ? 0 : x.intValue();
 			++z;
 			connectionErrorsCounter.put(jid, z);
+
+			if (DEBUG)
+				Log.d(TAG, "Error counter for " + jid + " is now " + z);
+
 			return z;
 		}
 	}
@@ -1038,20 +1050,26 @@ public class JaxmppService extends Service {
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
 			if (throwable instanceof UnknownHostException) {
-				Log.w(TAG, "Skiped exception", throwable);
+				Log.w(TAG, "Skipped UnknownHostException exception", throwable);
 				// notificationUpdateFail(be.getSessionObject(),
 				// "Connection error: unknown host " + throwable.getMessage(),
 				// null,
 				// null);
 				// disable(be.getSessionObject(), true);
 			} else if (throwable instanceof SocketException) {
-				Log.w(TAG, "Skiped exception", throwable);
+				Log.w(TAG, "Skipped SocketException exception", throwable);
 			} else {
-				Log.w(TAG, "Skiped exception", throwable);
+				Log.w(TAG, "Skipped exception", throwable);
 				// Log.e(TAG, "Connection error!", throwable);
 				// notificationUpdateFail(be.getSessionObject(), null, null,
 				// throwable);
 				// disable(be.getSessionObject(), true);
+			}
+		} else {
+			try {
+				Log.w(TAG, "Ignored ConnectorError: " + (be.getStanza() == null ? "???" : be.getStanza().getAsString()));
+			} catch (XMLException e) {
+				Log.e(TAG, "Can't display exception", e);
 			}
 		}
 	}
@@ -1298,8 +1316,11 @@ public class JaxmppService extends Service {
 	}
 
 	protected void reconnectIfAvailable(final SessionObject sessionObject) {
-		if (!reconnect)
+		if (!reconnect) {
+			if (DEBUG)
+				Log.d(TAG, "Reconnect disabled for: " + sessionObject.getUserBareJid());
 			return;
+		}
 
 		if (DEBUG)
 			Log.d(TAG, "Preparing for reconnect " + sessionObject.getUserBareJid());
@@ -1458,6 +1479,8 @@ public class JaxmppService extends Service {
 	}
 
 	private void setConnectionError(final BareJID jid, final int count) {
+		if (DEBUG)
+			Log.d(TAG, "Error counter for " + jid + " is now " + count);
 		synchronized (connectionErrorsCounter) {
 			if (count == 0)
 				connectionErrorsCounter.remove(jid);
