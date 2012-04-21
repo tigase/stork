@@ -237,6 +237,11 @@ public class ChatHistoryFragment extends Fragment {
 
 	@Override
 	public void onResume() {
+		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
+		if (((ChatAdapter)lv.getAdapter()).getCursor().isClosed()) {
+			((ChatAdapter)lv.getAdapter()).swapCursor(getCursor());
+		}
+		
 		super.onResume();
 
 		updatePresence();
