@@ -1118,7 +1118,7 @@ public class JaxmppService extends Service {
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		this.myConnReceiver = new ConnReceiver();
-		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+		IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
 		registerReceiver(myConnReceiver, filter);
 		this.focusChangeReceiver = new ClientFocusReceiver();
 		filter = new IntentFilter(TigaseMobileMessengerActivity.CLIENT_FOCUS_MSG);
@@ -1225,12 +1225,7 @@ public class JaxmppService extends Service {
 							+ (netInfo != null ? netInfo.getDetailedState() : null));
 		}
 
-		if (netInfo == null || !netInfo.isConnected()) {
-			if (DEBUG)
-				Log.d(TAG, "No internet connection");
-			setRecconnect(false);
-			disconnectAllJaxmpp();
-		} else if (netInfo.isConnected() && getUsedNetworkType() == -1) {
+		if (netInfo != null && netInfo.isConnected()) {
 			if (DEBUG)
 				Log.d(TAG, "Network became available");
 			setRecconnect(true);
@@ -1238,31 +1233,12 @@ public class JaxmppService extends Service {
 				connectionErrorsCounter.clear();
 			}
 			connectAllJaxmpp(5000l);
-		} else if (netInfo.isConnected() && netInfo.getType() != getUsedNetworkType()) {
+		} else {
 			if (DEBUG)
-				Log.d(TAG, "Changed internet connection. Reconnection needed.");
-			setRecconnect(true);
+				Log.d(TAG, "No internet connection");
+			setRecconnect(false);
 			disconnectAllJaxmpp();
 		}
-
-		// if (getUsedNetworkType() == -1 && netInfo != null &&
-		// netInfo.isConnected()) {
-		// if (DEBUG)
-		// Log.d(TAG, "connect when network became available: " +
-		// netInfo.getTypeName());
-		// setRecconnect(true);
-		// synchronized (connectionErrorsCounter) {
-		// connectionErrorsCounter.clear();
-		// }
-		// connectAllJaxmpp(5000l);
-		// } else if (netInfo == null || (!netInfo.isConnected() &&
-		// netInfo.getType() == getUsedNetworkType())) {
-		// if (DEBUG)
-		// Log.d(TAG, "currently used network disconnected " + (netInfo == null
-		// ? null : netInfo.getTypeName()));
-		// setRecconnect(false);
-		// disconnectAllJaxmpp();
-		// }
 	}
 
 	protected void onPageChanged(int pageIndex) {
