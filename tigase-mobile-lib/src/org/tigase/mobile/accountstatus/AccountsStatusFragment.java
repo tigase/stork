@@ -141,6 +141,7 @@ public class AccountsStatusFragment extends Fragment {
 						@Override
 						public void run() {
 							try {
+								JaxmppService.disable(jaxmpp.getSessionObject(), true);
 								jaxmpp.disconnect();
 							} catch (JaxmppException ex) {
 								Log.e(TAG, "error manually disconnecting account "
@@ -228,6 +229,7 @@ public class AccountsStatusFragment extends Fragment {
 						@Override
 						public void run() {
 							try {
+								JaxmppService.disable(jaxmpp.getSessionObject(), false);
 								jaxmpp.login();
 							} catch (JaxmppException ex) {
 								Log.e(TAG, "error manually connecting account "

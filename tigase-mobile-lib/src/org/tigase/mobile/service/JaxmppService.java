@@ -214,7 +214,7 @@ public class JaxmppService extends Service {
 		return d;
 	}
 
-	private static void disable(SessionObject jaxmpp, boolean disabled) {
+	public static void disable(SessionObject jaxmpp, boolean disabled) {
 		if (DEBUG)
 			Log.d(TAG, "Account " + jaxmpp.getUserBareJid() + " disabled=" + disabled);
 		jaxmpp.setProperty("CC:DISABLED", disabled);
@@ -235,7 +235,7 @@ public class JaxmppService extends Service {
 		return ex;
 	}
 
-	private static boolean isDisabled(SessionObject jaxmpp) {
+	public static boolean isDisabled(SessionObject jaxmpp) {
 		Boolean x = jaxmpp.getProperty("CC:DISABLED");
 		return x == null ? false : x;
 	}
