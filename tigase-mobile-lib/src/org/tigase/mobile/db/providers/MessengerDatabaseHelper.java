@@ -17,7 +17,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 16;
+	public static final Integer DATABASE_VERSION = 1;
 
 	private static final String TAG = "tigase";
 
@@ -93,13 +93,6 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
-		db.execSQL("DROP TABLE IF EXISTS " + OpenChatsTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + ChatTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + RosterCacheTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + VCardsCacheTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + CapsFeaturesTableMetaData.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + CapsIdentitiesTableMetaData.TABLE_NAME);
-		onCreate(db);
 	}
 
 }
