@@ -28,7 +28,9 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -288,6 +290,17 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		finish();
 	}
 
+	private JID getJID(EditText mUsernameEdit, View v) {
+		try {
+			if (mUsernameEdit.getText().toString().contains("@")) {
+				return JID.jidInstance(mUsernameEdit.getText().toString());
+			}
+		} catch (Exception e) {
+		}
+
+		return JID.jidInstance(mUsernameEdit.getText().toString(), getServerName(v));
+	}
+
 	protected String getServerName(View v) {
 		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
@@ -315,7 +328,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			return;
 		}
 		try {
-			JID j = JID.jidInstance(mUsernameEdit.getText().toString(), getServerName(v));
+			JID j = getJID(mUsernameEdit, v);
 
 			if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
 					&& j.getDomain().length() > 0) {
@@ -340,10 +353,11 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			return;
 		}
 
-//		if (mEmailEdit != null && TextUtils.isEmpty(mEmailEdit.getText().toString())) {
-//			mEmailEdit.setError("Field can't be empty");
-//			return;
-//		}
+		// if (mEmailEdit != null &&
+		// TextUtils.isEmpty(mEmailEdit.getText().toString())) {
+		// mEmailEdit.setError("Field can't be empty");
+		// return;
+		// }
 
 		mPassword = mPasswordEdit.getText().toString();
 		mNickname = mNicknameEdit.getText().toString();
@@ -503,6 +517,35 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+		mUsernameEdit.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (s != null && s.toString().contains("@")) {
+					try {
+						JID j = JID.jidInstance(s.toString());
+						if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
+								&& j.getDomain().length() > 0) {
+							final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+
+							final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+							mHostnameSelector.setSelection(accounts.length - 1);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+
 		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
 		mHostnameSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -574,6 +617,34 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
+		mUsernameEdit.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (s != null && s.toString().contains("@")) {
+					try {
+						JID j = JID.jidInstance(s.toString());
+						if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
+								&& j.getDomain().length() > 0) {
+							final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+
+							final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+							mHostnameSelector.setSelection(accounts.length - 1);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
