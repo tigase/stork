@@ -28,29 +28,32 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/appNameText"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="19px"
+        android:layout_marginTop="9px"
         android:text="@string/account_add_description" />
 
-    <Button
-        android:id="@+id/welcomeScreenAddAccountsButton"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView1"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="59px"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        android:text="@string/account_add_login" />
+        android:layout_marginBottom="12dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" >
 
-    <Button
-        android:id="@+id/welcomeScreenCreateAccountsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/welcomeScreenAddAccountsButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="29px"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        android:text="@string/account_add_create" />
+        <Button
+            android:id="@+id/welcomeScreenAddAccountsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/account_add_login" />
+
+        <Button
+            android:id="@+id/welcomeScreenCreateAccountsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/account_add_create" />
+    </LinearLayout>
 
 </RelativeLayout>
