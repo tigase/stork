@@ -502,6 +502,107 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		showDialog(CREATION_ERROR_DIALOG, b);
 	}
 
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		// Read values from the "savedInstanceState"-object and put them in your
+		// textview
+		String tmp;
+		flipper.setDisplayedChild(savedInstanceState.getInt("page", 0));
+		tmp = savedInstanceState.getString("", null);
+		if (tmp != null)
+			screenTitle.setText(tmp);
+
+		mUsername = savedInstanceState.getString("mUsername");
+
+		EditText newAccountUsername = (EditText) findViewById(R.id.newAccountUsername);
+		tmp = savedInstanceState.getString("newAccountUsername");
+		if (newAccountUsername != null && tmp != null)
+			newAccountUsername.setText(tmp);
+
+		Spinner newAccountHostnameSelector = (Spinner) findViewById(R.id.newAccountHostnameSelector);
+		int i = savedInstanceState.getInt("newAccountHostnameSelector", 0);
+		if (newAccountHostnameSelector != null)
+			newAccountHostnameSelector.setSelection(i);
+
+		EditText newAccountHostnameSelectorEdit = (EditText) findViewById(R.id.newAccountHostnameSelectorEdit);
+		tmp = savedInstanceState.getString("newAccountHostnameSelectorEdit");
+		if (newAccountHostnameSelectorEdit != null && tmp != null)
+			newAccountHostnameSelectorEdit.setText(tmp);
+
+		EditText newAccountPassowrd = (EditText) findViewById(R.id.newAccountPassowrd);
+		tmp = savedInstanceState.getString("newAccountPassowrd");
+		if (newAccountPassowrd != null && tmp != null)
+			newAccountPassowrd.setText(tmp);
+		EditText newAccountPassowrdConfirm = (EditText) findViewById(R.id.newAccountPassowrdConfirm);
+		tmp = savedInstanceState.getString("newAccountPassowrdConfirm");
+		if (newAccountPassowrdConfirm != null && tmp != null)
+			newAccountPassowrdConfirm.setText(tmp);
+		EditText newAccountResource = (EditText) findViewById(R.id.newAccountResource);
+		tmp = savedInstanceState.getString("newAccountResource");
+		if (newAccountResource != null && tmp != null)
+			newAccountResource.setText(tmp);
+		EditText newAccountHostname = (EditText) findViewById(R.id.newAccountHostname);
+		tmp = savedInstanceState.getString("newAccountHostname");
+		if (newAccountHostname != null && tmp != null)
+			newAccountHostname.setText(tmp);
+		EditText newAccountNickname = (EditText) findViewById(R.id.newAccountNickname);
+		tmp = savedInstanceState.getString("newAccountNickname");
+		if (newAccountNickname != null && tmp != null)
+			newAccountNickname.setText(tmp);
+		EditText newAccountEmail = (EditText) findViewById(R.id.newAccountEmail);
+		tmp = savedInstanceState.getString("newAccountEmail");
+		if (newAccountEmail != null && tmp != null)
+			newAccountEmail.setText(tmp);
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		// Save the values you need from your textview into "outState"-object
+
+		outState.putInt("page", flipper.getDisplayedChild());
+		outState.putCharSequence("pageTitle", screenTitle.getText());
+		outState.putString("mUsername", mUsername);
+
+		EditText newAccountUsername = (EditText) findViewById(R.id.newAccountUsername);
+		if (newAccountUsername != null)
+			outState.putString("newAccountUsername", newAccountUsername.getText().toString());
+
+		Spinner newAccountHostnameSelector = (Spinner) findViewById(R.id.newAccountHostnameSelector);
+		if (newAccountHostnameSelector != null)
+			outState.putInt("newAccountHostnameSelector", newAccountHostnameSelector.getSelectedItemPosition());
+
+		EditText newAccountHostnameSelectorEdit = (EditText) findViewById(R.id.newAccountHostnameSelectorEdit);
+		if (newAccountHostnameSelectorEdit != null)
+			outState.putString("newAccountHostnameSelectorEdit", newAccountHostnameSelectorEdit.getText().toString());
+
+		EditText newAccountPassowrd = (EditText) findViewById(R.id.newAccountPassowrd);
+		if (newAccountPassowrd != null)
+			outState.putString("newAccountPassowrd", newAccountPassowrd.getText().toString());
+
+		EditText newAccountPassowrdConfirm = (EditText) findViewById(R.id.newAccountPassowrdConfirm);
+		if (newAccountPassowrdConfirm != null)
+			outState.putString("newAccountPassowrdConfirm", newAccountPassowrdConfirm.getText().toString());
+
+		EditText newAccountResource = (EditText) findViewById(R.id.newAccountResource);
+		if (newAccountResource != null)
+			outState.putString("newAccountResource", newAccountResource.getText().toString());
+
+		EditText newAccountHostname = (EditText) findViewById(R.id.newAccountHostname);
+		if (newAccountHostname != null)
+			outState.putString("newAccountHostname", newAccountHostname.getText().toString());
+
+		EditText newAccountNickname = (EditText) findViewById(R.id.newAccountNickname);
+		if (newAccountNickname != null)
+			outState.putString("newAccountNickname", newAccountNickname.getText().toString());
+
+		EditText newAccountEmail = (EditText) findViewById(R.id.newAccountEmail);
+		if (newAccountEmail != null)
+			outState.putString("newAccountEmail", newAccountEmail.getText().toString());
+
+		super.onSaveInstanceState(outState);
+	}
+
 	private View prepareAddAccount(final LayoutInflater inflater) {
 		final View v = inflater.inflate(R.layout.account_edit_dialog, null);
 
