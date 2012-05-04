@@ -630,12 +630,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+				final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 				if (s != null && s.toString().contains("@")) {
+					updateVisibility(View.GONE, mHostnameSelector, mHostnameSelectorEdit);
 					try {
 						JID j = JID.jidInstance(s.toString());
 						if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
 								&& j.getDomain().length() > 0) {
-							final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 
 							final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
 							mHostnameSelector.setSelection(accounts.length - 1);
@@ -643,6 +645,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+				} else {
+					updateVisibility(View.VISIBLE, mHostnameSelector, mHostnameSelectorEdit);
 				}
 			}
 		});
@@ -730,12 +734,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+				final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 				if (s != null && s.toString().contains("@")) {
+					updateVisibility(View.GONE, mHostnameSelector, mHostnameSelectorEdit);
 					try {
 						JID j = JID.jidInstance(s.toString());
 						if (j.getLocalpart() != null && j.getLocalpart().length() > 0 && j.getDomain() != null
 								&& j.getDomain().length() > 0) {
-							final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
 
 							final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
 							mHostnameSelector.setSelection(accounts.length - 1);
@@ -743,6 +749,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+				} else {
+					updateVisibility(View.VISIBLE, mHostnameSelector, mHostnameSelectorEdit);
 				}
 			}
 		});
@@ -825,6 +833,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		});
 
 		return v;
+	}
+
+	private void updateVisibility(int visibility, View... views) {
+		for (View view : views) {
+			if (view.getVisibility() != visibility) {
+				view.setVisibility(visibility);
+			}
+		}
 	}
 
 }
