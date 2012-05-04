@@ -616,8 +616,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			mResource = mAccountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 		}
 
+		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+
 		mUsernameEdit.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -630,8 +634,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
-				final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 				if (s != null && s.toString().contains("@")) {
 					updateVisibility(View.GONE, mHostnameSelector, mHostnameSelectorEdit);
 					try {
@@ -647,12 +649,16 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 					}
 				} else {
 					updateVisibility(View.VISIBLE, mHostnameSelector, mHostnameSelectorEdit);
+					int position = mHostnameSelector.getSelectedItemPosition();
+					if (position != accounts.length - 1) {
+						mHostnameSelectorEdit.setVisibility(View.GONE);
+					} else {
+						mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+					}
 				}
 			}
 		});
 
-		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
-		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
 		mHostnameSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
@@ -721,6 +727,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	private View prepareCreateAccount(LayoutInflater inflater) {
 		final View v = inflater.inflate(R.layout.account_create_dialog, null);
 
+		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
+		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
+		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
+
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		mUsernameEdit.addTextChangedListener(new TextWatcher() {
 
@@ -734,8 +744,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
-				final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 				if (s != null && s.toString().contains("@")) {
 					updateVisibility(View.GONE, mHostnameSelector, mHostnameSelectorEdit);
 					try {
@@ -751,12 +759,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 					}
 				} else {
 					updateVisibility(View.VISIBLE, mHostnameSelector, mHostnameSelectorEdit);
+					int position = mHostnameSelector.getSelectedItemPosition();
+					if (position != accounts.length - 1) {
+						mHostnameSelectorEdit.setVisibility(View.GONE);
+					} else {
+						mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+					}
 				}
 			}
 		});
-		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
-		final Spinner mHostnameSelector = (Spinner) v.findViewById(R.id.newAccountHostnameSelector);
-		final String[] accounts = getResources().getStringArray(R.array.free_account_hostnames);
 		mHostnameSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
