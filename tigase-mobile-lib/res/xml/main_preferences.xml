@@ -32,7 +32,7 @@
             android:key="notification_type"
             android:title="@string/pref_login_ui_notification_title" />
         <ListPreference
-            android:defaultValue="groups"
+            android:defaultValue="flat"
             android:entries="@array/roster_layout_options"
             android:entryValues="@array/roster_layout_options_values"
             android:key="roster_layout"
@@ -74,6 +74,6 @@
             android:key="keepalive_time"
             android:summary="@string/pref_keepalive_time_summary"
             android:title="@string/pref_keepalive_time_title" />
-        </PreferenceScreen>
+    </PreferenceScreen>
 
 </PreferenceScreen>

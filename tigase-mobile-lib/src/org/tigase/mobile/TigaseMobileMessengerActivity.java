@@ -359,7 +359,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				@Override
 				public Fragment getItem(int i) {
-					return createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
+					return createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "flat"));
 				}
 			});
 		}
@@ -381,7 +381,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (i == 0) {
 					return AccountsStatusFragment.newInstance();
 				} else if (!isXLarge() && i == 1) {
-					Fragment f = createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "groups"));
+					Fragment f = createRosterFragment(mPreferences.getString(Preferences.ROSTER_LAYOUT_KEY, "flat"));
 					if (DEBUG)
 						Log.d(TAG, "Created roster with FragmentManager " + f.getFragmentManager());
 					return f;
