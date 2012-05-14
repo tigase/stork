@@ -62,6 +62,7 @@ public class AccountsStatusFragment extends Fragment {
 
 					@Override
 					public void run() {
+						loadData();
 						adapter.notifyDataSetChanged();
 					}
 				});
@@ -115,6 +116,13 @@ public class AccountsStatusFragment extends Fragment {
 			return ((AdapterContextMenuInfo) menuInfo).position;
 		} else {
 			return -1;
+		}
+	}
+
+	private void loadData() {
+		adapter.clear();
+		for (JaxmppCore jaxmpp : ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().get()) {
+			adapter.add((Jaxmpp) jaxmpp);
 		}
 	}
 
@@ -296,9 +304,7 @@ public class AccountsStatusFragment extends Fragment {
 
 		};
 
-		for (JaxmppCore jaxmpp : ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().get()) {
-			adapter.add((Jaxmpp) jaxmpp);
-		}
+		// loadData();
 
 		ListView list = (ListView) view.findViewById(R.id.account_status_list);
 		list.setAdapter(adapter);
@@ -315,15 +321,17 @@ public class AccountsStatusFragment extends Fragment {
 		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 
-		getActivity().registerReceiver(this.accountModifiedReceiver,
+		getActivity().getApplicationContext().registerReceiver(this.accountModifiedReceiver,
 				new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION));
+
+		loadData();
 	}
 
 	@Override
 	public void onStop() {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
-		getActivity().unregisterReceiver(this.accountModifiedReceiver);
+		getActivity().getApplicationContext().unregisterReceiver(this.accountModifiedReceiver);
 		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
 		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
 
