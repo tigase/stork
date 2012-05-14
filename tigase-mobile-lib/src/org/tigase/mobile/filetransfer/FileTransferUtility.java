@@ -69,14 +69,14 @@ public class FileTransferUtility {
 					discoItemsModule.getItems(JID.jidInstance(jid.getDomain()), new DiscoItemsAsyncCallback() {
 						@Override
 						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
-							callback.onError("proxy discovery failed");
+							callback.onError("not supported by this server");
 						}
 
 						@Override
 						public void onInfoReceived(String attribute, ArrayList<Item> items) throws XMLException {
 							final int all = items.size();
 							if (all == 0) {
-								callback.onError("proxy component not found");
+								callback.onError("not supported by this server");
 							} else {
 								discoverProxy2(jaxmpp, items, callback);
 							}
@@ -152,7 +152,7 @@ public class FileTransferUtility {
 
 	private static void discoverProxy3(final List<JID> proxyComponents, final ProxyDiscoveryAsyncCallback callback) {
 		if (proxyComponents.isEmpty()) {
-			callback.onError("proxy not found");
+			callback.onError("not supported by this server");
 		} else {
 			callback.onResult(proxyComponents.get(0));
 		}
