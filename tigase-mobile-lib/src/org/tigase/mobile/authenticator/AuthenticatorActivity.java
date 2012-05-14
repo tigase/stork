@@ -214,6 +214,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private static final int LOGIN_ERROR_DIALOG = 2;
 
+	private static final int PAGE_ADD = 1;
+
+	private static final int PAGE_CREATE = 2;
+
+	private static final int PAGE_WELCOME = 0;
+
 	public static final String PARAM_AUTHTOKEN_TYPE = "authtokenType";
 
 	public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
@@ -433,7 +439,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
 			screenTitle.setText("Account edit");
-			flipper.setDisplayedChild(1);
+			flipper.setDisplayedChild(PAGE_ADD);
 		}
 
 	}
@@ -510,7 +516,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		// Read values from the "savedInstanceState"-object and put them in your
 		// textview
 		String tmp;
-		flipper.setDisplayedChild(savedInstanceState.getInt("page", 0));
+		flipper.setDisplayedChild(savedInstanceState.getInt("page", PAGE_WELCOME));
 		tmp = savedInstanceState.getString("", null);
 		if (tmp != null)
 			screenTitle.setText(tmp);
@@ -624,6 +630,34 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		EditText mUsernameEdit = (EditText) v.findViewById(R.id.newAccountUsername);
 		final EditText mHostnameSelectorEdit = (EditText) v.findViewById(R.id.newAccountHostnameSelectorEdit);
 
+		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
+		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
+		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
+		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
+		if (!TextUtils.isEmpty(mUsername)) {
+			BareJID j = BareJID.bareJIDInstance(mUsername);
+			mHostnameSelector.setVisibility(View.GONE);
+			mHostnameSelectorEdit.setVisibility(View.VISIBLE);
+			mHostnameSelectorEdit.setText(j.getDomain());
+			mHostnameSelectorEdit.setEnabled(false);
+			mUsernameEdit.setText(j.getLocalpart());
+		} else {
+			mHostnameSelector.setVisibility(View.VISIBLE);
+			mHostnameSelectorEdit.setVisibility(View.GONE);
+			mHostnameSelectorEdit.setEnabled(true);
+		}
+		if (!TextUtils.isEmpty(mPassword))
+			mPasswordEdit.setText(mPassword);
+		if (!TextUtils.isEmpty(mNickname))
+			mNicknameEdit.setText(mNickname);
+		if (!TextUtils.isEmpty(mHostname))
+			mHostnameEdit.setText(mHostname);
+		if (!TextUtils.isEmpty(mResource))
+			mResourceEdit.setText(mResource);
+
+		mUsernameEdit.setEnabled(mUsername == null);
+		mHostnameSelector.setEnabled(mUsername == null);
+
 		mUsernameEdit.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -676,34 +710,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			}
 
 		});
-
-		EditText mPasswordEdit = (EditText) v.findViewById(R.id.newAccountPassowrd);
-		EditText mResourceEdit = (EditText) v.findViewById(R.id.newAccountResource);
-		EditText mNicknameEdit = (EditText) v.findViewById(R.id.newAccountNickname);
-		EditText mHostnameEdit = (EditText) v.findViewById(R.id.newAccountHostname);
-		if (!TextUtils.isEmpty(mUsername)) {
-			BareJID j = BareJID.bareJIDInstance(mUsername);
-			mHostnameSelector.setVisibility(View.GONE);
-			mHostnameSelectorEdit.setVisibility(View.VISIBLE);
-			mHostnameSelectorEdit.setText(j.getDomain());
-			mHostnameSelectorEdit.setEnabled(false);
-			mUsernameEdit.setText(j.getLocalpart());
-		} else {
-			mHostnameSelector.setVisibility(View.VISIBLE);
-			mHostnameSelectorEdit.setVisibility(View.GONE);
-			mHostnameSelectorEdit.setEnabled(true);
-		}
-		if (!TextUtils.isEmpty(mPassword))
-			mPasswordEdit.setText(mPassword);
-		if (!TextUtils.isEmpty(mNickname))
-			mNicknameEdit.setText(mNickname);
-		if (!TextUtils.isEmpty(mHostname))
-			mHostnameEdit.setText(mHostname);
-		if (!TextUtils.isEmpty(mResource))
-			mResourceEdit.setText(mResource);
-
-		mUsernameEdit.setEnabled(mUsername == null);
-		mHostnameSelector.setEnabled(mUsername == null);
 
 		Button cancelButton = (Button) v.findViewById(R.id.newAccountcancelButton);
 		cancelButton.setOnClickListener(new OnClickListener() {
@@ -841,7 +847,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			public void onClick(View v) {
 				screenTitle.setText("Login");
 				mRequestNewAccount = mUsername == null;
-				flipper.setDisplayedChild(1);
+				flipper.setDisplayedChild(PAGE_ADD);
 			}
 		});
 		b = (Button) v.findViewById(R.id.welcomeScreenCreateAccountsButton);
@@ -851,7 +857,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			public void onClick(View v) {
 				screenTitle.setText("Create account");
 				mRequestNewAccount = true;
-				flipper.setDisplayedChild(2);
+				flipper.setDisplayedChild(PAGE_CREATE);
 			}
 		});
 
