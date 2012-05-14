@@ -58,9 +58,9 @@
 
     <!-- Accounts Create/Edit -->
     <string name="account_add_welcome">Join to Tigase</string>
-    <string name="account_add_login">Login</string>
+    <string name="account_add_login">I have an account</string>
     <string name="account_add_description">Hello world</string>
-    <string name="account_add_create">Create account</string>
+    <string name="account_add_create">Create a new account</string>
     <string name="account_dialog_enter_details">Enter details of your XMPP account</string>
     <string name="account_dialog_username_hint">User name</string>
     <string name="account_dialog_hostname_hint">Server name</string>
