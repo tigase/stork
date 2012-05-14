@@ -107,7 +107,7 @@ public class ChatListActivity extends Activity {
 			else
 				x = rdt.getDisplayName(ri);
 
-			final CPresence cp = rdt.getShowOf(ri.getSessionObject(), chat.getJid());
+			final CPresence cp = rdt.getShowOf(chat.getSessionObject(), chat.getJid());
 
 			ImageView itemPresence = (ImageView) imageView.findViewById(R.id.imageView2);
 			if (cp == null)
