@@ -90,8 +90,8 @@
         activity.
     -->
     <string name="login_activity_newaccount_text">Sign in to your XMPP account. </string>
-    <string name="vcard_editor_activity_title">Personal informations</string>
-    <string name="accountVCard">Personal informations</string>
+    <string name="vcard_editor_activity_title">Personal information</string>
+    <string name="accountVCard">Personal information</string>
     <string name="vcard_fullname">Full name</string>
     <string name="vcard_nickname">Nick</string>
     <string name="vcard_email">Email</string>
