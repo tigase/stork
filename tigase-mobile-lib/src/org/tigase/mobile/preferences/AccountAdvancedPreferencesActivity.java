@@ -13,6 +13,7 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -112,5 +113,13 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			public void onNothingSelected(AdapterView<?> arg0) {
 			}
 		});
+		
+		if (!available_v1 && !available_v2 && getMulti().get(accountJid).isConnected()) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(R.string.mobile_optimizations_not_supported).setIcon(R.drawable.icon);
+			builder.setTitle(R.string.mobile_optimizations).setCancelable(true);
+			AlertDialog dlg = builder.create();
+			dlg.show();
+		}
 	}
 }
