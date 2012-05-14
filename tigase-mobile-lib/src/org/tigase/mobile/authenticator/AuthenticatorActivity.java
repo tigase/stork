@@ -29,8 +29,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -821,6 +823,16 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private View prepareWelcomeScreen(final LayoutInflater inflater) {
 		View v = inflater.inflate(R.layout.welcome_screen, null);
+
+		TextView tos = (TextView) v.findViewById(R.id.aboutTermsOfService);
+		tos.setText(Html.fromHtml("<a href='" + getResources().getString(R.string.termsOfServiceURL) + "'>"
+				+ getResources().getString(R.string.termsOfService) + "</a>"));
+		tos.setMovementMethod(LinkMovementMethod.getInstance());
+
+		TextView pp = (TextView) v.findViewById(R.id.aboutPrivacyPolicy);
+		pp.setText(Html.fromHtml("<a href='" + getResources().getString(R.string.privacyPolicyURL) + "'>"
+				+ getResources().getString(R.string.privacyPolicy) + "</a>"));
+		pp.setMovementMethod(LinkMovementMethod.getInstance());
 
 		Button b = (Button) v.findViewById(R.id.welcomeScreenAddAccountsButton);
 		b.setOnClickListener(new OnClickListener() {

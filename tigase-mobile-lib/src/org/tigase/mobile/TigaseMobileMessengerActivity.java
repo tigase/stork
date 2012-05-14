@@ -55,6 +55,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,6 +64,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
 
@@ -240,7 +243,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		sendBroadcast(intent);
 
 		updateActionBar();
-		
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			invalidateOptionsMenu();
 		}
@@ -473,6 +476,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			dialog.setContentView(R.layout.about_dialog);
 			dialog.setTitle(getString(R.string.aboutButton));
 
+			TextView tos = (TextView) dialog.findViewById(R.id.aboutTermsOfService);
+			tos.setText(Html.fromHtml("<a href='" + getResources().getString(R.string.termsOfServiceURL) + "'>"
+					+ getResources().getString(R.string.termsOfService) + "</a>"));
+			tos.setMovementMethod(LinkMovementMethod.getInstance());
+
+			TextView pp = (TextView) dialog.findViewById(R.id.aboutPrivacyPolicy);
+			pp.setText(Html.fromHtml("<a href='" + getResources().getString(R.string.privacyPolicyURL) + "'>"
+					+ getResources().getString(R.string.privacyPolicy) + "</a>"));
+			pp.setMovementMethod(LinkMovementMethod.getInstance());
+
 			Button okButton = (Button) dialog.findViewById(R.id.okButton);
 			okButton.setOnClickListener(new OnClickListener() {
 
@@ -565,7 +578,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		updateActionBar();
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == android.R.id.home) {
@@ -689,8 +702,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 			add.setVisible(serviceActive);
 
-		} 
-		if (currentPage > 1 || (currentPage > 0 && serviceActive && isXLarge())){
+		}
+		if (currentPage > 1 || (currentPage > 0 && serviceActive && isXLarge())) {
 			inflater.inflate(R.menu.chat_main_menu, menu);
 
 			// Share button support
@@ -712,7 +725,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				share.setVisible(visible);
 			} catch (XMLException e) {
 			}
-			
+
 			if (isXLarge())
 				menu.findItem(R.id.showChatsButton).setVisible(false);
 		}
@@ -797,21 +810,23 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		};
 		viewPager.postDelayed(r, 750);
 	}
-	
+
 	private void updateActionBar() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 && !isXLarge());
-			
-//			Chat c = getChatByPageIndex(currentPage);
-//			if (c != null) {
-//				actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-//				String subtitle = "Chat with " + c.getSessionObject().getRoster().get(c.getJid().getBareJid()).getName();
-//				actionBar.setSubtitle(subtitle);
-//			}			
-//			else {
-//				actionBar.setSubtitle(null);
-//			}
-		}		
+
+			// Chat c = getChatByPageIndex(currentPage);
+			// if (c != null) {
+			// actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE,
+			// ActionBar.DISPLAY_SHOW_TITLE);
+			// String subtitle = "Chat with " +
+			// c.getSessionObject().getRoster().get(c.getJid().getBareJid()).getName();
+			// actionBar.setSubtitle(subtitle);
+			// }
+			// else {
+			// actionBar.setSubtitle(null);
+			// }
+		}
 	}
 }
