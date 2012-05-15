@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version_code">1</string>
     <string name="app_version">1.0</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="TrackingID">UA-30622348-1</string>
@@ -31,6 +30,10 @@
     <string name="shareVideoButton">Video</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>
+    <string name="termsOfService">Terms</string>
+    <string name="termsOfServiceURL">http://www.sure.im/terms.txt</string>
+    <string name="privacyPolicy">Privacy</string>
+    <string name="privacyPolicyURL">http://www.sure.im/privacy.txt</string>
     <string name="pref_login_section_title">Login data</string>
     <string name="pref_login_section_summary">Data needed to login to XMPP server</string>
     <string name="pref_advanced_section_title">Advanced settings</string>
@@ -52,9 +55,9 @@
 
     <!-- Accounts Create/Edit -->
     <string name="account_add_welcome">Join to Tigase</string>
-    <string name="account_add_login">Login</string>
+    <string name="account_add_login">I have an account</string>
     <string name="account_add_description">Hello world</string>
-    <string name="account_add_create">Create account</string>
+    <string name="account_add_create">Create a new account</string>
     <string name="account_dialog_enter_details">Enter details of your XMPP account</string>
     <string name="account_dialog_username_hint">User name</string>
     <string name="account_dialog_hostname_hint">Server name</string>
@@ -84,8 +87,8 @@
         activity.
     -->
     <string name="login_activity_newaccount_text">Sign in to your XMPP account. </string>
-    <string name="vcard_editor_activity_title">Personal informations</string>
-    <string name="accountVCard">Personal informations</string>
+    <string name="vcard_editor_activity_title">Personal information</string>
+    <string name="accountVCard">Personal information</string>
     <string name="vcard_fullname">Full name</string>
     <string name="vcard_nickname">Nick</string>
     <string name="vcard_email">Email</string>

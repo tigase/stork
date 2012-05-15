@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content" 
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="5px" >
 
@@ -52,5 +52,27 @@
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:text="@string/account_add_create" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/welcomeScreenCreateAccountsButton"
+        android:layout_centerHorizontal="true" >
+
+        <TextView
+            android:id="@+id/aboutTermsOfService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="22sp"
+            android:text="@string/termsOfService" />
+
+        <TextView
+            android:id="@+id/aboutPrivacyPolicy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="12sp"
+            android:paddingTop="22sp"
+            android:text="@string/privacyPolicy" />
+    </LinearLayout>
 
 </RelativeLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content" 
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="5px" >
 
@@ -32,10 +32,33 @@
         android:text="@string/account_add_description" />
 
     <LinearLayout
+        android:id="@+id/linearLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" >
+
+        <TextView
+            android:id="@+id/aboutTermsOfService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="22sp"
+            android:text="@string/termsOfService" />
+
+        <TextView
+            android:id="@+id/aboutPrivacyPolicy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="12sp"
+            android:paddingTop="22sp"
+            android:text="@string/privacyPolicy" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/buttonsLinear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/linearLayout1"
         android:layout_centerHorizontal="true" >
 
         <Button

@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.ConsoleHandler;
@@ -241,18 +242,28 @@ public class JaxmppService extends Service {
 	}
 
 	private static boolean isLocked(SessionObject jaxmpp) {
-		Boolean x = jaxmpp.getProperty("CC:LOCKED");
-		return x == null ? false : x;
+		synchronized (locked) {
+			return locked.contains(jaxmpp);
+		}
 	}
 
 	public static boolean isServiceActive() {
 		return serviceActive;
 	}
 
-	private static void lock(SessionObject jaxmpp, boolean locked) {
-		if (DEBUG)
-			Log.d(TAG, "Account " + jaxmpp.getUserBareJid() + " locked=" + locked);
-		jaxmpp.setProperty("CC:LOCKED", locked);
+	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
+
+	private static void lock(SessionObject jaxmpp, boolean value) {
+		synchronized (locked) {
+			if (DEBUG)
+				Log.d(TAG, "Account " + jaxmpp.getUserBareJid() + " locked=" + value);
+
+			if (value)
+				locked.add(jaxmpp);
+			else
+				locked.remove(jaxmpp);
+			// jaxmpp.setProperty("CC:LOCKED", locked);
+		}
 	}
 
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
