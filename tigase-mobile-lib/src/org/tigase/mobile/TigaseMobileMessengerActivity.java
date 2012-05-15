@@ -295,7 +295,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Intent intent = new Intent(this, AuthenticatorActivity.class);
 			intent.putExtra("new", true);
 			startActivity(intent);
-			finish();
+//			finish();
 		}
 
 		Bundle bundle = getIntent().getExtras();
