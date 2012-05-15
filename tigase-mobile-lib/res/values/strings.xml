@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version_code">1</string>
     <string name="app_version">1.0</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="TrackingID">UA-30622348-1</string>
@@ -31,12 +30,10 @@
     <string name="shareVideoButton">Video</string>
     <string name="chatSendButton">Send</string>
     <string name="aboutButton">About</string>
-    
     <string name="termsOfService">Terms</string>
     <string name="termsOfServiceURL">http://www.sure.im/terms.txt</string>
     <string name="privacyPolicy">Privacy</string>
     <string name="privacyPolicyURL">http://www.sure.im/privacy.txt</string>
-    
     <string name="pref_login_section_title">Login data</string>
     <string name="pref_login_section_summary">Data needed to login to XMPP server</string>
     <string name="pref_advanced_section_title">Advanced settings</string>

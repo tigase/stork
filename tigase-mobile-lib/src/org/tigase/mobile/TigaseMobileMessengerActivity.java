@@ -291,10 +291,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		this.mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		this.mPreferences.registerOnSharedPreferenceChangeListener(prefChangeListener);
 
+		boolean autostart = mPreferences.getBoolean(Preferences.AUTOSTART_KEY, true);
+		autostart &= mPreferences.getBoolean(Preferences.SERVICE_ACTIVATED, true);
+		if (autostart && !JaxmppService.isServiceActive()) {
+			Intent intent = new Intent(this, JaxmppService.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startService(intent);
+		}
+
 		AccountManager accountManager = AccountManager.get(this);
 		Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
+		String previouslyStartedVersion = mPreferences.getString(Preferences.LAST_STARTED_VERSION, null);
+		mPreferences.edit().putString(Preferences.LAST_STARTED_VERSION, getResources().getString(R.string.app_version)).apply();
 
-		if (accounts == null || accounts.length == 0) {
+		if (previouslyStartedVersion == null && (accounts == null || accounts.length == 0)) {
 			Intent intent = new Intent(this, AuthenticatorActivity.class);
 			intent.putExtra("new", true);
 			startActivity(intent);
@@ -450,14 +460,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					openChatWith(ri, jid.getResource());
 				}
 			}
-		}
-
-		boolean autostart = mPreferences.getBoolean(Preferences.AUTOSTART_KEY, true);
-		autostart &= mPreferences.getBoolean(Preferences.SERVICE_ACTIVATED, false);
-		if (autostart && !JaxmppService.isServiceActive()) {
-			Intent intent = new Intent(this, JaxmppService.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startService(intent);
 		}
 
 	}

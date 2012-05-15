@@ -14,6 +14,8 @@ public final class Preferences {
 
 	// public static final String NAME = "org.tigase.mobile_preferences";
 
+	public static final String LAST_STARTED_VERSION = "last_started_version";
+
 	public static final String NOTIFICATION_TYPE_KEY = "notification_type";
 
 	public static final String RECONNECT_TIME_KEY = "reconnect_time";
