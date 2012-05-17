@@ -308,7 +308,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Intent intent = new Intent(this, AuthenticatorActivity.class);
 			intent.putExtra("new", true);
 			startActivity(intent);
-//			finish();
+			// finish();
 		}
 
 		Bundle bundle = getIntent().getExtras();
@@ -612,7 +612,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				newFragment.show(ft, "account:select:dialog");
 			} else if (accounts != null && accounts.length == 1) {
 				Intent intent = new Intent(this, ContactEditActivity.class);
-				intent.putExtra("account", accounts[0]);
+				intent.putExtra("account", accounts[0].name);
 				startActivityForResult(intent, 0);
 			}
 		} else if (item.getItemId() == R.id.aboutButton) {
