@@ -994,30 +994,36 @@ public class JaxmppService extends Service {
 
 		String notificationText = "";
 
-		Notification notification = new Notification(ico, notificationTitle, whenNotify);
-
+		int flags = 0;
+		
 		switch (ft.getState()) {
 		case error:
+			flags |= Notification.FLAG_AUTO_CANCEL;
 			ico = android.R.drawable.stat_notify_error;
 			notificationText = ft.errorMessage;
 			break;
 
 		case negotiating:
-			notification.flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_NO_CLEAR;
 			notificationText = getResources().getString(R.string.service_file_transfer_negotiating);
 			break;
 
 		case connecting:
-			notification.flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_NO_CLEAR;
 			notificationText = getResources().getString(R.string.service_file_transfer_connecting);
 			break;
 
 		case active:
-			notification.flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_ONGOING_EVENT;
+			flags |= Notification.FLAG_NO_CLEAR;
 			notificationText = getResources().getString(R.string.service_file_transfer_progress, ft.getProgress());
 			break;
 
 		case finished:
+			ico = (ft.outgoing) ? android.R.drawable.stat_sys_upload_done : android.R.drawable.stat_sys_download_done;
+			flags |= Notification.FLAG_AUTO_CANCEL;
 			notificationText = getResources().getString(R.string.service_file_transfer_finished);
 			if (!ft.outgoing) {
 				AndroidFileTransferUtility.refreshMediaScanner(getApplicationContext(), ft.destination);
@@ -1027,6 +1033,9 @@ public class JaxmppService extends Service {
 			break;
 		}
 
+		Notification notification = new Notification(ico, notificationTitle, whenNotify);
+		notification.flags = flags;
+		
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = null;
