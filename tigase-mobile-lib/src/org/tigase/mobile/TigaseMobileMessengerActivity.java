@@ -302,7 +302,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		AccountManager accountManager = AccountManager.get(this);
 		Account[] accounts = accountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
 		String previouslyStartedVersion = mPreferences.getString(Preferences.LAST_STARTED_VERSION, null);
-		mPreferences.edit().putString(Preferences.LAST_STARTED_VERSION, getResources().getString(R.string.app_version)).apply();
+		mPreferences.edit().putString(Preferences.LAST_STARTED_VERSION, getResources().getString(R.string.app_version)).commit();
 
 		if (previouslyStartedVersion == null && (accounts == null || accounts.length == 0)) {
 			Intent intent = new Intent(this, AuthenticatorActivity.class);
@@ -590,7 +590,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			boolean x = mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE);
 			Editor editor = mPreferences.edit();
 			editor.putBoolean(Preferences.SHOW_OFFLINE, !x);
-			editor.apply();
+			editor.commit();
 			Uri insertedItem = Uri.parse(RosterProvider.CONTENT_URI);
 			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
 			// insertedItem =
@@ -653,10 +653,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
 		} else if (item.getItemId() == R.id.disconnectButton) {
-			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, false).apply();
+			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, false).commit();
 			stopService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
 		} else if (item.getItemId() == R.id.connectButton) {
-			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, true).apply();
+			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, true).commit();
 
 			Intent intent = new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class);
 			intent.putExtra("focused", true);
