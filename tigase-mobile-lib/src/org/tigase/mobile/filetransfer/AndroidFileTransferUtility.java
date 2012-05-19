@@ -131,7 +131,8 @@ public class AndroidFileTransferUtility {
 				// it should not happen
 				Log.v(TAG, "no file for uri = " + uri.toString());
 			}
-			cursor.close();
+			// we are using managedQuery so we are not allowed to close this cursor!
+			//cursor.close();
 		} catch (Exception ex) {
 			Log.e(TAG, "should not happen", ex);
 		}
@@ -141,7 +142,6 @@ public class AndroidFileTransferUtility {
 
 	public static void startFileTransfer(final Activity activity, final RosterItem ri, final JID jid, final Uri uri,
 			final String mimetype) {
-		final ContentResolver cr = activity.getContentResolver();
 		final String name = ri.getName() != null ? ri.getName() : ri.getJid().toString();
 		final Jaxmpp jaxmpp = getJaxmpp(activity, ri.getSessionObject().getUserBareJid());
 
@@ -155,6 +155,7 @@ public class AndroidFileTransferUtility {
 					if (jid == null)
 						return;
 					final FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					final ContentResolver cr = activity.getContentResolver();
 					final InputStream is = cr.openInputStream(uri);
 					final long size = is.available();
 					final FileTransfer ft = new FileTransfer(jaxmpp, jid, name, filename, is, size);
