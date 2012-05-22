@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
@@ -11,7 +12,6 @@ import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;

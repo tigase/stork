@@ -2,12 +2,12 @@ package org.tigase.mobile.preferences;
 
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
 import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import android.accounts.Account;

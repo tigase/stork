@@ -6,11 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.db.RosterTableMetaData;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;

@@ -8,13 +8,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.tigase.mobile.Constants;
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.MessengerDatabaseHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.MultiJaxmpp;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
