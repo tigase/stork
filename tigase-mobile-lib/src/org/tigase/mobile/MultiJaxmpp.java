@@ -23,9 +23,52 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
 public class MultiJaxmpp {
 
-	private final ArrayList<Chat> chats = new ArrayList<Chat>();
+	public static class ChatWrapper {
 
-	private final ArrayList<Room> rooms = new ArrayList<Room>();
+		private final Object data;
+
+		@Override
+		public int hashCode() {
+			return data.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			return data.equals(o);
+		}
+
+		public ChatWrapper(Room room) {
+			this.data = room;
+		}
+
+		public ChatWrapper(Chat chat) {
+			this.data = chat;
+		}
+
+		public boolean isChat() {
+			return data instanceof Chat;
+		}
+
+		public boolean isRoom() {
+			return data instanceof Room;
+		}
+
+		public Chat getChat() {
+			if (data instanceof Chat)
+				return (Chat) data;
+			else
+				return null;
+		}
+
+		public Room getRoom() {
+			if (data instanceof Room)
+				return (Room) data;
+			else
+				return null;
+		}
+	}
+
+	private final ArrayList<ChatWrapper> chats = new ArrayList<ChatWrapper>();
 
 	private final HashMap<BareJID, JaxmppCore> jaxmpps = new HashMap<BareJID, JaxmppCore>();
 
@@ -39,13 +82,13 @@ public class MultiJaxmpp {
 			@Override
 			public void handleEvent(BaseEvent be) throws JaxmppException {
 				if (be.getType() == MessageModule.ChatCreated) {
-					chats.add(((MessageEvent) be).getChat());
+					chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
 				} else if (be.getType() == MessageModule.ChatClosed) {
 					chats.remove(((MessageEvent) be).getChat());
 				} else if (be.getType() == MucModule.RoomClosed) {
-					rooms.remove(((MucEvent) be).getRoom());
+					chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
 				} else if (be.getType() == MucModule.YouJoined) {
-					rooms.add(((MucEvent) be).getRoom());
+					chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
 				}
 				observable.fireEvent(be);
 			}
@@ -56,8 +99,15 @@ public class MultiJaxmpp {
 		synchronized (jaxmpps) {
 			jaxmpp.addListener(listener);
 			jaxmpps.put(jaxmpp.getSessionObject().getUserBareJid(), jaxmpp);
-			this.chats.addAll(jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats());
-			this.rooms.addAll(jaxmpp.getModulesManager().getModule(MucModule.class).getRooms());
+
+			for (Chat c : jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats()) {
+				this.chats.add(new ChatWrapper(c));
+			}
+
+			for (Room r : jaxmpp.getModulesManager().getModule(MucModule.class).getRooms()) {
+				this.chats.add(new ChatWrapper(r));
+
+			}
 		}
 	}
 
@@ -83,12 +133,8 @@ public class MultiJaxmpp {
 		return get(sessionObject.getUserBareJid());
 	}
 
-	public List<Chat> getChats() {
+	public List<ChatWrapper> getChats() {
 		return Collections.unmodifiableList(chats);
-	}
-
-	public List<Room> getRooms() {
-		return Collections.unmodifiableList(rooms);
 	}
 
 	public <T extends JaxmppCore> void remove(final T jaxmpp) {

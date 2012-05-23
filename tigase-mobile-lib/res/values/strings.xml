@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">1.1</string>
+    <string name="app_version">1.1-muc-1</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="TrackingID">UA-30622348-1</string>
     <string name="pingServer">Ping</string>
@@ -161,5 +161,6 @@
     <string name="service_authentication_request_notification_title">Authentication request: %s</string>
     <string name="service_too_many_errors_disabled">Too many connection errors. Account disabled.</string>
     <string name="service_message_from_notification_title">Message from %s</string>
-
+    <string name="join_muc_room">Join conference</string>
+    
 </resources>

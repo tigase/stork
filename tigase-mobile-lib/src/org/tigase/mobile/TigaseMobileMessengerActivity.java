@@ -2,6 +2,7 @@ package org.tigase.mobile;
 
 import java.util.List;
 
+import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.accountstatus.AccountsStatusFragment;
 import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
@@ -162,20 +163,21 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	protected Integer findChat(final long chatId) {
-		List<Chat> l = getChatList();
+		List<ChatWrapper> l = getChatList();
 		for (int i = 0; i < l.size(); i++) {
-			Chat c = l.get(i);
-			if (c.getId() == chatId)
+			ChatWrapper c = l.get(i);
+			if (c.isChat() && c.getChat().getId() == chatId)
 				return i;
 		}
 		return null;
 	}
 
 	protected Integer findChat(final RosterItem rosterItem) {
-		List<Chat> l = getChatList();
+		List<ChatWrapper> l = getChatList();
 		for (int i = 0; i < l.size(); i++) {
-			Chat c = l.get(i);
-			if (c.getSessionObject() == rosterItem.getSessionObject() && c.getJid().getBareJid().equals(rosterItem.getJid()))
+			ChatWrapper c = l.get(i);
+			if (c.isChat() && c.getChat().getSessionObject() == rosterItem.getSessionObject()
+					&& c.getChat().getJid().getBareJid().equals(rosterItem.getJid()))
 				return i;
 		}
 		return null;
@@ -201,17 +203,17 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		return -1;
 	}
 
-	protected Chat getChatByPageIndex(int page) {
+	protected ChatWrapper getChatByPageIndex(int page) {
 		int x = page - (isXLarge() ? 1 : 2);
 		if (x < 0)
 			return null;
-		List<Chat> chats = getChatList();
+		List<ChatWrapper> chats = getChatList();
 		if (x >= chats.size())
 			return null;
 		return chats.get(x);
 	}
 
-	protected List<Chat> getChatList() {
+	protected List<ChatWrapper> getChatList() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
 	}
 
@@ -234,9 +236,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			((MessengerApplication) getApplication()).getTracker().trackPageView("/rosterPage");
 		} else if (msg > 1) {
 			((MessengerApplication) getApplication()).getTracker().trackPageView("/chatPage");
-			final Chat chat = getChatByPageIndex(msg);
-			if (chat != null)
-				intent.putExtra("chatId", chat.getId());
+			final ChatWrapper chat = getChatByPageIndex(msg);
+			if (chat != null && chat.isChat())
+				intent.putExtra("chatId", chat.getChat().getId());
+			else if (chat != null && chat.isRoom())
+				intent.putExtra("roomId", chat.getRoom().getId());
 		}
 
 		sendBroadcast(intent);

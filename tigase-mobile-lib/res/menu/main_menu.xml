@@ -18,6 +18,10 @@
         android:title="@string/contact_add">
     </item>
     <item
+        android:id="@+id/joinMucRoom"
+        android:title="@string/join_muc_room">
+    </item>
+    <item
         android:id="@+id/showHideOffline"
         android:checkable="true"
         android:title="Show offline">

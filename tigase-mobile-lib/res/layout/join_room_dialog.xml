@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="5px" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/relativeLayout1"
+        android:layout_alignParentTop="true" >
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:padding="5px" >
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter Multi User Chat Room details" />
+
+            <EditText
+                android:id="@+id/muc_roomName"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Room name"
+                android:inputType="textNoSuggestions" >
+
+                <requestFocus />
+            </EditText>
+
+            <EditText
+                android:id="@+id/muc_server"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="MUC Server"
+                android:inputType="textNoSuggestions" >
+            </EditText>
+
+            <EditText
+                android:id="@+id/muc_nickname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nickname" >
+            </EditText>
+
+            <View
+                android:id="@+id/view_separator"
+                android:layout_width="fill_parent"
+                android:layout_height="2dip"
+                android:layout_alignParentTop="true"
+                android:layout_centerVertical="true"
+                android:background="@color/account_dialog_separator" />
+
+            <EditText
+                android:id="@+id/muc_password"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:inputType="textPassword" />
+        </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="52dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:gravity="center" >
+
+        <Button
+            android:id="@+id/muc_joinButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:text="@string/ok" />
+
+        <Button
+            android:id="@+id/muc_cancelButton"
+            android:layout_width="100sp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/muc_joinButton"
+            android:text="@string/cancel" />
+    </RelativeLayout>
+
+</RelativeLayout>
