@@ -113,7 +113,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			public void onNothingSelected(AdapterView<?> arg0) {
 			}
 		});
-		
+
 		if (!available_v1 && !available_v2 && getMulti().get(accountJid).isConnected()) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage(R.string.mobile_optimizations_not_supported).setIcon(R.drawable.icon);

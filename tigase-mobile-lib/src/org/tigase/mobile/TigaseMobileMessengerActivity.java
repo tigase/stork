@@ -28,6 +28,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
@@ -262,7 +264,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Uri selected = data.getData();
 			String mimetype = data.getType();
 			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p);
+			ChatWrapper chatW = getChatByPageIndex(p);
+			Chat chat = chatW.getChat();
+			if (chat == null)
+				return;
 			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
 			JID jid = chat.getJid();
 			if (jid.getResource() == null) {
@@ -401,9 +406,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 				} else {
 					int idx = i - (!isXLarge() ? 2 : 1);
-					final Chat chat = getChatList().get(idx);
-					return ChatHistoryFragment.newInstance(chat.getSessionObject().getUserBareJid().toString(), chat.getId(),
-							idx);
+					final ChatWrapper wrapper = getChatList().get(idx);
+					if (wrapper.isChat()) {
+						return ChatHistoryFragment.newInstance(
+								wrapper.getChat().getSessionObject().getUserBareJid().toString(), wrapper.getChat().getId(),
+								idx);
+					} else {
+						Room room = wrapper.getRoom();
+						// TODO
+						return null;
+					}
 				}
 			}
 
@@ -440,8 +452,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				else if (index == 1)
 					return "android:switcher:" + viewId + ":roster";
 				else {
-					Chat chat = getChatByPageIndex(index);
-					String name = "android:switcher:" + viewId + ":" + chat;
+					ChatWrapper wrapper = getChatByPageIndex(index);
+					String name = "android:switcher:" + viewId + ":" + wrapper;
 					if (DEBUG)
 						Log.d(TAG, "Chat page name: " + name);
 					return name;
@@ -625,20 +637,35 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			this.startActivityForResult(chatListActivity, REQUEST_CHAT);
 		} else if (item.getItemId() == R.id.closeChatButton) {
 			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p);
-			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(chat.getSessionObject());
-			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
-			try {
-				cm.close(chat);
-				if (DEBUG)
-					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
-			} catch (JaxmppException e) {
-				Log.w(TAG, "Chat close problem!", e);
+			ChatWrapper wrapper = getChatByPageIndex(p);
+			if (wrapper.isChat()) {
+				Chat chat = wrapper.getChat();
+				final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
+						chat.getSessionObject());
+				final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
+				try {
+					cm.close(chat);
+					if (DEBUG)
+						Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
+				} catch (JaxmppException e) {
+					Log.w(TAG, "Chat close problem!", e);
+				}
+			} else {
+				Room room = wrapper.getRoom();
+				final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
+						room.getSessionObject());
+				final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
+				try {
+					cm.leave(room);
+				} catch (JaxmppException e) {
+					Log.w(TAG, "Chat close problem!", e);
+				}
 			}
+
 			viewPager.setCurrentItem(1);
 		} else if (item.getItemId() == R.id.shareImageButton) {
 			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p);
+			Chat chat = getChatByPageIndex(p).getChat();
 			Log.v(TAG, "share selected for = " + chat.getJid().toString());
 			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
 			pickerIntent.setType("image/*");
@@ -646,7 +673,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			startActivityForResult(pickerIntent, SELECT_FOR_SHARE);
 		} else if (item.getItemId() == R.id.shareVideoButton) {
 			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p);
+			Chat chat = getChatByPageIndex(p).getChat();
 			Log.v(TAG, "share selected for = " + chat.getJid().toString());
 			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
 			pickerIntent.setType("video/*");
@@ -713,7 +740,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			// Share button support
 			MenuItem share = menu.findItem(R.id.shareButton);
-			Chat chat = getChatByPageIndex(this.currentPage);
+			Chat chat = getChatByPageIndex(this.currentPage).getChat();
 			if (chat == null)
 				return false;
 			final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(

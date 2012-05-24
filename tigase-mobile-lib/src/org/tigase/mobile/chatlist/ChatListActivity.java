@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
@@ -11,6 +12,7 @@ import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import android.app.Activity;
@@ -36,7 +38,7 @@ public class ChatListActivity extends Activity {
 
 	private class ImageAdapter extends BaseAdapter {
 
-		private final ArrayList<Chat> chats = new ArrayList<Chat>();
+		private final ArrayList<ChatWrapper> chats = new ArrayList<ChatWrapper>();
 
 		private Context mContext;
 
@@ -66,7 +68,8 @@ public class ChatListActivity extends Activity {
 
 		@Override
 		public long getItemId(int position) {
-			return this.chats.get(position).getId();
+			// XXX
+			return this.chats.get(position).hashCode();
 		}
 
 		@Override
@@ -85,63 +88,69 @@ public class ChatListActivity extends Activity {
 				imageView = convertView;
 			}
 
-			Chat chat = this.chats.get(position);
+			final TextView tv = (TextView) imageView.findViewById(R.id.chat_list_item_name);
+			final ImageView avatar = (ImageView) imageView.findViewById(R.id.imageView1);
+			final ImageView itemPresence = (ImageView) imageView.findViewById(R.id.imageView2);
 
-			final Cursor cursor = getContentResolver().query(
-					Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
-			byte[] avatarData = null;
-			try {
-				cursor.moveToNext();
-				avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
-			} catch (Exception ex) {
-				Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
-			} finally {
-				cursor.close();
-			}
+			ChatWrapper wrapper = this.chats.get(position);
+			if (wrapper.isChat()) {
+				Chat chat = wrapper.getChat();
 
-			String x;
-			RosterStore roster = multi.get(chat.getSessionObject()).getRoster();
-			RosterItem ri = roster.get(chat.getJid().getBareJid());
-			if (ri == null)
-				x = chat.getJid().toString();
-			else
-				x = rdt.getDisplayName(ri);
-
-			final CPresence cp = rdt.getShowOf(chat.getSessionObject(), chat.getJid());
-
-			ImageView itemPresence = (ImageView) imageView.findViewById(R.id.imageView2);
-			if (cp == null)
-				itemPresence.setImageResource(R.drawable.user_offline);
-			else
-				switch (cp) {
-				case chat:
-				case online:
-					itemPresence.setImageResource(R.drawable.user_available);
-					break;
-				case away:
-					itemPresence.setImageResource(R.drawable.user_away);
-					break;
-				case xa:
-					itemPresence.setImageResource(R.drawable.user_extended_away);
-					break;
-				case dnd:
-					itemPresence.setImageResource(R.drawable.user_busy);
-					break;
-				default:
-					itemPresence.setImageResource(R.drawable.user_offline);
-					break;
+				final Cursor cursor = getContentResolver().query(
+						Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+				byte[] avatarData = null;
+				try {
+					cursor.moveToNext();
+					avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
+				} catch (Exception ex) {
+					Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
+				} finally {
+					cursor.close();
 				}
 
-			TextView tv = (TextView) imageView.findViewById(R.id.chat_list_item_name);
-			tv.setText(x);
+				String x;
+				RosterStore roster = multi.get(chat.getSessionObject()).getRoster();
+				RosterItem ri = roster.get(chat.getJid().getBareJid());
+				if (ri == null)
+					x = chat.getJid().toString();
+				else
+					x = rdt.getDisplayName(ri);
 
-			ImageView avatar = (ImageView) imageView.findViewById(R.id.imageView1);
+				final CPresence cp = rdt.getShowOf(chat.getSessionObject(), chat.getJid());
 
-			if (avatarData != null) {
-				Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
-				avatar.setImageBitmap(bmp);
+				if (cp == null)
+					itemPresence.setImageResource(R.drawable.user_offline);
+				else
+					switch (cp) {
+					case chat:
+					case online:
+						itemPresence.setImageResource(R.drawable.user_available);
+						break;
+					case away:
+						itemPresence.setImageResource(R.drawable.user_away);
+						break;
+					case xa:
+						itemPresence.setImageResource(R.drawable.user_extended_away);
+						break;
+					case dnd:
+						itemPresence.setImageResource(R.drawable.user_busy);
+						break;
+					default:
+						itemPresence.setImageResource(R.drawable.user_offline);
+						break;
+					}
+
+				tv.setText(x);
+
+				if (avatarData != null) {
+					Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
+					avatar.setImageBitmap(bmp);
+				} else {
+					avatar.setImageResource(R.drawable.user_avatar);
+				}
 			} else {
-				avatar.setImageResource(R.drawable.user_avatar);
+				Room room = wrapper.getRoom();
+				tv.setText(room.getRoomJid().toString());
 			}
 
 			return imageView;
@@ -161,10 +170,15 @@ public class ChatListActivity extends Activity {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				Chat chat = (Chat) parent.getItemAtPosition(position);
+				ChatWrapper wrapper = (ChatWrapper) parent.getItemAtPosition(position);
 				Intent result = new Intent();
-				result.putExtra("jid", chat.getJid().toString());
-				result.putExtra("chatId", chat.getId());
+				if (wrapper.isChat()) {
+					result.putExtra("jid", wrapper.getChat().getJid().toString());
+					result.putExtra("chatId", wrapper.getChat().getId());
+				} else {
+					result.putExtra("room", wrapper.getRoom().getRoomJid().toString());
+					result.putExtra("roomId", wrapper.getRoom().getId());
+				}
 				setResult(Activity.RESULT_OK, result);
 				finish();
 			}

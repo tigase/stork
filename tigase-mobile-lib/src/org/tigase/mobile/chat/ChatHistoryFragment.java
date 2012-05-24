@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
@@ -144,9 +145,9 @@ public class ChatHistoryFragment extends Fragment {
 
 		if (getArguments() != null) {
 			int idx = getArguments().getInt("page");
-			List<Chat> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
+			List<ChatWrapper> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
 			if (idx < chats.size()) {
-				Chat ch = chats.get(idx);
+				Chat ch = chats.get(idx).getChat();
 				setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
 			} else {
 				Log.v(TAG, "got request for page = " + idx + " but we have only " + chats.size() + " open");
@@ -238,10 +239,10 @@ public class ChatHistoryFragment extends Fragment {
 	@Override
 	public void onResume() {
 		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
-		if (((ChatAdapter)lv.getAdapter()).getCursor().isClosed()) {
-			((ChatAdapter)lv.getAdapter()).swapCursor(getCursor());
+		if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {
+			((ChatAdapter) lv.getAdapter()).swapCursor(getCursor());
 		}
-		
+
 		super.onResume();
 
 		updatePresence();
@@ -292,13 +293,13 @@ public class ChatHistoryFragment extends Fragment {
 	private void setChatId(final BareJID account, final long chatId) {
 		MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
-		List<Chat> l = multi.getChats();
+		List<ChatWrapper> l = multi.getChats();
 		for (int i = 0; i < l.size(); i++) {
-			Chat c = l.get(i);
-			if (c.getId() == chatId) {
-				this.chat = c;
+			ChatWrapper c = l.get(i);
+			if (c.isChat() && c.getChat().getId() == chatId) {
+				this.chat = c.getChat();
 				if (DEBUG)
-					Log.d(TAG, "Found chat with " + c.getJid() + " (id=" + chatId + ")");
+					Log.d(TAG, "Found chat with " + chat.getJid() + " (id=" + chatId + ")");
 
 				return;
 			}
@@ -306,8 +307,8 @@ public class ChatHistoryFragment extends Fragment {
 
 		String ids = "";
 		for (int i = 0; i < l.size(); i++) {
-			Chat c = l.get(i);
-			ids += c.getId() + " ";
+			ChatWrapper c = l.get(i);
+			ids += c + " ";
 		}
 		throw new RuntimeException("Chat (id:" + chatId + ", account:" + account + ")  not found! Available ids=" + ids);
 	}

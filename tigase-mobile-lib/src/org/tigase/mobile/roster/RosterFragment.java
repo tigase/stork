@@ -298,7 +298,7 @@ public class RosterFragment extends Fragment {
 
 		if (listView instanceof ExpandableListView) {
 			if (c != null) {
-				getActivity().stopManagingCursor(c);				
+				getActivity().stopManagingCursor(c);
 			}
 			this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.GROUP_URI), null, null, null,
 					null);
@@ -325,7 +325,7 @@ public class RosterFragment extends Fragment {
 			});
 		} else if (listView instanceof ListView) {
 			if (c != null) {
-				getActivity().stopManagingCursor(c);				
+				getActivity().stopManagingCursor(c);
 			}
 			this.c = inflater.getContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, null,
 					null);

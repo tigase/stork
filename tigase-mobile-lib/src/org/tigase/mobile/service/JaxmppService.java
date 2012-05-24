@@ -191,6 +191,8 @@ public class JaxmppService extends Service {
 
 	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
 
+	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
+
 	public static final String MOBILE_OPTIMIZATIONS_ENABLED = Features.MOBILE_V1 + "#enabled";
 
 	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE_V1 + "#presence_queue_timeout";
@@ -250,8 +252,6 @@ public class JaxmppService extends Service {
 	public static boolean isServiceActive() {
 		return serviceActive;
 	}
-
-	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
 
 	private static void lock(SessionObject jaxmpp, boolean value) {
 		synchronized (locked) {
@@ -995,7 +995,7 @@ public class JaxmppService extends Service {
 		String notificationText = "";
 
 		int flags = 0;
-		
+
 		switch (ft.getState()) {
 		case error:
 			flags |= Notification.FLAG_AUTO_CANCEL;
@@ -1035,7 +1035,7 @@ public class JaxmppService extends Service {
 
 		Notification notification = new Notification(ico, notificationTitle, whenNotify);
 		notification.flags = flags;
-		
+
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = null;

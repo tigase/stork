@@ -27,30 +27,20 @@ public class MultiJaxmpp {
 
 		private final Object data;
 
-		@Override
-		public int hashCode() {
-			return data.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			return data.equals(o);
+		public ChatWrapper(Chat chat) {
+			this.data = chat;
 		}
 
 		public ChatWrapper(Room room) {
 			this.data = room;
 		}
 
-		public ChatWrapper(Chat chat) {
-			this.data = chat;
-		}
-
-		public boolean isChat() {
-			return data instanceof Chat;
-		}
-
-		public boolean isRoom() {
-			return data instanceof Room;
+		@Override
+		public boolean equals(Object o) {
+			if (o instanceof ChatWrapper) {
+				return data.equals(((ChatWrapper) o).data);
+			} else
+				return data.equals(o);
 		}
 
 		public Chat getChat() {
@@ -65,6 +55,19 @@ public class MultiJaxmpp {
 				return (Room) data;
 			else
 				return null;
+		}
+
+		@Override
+		public int hashCode() {
+			return data.hashCode();
+		}
+
+		public boolean isChat() {
+			return data instanceof Chat;
+		}
+
+		public boolean isRoom() {
+			return data instanceof Room;
 		}
 	}
 
@@ -84,7 +87,7 @@ public class MultiJaxmpp {
 				if (be.getType() == MessageModule.ChatCreated) {
 					chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
 				} else if (be.getType() == MessageModule.ChatClosed) {
-					chats.remove(((MessageEvent) be).getChat());
+					chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
 				} else if (be.getType() == MucModule.RoomClosed) {
 					chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
 				} else if (be.getType() == MucModule.YouJoined) {

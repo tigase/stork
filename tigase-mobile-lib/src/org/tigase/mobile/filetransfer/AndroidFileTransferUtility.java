@@ -131,8 +131,9 @@ public class AndroidFileTransferUtility {
 				// it should not happen
 				Log.v(TAG, "no file for uri = " + uri.toString());
 			}
-			// we are using managedQuery so we are not allowed to close this cursor!
-			//cursor.close();
+			// we are using managedQuery so we are not allowed to close this
+			// cursor!
+			// cursor.close();
 		} catch (Exception ex) {
 			Log.e(TAG, "should not happen", ex);
 		}
