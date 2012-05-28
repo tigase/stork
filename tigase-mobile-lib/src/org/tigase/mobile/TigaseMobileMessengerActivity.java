@@ -11,6 +11,8 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
+import org.tigase.mobile.muc.JoinMucDialog;
+import org.tigase.mobile.muc.MucRoomFragment;
 import org.tigase.mobile.preferences.MessengerPreferenceActivity;
 import org.tigase.mobile.roster.AccountSelectorDialogFragment;
 import org.tigase.mobile.roster.ContactEditActivity;
@@ -111,6 +113,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
 	private static final boolean DEBUG = true;
+
+	public final static int JOIN_MUC_DIALOG = 3;
 
 	public static final int REQUEST_CHAT = 1;
 
@@ -413,8 +417,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 								idx);
 					} else {
 						Room room = wrapper.getRoom();
-						// TODO
-						return null;
+						Fragment fr = MucRoomFragment.newInstance(room.getSessionObject().getUserBareJid().toString(),
+								room.getId(), idx);
+						return fr;
 					}
 				}
 			}
@@ -598,10 +603,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == android.R.id.home) {
+		if (item.getItemId() == R.id.joinMucRoom) {
+			JoinMucDialog newFragment = JoinMucDialog.newInstance();
+			newFragment.show(getSupportFragmentManager(), "dialog");
+			return true;
+		} else if (item.getItemId() == android.R.id.home) {
 			viewPager.setCurrentItem(1);
-		}
-		if (item.getItemId() == R.id.showHideOffline) {
+		} else if (item.getItemId() == R.id.showHideOffline) {
 			boolean x = mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE);
 			Editor editor = mPreferences.edit();
 			editor.putBoolean(Preferences.SHOW_OFFLINE, !x);

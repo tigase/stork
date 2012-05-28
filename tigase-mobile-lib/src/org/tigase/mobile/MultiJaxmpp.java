@@ -90,7 +90,7 @@ public class MultiJaxmpp {
 					chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
 				} else if (be.getType() == MucModule.RoomClosed) {
 					chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
-				} else if (be.getType() == MucModule.YouJoined) {
+				} else if (be.getType() == MucModule.JoinRequested) {
 					chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
 				}
 				observable.fireEvent(be);

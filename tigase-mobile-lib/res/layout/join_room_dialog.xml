@@ -24,6 +24,11 @@
                 android:layout_height="wrap_content"
                 android:text="Enter Multi User Chat Room details" />
 
+            <Spinner
+                android:id="@+id/muc_accountSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <EditText
                 android:id="@+id/muc_roomName"
                 android:layout_width="fill_parent"
