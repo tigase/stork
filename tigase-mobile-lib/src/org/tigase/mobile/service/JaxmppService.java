@@ -67,6 +67,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -401,6 +403,8 @@ public class JaxmppService extends Service {
 
 	private boolean mobileModeEnabled = false;
 
+	private Listener<MucEvent> mucListener;
+
 	private ConnReceiver myConnReceiver;
 
 	private ScreenStateReceiver myScreenStateReceiver;
@@ -487,7 +491,28 @@ public class JaxmppService extends Service {
 				}
 			}
 		};
+		this.mucListener = new Listener<MucModule.MucEvent>() {
 
+			@Override
+			public void handleEvent(MucModule.MucEvent be) throws JaxmppException {
+				if (be.getRoom() != null && be.getMessage() != null && be.getMessage().getBody() != null) {
+
+					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getRoom().getRoomJid().toString());
+
+					ContentValues values = new ContentValues();
+					values.put(ChatTableMetaData.FIELD_JID, be.getRoom().getRoomJid().toString());
+					values.put(ChatTableMetaData.FIELD_AUTHOR_NICKNAME, be.getNickname());
+					values.put(ChatTableMetaData.FIELD_TIMESTAMP, be.getDate().getTime());
+					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
+					values.put(ChatTableMetaData.FIELD_STATE, 0);
+					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
+
+					getContentResolver().insert(uri, values);
+
+					// showChatNotification(be);
+				}
+			}
+		};
 		this.presenceListener = new Listener<PresenceModule.PresenceEvent>() {
 
 			@Override
@@ -1166,6 +1191,7 @@ public class JaxmppService extends Service {
 		getMulti().addListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
+		getMulti().addListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
 		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
@@ -1222,6 +1248,8 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(Connector.StateChanged, this.stateChangeListener);
 
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
+		getMulti().removeListener(MucModule.MucMessageReceived, this.mucListener);
+
 		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
 		getMulti().removeListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
