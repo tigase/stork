@@ -20,6 +20,7 @@ import org.tigase.mobile.Constants;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
@@ -598,6 +599,7 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
+				rejoinToRooms();
 				if (mobileModeEnabled) {
 					JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
 					setMobileMode(jaxmpp, mobileModeEnabled);
@@ -662,6 +664,18 @@ public class JaxmppService extends Service {
 			}
 		}
 
+	}
+
+	private void rejoinToRooms() {
+		try {
+			for (ChatWrapper x : getMulti().getChats()) {
+				if (x.isRoom()) {
+					x.getRoom().rejoin();
+				}
+			}
+		} catch (JaxmppException e) {
+			Log.e(TAG, "Problem on rejoining", e);
+		}
 	}
 
 	private void clearLocalJaxmppProperties() {
