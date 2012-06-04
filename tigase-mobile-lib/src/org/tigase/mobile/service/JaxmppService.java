@@ -185,7 +185,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
@@ -995,7 +995,7 @@ public class JaxmppService extends Service {
 		String notificationText = "";
 
 		int flags = 0;
-		
+
 		switch (ft.getState()) {
 		case error:
 			flags |= Notification.FLAG_AUTO_CANCEL;
@@ -1035,7 +1035,7 @@ public class JaxmppService extends Service {
 
 		Notification notification = new Notification(ico, notificationTitle, whenNotify);
 		notification.flags = flags;
-		
+
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = null;
