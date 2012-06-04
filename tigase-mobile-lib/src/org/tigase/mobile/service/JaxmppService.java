@@ -188,7 +188,7 @@ public class JaxmppService extends Service {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
