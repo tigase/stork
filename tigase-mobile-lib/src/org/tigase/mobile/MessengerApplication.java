@@ -1,6 +1,7 @@
 package org.tigase.mobile;
 
 import org.tigase.mobile.db.providers.DBChatManager;
+import org.tigase.mobile.db.providers.DBMUCManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.service.JaxmppService;
@@ -18,6 +19,7 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatSelector;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.JidOnlyChatSelector;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.AbstractRoomsManager;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
@@ -56,6 +58,13 @@ public class MessengerApplication extends Application {
 			@Override
 			public AbstractChatManager create() {
 				return new DBChatManager(context);
+			}
+		});
+		UniversalFactory.setSpi(AbstractRoomsManager.class.getName(), new FactorySpi<AbstractRoomsManager>() {
+
+			@Override
+			public AbstractRoomsManager create() {
+				return new DBMUCManager(context);
 			}
 		});
 		UniversalFactory.setSpi(RosterCacheProvider.class.getName(), new FactorySpi<RosterCacheProvider>() {

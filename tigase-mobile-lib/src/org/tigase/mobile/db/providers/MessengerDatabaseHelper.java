@@ -5,6 +5,7 @@ import org.tigase.mobile.db.CapsFeaturesTableMetaData;
 import org.tigase.mobile.db.CapsIdentitiesTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
+import org.tigase.mobile.db.OpenMUCTableMetaData;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
@@ -17,7 +18,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 1;
+	public static final Integer DATABASE_VERSION = 2;
 
 	private static final String TAG = "tigase";
 
@@ -88,11 +89,34 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += CapsFeaturesTableMetaData.FIELD_FEATURE + " TEXT";
 		sql += ");";
 		db.execSQL(sql);
+
+		sql = "CREATE TABLE " + OpenMUCTableMetaData.TABLE_NAME + " (";
+		sql += OpenMUCTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += OpenMUCTableMetaData.FIELD_ACCOUNT + " TEXT, ";
+		sql += OpenMUCTableMetaData.FIELD_ROOM_JID + " TEXT, ";
+		sql += OpenMUCTableMetaData.FIELD_NICKNAME + " TEXT, ";
+		sql += OpenMUCTableMetaData.FIELD_PASSWORD + " TEXT, ";
+		sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
+		sql += OpenMUCTableMetaData.FIELD_LAST_MESSAGE_TIMESTAMP + " DATETIME";
+		sql += ");";
+		db.execSQL(sql);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
+		if (oldVersion == 1) {
+			String sql = "CREATE TABLE " + OpenMUCTableMetaData.TABLE_NAME + " (";
+			sql += OpenMUCTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+			sql += OpenMUCTableMetaData.FIELD_ACCOUNT + " TEXT, ";
+			sql += OpenMUCTableMetaData.FIELD_ROOM_JID + " TEXT, ";
+			sql += OpenMUCTableMetaData.FIELD_NICKNAME + " TEXT, ";
+			sql += OpenMUCTableMetaData.FIELD_PASSWORD + " TEXT, ";
+			sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
+			sql += OpenMUCTableMetaData.FIELD_LAST_MESSAGE_TIMESTAMP + " DATETIME";
+			sql += ");";
+			db.execSQL(sql);
+		}
 	}
 
 }
