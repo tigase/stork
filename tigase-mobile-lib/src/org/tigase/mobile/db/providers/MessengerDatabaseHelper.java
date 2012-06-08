@@ -96,8 +96,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += OpenMUCTableMetaData.FIELD_ROOM_JID + " TEXT, ";
 		sql += OpenMUCTableMetaData.FIELD_NICKNAME + " TEXT, ";
 		sql += OpenMUCTableMetaData.FIELD_PASSWORD + " TEXT, ";
-		sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
-		sql += OpenMUCTableMetaData.FIELD_LAST_MESSAGE_TIMESTAMP + " DATETIME";
+		sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 		sql += ");";
 		db.execSQL(sql);
 	}
@@ -112,8 +111,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			sql += OpenMUCTableMetaData.FIELD_ROOM_JID + " TEXT, ";
 			sql += OpenMUCTableMetaData.FIELD_NICKNAME + " TEXT, ";
 			sql += OpenMUCTableMetaData.FIELD_PASSWORD + " TEXT, ";
-			sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
-			sql += OpenMUCTableMetaData.FIELD_LAST_MESSAGE_TIMESTAMP + " DATETIME";
+			sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 			sql += ");";
 			db.execSQL(sql);
 		}

@@ -3,13 +3,19 @@ package org.tigase.mobile.muc;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
+import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -27,6 +33,7 @@ import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -55,9 +62,23 @@ public class MucRoomFragment extends Fragment {
 
 	private ChatView layout;
 
+	private Listener<MucEvent> mucListener;
+
 	private SharedPreferences prefs;
 
 	private Room room;
+
+	private ImageView stateImage;
+
+	public MucRoomFragment() {
+		this.mucListener = new Listener<MucModule.MucEvent>() {
+
+			@Override
+			public void handleEvent(MucEvent be) throws JaxmppException {
+				onMucEvent(be);
+			}
+		};
+	}
 
 	private Cursor getCursor() {
 		return getActivity().getApplicationContext().getContentResolver().query(
@@ -86,6 +107,8 @@ public class MucRoomFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View view = inflater.inflate(R.layout.muc_conversation, container, false);
+
+		this.stateImage = (ImageView) view.findViewById(R.id.user_presence);
 
 		TextView title = (TextView) view.findViewById(R.id.textView1);
 		title.setText(room.getRoomJid().toString());
@@ -150,6 +173,28 @@ public class MucRoomFragment extends Fragment {
 		return view;
 	}
 
+	protected void onMucEvent(MucEvent be) {
+		updatePresenceImage();
+	}
+
+	@Override
+	public void onStart() {
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+
+		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
+
+		super.onStart();
+	}
+
+	@Override
+	public void onStop() {
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+
+		jaxmpp.removeListener(MucModule.StateChange, this.mucListener);
+
+		super.onStop();
+	}
+
 	protected void sendMessage() {
 		if (ed == null)
 			return;
@@ -181,6 +226,25 @@ public class MucRoomFragment extends Fragment {
 				"Message", // Action
 				"Send", // Label
 				0);
+		updatePresenceImage();
+	}
 
+	private void updatePresenceImage() {
+		if (stateImage != null) {
+			stateImage.post(new Runnable() {
+
+				@Override
+				public void run() {
+					if (room.getState() == State.not_joined) {
+						stateImage.setImageResource(R.drawable.user_offline);
+					} else if (room.getState() == State.requested) {
+						stateImage.setImageResource(R.drawable.user_away);
+					} else if (room.getState() == State.joined) {
+						stateImage.setImageResource(R.drawable.user_available);
+					}
+				}
+			});
+
+		}
 	}
 }

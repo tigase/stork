@@ -8,8 +8,6 @@ public class OpenMUCTableMetaData implements BaseColumns {
 
 	public static final String FIELD_ID = "_id";
 
-	public static final String FIELD_LAST_MESSAGE_TIMESTAMP = "last_msg_tmstmp";
-
 	public static final String FIELD_NICKNAME = "nickname";
 
 	public static final String FIELD_PASSWORD = "password";
