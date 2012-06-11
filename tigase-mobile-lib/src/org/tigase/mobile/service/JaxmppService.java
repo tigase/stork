@@ -1,11 +1,13 @@
 package org.tigase.mobile.service;
 
+import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,6 +71,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
@@ -101,12 +104,19 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.SSLCertificateSocketFactory;
 import android.net.SSLSessionCache;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -195,6 +205,10 @@ public class JaxmppService extends Service {
 
 	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE_V1 + "#presence_queue_timeout";
 
+	public static final String GEOLOCATION_ENABLED = "geolocation#enabled";
+	
+	public static final String GEOLOCATION_PRECISION = "geolocation#precision";
+
 	public static final int NOTIFICATION_ID = 5398777;
 
 	private static boolean serviceActive = false;
@@ -282,6 +296,13 @@ public class JaxmppService extends Service {
 			String resource = accountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 			hostname = hostname == null ? null : hostname.trim();
 
+			String valueStr = accountManager.getUserData(account, MOBILE_OPTIMIZATIONS_ENABLED);
+			boolean mobileOptimizations = (valueStr == null || Boolean.parseBoolean(valueStr));
+			valueStr = accountManager.getUserData(account, GEOLOCATION_ENABLED);
+			boolean geolocation = (valueStr != null && Boolean.parseBoolean(valueStr));
+			valueStr = accountManager.getUserData(account, GEOLOCATION_PRECISION);
+			int geolocationPrecision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;			
+
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new DefaultSessionObject();
 				sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
@@ -320,6 +341,10 @@ public class JaxmppService extends Service {
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
+				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
+				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_ENABLED, geolocation);
+				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PRECISION, geolocationPrecision);
+
 				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
 					@Override
 					public void modulesInit() {
@@ -348,6 +373,9 @@ public class JaxmppService extends Service {
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
+				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
+				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_ENABLED, geolocation);
+				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PRECISION, geolocationPrecision);
 			}
 			accountsJids.remove(jid);
 		}
@@ -396,6 +424,12 @@ public class JaxmppService extends Service {
 	private Listener<AuthEvent> invalidAuthListener;
 
 	private long keepaliveInterval = 3 * 60 * 1000;
+
+	private Criteria locationCriteria = new Criteria();
+
+	private long locationInterval = 5 * 60 * 1000;
+
+	private final LocationListener locationListener;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
@@ -573,10 +607,11 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
+				JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
 				if (mobileModeEnabled) {
-					JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
+				sendCurrentLocation(jaxmpp);
 				notificationUpdate();
 			}
 		};
@@ -617,6 +652,27 @@ public class JaxmppService extends Service {
 			public void handleEvent(StreamhostsEvent be) throws JaxmppException {
 				Jaxmpp jaxmpp = getMulti().get(be.getSessionObject());
 				AndroidFileTransferUtility.fileTransferHostsEventReceived(jaxmpp, be);
+			}
+
+		};
+
+		locationListener = new LocationListener() {
+
+			@Override
+			public void onLocationChanged(Location location) {
+				updateLocation(location);
+			}
+
+			@Override
+			public void onProviderDisabled(String provider) {
+			}
+
+			@Override
+			public void onProviderEnabled(String provider) {
+			}
+
+			@Override
+			public void onStatusChanged(String provider, int status, Bundle extras) {
 			}
 
 		};
@@ -729,6 +785,7 @@ public class JaxmppService extends Service {
 				@Override
 				public void run() {
 					try {
+						updateLocation(j, null);
 						((Jaxmpp) j).disconnect(false);
 					} catch (Exception e) {
 						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserBareJid(), e);
@@ -1188,6 +1245,10 @@ public class JaxmppService extends Service {
 	public void onDestroy() {
 		serviceActive = false;
 		timer.cancel();
+
+		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.requestLocationUpdates(locationInterval, 1000, locationCriteria, locationListener, null);
+
 		clearLocalJaxmppProperties();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
@@ -1314,6 +1375,9 @@ public class JaxmppService extends Service {
 			notificationUpdate();
 
 			connectAllJaxmpp(null);
+
+			LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+			locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
 		}
 
 		return START_STICKY;
@@ -1580,7 +1644,7 @@ public class JaxmppService extends Service {
 					xmlns = Features.MOBILE_V1;
 				}
 			}
-			if (xmlns == null)
+			if (xmlns == null || (enable && !((Boolean) jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_ENABLED))))
 				return;
 
 			IQ iq = IQ.create();
@@ -1711,5 +1775,147 @@ public class JaxmppService extends Service {
 
 		// Synchronize contact status
 		SyncAdapter.syncContactStatus(getApplicationContext(), be);
+	}
+
+	private void updateLocation(Location location) {
+		for (JaxmppCore jaxmpp : getMulti().get()) {
+			try {
+				updateLocation(jaxmpp, location);
+			} catch (JaxmppException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void updateLocation(final JaxmppCore jaxmpp, Location location) throws JaxmppException {
+		updateLocation(jaxmpp, location, this);
+	}
+
+	public static void updateLocation(final JaxmppCore jaxmpp, Location location, Context context) throws JaxmppException {
+		if (!jaxmpp.isConnected())
+			return;
+		Boolean enabled = (Boolean) jaxmpp.getSessionObject().getProperty(GEOLOCATION_ENABLED);
+		if (enabled == null || !enabled.booleanValue())
+			return;
+
+		int precision = jaxmpp.getSessionObject().getProperty(GEOLOCATION_PRECISION);
+		
+		final IQ iq = IQ.create();
+		iq.setType(StanzaType.set);
+		iq.setId("pubsub1");
+		Element pubsub = new DefaultElement("pubsub");
+		pubsub.setXMLNS("http://jabber.org/protocol/pubsub");
+		iq.addChild(pubsub);
+		Element publish = new DefaultElement("publish");
+		publish.setAttribute("node", "http://jabber.org/protocol/geoloc");
+		pubsub.addChild(publish);
+		Element item = new DefaultElement("item");
+		publish.addChild(item);
+		Element geoloc = new DefaultElement("geoloc");
+		geoloc.setXMLNS("http://jabber.org/protocol/geoloc");
+		item.addChild(geoloc);
+		if (location != null) {
+			if (precision > 2) {
+				Element lat = new DefaultElement("lat");
+				lat.setValue(String.valueOf(location.getLatitude()));
+				geoloc.addChild(lat);
+				Element lon = new DefaultElement("lon");
+				lon.setValue(String.valueOf(location.getLongitude()));
+				geoloc.addChild(lon);
+				Element alt = new DefaultElement("alt");
+				alt.setValue(String.valueOf(location.getAltitude()));
+				geoloc.addChild(alt);
+			}
+
+			if (context != null) {
+				try {
+					Geocoder geocoder = new Geocoder(context);
+					List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+					if (!addresses.isEmpty()) {
+						Address address = addresses.get(0);
+						// precision == 0
+						if (address.getCountryName() != null) {
+							Element country = new DefaultElement("country");
+							country.setValue(address.getCountryName());
+							geoloc.addChild(country);
+						}
+						// precision == 1
+						if (precision >= 1) {
+							if (address.getLocality() != null) {
+								Element locality = new DefaultElement("locality");
+								locality.setValue(address.getLocality());
+								geoloc.addChild(locality);
+							}
+							// precision == 1
+							if (address.getPostalCode() != null) {
+								Element postalcode = new DefaultElement("postalcode");
+								postalcode.setValue(address.getPostalCode());
+								geoloc.addChild(postalcode);
+							}
+						}
+						// precision == 2
+						if (precision >= 2) {
+							if (address.getThoroughfare() != null) {
+								Element street = new DefaultElement("street");
+								street.setValue(address.getThoroughfare());
+								geoloc.addChild(street);
+							}
+						}
+					}
+					else if (precision < 3) {
+						// nothing to send - exiting
+						return;
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else if (precision < 3) {
+				// nothing to send - exiting
+				return;
+			}
+		}
+
+		new Thread() {
+			public void run() {
+				try {
+					jaxmpp.send(iq);
+				} catch (XMLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JaxmppException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}.start();
+	}
+
+	private void sendCurrentLocation() {
+		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		for (JaxmppCore jaxmpp : getMulti().get()) {
+			try {
+				updateLocation(jaxmpp, location);
+			} catch (JaxmppException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void sendCurrentLocation(JaxmppCore jaxmpp) {
+		sendCurrentLocation(jaxmpp, this);
+	}
+
+	public static void sendCurrentLocation(JaxmppCore jaxmpp, Context context) {
+		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		try {
+			updateLocation(jaxmpp, location, context);
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+		}
 	}
 }

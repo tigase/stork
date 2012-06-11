@@ -43,4 +43,10 @@
         <item>12 min</item>
         <item>15 min</item>
 	</string-array>        
+	<string-array name="geolocation_precision">
+	    <item>Country</item>
+	    <item>City</item>
+	    <item>Street</item>
+	    <item>Latitude/Longitude</item>
+	</string-array>
 </resources>

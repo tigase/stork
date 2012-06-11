@@ -28,5 +28,27 @@
         android:layout_height="wrap_content"
         android:layout_weight="1.09" >        
     </Spinner>
+    
+    <CheckBox
+        android:id="@+id/geolocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.09"
+        android:text="@string/geolocation" />
 
+    <TextView 
+        android:text="@string/geolocation_precision"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    
+    <Spinner
+        android:id="@+id/geolocation_percision"
+        android:prompt="@string/geolocation_precision"
+        android:entries="@array/geolocation_precision"
+        android:minHeight="40dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.09" >        
+    </Spinner>
+    
 </LinearLayout>
