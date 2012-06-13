@@ -14,6 +14,7 @@ import tigase.jaxmpp.core.client.observer.BaseEvent;
 import tigase.jaxmpp.core.client.observer.EventType;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.observer.Observable;
+import tigase.jaxmpp.core.client.observer.ObservableFactory;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
@@ -77,7 +78,7 @@ public class MultiJaxmpp {
 
 	private final Listener<BaseEvent> listener;
 
-	private final Observable observable = new Observable();
+	private final Observable observable = ObservableFactory.instance();
 
 	public MultiJaxmpp() {
 		this.listener = new Listener<BaseEvent>() {

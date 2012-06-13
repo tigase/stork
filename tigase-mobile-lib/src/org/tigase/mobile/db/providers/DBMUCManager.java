@@ -6,7 +6,6 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.OpenMUCTableMetaData;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.observer.Observable;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.AbstractRoomsManager;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.content.ContentValues;
@@ -30,8 +29,7 @@ public class DBMUCManager extends AbstractRoomsManager {
 	}
 
 	@Override
-	protected Room createRoomInstance(final Observable observable, final BareJID jid, final String nickname,
-			final String password) {
+	protected Room createRoomInstance(final BareJID jid, final String nickname, final String password) {
 		SQLiteDatabase db = helper.getWritableDatabase();
 		final ContentValues values = new ContentValues();
 		values.put(OpenMUCTableMetaData.FIELD_ROOM_JID, jid.toString());
@@ -99,6 +97,7 @@ public class DBMUCManager extends AbstractRoomsManager {
 
 				Room room = new Room(id, packetWriter, roomJID, nickname, sessionObject);
 				room.setPassword(password);
+				room.setObservable(observable);
 				if (lastMsgTmstmp != 0)
 					room.setLastMessageDate(new Date(lastMsgTmstmp));
 

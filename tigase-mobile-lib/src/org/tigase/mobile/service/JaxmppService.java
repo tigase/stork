@@ -599,12 +599,12 @@ public class JaxmppService extends Service {
 			@Override
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
-				rejoinToRooms();
 				if (mobileModeEnabled) {
 					JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
 				notificationUpdate();
+				rejoinToRooms();
 			}
 		};
 
@@ -664,18 +664,6 @@ public class JaxmppService extends Service {
 			}
 		}
 
-	}
-
-	private void rejoinToRooms() {
-		try {
-			for (ChatWrapper x : getMulti().getChats()) {
-				if (x.isRoom()) {
-					x.getRoom().rejoin();
-				}
-			}
-		} catch (JaxmppException e) {
-			Log.e(TAG, "Problem on rejoining", e);
-		}
 	}
 
 	private void clearLocalJaxmppProperties() {
@@ -1411,6 +1399,18 @@ public class JaxmppService extends Service {
 		} else
 			connectJaxmpp(j, calculateNextRestart(5, connectionErrors));
 
+	}
+
+	private void rejoinToRooms() {
+		try {
+			for (ChatWrapper x : getMulti().getChats()) {
+				if (x.isRoom()) {
+					x.getRoom().rejoin();
+				}
+			}
+		} catch (JaxmppException e) {
+			Log.e(TAG, "Problem on rejoining", e);
+		}
 	}
 
 	private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {

@@ -90,6 +90,9 @@ public class MucRoomFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
+
 		if (getArguments() != null) {
 			int idx = getArguments().getInt("page");
 			List<ChatWrapper> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
@@ -173,26 +176,22 @@ public class MucRoomFragment extends Fragment {
 		return view;
 	}
 
+	@Override
+	public void onDestroy() {
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+		jaxmpp.removeListener(MucModule.StateChange, this.mucListener);
+
+		super.onDestroy();
+	}
+
 	protected void onMucEvent(MucEvent be) {
 		updatePresenceImage();
 	}
 
 	@Override
-	public void onStart() {
-		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
-
-		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
-
-		super.onStart();
-	}
-
-	@Override
-	public void onStop() {
-		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
-
-		jaxmpp.removeListener(MucModule.StateChange, this.mucListener);
-
-		super.onStop();
+	public void onResume() {
+		super.onResume();
+		updatePresenceImage();
 	}
 
 	protected void sendMessage() {

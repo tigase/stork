@@ -18,6 +18,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.EventType;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.observer.Observable;
+import tigase.jaxmpp.core.client.observer.ObservableFactory;
 import tigase.jaxmpp.core.client.xml.DefaultElement;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -30,7 +31,7 @@ public class FileTransferModule implements XmppModule {
 	public static abstract class ActivateCallback implements AsyncCallback {
 
 	}
-	
+
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
 	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
 	public static final String XMLNS_SI_FILE = "http://jabber.org/protocol/si/profile/file-transfer";
@@ -38,14 +39,16 @@ public class FileTransferModule implements XmppModule {
 	private static final Criteria CRIT = ElementCriteria.name("iq").add(
 			new Or(ElementCriteria.name("query", XMLNS_BS), ElementCriteria.name("si", new String[] { "xmlns", "profile" },
 					new String[] { XMLNS_SI, XMLNS_SI_FILE })));
-
 	private static final String[] FEATURES = new String[] { XMLNS_BS, XMLNS_SI, XMLNS_SI_FILE };
-
+	
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());
 
 	public static final EventType ProgressEventType = new EventType();
+
 	public static final EventType RequestEventType = new EventType();
+
 	public static final EventType StreamhostsEventType = new EventType();
+
 
 	private final Observable observable;
 
@@ -54,7 +57,7 @@ public class FileTransferModule implements XmppModule {
 	private final PacketWriter writer;
 
 	public FileTransferModule(Observable parentObservable, SessionObject sessionObject, PacketWriter packetWriter) {
-		observable = new Observable(parentObservable);
+		observable = ObservableFactory.instance(parentObservable);
 		session = sessionObject;
 		writer = packetWriter;
 	}
