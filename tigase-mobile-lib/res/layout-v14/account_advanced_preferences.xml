@@ -30,12 +30,20 @@
     </Spinner>
 
     <Switch
-        android:id="@+id/geolocation"
+        android:id="@+id/geolocation_listen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1.09"
         android:minHeight="40dp"
-        android:text="@string/geolocation" />
+        android:text="@string/geolocation_listen" />
+    
+    <Switch
+        android:id="@+id/geolocation_publish"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.09"
+        android:minHeight="40dp"
+        android:text="@string/geolocation_publish" />
     
     <TextView 
         android:text="@string/geolocation_precision"

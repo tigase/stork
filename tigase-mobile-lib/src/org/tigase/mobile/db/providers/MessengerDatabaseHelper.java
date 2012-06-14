@@ -4,6 +4,7 @@ package org.tigase.mobile.db.providers;
 import org.tigase.mobile.db.CapsFeaturesTableMetaData;
 import org.tigase.mobile.db.CapsIdentitiesTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
 import org.tigase.mobile.db.RosterCacheTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -17,7 +18,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 1;
+	public static final Integer DATABASE_VERSION = 2;
 
 	private static final String TAG = "tigase";
 
@@ -88,11 +89,37 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += CapsFeaturesTableMetaData.FIELD_FEATURE + " TEXT";
 		sql += ");";
 		db.execSQL(sql);
+		
+		sql = "CREATE TABLE " + GeolocationTableMetaData.TABLE_NAME + " (";
+		sql += GeolocationTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+		sql += GeolocationTableMetaData.FIELD_JID + " TEXT, ";
+		sql += GeolocationTableMetaData.FIELD_LON + " REAL, ";
+		sql += GeolocationTableMetaData.FIELD_LAT + " REAL, ";
+		sql += GeolocationTableMetaData.FIELD_ALT + " REAL, ";
+		sql += GeolocationTableMetaData.FIELD_COUNTRY + " TEXT, ";
+		sql += GeolocationTableMetaData.FIELD_LOCALITY + " TEXT, ";
+		sql += GeolocationTableMetaData.FIELD_STREET + " TEXT ";
+		sql += ");";
+		db.execSQL(sql);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
+		String sql = "";
+		if (oldVersion < 2) {
+			sql = "CREATE TABLE " + GeolocationTableMetaData.TABLE_NAME + " (";
+			sql += GeolocationTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
+			sql += GeolocationTableMetaData.FIELD_JID + " TEXT, ";
+			sql += GeolocationTableMetaData.FIELD_LON + " REAL, ";
+			sql += GeolocationTableMetaData.FIELD_LAT + " REAL, ";
+			sql += GeolocationTableMetaData.FIELD_ALT + " REAL, ";
+			sql += GeolocationTableMetaData.FIELD_COUNTRY + " TEXT, ";
+			sql += GeolocationTableMetaData.FIELD_LOCALITY + " TEXT, ";
+			sql += GeolocationTableMetaData.FIELD_STREET + " TEXT ";
+			sql += ");";
+			db.execSQL(sql);
+		}
 	}
 
 }

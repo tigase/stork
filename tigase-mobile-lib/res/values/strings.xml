@@ -119,8 +119,10 @@
     <string name="mobile_optimizations">Mobile optimizations</string>
     <string name="presence_queue_max_timeout">Maximum presence queue timeout</string>
     <string name="auth_request_info">This user wants to subscribe to your presence.</string>
-    <string name="geolocation">Publish location</string>
+    <string name="geolocation_listen">Receive geolocation</string>
+    <string name="geolocation_publish">Publish location</string>
     <string name="geolocation_precision">Location precision</string>
+    <string name="geolocation_show">Geolocation</string>
     <string name="ok">Ok</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
