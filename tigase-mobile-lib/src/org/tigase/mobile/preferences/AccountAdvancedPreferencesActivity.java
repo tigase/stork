@@ -26,7 +26,8 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 
 	private CompoundButton mobileOptimizations;
 	private Spinner presenceQueueTimeout;
-	private CompoundButton geolocation;
+	private CompoundButton geolocationListen;
+	private CompoundButton geolocationPublish;
 	private Spinner geolocationPrecision;
 
 	private Account getAccount(final AccountManager accountManager) {
@@ -116,47 +117,47 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			}
 		});
 
-		geolocation = (CompoundButton) findViewById(R.id.geolocation);
+		geolocationListen = (CompoundButton) findViewById(R.id.geolocation_listen);
+		geolocationPublish = (CompoundButton) findViewById(R.id.geolocation_publish);
 		geolocationPrecision = (Spinner) findViewById(R.id.geolocation_percision);
-		valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_ENABLED);
-		if (geolocation != null) {
-			geolocation.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
-			geolocation.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+		if (geolocationPublish != null) {
+			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_LISTEN_ENABLED);
+			geolocationListen.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
+			geolocationListen.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					accountManager.setUserData(account, JaxmppService.GEOLOCATION_ENABLED, String.valueOf(isChecked));
+					accountManager.setUserData(account, JaxmppService.GEOLOCATION_LISTEN_ENABLED, String.valueOf(isChecked));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					if (isChecked) {
-						jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_ENABLED, isChecked);
-						JaxmppService.sendCurrentLocation(jaxmpp, getApplicationContext());
-					} else {
-						try {
-							JaxmppService.updateLocation(jaxmpp, null, getApplicationContext());
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-						jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_ENABLED, isChecked);
-					}
+					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());					
+				}				
+			});
+			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_PUBLISH_ENABLED);
+			geolocationPublish.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
+			geolocationPublish.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					accountManager.setUserData(account, JaxmppService.GEOLOCATION_PUBLISH_ENABLED, String.valueOf(isChecked));
+					JaxmppCore jaxmpp = getMulti().get(accountJid);
+					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 					geolocationPrecision.setEnabled(isChecked);
 				}
 			});			
-			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_PRECISION);
+			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_PUBLISH_PRECISION);
 			int precision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;
 			geolocationPrecision.setSelection(precision);
 			geolocationPrecision.setOnItemSelectedListener(new OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
 					int precision = position;
-					accountManager.setUserData(account, JaxmppService.GEOLOCATION_PRECISION, String.valueOf(precision));
+					accountManager.setUserData(account, JaxmppService.GEOLOCATION_PUBLISH_PRECISION, String.valueOf(precision));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PRECISION, precision);
-					JaxmppService.sendCurrentLocation(jaxmpp, getApplicationContext());
+					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 				}
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {
 				}				
 			});
-			geolocationPrecision.setEnabled(geolocation.isChecked());
+			geolocationPrecision.setEnabled(geolocationPublish.isChecked());
 		}
 
 		if (!available_v1 && !available_v2 && getMulti().get(accountJid).isConnected()) {

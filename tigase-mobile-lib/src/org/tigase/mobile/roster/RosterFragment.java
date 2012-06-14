@@ -10,8 +10,10 @@ import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
+import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.pubsub.GeolocationModule;
 import org.tigase.mobile.vcard.VCardViewActivity;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -30,6 +32,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -270,6 +273,59 @@ public class RosterFragment extends Fragment {
 			}
 			m.inflate(R.menu.roster_context_menu, menu);
 
+			JaxmppCore jaxmpp = this.getMulti().get(r.getSessionObject());
+			if (jaxmpp != null && sessionEstablished) {
+				GeolocationModule module = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+				if (module != null) {
+					ContentValues location = module.getLocationForJid(r.getJid());
+					if (location != null) {
+						Double lat = location.getAsDouble(GeolocationTableMetaData.FIELD_LAT);
+						Double lon = location.getAsDouble(GeolocationTableMetaData.FIELD_LON);
+						String uriStr = null;
+						if (lon == null || lat == null) {
+							String str = "";
+							String val = location.getAsString(GeolocationTableMetaData.FIELD_STREET);
+							Log.v(TAG, "Street = " + String.valueOf(val));
+							if (val != null) {
+								str += val;			
+							}
+							val = location.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
+							Log.v(TAG, "Locality = " + String.valueOf(val));
+							if (val != null) {
+								if (!str.isEmpty()) {
+									str += " ";
+								}
+								str += val;			
+							}
+							val = location.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
+							Log.v(TAG, "Country = " + String.valueOf(val));
+							if (val != null) {
+								if (!str.isEmpty()) {
+									str += " ";
+								}
+								str += val;			
+							}
+							if (!str.isEmpty()) {
+								str = str.replace(' ', '+');
+								uriStr = "geo:0,0?q=" + str;
+							}
+						}
+						else {
+							Log.v(TAG, "latitude = " + String.valueOf(lat));
+							Log.v(TAG, "longitude = " + String.valueOf(lon));
+							uriStr = "geo:" + String.valueOf(lat) + "," + String.valueOf(lon) + "?z=14";
+						}
+						if (uriStr != null) {
+							Log.v(TAG, "created geolocation uri = " + uriStr);
+							Uri uri = Uri.parse(uriStr);
+							MenuItem item = menu.add(R.string.geolocation_show);
+							Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+							item.setIntent(intent);
+						}
+					}
+				}
+			}
+			
 			menu.setGroupVisible(R.id.contactsOnlineGroup, sessionEstablished);
 		}
 	}

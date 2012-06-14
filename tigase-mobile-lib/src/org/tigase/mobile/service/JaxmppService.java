@@ -41,6 +41,7 @@ import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import org.tigase.mobile.filetransfer.IncomingFileActivity;
 import org.tigase.mobile.filetransfer.StreamhostsEvent;
 import org.tigase.mobile.net.SocketThread;
+import org.tigase.mobile.pubsub.GeolocationModule;
 import org.tigase.mobile.roster.AuthRequestActivity;
 import org.tigase.mobile.sync.SyncAdapter;
 
@@ -210,9 +211,11 @@ public class JaxmppService extends Service {
 
 	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE_V1 + "#presence_queue_timeout";
 
-	public static final String GEOLOCATION_ENABLED = "geolocation#enabled";
+	public static final String GEOLOCATION_LISTEN_ENABLED = "geolocation#listen_enabled";
 	
-	public static final String GEOLOCATION_PRECISION = "geolocation#precision";
+	public static final String GEOLOCATION_PUBLISH_ENABLED = "geolocation#publish_enabled";
+	
+	public static final String GEOLOCATION_PUBLISH_PRECISION = "geolocation#publish_precision";
 
 	public static final int NOTIFICATION_ID = 5398777;
 
@@ -301,10 +304,12 @@ public class JaxmppService extends Service {
 
 			String valueStr = accountManager.getUserData(account, MOBILE_OPTIMIZATIONS_ENABLED);
 			boolean mobileOptimizations = (valueStr == null || Boolean.parseBoolean(valueStr));
-			valueStr = accountManager.getUserData(account, GEOLOCATION_ENABLED);
-			boolean geolocation = (valueStr != null && Boolean.parseBoolean(valueStr));
-			valueStr = accountManager.getUserData(account, GEOLOCATION_PRECISION);
-			int geolocationPrecision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;			
+//			valueStr = accountManager.getUserData(account, GEOLOCATION_LISTEN_ENABLED);
+//			boolean geolocationListen = (valueStr != null && Boolean.parseBoolean(valueStr));
+//			valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_ENABLED);
+//			boolean geolocationPublish = (valueStr != null && Boolean.parseBoolean(valueStr));
+//			valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_PRECISION);
+//			int geolocationPrecision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;			
 
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new DefaultSessionObject();
@@ -345,8 +350,9 @@ public class JaxmppService extends Service {
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
 				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
-				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_ENABLED, geolocation);
-				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PRECISION, geolocationPrecision);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED, geolocationListen);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, geolocationPublish);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION, geolocationPrecision);
 
 				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
 					@Override
@@ -359,7 +365,7 @@ public class JaxmppService extends Service {
 				if (capabilitiesModule != null) {
 					capabilitiesModule.setCache(new CapabilitiesDBCache(context));
 				}
-
+				
 				multi.add(jaxmpp);
 			} else {
 				SessionObject sessionObject = multi.get(jid).getSessionObject();
@@ -377,9 +383,16 @@ public class JaxmppService extends Service {
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
 				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
-				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_ENABLED, geolocation);
-				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PRECISION, geolocationPrecision);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED, geolocationListen);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, geolocationPublish);
+//				sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION, geolocationPrecision);
 			}
+			
+			Jaxmpp jaxmpp = multi.get(jid);
+			if (jaxmpp != null) {
+				updateGeolocationSettings(account, jaxmpp, context);				
+			}
+			
 			accountsJids.remove(jid);
 		}
 
@@ -422,7 +435,7 @@ public class JaxmppService extends Service {
 
 	private ClientFocusReceiver focusChangeReceiver;
 
-	private boolean focused;
+	private static boolean focused;
 
 	private Listener<AuthEvent> invalidAuthListener;
 
@@ -472,9 +485,9 @@ public class JaxmppService extends Service {
 
 	private int usedNetworkType = -1;
 
-	private String userStatusMessage = null;
+	private static String userStatusMessage = null;
 
-	private Show userStatusShow = Show.online;
+	private static Show userStatusShow = Show.online;
 
 	public JaxmppService() {
 		super();
@@ -1837,11 +1850,11 @@ public class JaxmppService extends Service {
 	public static void updateLocation(final JaxmppCore jaxmpp, Location location, Context context) throws JaxmppException {
 		if (!jaxmpp.isConnected())
 			return;
-		Boolean enabled = (Boolean) jaxmpp.getSessionObject().getProperty(GEOLOCATION_ENABLED);
+		Boolean enabled = (Boolean) jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_ENABLED);
 		if (enabled == null || !enabled.booleanValue())
 			return;
 
-		int precision = jaxmpp.getSessionObject().getProperty(GEOLOCATION_PRECISION);
+		int precision = jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_PRECISION);
 		
 		final IQ iq = IQ.create();
 		iq.setType(StanzaType.set);
@@ -1959,5 +1972,92 @@ public class JaxmppService extends Service {
 		} catch (JaxmppException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Method used to update geolocation settings on connected or disconnected 
+	 * instance of JaxmppCore with proper handling of this situation
+	 * @param account
+	 * @param jaxmpp
+	 * @param context
+	 */
+	public static void updateGeolocationSettings(final Account account, final JaxmppCore jaxmpp, final Context context) {
+		new Thread() {
+		public void run() {
+		AccountManager accountManager = AccountManager.get(context);
+
+		// update of geolocation listen setting
+		Boolean listenOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED);
+		if (listenOld == null) listenOld = false;
+		String valueStr = accountManager.getUserData(account, GEOLOCATION_LISTEN_ENABLED);
+		boolean listenNew = (valueStr != null && Boolean.parseBoolean(valueStr));
+
+		jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED, listenNew);
+		if (listenNew != listenOld) {
+			if (listenNew) {
+				GeolocationModule geolocationModule = new GeolocationModule(context); 
+				jaxmpp.getModulesManager().register(geolocationModule);
+				geolocationModule.init(jaxmpp);
+			}
+			else {
+				GeolocationModule module = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+				module.deinit(jaxmpp);
+				jaxmpp.getModulesManager().unregister(module);
+			}
+			jaxmpp.getSessionObject().setProperty(CapabilitiesModule.VERIFICATION_STRING_KEY, null);
+			if (jaxmpp.isConnected()) {
+				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+				PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
+				try {
+					if (focused) {
+						int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);					
+						presenceModule.setPresence(userStatusShow, userStatusMessage, pr);
+					}
+					else {
+						int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
+						presenceModule.setPresence(Show.away, "Auto away", pr);
+					}	
+				}
+				catch (JaxmppException ex) {	
+					ex.printStackTrace();
+				}
+			}
+		}		
+		
+		// update of geolocation publish setting
+		Boolean publishOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED);
+		if (publishOld == null) {
+			publishOld = false;
+		}
+		valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_ENABLED);
+		boolean publishNew = (valueStr != null && Boolean.parseBoolean(valueStr));
+
+		if (jaxmpp.isConnected() && publishNew != publishOld) {
+			if (publishNew) {
+				jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
+				JaxmppService.sendCurrentLocation(jaxmpp, context);
+			} else {
+				try {
+					JaxmppService.updateLocation(jaxmpp, null, context);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
+			}			
+		}
+		jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
+		
+		// update of geolocation publish precision	
+		Integer precisionOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION);
+		if (precisionOld == null) precisionOld = 0;		
+		valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_PRECISION);
+		int precisionNew = (valueStr != null) ? Integer.parseInt(valueStr) : 0;			
+		
+		jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION, precisionNew);
+		if (jaxmpp.isConnected() && precisionOld != precisionNew) {
+			JaxmppService.sendCurrentLocation(jaxmpp, context);			
+		}
+		}
+		}.start();
 	}
 }
