@@ -604,7 +604,7 @@ public class JaxmppService extends Service {
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
 				notificationUpdate();
-				rejoinToRooms();
+				rejoinToRooms(be.getSessionObject());
 			}
 		};
 
@@ -1401,10 +1401,10 @@ public class JaxmppService extends Service {
 
 	}
 
-	private void rejoinToRooms() {
+	private void rejoinToRooms(final SessionObject sessionObject) {
 		try {
 			for (ChatWrapper x : getMulti().getChats()) {
-				if (x.isRoom()) {
+				if (x.isRoom() && x.getRoom().getSessionObject() == sessionObject) {
 					x.getRoom().rejoin();
 				}
 			}
