@@ -4,6 +4,7 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.pubsub.GeolocationModule;
 
@@ -171,10 +172,9 @@ public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 			itemDescription.setText(status);
 		}
 
-		byte[] avatar = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
-		if (avatar != null) {
-			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
-			itemAvatar.setImageBitmap(bmp);
+		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);		
+		if (avatarBmp != null) {
+			itemAvatar.setImageBitmap(avatarBmp);
 		} else {
 			itemAvatar.setImageResource(R.drawable.user_avatar);
 		}
