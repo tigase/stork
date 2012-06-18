@@ -1,7 +1,5 @@
 package org.tigase.mobile.muc;
 
-import java.util.List;
-
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
@@ -35,6 +33,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MucRoomFragment extends Fragment {
@@ -43,13 +42,12 @@ public class MucRoomFragment extends Fragment {
 
 	private static final String TAG = "MUC";
 
-	public static Fragment newInstance(String account, long roomId, int pageIndex) {
+	public static Fragment newInstance(String account, long roomId) {
 		MucRoomFragment f = new MucRoomFragment();
 
 		Bundle args = new Bundle();
 		args.putLong("roomId", roomId);
 		args.putString("account", account);
-		args.putInt("page", pageIndex);
 		f.setArguments(args);
 
 		if (DEBUG)
@@ -65,6 +63,8 @@ public class MucRoomFragment extends Fragment {
 	private Listener<MucEvent> mucListener;
 
 	private SharedPreferences prefs;
+
+	private ProgressBar progressBar;
 
 	private Room room;
 
@@ -94,16 +94,9 @@ public class MucRoomFragment extends Fragment {
 		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
 
 		if (getArguments() != null) {
-			int idx = getArguments().getInt("page");
-			List<ChatWrapper> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
-			if (idx < chats.size()) {
-				this.room = chats.get(idx).getRoom();
-			} else {
-				Log.v(TAG, "got request for page = " + idx + " but we have only " + chats.size() + " open");
-			}
-
-			// setChatId(BareJID.bareJIDInstance(getArguments().getString("account")),
-			// getArguments().getLong("chatId"));
+			long id = getArguments().getLong("roomId");
+			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getRoomById(id);
+			this.room = ch.getRoom();
 		}
 	}
 
@@ -112,6 +105,7 @@ public class MucRoomFragment extends Fragment {
 		final View view = inflater.inflate(R.layout.muc_conversation, container, false);
 
 		this.stateImage = (ImageView) view.findViewById(R.id.user_presence);
+		this.progressBar = (ProgressBar) view.findViewById(R.id.progressBar1);
 
 		TextView title = (TextView) view.findViewById(R.id.textView1);
 		title.setText(room.getRoomJid().toString());
@@ -146,7 +140,7 @@ public class MucRoomFragment extends Fragment {
 		Cursor c = getCursor();
 
 		final ListView lv = (ListView) view.findViewById(R.id.chat_conversation_history);
-		MucAdapter ad = new MucAdapter(inflater.getContext(), R.layout.chat_item, c, room);
+		MucAdapter ad = new MucAdapter(inflater.getContext(), R.layout.muc_chat_item, c, room);
 		lv.setAdapter(ad);
 		ad.registerDataSetObserver(new DataSetObserver() {
 
@@ -235,15 +229,17 @@ public class MucRoomFragment extends Fragment {
 				@Override
 				public void run() {
 					if (room.getState() == State.not_joined) {
+						progressBar.setVisibility(View.GONE);
 						stateImage.setImageResource(R.drawable.user_offline);
 					} else if (room.getState() == State.requested) {
-						stateImage.setImageResource(R.drawable.user_away);
+						progressBar.setVisibility(View.VISIBLE);
+						stateImage.setVisibility(View.GONE);
 					} else if (room.getState() == State.joined) {
+						progressBar.setVisibility(View.GONE);
 						stateImage.setImageResource(R.drawable.user_available);
 					}
 				}
 			});
-
 		}
 	}
 }

@@ -413,12 +413,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					final ChatWrapper wrapper = getChatList().get(idx);
 					if (wrapper.isChat()) {
 						return ChatHistoryFragment.newInstance(
-								wrapper.getChat().getSessionObject().getUserBareJid().toString(), wrapper.getChat().getId(),
-								idx);
+								wrapper.getChat().getSessionObject().getUserBareJid().toString(), wrapper.getChat().getId());
 					} else {
 						Room room = wrapper.getRoom();
 						Fragment fr = MucRoomFragment.newInstance(room.getSessionObject().getUserBareJid().toString(),
-								room.getId(), idx);
+								room.getId());
 						return fr;
 					}
 				}

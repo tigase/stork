@@ -137,8 +137,28 @@ public class MultiJaxmpp {
 		return get(sessionObject.getUserBareJid());
 	}
 
+	public ChatWrapper getChatById(final long id) {
+		synchronized (chats) {
+			for (ChatWrapper w : chats) {
+				if (w.isChat() && w.getChat().getId() == id)
+					return w;
+			}
+		}
+		return null;
+	}
+
 	public List<ChatWrapper> getChats() {
 		return Collections.unmodifiableList(chats);
+	}
+
+	public ChatWrapper getRoomById(final long id) {
+		synchronized (chats) {
+			for (ChatWrapper w : chats) {
+				if (w.isRoom() && w.getRoom().getId() == id)
+					return w;
+			}
+		}
+		return null;
 	}
 
 	public <T extends JaxmppCore> void remove(final T jaxmpp) {

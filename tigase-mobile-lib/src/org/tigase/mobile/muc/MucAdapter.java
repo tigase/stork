@@ -11,8 +11,6 @@ import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
 import android.text.Html;
 import android.text.format.DateFormat;
@@ -42,7 +40,6 @@ public class MucAdapter extends SimpleCursorAdapter {
 		TextView nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
 		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
 		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
-		ImageView msgStatus = (ImageView) view.findViewById(R.id.msgStatus);
 
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
@@ -74,8 +71,6 @@ public class MucAdapter extends SimpleCursorAdapter {
 			timestamp.setTextColor(context.getResources().getColor(R.color.message_his_text));
 			view.setBackgroundColor(context.getResources().getColor(R.color.message_his_background));
 		}
-
-		msgStatus.setVisibility(View.GONE);
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
 		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
