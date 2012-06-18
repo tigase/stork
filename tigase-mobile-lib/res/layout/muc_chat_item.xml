@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5px" >
+
+    <ImageView
+        android:id="@+id/user_avatar"
+        android:layout_width="50sp"
+        android:layout_height="50sp"
+        android:src="@drawable/user_avatar" >
+    </ImageView>
+
+    <TextView
+        android:id="@+id/chat_item_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/chat_item_body" >
+    </TextView>
+
+    <!--
+		android:layout_alignParentTop="true" 
+		android:layout_alignBottom="@+id/user_avatar"
+    -->
+
+    <TextView
+        android:id="@+id/chat_item_body"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/chat_item_nickname"
+        android:layout_toRightOf="@+id/user_avatar"
+        android:autoLink="all"
+        android:paddingLeft="5px" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/chat_item_nickname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/user_avatar"
+        android:paddingLeft="5px"
+        android:textStyle="bold" >
+    </TextView>
+
+</RelativeLayout>

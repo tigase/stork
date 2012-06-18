@@ -44,13 +44,9 @@ public class MucAdapter extends SimpleCursorAdapter {
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
 		ImageView avatar = (ImageView) view.findViewById(R.id.user_avatar);
-		byte[] avatarData = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-		if (avatarData != null) {
-			Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
-			avatar.setImageBitmap(bmp);
-		} else {
-			avatar.setImageResource(R.drawable.user_avatar);
-		}
+		// byte[] avatarData =
+		// cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+		avatar.setVisibility(View.GONE);
 
 		// final BareJID account =
 		// BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_ACCOUNT)));
