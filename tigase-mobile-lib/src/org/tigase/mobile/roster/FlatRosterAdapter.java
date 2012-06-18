@@ -3,6 +3,7 @@ package org.tigase.mobile.roster;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -15,6 +16,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.v4.util.LruCache;
 import android.text.Html;
 import android.text.method.SingleLineTransformationMethod;
 import android.view.View;
@@ -30,6 +32,7 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 
 	public FlatRosterAdapter(Context context, Cursor c) {
 		super(context, R.layout.roster_item, c, cols, names);
+			    
 		findColumns(cols, c);
 	}
 
@@ -133,16 +136,15 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 		} else
 			itemDescription.setText("");
 
-		byte[] avatar = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
-		if (avatar != null) {
-			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
-			itemAvatar.setImageBitmap(bmp);
+		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);
+		if (avatarBmp != null) {			
+			itemAvatar.setImageBitmap(avatarBmp);
 		} else {
 			itemAvatar.setImageResource(R.drawable.user_avatar);
 		}
 
 	}
-
+	
 	private void findColumns(String[] from, Cursor mCursor) {
 		int i;
 		int count = from.length;

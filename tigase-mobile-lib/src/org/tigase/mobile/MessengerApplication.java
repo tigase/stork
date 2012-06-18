@@ -1,5 +1,6 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBMUCManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
@@ -88,7 +89,6 @@ public class MessengerApplication extends Application {
 		// handler.setLevel(Level.ALL);
 		// logger.addHandler(handler);
 		// logger.setLevel(Level.ALL);
-
 	}
 
 	private void createMultiJaxmpp() {
@@ -148,6 +148,8 @@ public class MessengerApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 
+		AvatarHelper.initilize(getApplicationContext());
+		
 		tracker = GoogleAnalyticsTracker.getInstance();
 		tracker.startNewSession(getResources().getString(R.string.TrackingID), 300, this);
 

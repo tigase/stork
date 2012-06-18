@@ -8,6 +8,7 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.CPresence;
 
@@ -98,10 +99,10 @@ public class ChatListActivity extends Activity {
 
 				final Cursor cursor = getContentResolver().query(
 						Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
-				byte[] avatarData = null;
+				Bitmap avatarBmp = null;
 				try {
 					cursor.moveToNext();
-					avatarData = cursor.getBlob(cursor.getColumnIndex(RosterTableMetaData.FIELD_AVATAR));
+					avatarBmp = AvatarHelper.getAvatar(chat.getJid().getBareJid(), cursor, RosterTableMetaData.FIELD_AVATAR);
 				} catch (Exception ex) {
 					Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
 				} finally {
@@ -142,9 +143,8 @@ public class ChatListActivity extends Activity {
 
 				tv.setText(x);
 
-				if (avatarData != null) {
-					Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
-					avatar.setImageBitmap(bmp);
+				if (avatarBmp != null) {
+					avatar.setImageBitmap(avatarBmp);
 				} else {
 					avatar.setImageResource(R.drawable.user_avatar);
 				}

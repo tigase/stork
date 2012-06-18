@@ -6,7 +6,9 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
+import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
+import org.tigase.mobile.db.providers.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -53,17 +55,11 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
 		ImageView avatar = (ImageView) view.findViewById(R.id.user_avatar);
-		byte[] avatarData = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-		if (avatarData != null) {
-			Bitmap bmp = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
-			avatar.setImageBitmap(bmp);
-		} else {
-			avatar.setImageResource(R.drawable.user_avatar);
-		}
 
 		if (state == ChatTableMetaData.STATE_INCOMING) {
 			final BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_ACCOUNT)));
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_JID)));
+			setAvatarForJid(avatar, jid, cursor);
 			JaxmppCore jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 			RosterItem ri = jaxmpp.getRoster().get(jid);
 			nickname.setText(ri == null ? jid.toString() : rdt.getDisplayName(ri));
@@ -76,6 +72,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			msgStatus.setVisibility(View.GONE);
 		} else if (state == ChatTableMetaData.STATE_OUT_NOT_SENT || state == ChatTableMetaData.STATE_OUT_SENT) {
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_AUTHOR_JID)));
+			setAvatarForJid(avatar, jid, cursor);
 			nickname.setText(this.nickname == null ? jid.getLocalpart() : this.nickname);
 
 			nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
@@ -101,5 +98,14 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
 		timestamp.setText(df.format(t));
 
+	}
+	
+	private void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
+		Bitmap bmp = AvatarHelper.getAvatar(jid, cursor, VCardsCacheTableMetaData.FIELD_DATA);
+		if (bmp != null) {
+			avatar.setImageBitmap(bmp);
+		} else {
+			avatar.setImageResource(R.drawable.user_avatar);
+		}		
 	}
 }
