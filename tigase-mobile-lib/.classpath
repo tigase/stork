@@ -7,8 +7,6 @@
 	<classpathentry kind="lib" path="libs/android-support-v4.jar"/>
 	<classpathentry kind="lib" path="libs/dnsjava-2.1.3.jar"/>
 	<classpathentry kind="lib" path="libs/libGoogleAnalytics.jar"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/tigase-xmltools"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
