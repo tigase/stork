@@ -2,8 +2,10 @@ package org.tigase.mobile.roster;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.AvatarHelper;
+import org.tigase.mobile.pubsub.GeolocationModule;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -12,6 +14,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -133,8 +136,28 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 		String status = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_STATUS_MESSAGE));
 		if (status != null) {
 			itemDescription.setText(Html.fromHtml(status));
-		} else
-			itemDescription.setText("");
+		} else {
+			status = "";
+			// TODO: is it fast enough?
+			GeolocationModule geoModule = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+			if (geoModule != null) {
+				ContentValues geoValue = geoModule.getLocationForJid(jid);
+				if (geoValue != null) {
+					String locality = geoValue.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
+					if (locality != null) {
+						status = locality;
+					}
+					String country = geoValue.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
+					if (country != null) {
+						if (!status.isEmpty()) {
+							status += ", ";
+						}				
+						status += country;
+					}
+				}
+			}
+			itemDescription.setText(status);
+		}
 
 		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);
 		if (avatarBmp != null) {			
