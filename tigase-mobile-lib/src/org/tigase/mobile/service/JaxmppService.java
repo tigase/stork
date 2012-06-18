@@ -1260,7 +1260,7 @@ public class JaxmppService extends Service {
 		timer.cancel();
 
 		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.requestLocationUpdates(locationInterval, 1000, locationCriteria, locationListener, null);
+		locationManager.removeUpdates(locationListener);
 
 		clearLocalJaxmppProperties();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
@@ -1389,8 +1389,13 @@ public class JaxmppService extends Service {
 
 			connectAllJaxmpp(null);
 
-			LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-			locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
+			LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);			
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+				locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
+			}
+			else {
+				locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationInterval, 100, locationListener);
+			}
 		}
 
 		return START_STICKY;
