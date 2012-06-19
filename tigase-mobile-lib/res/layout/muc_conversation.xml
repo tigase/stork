@@ -31,10 +31,21 @@
             android:layout_centerVertical="true"
             android:adjustViewBounds="true"
             android:cropToPadding="true"
+            android:padding="2dp"
             android:paddingRight="5dp"
             android:scaleType="centerInside"
             android:src="@drawable/user_offline" >
         </ImageView>
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="26dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:padding="3dp" />
 
         <ImageView
             android:id="@+id/client_type_indicator"

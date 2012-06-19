@@ -47,13 +47,12 @@ public class ChatHistoryFragment extends Fragment {
 
 	private static final String TAG = "tigase";
 
-	public static Fragment newInstance(String account, long chatId, int pageIndex) {
+	public static Fragment newInstance(String account, long chatId) {
 		ChatHistoryFragment f = new ChatHistoryFragment();
 
 		Bundle args = new Bundle();
 		args.putLong("chatId", chatId);
 		args.putString("account", account);
-		args.putInt("page", pageIndex);
 		f.setArguments(args);
 
 		if (DEBUG)
@@ -144,17 +143,9 @@ public class ChatHistoryFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
-			int idx = getArguments().getInt("page");
-			List<ChatWrapper> chats = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChats();
-			if (idx < chats.size()) {
-				Chat ch = chats.get(idx).getChat();
-				setChatId(ch.getSessionObject().getUserBareJid(), ch.getId());
-			} else {
-				Log.v(TAG, "got request for page = " + idx + " but we have only " + chats.size() + " open");
-			}
-
-			// setChatId(BareJID.bareJIDInstance(getArguments().getString("account")),
-			// getArguments().getLong("chatId"));
+			long id = getArguments().getLong("chatId");
+			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
+			setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
 		}
 	}
 

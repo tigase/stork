@@ -46,7 +46,8 @@ public class JoinMucDialog extends DialogFragment {
 		}
 
 		final Spinner accountSelector = (Spinner) dialog.findViewById(R.id.muc_accountSelector);
-		final Button button = (Button) dialog.findViewById(R.id.muc_joinButton);
+		final Button joinButton = (Button) dialog.findViewById(R.id.muc_joinButton);
+		final Button cancelButton = (Button) dialog.findViewById(R.id.muc_cancelButton);
 		final TextView roomName = (TextView) dialog.findViewById(R.id.muc_roomName);
 		final TextView mucServer = (TextView) dialog.findViewById(R.id.muc_server);
 		final TextView nickname = (TextView) dialog.findViewById(R.id.muc_nickname);
@@ -56,7 +57,15 @@ public class JoinMucDialog extends DialogFragment {
 				accounts.toArray(new String[] {}));
 		accountSelector.setAdapter(adapter);
 
-		button.setOnClickListener(new OnClickListener() {
+		cancelButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+
+			}
+		});
+		joinButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
@@ -80,7 +89,7 @@ public class JoinMucDialog extends DialogFragment {
 					}
 				};
 				(new Thread(r)).start();
-				dialog.hide();
+				dialog.dismiss();
 			}
 		});
 
