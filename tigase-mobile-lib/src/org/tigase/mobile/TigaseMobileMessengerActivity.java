@@ -580,10 +580,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				} else if (be.getType() == MessageModule.ChatClosed) {
 					viewPager.getAdapter().notifyDataSetChanged();
 				}
-				RosterItem it = be.getChat().getSessionObject().getRoster().get(be.getChat().getJid().getBareJid());
-				if (it != null) {
-					Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
-					getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+				try {
+					BareJID from = be.getMessage().getFrom().getBareJid();
+					RosterItem it = be.getSessionObject().getRoster().get(from);
+					if (it != null) {
+						Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
+						getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+					}
+				}
+				catch (Exception ex) {
+					Log.e(TAG, ex.getMessage(), ex);
 				}
 			}
 		};

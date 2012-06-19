@@ -82,6 +82,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
+import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
@@ -521,7 +522,7 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(MessageEvent be) throws JaxmppException {
-				if (be.getChat() != null && be.getMessage().getBody() != null) {
+				if (be.getChat() != null && (be.getMessage().getBody() != null || be.getMessage().getType() == StanzaType.error)) {
 
 					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getChat().getJid().getBareJid().toString());
 
@@ -529,7 +530,30 @@ public class JaxmppService extends Service {
 					values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
 					values.put(ChatTableMetaData.FIELD_AUTHOR_JID, be.getChat().getJid().getBareJid().toString());
 					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
-					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
+					Message msg = be.getMessage();
+					if (msg.getType() == StanzaType.error) {
+						ErrorElement error = ErrorElement.extract(msg);						
+						String body = "Error: ";
+						if (error != null) {
+							if (error.getText() != null) {
+								body += error.getText();
+							}
+							else { 
+								ErrorCondition errorCondition = error.getCondition();
+								if (errorCondition != null) {
+									body += errorCondition.getElementName();
+								}
+							}
+						}
+						if (msg.getBody() != null) {
+							body += " ------ ";						
+							body += msg.getBody();
+						}
+						values.put(ChatTableMetaData.FIELD_BODY, body);
+					}
+					else {
+						values.put(ChatTableMetaData.FIELD_BODY, msg.getBody());
+					}
 					values.put(ChatTableMetaData.FIELD_STATE, 0);
 					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
 
