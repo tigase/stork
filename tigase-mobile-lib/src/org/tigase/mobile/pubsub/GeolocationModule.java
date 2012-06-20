@@ -26,6 +26,7 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule.PubSubEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
 public class GeolocationModule implements XmppModule {
 
@@ -75,7 +76,7 @@ public class GeolocationModule implements XmppModule {
 					return;
 
 				List<Element> children = geoloc.getChildren();
-				if (children == null || children.isEmpty()) {
+				if (children == null || children.isEmpty() || (be.getMessage() != null && be.getMessage().getType() == StanzaType.error)) {
 					removeLocalityForJid(be.getPubSubJID().getBareJid());
 				}
 				else {
