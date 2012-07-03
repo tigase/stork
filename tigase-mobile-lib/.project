@@ -3,6 +3,10 @@
 	<name>tigase-mobile</name>
 	<comment></comment>
 	<projects>
+		<project>jaxmpp-android</project>
+		<project>jaxmpp-core</project>
+		<project>jaxmpp-j2se</project>
+		<project>tigase-xmltools</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -159,6 +159,10 @@
             android:name=".db.providers.ChatHistoryProvider"
             android:authorities="org.tigase.mobile.db.providers.ChatHistoryProvider" >
         </provider>
+        <service android:name="org.tigase.mobile.service.ExtXmppService" 
+            android:exported="true" 
+            android:process=":remote">
+		</service>        
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
