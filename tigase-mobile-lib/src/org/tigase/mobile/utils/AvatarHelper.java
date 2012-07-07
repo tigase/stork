@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.widget.ImageView;
@@ -37,13 +38,27 @@ public class AvatarHelper {
 		    // Use 1/8th of the available memory for this memory cache.
 		    final int cacheSize = 1024 * 1024 * memClass / 8;
 
-		    avatarCache = new LruCache<BareJID,Bitmap>(cacheSize) {
-		        @Override
-		        protected int sizeOf(BareJID key, Bitmap bitmap) {
-		            // The cache size will be measured in bytes rather than number of items.
-		            return bitmap == mPlaceHolderBitmap ? 0 : bitmap.getByteCount();
-		        }
-		    };					
+		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
+				avatarCache = new LruCache<BareJID, Bitmap>(cacheSize) {
+					@Override
+					protected int sizeOf(BareJID key, Bitmap bitmap) {
+						// The cache size will be measured in bytes rather than
+						// number of items. Ignoring placeholder bitmap as well.
+						return bitmap == mPlaceHolderBitmap ? 0 : bitmap.getByteCount();
+					}
+				};
+			}
+		    else {
+		    	// below SDK 12 there is no getByteCount method
+				avatarCache = new LruCache<BareJID, Bitmap>(cacheSize) {
+					@Override
+					protected int sizeOf(BareJID key, Bitmap bitmap) {
+						// The cache size will be measured in bytes rather than
+						// number of items. Ignoring placeholder bitmap as well.
+						return bitmap == mPlaceHolderBitmap ? 0 : (bitmap.getRowBytes() * bitmap.getHeight());
+					}
+				};		    	
+		    }
 		    
 		    mPlaceHolderBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.user_avatar); 
 		}
