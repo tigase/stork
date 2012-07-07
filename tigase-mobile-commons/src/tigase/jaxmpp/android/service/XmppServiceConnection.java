@@ -134,54 +134,36 @@ public abstract class XmppServiceConnection implements ServiceConnection, XmppMo
 		mService = null;
 	}
 
-	public void send(BareJID account, Element element, boolean requestCallback) {
-		try {
-			Message msg = Message.obtain(null, XmppService.MSG_SEND_STANZA);
-			msg.replyTo = mMessenger;
-	
-			Bundle bundle = new Bundle();
-			bundle.putString(XmppService.ACCOUNT_JID_KEY, account.toString());
-			bundle.putParcelable(XmppService.STANZA_KEY, ParcelableElement.fromElement(element));
-			bundle.putBoolean(XmppService.REQUEST_CALLBACK_KEY, requestCallback);
-			msg.setData(bundle);
-			
-			mService.send(msg);
-		}
-		catch (JaxmppException e) {
-			Log.e(TAG, "Jaxmpp exception", e);
-		}
-		catch (RemoteException e) {
-			Log.e(TAG, "Remote exception", e);
-		}		
+	public void send(BareJID account, Element element, boolean requestCallback) throws JaxmppException, RemoteException {
+		Message msg = Message.obtain(null, XmppService.MSG_SEND_STANZA);
+		msg.replyTo = mMessenger;
+
+		Bundle bundle = new Bundle();
+		bundle.putString(XmppService.ACCOUNT_JID_KEY, account.toString());
+		bundle.putParcelable(XmppService.STANZA_KEY, ParcelableElement.fromElement(element));
+		bundle.putBoolean(XmppService.REQUEST_CALLBACK_KEY, requestCallback);
+		msg.setData(bundle);
+
+		mService.send(msg);
 	}
 	
-	public void getAccountsList(Callback<List<Account>> callback) {
-		try {
-			int id = registerCallback(callback);
-			Message msg = Message.obtain(null, XmppService.MSG_ACCOUNTS_LIST_REQUEST);
-			msg.replyTo = mMessenger;
-			msg.arg1 = id;
-			mService.send(msg);
-		}
-		catch (RemoteException ex) {
-			Log.e(TAG, "Remote exception", ex);			
-		}
+	public void getAccountsList(Callback<List<Account>> callback) throws RemoteException {
+		int id = registerCallback(callback);
+		Message msg = Message.obtain(null, XmppService.MSG_ACCOUNTS_LIST_REQUEST);
+		msg.replyTo = mMessenger;
+		msg.arg1 = id;
+		mService.send(msg);
 	}
 	
-	public void getAvatar(BareJID jid, Callback<Avatar> callback) {
-		try {
-			int id = registerCallback(callback);
-			Message msg = Message.obtain(null, XmppService.MSG_AVATAR_REQUEST);
-			msg.replyTo = mMessenger;
-			msg.arg1 = id;
-			Bundle data = new Bundle();
-			data.putString(XmppService.AVATAR_JID_KEY, jid.toString());
-			msg.setData(data);
-			mService.send(msg);
-		}
-		catch (RemoteException ex) {
-			Log.e(TAG, "Remote exception", ex);			
-		}		
+	public void getAvatar(BareJID jid, Callback<Avatar> callback) throws RemoteException {
+		int id = registerCallback(callback);
+		Message msg = Message.obtain(null, XmppService.MSG_AVATAR_REQUEST);
+		msg.replyTo = mMessenger;
+		msg.arg1 = id;
+		Bundle data = new Bundle();
+		data.putString(XmppService.AVATAR_JID_KEY, jid.toString());
+		msg.setData(data);
+		mService.send(msg);
 	}
 	
 	private int generateNextId() {
