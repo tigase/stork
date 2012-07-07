@@ -127,7 +127,7 @@ public class AvatarHelper {
 
 	    if (bitmapWorkerTask != null) {
 	        final BareJID bitmapData = bitmapWorkerTask.data;
-	        if (jid.equals(bitmapData)) {
+	        if (!jid.equals(bitmapData)) {
 	            // Cancel previous task
 	            bitmapWorkerTask.cancel(true);
 	        } else {
