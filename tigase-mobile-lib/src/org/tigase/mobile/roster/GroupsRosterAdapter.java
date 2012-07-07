@@ -4,9 +4,9 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.pubsub.GeolocationModule;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -31,7 +31,7 @@ import android.widget.TextView;
 public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
-			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE, RosterTableMetaData.FIELD_AVATAR };
+			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE/*, RosterTableMetaData.FIELD_AVATAR */};
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
 	static Context staticContext;
@@ -172,12 +172,13 @@ public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 			itemDescription.setText(status);
 		}
 
-		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);		
-		if (avatarBmp != null) {
-			itemAvatar.setImageBitmap(avatarBmp);
-		} else {
-			itemAvatar.setImageResource(R.drawable.user_avatar);
-		}
+//		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);		
+//		if (avatarBmp != null) {
+//			itemAvatar.setImageBitmap(avatarBmp);
+//		} else {
+//			itemAvatar.setImageResource(R.drawable.user_avatar);
+//		}
+		AvatarHelper.setAvatarToImageView(jid, itemAvatar);
 
 	}
 

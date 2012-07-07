@@ -8,9 +8,9 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.CPresence;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
@@ -97,17 +97,17 @@ public class ChatListActivity extends Activity {
 			if (wrapper.isChat()) {
 				Chat chat = wrapper.getChat();
 
-				final Cursor cursor = getContentResolver().query(
-						Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
-				Bitmap avatarBmp = null;
-				try {
-					cursor.moveToNext();
-					avatarBmp = AvatarHelper.getAvatar(chat.getJid().getBareJid(), cursor, RosterTableMetaData.FIELD_AVATAR);
-				} catch (Exception ex) {
-					Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
-				} finally {
-					cursor.close();
-				}
+//				final Cursor cursor = getContentResolver().query(
+//						Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+//				Bitmap avatarBmp = null;
+//				try {
+//					cursor.moveToNext();
+//					avatarBmp = AvatarHelper.getAvatar(chat.getJid().getBareJid(), cursor, RosterTableMetaData.FIELD_AVATAR);
+//				} catch (Exception ex) {
+//					Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
+//				} finally {
+//					cursor.close();
+//				}
 
 				String x;
 				RosterStore roster = multi.get(chat.getSessionObject()).getRoster();
@@ -143,11 +143,12 @@ public class ChatListActivity extends Activity {
 
 				tv.setText(x);
 
-				if (avatarBmp != null) {
-					avatar.setImageBitmap(avatarBmp);
-				} else {
-					avatar.setImageResource(R.drawable.user_avatar);
-				}
+//				if (avatarBmp != null) {
+//					avatar.setImageBitmap(avatarBmp);
+//				} else {
+//					avatar.setImageResource(R.drawable.user_avatar);
+//				}
+				AvatarHelper.setAvatarToImageView(chat.getJid().getBareJid(), avatar);
 			} else {
 				Room room = wrapper.getRoom();
 				tv.setText(room.getRoomJid().toString());

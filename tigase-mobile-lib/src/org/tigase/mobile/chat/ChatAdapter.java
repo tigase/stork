@@ -8,7 +8,7 @@ import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
-import org.tigase.mobile.db.providers.AvatarHelper;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -30,7 +30,7 @@ import android.widget.TextView;
 public class ChatAdapter extends SimpleCursorAdapter {
 
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID, VCardsCacheTableMetaData.FIELD_DATA };
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID/*, VCardsCacheTableMetaData.FIELD_DATA*/ };
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
 	private String nickname;
@@ -101,11 +101,18 @@ public class ChatAdapter extends SimpleCursorAdapter {
 	}
 	
 	private void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
-		Bitmap bmp = AvatarHelper.getAvatar(jid, cursor, VCardsCacheTableMetaData.FIELD_DATA);
-		if (bmp != null) {
-			avatar.setImageBitmap(bmp);
-		} else {
-			avatar.setImageResource(R.drawable.user_avatar);
-		}		
+		// old implementation
+//		Bitmap bmp = AvatarHelper.getAvatar(jid, cursor, VCardsCacheTableMetaData.FIELD_DATA);
+//		if (bmp != null) {
+//			avatar.setImageBitmap(bmp);
+//		} else {
+//			avatar.setImageResource(R.drawable.user_avatar);
+//		}
+		
+		// roster uses this below
+		//AvatarHelper.setAvatarToImageView(jid, avatar);
+		// but it is not good as in chat async avatar loading while here 
+		// synchronized loading is better as we can use results from cache
+		avatar.setImageBitmap(AvatarHelper.getAvatar(jid));
 	}
 }

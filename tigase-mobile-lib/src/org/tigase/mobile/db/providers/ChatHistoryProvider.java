@@ -126,12 +126,13 @@ public class ChatHistoryProvider extends ContentProvider {
 			break;
 		case CHAT_URI_INDICATOR: {
 			final Map<String, String> x = new HashMap<String, String>(chatHistoryProjectionMap);
-			x.put(VCardsCacheTableMetaData.FIELD_DATA, VCardsCacheTableMetaData.TABLE_NAME + "."
-					+ VCardsCacheTableMetaData.FIELD_DATA);
-
-			qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " + VCardsCacheTableMetaData.TABLE_NAME + " ON ("
-					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID + "="
-					+ VCardsCacheTableMetaData.TABLE_NAME + "." + VCardsCacheTableMetaData.FIELD_JID + ")");
+//			x.put(VCardsCacheTableMetaData.FIELD_DATA, VCardsCacheTableMetaData.TABLE_NAME + "."
+//					+ VCardsCacheTableMetaData.FIELD_DATA);
+//
+//			qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " + VCardsCacheTableMetaData.TABLE_NAME + " ON ("
+//					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID + "="
+//					+ VCardsCacheTableMetaData.TABLE_NAME + "." + VCardsCacheTableMetaData.FIELD_JID + ")");
+			qb.setTables(ChatTableMetaData.TABLE_NAME);
 
 			qb.setProjectionMap(x);
 			String jid = uri.getPathSegments().get(1);

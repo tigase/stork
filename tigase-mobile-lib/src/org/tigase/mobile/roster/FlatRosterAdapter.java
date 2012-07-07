@@ -4,8 +4,8 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.GeolocationTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.pubsub.GeolocationModule;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -159,13 +159,13 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 			itemDescription.setText(status);
 		}
 
-		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);
-		if (avatarBmp != null) {			
-			itemAvatar.setImageBitmap(avatarBmp);
-		} else {
-			itemAvatar.setImageResource(R.drawable.user_avatar);
-		}
-
+//		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);
+//		if (avatarBmp != null) {			
+//			itemAvatar.setImageBitmap(avatarBmp);
+//		} else {
+//			itemAvatar.setImageResource(R.drawable.user_avatar);
+//		}
+		AvatarHelper.setAvatarToImageView(jid, itemAvatar);
 	}
 	
 	private void findColumns(String[] from, Cursor mCursor) {

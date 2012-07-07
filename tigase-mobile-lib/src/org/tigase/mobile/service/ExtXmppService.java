@@ -5,8 +5,8 @@ import java.util.Collection;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -131,20 +131,6 @@ public class ExtXmppService extends XmppService {
 	
 	@Override
 	protected Bitmap getAvatar(BareJID jid) {
-		Bitmap image = null;
-		Cursor c = null;
-		try {
-			c = this.getApplicationContext().getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
-			image = AvatarHelper.getAvatar(jid, c, RosterTableMetaData.FIELD_AVATAR);
-		}
-		catch (Exception ex) {
-			Log.e(TAG, "Exception retrieving avatar", ex);
-		}
-		finally {
-			if (c != null) {
-				c.close();
-			}
-		}
-		return image;
+		return AvatarHelper.getAvatar(jid);
 	}
 }

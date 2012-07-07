@@ -22,7 +22,7 @@ import android.widget.TextView;
 public class MucAdapter extends SimpleCursorAdapter {
 
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID, VCardsCacheTableMetaData.FIELD_DATA };
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID /*, VCardsCacheTableMetaData.FIELD_DATA*/ };
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
 	private final Room room;
