@@ -1,11 +1,15 @@
 package tigase.jaxmpp.android.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import tigase.jaxmpp.android.xml.ParcelableElement;
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.XmppModule;
 import tigase.jaxmpp.core.client.criteria.Criteria;
@@ -15,6 +19,7 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -34,30 +39,45 @@ public abstract class XmppService extends Service {
 	public static final String ACCOUNT_JID_KEY = "accountJid#key";
 	public static final String STANZA_KEY = "stanza#key";
 	public static final String REQUEST_CALLBACK_KEY = "requestCallback#key";
+	public static final String ACCOUNTS_LIST_KEY = "accountsList#key";
+	public static final String AVATAR_KEY = "avatar#key";
+	public static final String AVATAR_JID_KEY = "avatarJid#key";
 	
 	public static final int MSG_REGISTER_CLIENT = 1;
 	public static final int MSG_UNREGISTER_CLIENT = 2;
 	public static final int MSG_SEND_STANZA = 3;
 	public static final int MSG_RECV_STANZA = 4;
-	
+	public static final int MSG_ACCOUNTS_LIST_REQUEST = 5;
+	public static final int MSG_ACCOUNTS_LIST_RESPONSE = 6;
+	public static final int MSG_AVATAR_REQUEST = 7;
+	public static final int MSG_AVATAR_RESPONSE = 8;
 	
 	private Map<Messenger,ExtXmppModule> clients = Collections.synchronizedMap(new HashMap<Messenger,ExtXmppModule>());
 	
 	private class IncomingHandler extends Handler {
 		@Override
 		public void handleMessage(Message msg) {
-			switch (msg.what) {
-				case MSG_REGISTER_CLIENT:
-					registerClient(msg);
-					break;
-				case MSG_UNREGISTER_CLIENT:
-					unregisterClient(msg);
-					break;
-				case MSG_SEND_STANZA:
-					sendStanza(msg);
-					break;
-				default:
-					Log.v(TAG, "unknown message type = " + msg.what);
+			try {
+				switch (msg.what) {
+					case MSG_REGISTER_CLIENT:
+						registerClient(msg);
+						break;
+					case MSG_UNREGISTER_CLIENT:
+						unregisterClient(msg);
+						break;
+					case MSG_SEND_STANZA:
+						sendStanza(msg);
+						break;
+					case MSG_ACCOUNTS_LIST_REQUEST:
+						listAccounts(msg);
+					case MSG_AVATAR_REQUEST:
+						getAvatar(msg);
+					default:
+						Log.v(TAG, "unknown message type = " + msg.what);
+				}
+			}
+			catch (Exception ex) {
+				Log.e(TAG, "exception processing IPC message", ex);
 			}
 		}		
 	}
@@ -74,6 +94,8 @@ public abstract class XmppService extends Service {
 	protected abstract void registerModule(XmppModule module);
 	protected abstract void unregisterModule(XmppModule module);
 	protected abstract void sendStanza(BareJID account, Element element, boolean requestCallback, XmppModule module);
+	protected abstract Collection<JaxmppCore> getAccounts();
+	protected abstract Bitmap getAvatar(BareJID jid);
 	
 	private void registerClient(Message msg) {
 		Messenger messenger = msg.replyTo;
@@ -114,6 +136,48 @@ public abstract class XmppService extends Service {
 		}
 	}
 	
+	private void listAccounts(Message msg) {
+		int id = msg.arg1;
+		Collection<JaxmppCore> accounts = getAccounts();
+		ArrayList<Account> list = new ArrayList<Account>();
+		for (JaxmppCore jaxmpp : accounts) {
+			Account acc = new Account(jaxmpp.getSessionObject().getUserBareJid(), jaxmpp.isConnected());
+			list.add(acc);
+		}
+		Messenger messenger = msg.replyTo;
+		msg = Message.obtain(null, MSG_ACCOUNTS_LIST_RESPONSE);
+		msg.arg1 = id;
+		Bundle data = new Bundle();
+		data.putParcelableArrayList(ACCOUNTS_LIST_KEY, list);
+		msg.setData(data);
+		try {
+			messenger.send(msg);
+		} catch (RemoteException e) {
+			Log.e(TAG, "Remote exception", e);
+		}
+	}
+	
+	private void getAvatar(Message msg) {
+		int id = msg.arg1;
+		Bundle data = msg.getData(); 
+		data.setClassLoader(this.getClassLoader());
+		BareJID jid = BareJID.bareJIDInstance(data.getString(AVATAR_JID_KEY));
+		Bitmap image = getAvatar(jid);
+		Avatar avatar = new Avatar(jid, image);
+		
+		Messenger messenger = msg.replyTo;
+		msg = Message.obtain(null, MSG_AVATAR_RESPONSE);
+		msg.arg1 = id;
+		data = new Bundle();
+		data.putParcelable(AVATAR_KEY, avatar);
+		msg.setData(data);
+		try {
+			messenger.send(msg);
+		} catch (RemoteException e) {
+			Log.e(TAG, "Remote exception", e);
+		}
+	}
+
 	private class ExtXmppModule implements XmppModule {
 		
 		private final Messenger messenger;
