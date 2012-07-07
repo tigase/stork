@@ -43,26 +43,29 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 	public void bindView(View view, Context context, Cursor cursor) {
 		// TODO Auto-generated method stub
 		// super.bindView(view, context, cursor);
+		ViewHolder holder = (ViewHolder) view.getTag();
+		if (holder == null) {
+			holder = new ViewHolder();
+			view.setTag(holder);
+			holder.itemJid = (TextView) view.findViewById(R.id.roster_item_jid);
+			holder.itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
+			holder.openChatNotifier = view.findViewById(R.id.openChatNotifier);
 
-		TextView itemJid = (TextView) view.findViewById(R.id.roster_item_jid);
-		TextView itemDescription = (TextView) view.findViewById(R.id.roster_item_description);
-		itemJid.setTransformationMethod(SingleLineTransformationMethod.getInstance());
+			holder.itemAvatar = (ImageView) view.findViewById(R.id.imageView1);
+			holder.itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
+			holder.clientTypeIndicator = (ImageView) view.findViewById(R.id.client_type_indicator);
+		}
 
-		View openChatNotifier = view.findViewById(R.id.openChatNotifier);
-
-		ImageView itemAvatar = (ImageView) view.findViewById(R.id.imageView1);
-		ImageView itemPresence = (ImageView) view.findViewById(R.id.roster_item_precence);
-
+		holder.itemJid.setTransformationMethod(SingleLineTransformationMethod.getInstance());
 		String name = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_DISPLAY_NAME));
-		itemJid.setText(name);
+		holder.itemJid.setText(name);
 
 		BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_ACCOUNT)));
 
 		final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
 		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 
-		final ImageView clientTypeIndicator = (ImageView) view.findViewById(R.id.client_type_indicator);
-		clientTypeIndicator.setVisibility(View.INVISIBLE);
+		holder.clientTypeIndicator.setVisibility(View.INVISIBLE);
 
 		CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
 		try {
@@ -80,12 +83,12 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 				if (id != null) {
 					String tmp = id.getCategory() + "/" + id.getType();
 					if (tmp.equals("client/phone") && node.equals(nodeName)) {
-						clientTypeIndicator.setImageResource(R.drawable.client_messenger);
-						clientTypeIndicator.setVisibility(View.VISIBLE);
+						holder.clientTypeIndicator.setImageResource(R.drawable.client_messenger);
+						holder.clientTypeIndicator.setVisibility(View.VISIBLE);
 						break;
 					} else if (tmp.equals("client/phone")) {
-						clientTypeIndicator.setImageResource(R.drawable.client_mobile);
-						clientTypeIndicator.setVisibility(View.VISIBLE);
+						holder.clientTypeIndicator.setImageResource(R.drawable.client_mobile);
+						holder.clientTypeIndicator.setVisibility(View.VISIBLE);
 						break;
 					}
 				}
@@ -95,47 +98,47 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 		}
 
 		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(jid);
-		openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
+		holder.openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
 		Integer p = cursor.getInt(cursor.getColumnIndex(RosterTableMetaData.FIELD_PRESENCE));
 		CPresence cp = CPresence.valueOf(p);
 
 		if (cp == null)
-			itemPresence.setImageResource(R.drawable.user_offline);
+			holder.itemPresence.setImageResource(R.drawable.user_offline);
 		else
 			switch (cp) {
 			case chat:
-				itemPresence.setImageResource(R.drawable.user_free_for_chat);
+				holder.itemPresence.setImageResource(R.drawable.user_free_for_chat);
 				break;
 			case online:
-				itemPresence.setImageResource(R.drawable.user_available);
+				holder.itemPresence.setImageResource(R.drawable.user_available);
 				break;
 			case away:
-				itemPresence.setImageResource(R.drawable.user_away);
+				holder.itemPresence.setImageResource(R.drawable.user_away);
 				break;
 			case xa:
-				itemPresence.setImageResource(R.drawable.user_extended_away);
+				holder.itemPresence.setImageResource(R.drawable.user_extended_away);
 				break;
 			case dnd:
-				itemPresence.setImageResource(R.drawable.user_busy);
+				holder.itemPresence.setImageResource(R.drawable.user_busy);
 				break;
 			case requested:
-				itemPresence.setImageResource(R.drawable.user_ask);
+				holder.itemPresence.setImageResource(R.drawable.user_ask);
 				break;
 			case error:
-				itemPresence.setImageResource(R.drawable.user_error);
+				holder.itemPresence.setImageResource(R.drawable.user_error);
 				break;
 			case offline_nonauth:
-				itemPresence.setImageResource(R.drawable.user_noauth);
+				holder.itemPresence.setImageResource(R.drawable.user_noauth);
 				break;
 			default:
-				itemPresence.setImageResource(R.drawable.user_offline);
+				holder.itemPresence.setImageResource(R.drawable.user_offline);
 				break;
 			}
 
 		String status = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_STATUS_MESSAGE));
 		if (status != null) {
-			itemDescription.setText(Html.fromHtml(status));
+			holder.itemDescription.setText(Html.fromHtml(status));
 		} else {
 			status = "";
 			// TODO: is it fast enough?
@@ -156,7 +159,7 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 					}
 				}
 			}
-			itemDescription.setText(status);
+			holder.itemDescription.setText(status);
 		}
 
 //		Bitmap avatarBmp = AvatarHelper.getAvatar(jid, cursor, RosterTableMetaData.FIELD_AVATAR);
@@ -165,7 +168,7 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 //		} else {
 //			itemAvatar.setImageResource(R.drawable.user_avatar);
 //		}
-		AvatarHelper.setAvatarToImageView(jid, itemAvatar);
+		AvatarHelper.setAvatarToImageView(jid, holder.itemAvatar);
 	}
 	
 	private void findColumns(String[] from, Cursor mCursor) {
@@ -183,5 +186,14 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 				mFrom[i] = -1;
 			}
 		}
+	}
+	
+	static class ViewHolder {
+		TextView itemJid;
+		TextView itemDescription;
+		View openChatNotifier;
+		ImageView itemAvatar;
+		ImageView itemPresence;
+		ImageView clientTypeIndicator;		
 	}
 }

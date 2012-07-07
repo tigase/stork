@@ -37,16 +37,21 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
-		TextView nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
-		TextView webview = (TextView) view.findViewById(R.id.chat_item_body);
-		TextView timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
-
+		ViewHolder holder = (ViewHolder) view.getTag();
+		if (holder == null) {
+			holder = new ViewHolder();
+			view.setTag(holder);
+			holder.nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
+			holder.webview = (TextView) view.findViewById(R.id.chat_item_body);
+			holder.timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
+			holder.avatar = (ImageView) view.findViewById(R.id.user_avatar);
+		}
+		
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
-		ImageView avatar = (ImageView) view.findViewById(R.id.user_avatar);
 		// byte[] avatarData =
 		// cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-		avatar.setVisibility(View.GONE);
+		holder.avatar.setVisibility(View.GONE);
 
 		// final BareJID account =
 		// BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_ACCOUNT)));
@@ -54,27 +59,34 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 		// JaxmppCore jaxmpp = ((MessengerApplication)
 		// context.getApplicationContext()).getMultiJaxmpp().get(account);
-		nickname.setText(nick);
+		holder.nickname.setText(nick);
 
 		if (nick.equals(room.getNickname())) {
-			nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
-			webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
-			timestamp.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+			holder.webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
+			holder.timestamp.setTextColor(context.getResources().getColor(R.color.message_mine_text));
 			view.setBackgroundColor(context.getResources().getColor(R.color.message_mine_background));
 		} else {
-			nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
-			webview.setTextColor(context.getResources().getColor(R.color.message_his_text));
-			timestamp.setTextColor(context.getResources().getColor(R.color.message_his_text));
+			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
+			holder.webview.setTextColor(context.getResources().getColor(R.color.message_his_text));
+			holder.timestamp.setTextColor(context.getResources().getColor(R.color.message_his_text));
 			view.setBackgroundColor(context.getResources().getColor(R.color.message_his_background));
 		}
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
 		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
-		webview.setText(Html.fromHtml(txt));
+		holder.webview.setText(Html.fromHtml(txt));
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
 		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
-		timestamp.setText(df.format(t));
+		holder.timestamp.setText(df.format(t));
 
+	}
+	
+	static class ViewHolder {
+		TextView nickname;
+		TextView webview;
+		TextView timestamp;
+		ImageView avatar;
 	}
 }
