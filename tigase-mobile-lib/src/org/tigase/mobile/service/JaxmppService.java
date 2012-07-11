@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,6 +29,7 @@ import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
+import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -897,6 +899,23 @@ public class JaxmppService extends Service {
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
 				JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
+				
+				// is it good place to change availability of server features?
+				AccountManager accountManager = AccountManager.get(getApplicationContext());
+				String jidStr = jaxmpp.getSessionObject().getUserBareJid().toString();
+				for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+					if (jidStr.equals(acc.name)) {
+						Account account = acc;
+						Map<String, String> data = new HashMap<String, String>();
+						AuthenticatorActivity.processJaxmppForFeatures(jaxmpp, data);
+						for (String key : data.keySet()) {
+							String value = data.get(key);
+							accountManager.setUserData(account, key, value);
+						}
+						break;
+					}
+				}
+				
 				if (mobileModeEnabled) {
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
@@ -2118,4 +2137,5 @@ public class JaxmppService extends Service {
 		// Synchronize contact status
 		SyncAdapter.syncContactStatus(getApplicationContext(), be);
 	}
+	
 }

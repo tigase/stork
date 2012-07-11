@@ -1,5 +1,6 @@
 package org.tigase.mobile.preferences;
 
+import org.tigase.mobile.Constants;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
@@ -15,6 +16,7 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -24,6 +26,8 @@ import android.widget.Spinner;
 
 public class AccountAdvancedPreferencesActivity extends Activity {
 
+	private static final String TAG = "AccountAdvancedPreferencesActivity";
+	
 	private CompoundButton mobileOptimizations;
 	private Spinner presenceQueueTimeout;
 	private CompoundButton geolocationListen;
@@ -52,10 +56,14 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
 	}
 
-	private final boolean isMobileAvailable(JaxmppCore jaxmpp, String feature) {
+	public static final boolean isMobileAvailable(JaxmppCore jaxmpp, String feature) {
+		if (jaxmpp == null) return false;
+		if (jaxmpp.getSessionObject() == null) return false;
 		final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-		if (sf == null)
+		if (sf == null) {
+			Log.v(TAG, "no stream features available for = " + jaxmpp.getSessionObject().getUserBareJid().toString());
 			return false;
+		}
 
 		try {
 			Element m = sf.getChildrenNS("mobile", feature);
@@ -81,8 +89,10 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		mobileOptimizations = (CompoundButton) findViewById(R.id.mobile_optimizations);
 		presenceQueueTimeout = (Spinner) findViewById(R.id.presence_queue_timeout);
 
-		boolean available_v1 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V1);
-		boolean available_v2 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V2);
+		boolean available_v1 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V1)
+				|| Features.MOBILE_V1.equals(accountManager.getUserData(account, Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY));
+		boolean available_v2 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V2)
+				|| Features.MOBILE_V2.equals(accountManager.getUserData(account, Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY));
 		mobileOptimizations.setEnabled(available_v1 || available_v2);
 		presenceQueueTimeout.setEnabled(available_v1 && !available_v2);
 

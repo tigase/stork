@@ -1,12 +1,18 @@
 package org.tigase.mobile.authenticator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.tigase.mobile.Constants;
+import org.tigase.mobile.Features;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.AccountsTableMetaData;
+import org.tigase.mobile.preferences.AccountAdvancedPreferencesActivity;
 
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -53,6 +59,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public class UserCreateAccountTask extends AsyncTask<String, Void, String> {
 
+		private Map<String, String> data = new HashMap<String, String>();
 		private final Jaxmpp contact = new Jaxmpp();
 
 		private String errorMessage;
@@ -137,6 +144,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			try {
 				contact.login(true);
+
+				// here we process features available for account
+				processJaxmppForFeatures(contact, data);
+
 				return token;
 			} catch (JaxmppException e) {
 				Log.e(TAG, "Problem on password check", e);
@@ -161,7 +172,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			if (errorMessage != null)
 				onCreationError(errorMessage);
 			else
-				onAuthenticationResult(authToken);
+				onAuthenticationResult(authToken, data);
 		}
 
 		private void wakeup() {
@@ -172,6 +183,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	public class UserLoginTask extends AsyncTask<String, Void, String> {
+
+		private Map<String, String> data = new HashMap<String, String>();
 
 		/**
 		 * @param params
@@ -184,6 +197,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			contact.getProperties().setUserProperty(SessionObject.PASSWORD, params[1]);
 			try {
 				contact.login(true);
+
+				// here we process features available for account
+				processJaxmppForFeatures(contact, data);
+
 				return params[1];
 			} catch (JaxmppException e) {
 				Log.e(TAG, "Problem on password check", e);
@@ -204,7 +221,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		@Override
 		protected void onPostExecute(final String authToken) {
-			onAuthenticationResult(authToken);
+			onAuthenticationResult(authToken, data);
 		}
 	}
 
@@ -266,7 +283,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		finish();
 	}
 
-	private void finishLogin(String authToken) {
+	private void finishLogin(String authToken, Map<String, String> data) {
 		Log.i(TAG, "finishLogin()");
 		final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
 		if (mRequestNewAccount) {
@@ -281,9 +298,18 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			// ContentResolver.setSyncAutomatically(account,
 			// ContactsContract.AUTHORITY, true);
 		}
+
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_NICKNAME, mNickname);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_HOSTNAME, mHostname);
 		mAccountManager.setUserData(account, AccountsTableMetaData.FIELD_RESOURCE, mResource);
+
+		if (data != null) {
+			for (String key : data.keySet()) {
+				String value = data.get(key);
+				mAccountManager.setUserData(account, key, value);
+			}
+		}
+
 		final Intent intent = new Intent();
 		intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
 		intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
@@ -394,7 +420,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		hideProgress();
 	}
 
-	protected void onAuthenticationResult(String authToken) {
+	protected void onAuthenticationResult(String authToken, Map<String, String> data) {
 		boolean success = ((authToken != null) && (authToken.length() > 0));
 		Log.i(TAG, "onAuthenticationResult(" + success + ")");
 
@@ -406,7 +432,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		if (success) {
 			if (!mConfirmCredentials) {
-				finishLogin(authToken);
+				finishLogin(authToken, data);
 			} else {
 				finishConfirmCredentials(success);
 			}
@@ -862,6 +888,19 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		});
 
 		return v;
+	}
+
+	public static void processJaxmppForFeatures(JaxmppCore contact, Map<String, String> data) {
+		String mobile = null;
+		boolean mobileV1 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V1);
+		if (mobileV1) {
+			mobile = Features.MOBILE_V1;
+		}
+		boolean mobileV2 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V2);
+		if (mobileV2) {
+			mobile = Features.MOBILE_V2;
+		}
+		data.put(Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY, mobile);
 	}
 
 	private void updateVisibility(int visibility, View... views) {
