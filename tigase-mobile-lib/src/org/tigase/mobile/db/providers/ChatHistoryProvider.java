@@ -53,7 +53,18 @@ public class ChatHistoryProvider extends ContentProvider {
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		// TODO Auto-generated method stub
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		switch (match(uri)) {
+		case CHAT_URI_INDICATOR: {
+			db.delete(ChatTableMetaData.TABLE_NAME, ChatTableMetaData.FIELD_JID + "=?",
+					new String[] { uri.getPathSegments().get(1) });
+			getContext().getContentResolver().notifyChange(uri, null);
+		}
+			break;
+		default: {
+			throw new IllegalArgumentException("Unknown URI ");
+		}
+		}
 		return 0;
 	}
 
@@ -126,12 +137,16 @@ public class ChatHistoryProvider extends ContentProvider {
 			break;
 		case CHAT_URI_INDICATOR: {
 			final Map<String, String> x = new HashMap<String, String>(chatHistoryProjectionMap);
-//			x.put(VCardsCacheTableMetaData.FIELD_DATA, VCardsCacheTableMetaData.TABLE_NAME + "."
-//					+ VCardsCacheTableMetaData.FIELD_DATA);
-//
-//			qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " + VCardsCacheTableMetaData.TABLE_NAME + " ON ("
-//					+ ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID + "="
-//					+ VCardsCacheTableMetaData.TABLE_NAME + "." + VCardsCacheTableMetaData.FIELD_JID + ")");
+			// x.put(VCardsCacheTableMetaData.FIELD_DATA,
+			// VCardsCacheTableMetaData.TABLE_NAME + "."
+			// + VCardsCacheTableMetaData.FIELD_DATA);
+			//
+			// qb.setTables(ChatTableMetaData.TABLE_NAME + " LEFT OUTER JOIN " +
+			// VCardsCacheTableMetaData.TABLE_NAME + " ON ("
+			// + ChatTableMetaData.TABLE_NAME + "." +
+			// ChatTableMetaData.FIELD_AUTHOR_JID + "="
+			// + VCardsCacheTableMetaData.TABLE_NAME + "." +
+			// VCardsCacheTableMetaData.FIELD_JID + ")");
 			qb.setTables(ChatTableMetaData.TABLE_NAME);
 
 			qb.setProjectionMap(x);

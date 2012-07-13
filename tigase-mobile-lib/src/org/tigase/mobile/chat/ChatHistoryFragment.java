@@ -113,14 +113,14 @@ public class ChatHistoryFragment extends Fragment {
 
 	private Cursor getChatEntry(long id) {
 		Cursor cursor = getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid() + "/" + id), null, null, null, null);
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString()) + "/" + id), null, null, null, null);
 		cursor.moveToNext();
 		return cursor;
 	}
 
 	private Cursor getCursor() {
 		return getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null, null, null);
 	}
 
 	@Override
@@ -132,6 +132,9 @@ public class ChatHistoryFragment extends Fragment {
 		} else if (item.getItemId() == R.id.copyMessage) {
 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 			copyMessageBody(info.id);
+			return true;
+		} else if (item.getItemId() == R.id.clearMessageHistory) {
+			clearMessageHistory();
 			return true;
 		} else {
 			return super.onContextItemSelected(item);
@@ -360,4 +363,8 @@ public class ChatHistoryFragment extends Fragment {
 		}
 	}
 
+	private void clearMessageHistory() {
+		getActivity().getApplicationContext().getContentResolver().delete(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null);
+	}
 }

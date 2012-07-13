@@ -9,4 +9,8 @@
         android:id="@+id/detailsMessage"
         android:title="Details"></item>
 
+    <item
+        android:id="@+id/clearMessageHistory"
+        android:title="Clear history"></item>
+    
 </menu>
