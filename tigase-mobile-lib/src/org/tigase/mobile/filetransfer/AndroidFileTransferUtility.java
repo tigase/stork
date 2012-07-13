@@ -5,8 +5,18 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -14,6 +24,7 @@ import java.util.TimerTask;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.filetransfer.FileTransfer.State;
+import org.tigase.mobile.net.SocketThread;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -48,8 +59,11 @@ public class AndroidFileTransferUtility {
 		}
 	}
 
+	private static ServerSocketChannel serverSocketChannel = null;
 	private static final String TAG = "AndroidFileTransferUtility";
+
 	private static final Timer timer = new Timer(true);
+	private static final Map<String, FileTransfer> waitingForConnection = Collections.synchronizedMap(new HashMap<String, FileTransfer>());
 
 	private static final Map<String, FileTransfer> waitingForStreamhosts = Collections.synchronizedMap(new HashMap<String, FileTransfer>());
 
@@ -84,6 +98,10 @@ public class AndroidFileTransferUtility {
 		}
 	}
 
+	public static FileTransfer getFileTransferForConnection(final String id) {
+		return waitingForConnection.remove(id);
+	}
+
 	public static FileTransfer getFileTransferForStreamhost(final String id) {
 		return waitingForStreamhosts.get(id);
 	}
@@ -92,11 +110,81 @@ public class AndroidFileTransferUtility {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
 	}
 
+	public static void onStreamhostsReceived(FileTransfer ft, List<Streamhost> hosts) {
+		registerFileTransferForConnection(ft);
+		List<Streamhost> hostsLocal = new ArrayList<Streamhost>();
+		try {
+			synchronized (AndroidFileTransferUtility.class) {
+				if (serverSocketChannel == null) {
+					serverSocketChannel = ServerSocketChannel.open();
+					serverSocketChannel.configureBlocking(true);
+					serverSocketChannel.socket().bind(new InetSocketAddress(0));
+					new Thread() {
+						public void run() {
+							while (true) {
+								try {
+									SocketChannel channel = serverSocketChannel.accept();
+									if (channel.isConnectionPending()) {
+										channel.finishConnect();
+									}
+									Socks5IOService serv = new Socks5IOService(channel, true);
+									// serv.processSocketData();
+									SocketThread.addSocketService(serv);
+								} catch (Exception ex) {
+									Log.e(TAG, "socket accepting exception", ex);
+								}
+							}
+						}
+					}.start();
+				}
+			}
+			// need to accept connection somewhere
+			int port = serverSocketChannel.socket().getLocalPort();
+			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = en.nextElement();
+				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumIpAddr.nextElement();
+					if (!inetAddress.isLoopbackAddress()) {
+						String addr = inetAddress.getHostAddress().toString();
+						String jid = ft.jid.toString();
+						Streamhost host = new Streamhost(jid, addr, port);
+						hostsLocal.add(host);
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		hostsLocal.addAll(hosts);
+		if (hostsLocal.isEmpty()) {
+			ft.transferError("could not connect to destination");
+		} else {
+			FileTransferUtility.onStreamhostsReceived(ft, hostsLocal);
+		}
+	}
+
 	public static void refreshMediaScanner(Context context, File file) {
 		final MediaScannerConnectionRefreshClient client = new MediaScannerConnectionRefreshClient();
 		client.mediaScanner = new MediaScannerConnection(context, client);
 		client.path = file.getPath();
 		client.mediaScanner.connect();
+	}
+
+	public static void registerFileTransferForConnection(FileTransfer ft) {
+		final String id = ft.getAuthString();
+		waitingForConnection.put(id, ft);
+		timer.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				FileTransfer ft = waitingForConnection.remove(id);
+				if (ft != null && ft.getState() == State.negotiating) {
+					ft.transferError("negotiation timed out");
+				}
+
+			}
+
+		}, 5L * 60 * 1000);
 	}
 
 	public static void registerFileTransferForStreamhost(final String id, FileTransfer ft) {

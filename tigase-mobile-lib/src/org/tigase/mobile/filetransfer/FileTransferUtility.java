@@ -198,7 +198,8 @@ public class FileTransferUtility {
 		FileTransferUtility.discoverProxy(ft.jaxmpp, new ProxyDiscoveryAsyncCallback() {
 			@Override
 			public void onError(String errorMessage) {
-				ft.transferError(errorMessage);
+				// ft.transferError(errorMessage);
+				AndroidFileTransferUtility.onStreamhostsReceived(ft, new ArrayList<Streamhost>());
 			}
 
 			@Override
@@ -217,7 +218,7 @@ public class FileTransferUtility {
 							// TODO Auto-generated method stub
 							Log.v(TAG, "streamhost request succeeded for " + proxyJid.toString());
 							ft.setProxyJid(JID.jidInstance(hosts.get(0).getJid()));
-							FileTransferUtility.onStreamhostsReceived(ft, hosts);
+							AndroidFileTransferUtility.onStreamhostsReceived(ft, hosts);
 						}
 
 						@Override
@@ -260,10 +261,23 @@ public class FileTransferUtility {
 				String streamhostUsed = query.getFirstChild().getAttribute("jid");
 				boolean connected = false;
 				for (Streamhost host : getHosts()) {
+
+					// is it possible that we try to activate same record twice?
+					// we get 'connection error' but also 'activation for
+					// xxx@sss succeeded'
+					// how it is possible?
+
 					if (streamhostUsed.equals(host.getJid())) {
 						try {
-							ft.connectToProxy(host, null);
+							Log.v(TAG, "activating stream for = " + host.getJid());
+							if (host.getJid().equals(ft.jid.toString())) {
+								ft.outgoingConnected();
+							} else {
+								ft.connectToProxy(host, null);
+							}
+							Log.v(TAG, "activation of stream completed");
 							connected = true;
+							Log.v(TAG, "connected set to = " + connected);
 							break;
 						} catch (Exception ex) {
 							Log.e(TAG, "exception connecting to proxy", ex);
@@ -272,6 +286,7 @@ public class FileTransferUtility {
 					}
 				}
 				if (!connected) {
+					Log.v(TAG, "result = " + connected);
 					ft.transferError("connection error");
 				}
 			}
