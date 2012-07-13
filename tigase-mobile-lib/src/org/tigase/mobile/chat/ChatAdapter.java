@@ -60,12 +60,10 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
-		ImageView avatar = (ImageView) view.findViewById(R.id.user_avatar);
-
 		if (state == ChatTableMetaData.STATE_INCOMING) {
 			final BareJID account = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_ACCOUNT)));
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_JID)));
-			setAvatarForJid(avatar, jid, cursor);
+			setAvatarForJid(holder.avatar, jid, cursor);
 			JaxmppCore jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 			RosterItem ri = jaxmpp.getRoster().get(jid);
 			holder.nickname.setText(ri == null ? jid.toString() : rdt.getDisplayName(ri));
@@ -78,7 +76,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			holder.msgStatus.setVisibility(View.GONE);
 		} else if (state == ChatTableMetaData.STATE_OUT_NOT_SENT || state == ChatTableMetaData.STATE_OUT_SENT) {
 			final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_AUTHOR_JID)));
-			setAvatarForJid(avatar, jid, cursor);
+			setAvatarForJid(holder.avatar, jid, cursor);
 			holder.nickname.setText(this.nickname == null ? jid.getLocalpart() : this.nickname);
 
 			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
