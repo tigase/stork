@@ -94,6 +94,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -410,6 +411,8 @@ public class JaxmppService extends Service {
 		}.start();
 	}
 
+	// added to fix Eclipse error
+	@SuppressLint("NewApi")
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
@@ -1660,6 +1663,8 @@ public class JaxmppService extends Service {
 			Log.i(TAG, "onStart()");
 	}
 
+	// added to fix Eclipse error
+	@SuppressLint("NewApi")
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)
@@ -1770,7 +1775,7 @@ public class JaxmppService extends Service {
 			if (jaxmpp == null)
 				return;
 			final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
-			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid),
+			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid), (long) 3*60*1000,
 					new VCardAsyncCallback() {
 
 						@Override
