@@ -297,7 +297,7 @@ public class VCardEditorActivity extends Activity {
 			jid = JID.jidInstance((String) getIntent().getExtras().get("account_jid"));
 		}
 				
-		if (account != null && Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+		if (account != null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
 			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
 		}

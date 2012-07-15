@@ -105,7 +105,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			}
 		}
 		
-		if (jidStr == null && Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+		if (jidStr == null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
 			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
 		}

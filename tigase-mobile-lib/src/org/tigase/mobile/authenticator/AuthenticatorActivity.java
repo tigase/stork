@@ -502,7 +502,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
 			screenTitle.setText("Account edit");
-			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 				Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
 				this.startActivityForResult(intentChooser, PICK_ACCOUNT);
 			}
