@@ -32,12 +32,15 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -281,4 +284,63 @@ public class AndroidFileTransferUtility {
 			}
 		}.start();
 	}
+	
+	@SuppressLint("NewApi")
+	public static File getPathToSave(String filename, String mimetype, String store) {
+		File path = null;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+			String type = Environment.DIRECTORY_DOWNLOADS;
+			if (store != null) {
+				if ("Pictures".equals(store)) {
+					type = Environment.DIRECTORY_PICTURES;
+				} else if ("Music".equals(store)) {
+					type = Environment.DIRECTORY_MUSIC;
+				} else if ("Movies".equals(store)) {
+					type = Environment.DIRECTORY_MOVIES;
+				}
+			}
+			else {
+				if (mimetype.startsWith("video/")) {
+					type = Environment.DIRECTORY_MOVIES;
+				} else if (mimetype.startsWith("audio/")) {
+					type = Environment.DIRECTORY_MUSIC;
+				} else if (mimetype.startsWith("image/")) {
+					type = Environment.DIRECTORY_PICTURES;
+				}				
+			}
+			path = Environment.getExternalStoragePublicDirectory(type);
+		}
+		if (path == null) {
+			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
+		}
+		return new File(path, filename);
+	}
+	
+	public static String guessMimeType(String filename) {
+		int idx = filename.lastIndexOf(".");
+		if (idx == -1) {
+			return null;
+		}
+		String suffix = filename.substring(idx + 1).toLowerCase();
+		if (suffix.equals("png")) {
+			return "image/png";
+		} else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
+			return "image/jpeg";
+		} else if (suffix.equals("avi")) {
+			return "video/avi";
+		} else if (suffix.equals(".mkv")) {
+			return "video/x-matroska";
+		} else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
+			return "video/mpeg";
+		} else if (suffix.equals(".mp3")) {
+			return "audio/mpeg3";
+		} else if (suffix.equals(".ogg")) {
+			return "audio/ogg";
+		} else if (suffix.equals(".pdf")) {
+			return "application/pdf";
+		} else {
+			return null;
+		}
+	}
+	
 }
