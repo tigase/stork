@@ -228,6 +228,16 @@ public class AccountsStatusFragment extends Fragment {
 					return true;
 				}
 			});
+			menu.add(R.string.account_advanced_preferences).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				@Override
+				public boolean onMenuItemClick(MenuItem item) {
+					Intent intent = new Intent();
+					intent.setAction("org.tigase.mobile.account.advancedPreferences.EDIT");
+					intent.putExtra("account_jid", jaxmpp.getSessionObject().getUserBareJid().toString());
+					startActivity(intent);
+					return true;
+				}
+			});
 
 		} else {
 			menu.add(R.string.loginButton).setOnMenuItemClickListener(new OnMenuItemClickListener() {

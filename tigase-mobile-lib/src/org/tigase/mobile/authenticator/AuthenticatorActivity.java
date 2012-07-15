@@ -244,6 +244,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
 
 	private final static int PROGRESS_DIALOG = 1;
+	
+	private static final int PICK_ACCOUNT = 1;
 
 	private static final String TAG = "AuthenticatorActivity";
 
@@ -414,6 +416,42 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
+	@SuppressLint({ "ParserError", "ParserError" })
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_ACCOUNT) {
+			if (resultCode == RESULT_OK) {
+				Intent intent = getIntent();
+				if (intent == null) return;
+				String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+				if (accName == null) {
+					this.finish();
+					return;
+				}
+				Account account = null;
+				for (Account acc : mAccountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+					if (acc.name.equals(accName)) {
+						account = acc;
+						break;
+					}
+				}
+
+				intent = intent.putExtra("account", account);
+				this.setIntent(intent);
+				
+				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+				flipper.addView(prepareWelcomeScreen(inflater));
+				flipper.addView(prepareAddAccount(inflater));
+				flipper.addView(prepareCreateAccount(inflater));				
+				
+				flipper.setDisplayedChild(account == null ? PAGE_CREATE : PAGE_ADD);
+			}
+			else {
+				this.finish();				
+			}
+		}
+	}
+	
 	protected void onAuthenticationCancel() {
 		Log.i(TAG, "onAuthenticationCancel()");
 
@@ -447,6 +485,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -457,17 +496,31 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		this.screenTitle = (TextView) findViewById(R.id.screenTitle);
 		this.flipper = (ViewFlipper) findViewById(R.id.accounts_flipper);
-		final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-		flipper.addView(prepareWelcomeScreen(inflater));
-		flipper.addView(prepareAddAccount(inflater));
-		flipper.addView(prepareCreateAccount(inflater));
 
 		final Intent intent = getIntent();
+
 		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
 			screenTitle.setText("Account edit");
-			flipper.setDisplayedChild(PAGE_ADD);
+			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+				Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+				this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+			}
+			else {
+				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				
+				flipper.addView(prepareWelcomeScreen(inflater));
+				flipper.addView(prepareAddAccount(inflater));
+				flipper.addView(prepareCreateAccount(inflater));				
+				flipper.setDisplayedChild(PAGE_ADD);
+			}
+		}
+		else {
+			final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			
+			flipper.addView(prepareWelcomeScreen(inflater));
+			flipper.addView(prepareAddAccount(inflater));
+			flipper.addView(prepareCreateAccount(inflater));				
 		}
 
 	}

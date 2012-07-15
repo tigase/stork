@@ -13,8 +13,11 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -28,29 +31,13 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 
 	private static final String TAG = "AccountAdvancedPreferencesActivity";
 	
+	private static final int PICK_ACCOUNT = 1;
+	
 	private CompoundButton mobileOptimizations;
 	private Spinner presenceQueueTimeout;
 	private CompoundButton geolocationListen;
 	private CompoundButton geolocationPublish;
 	private Spinner geolocationPrecision;
-
-	private Account getAccount(final AccountManager accountManager) {
-		Account account = null;
-
-		if (getIntent().getExtras().get("account") != null) {
-			account = (Account) getIntent().getExtras().get("account");
-		} else {
-			String jidStr = (String) getIntent().getExtras().get("account_jid");
-			for (Account acc : accountManager.getAccounts()) {
-				if (jidStr.equals(jidStr)) {
-					account = acc;
-					break;
-				}
-			}
-		}
-
-		return account;
-	}
 
 	private final MultiJaxmpp getMulti() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
@@ -76,15 +63,61 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		return true;
 	}
 
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_ACCOUNT) {
+			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+			if (accName == null) {
+				this.finish();
+				return;
+			}
+			final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+			Account account = null;
+			for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+				if (acc.name.equals(accName)) {
+					account = acc;
+					break;
+				}
+			}
+			setAccount(account);
+		}
+	}
+	
+	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 
-		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
-		final Account account = getAccount(accountManager);
-		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
-
 		setContentView(R.layout.account_advanced_preferences);
+		
+		Account account = null;
+		String jidStr = null;
+		
+		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+		if (getIntent().getExtras().get("account") != null) {
+			account = (Account) getIntent().getExtras().get("account");
+		} else {
+			jidStr = (String) getIntent().getExtras().get("account_jid");
+			for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+				if (jidStr.equals(jidStr)) {
+					account = acc;
+					break;
+				}
+			}
+		}
+		
+		if (jidStr == null && Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
+		}
+		else {
+			setAccount(account);
+		}
+		
+	}
+
+	public void setAccount(final Account account) {		
+		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
 
 		mobileOptimizations = (CompoundButton) findViewById(R.id.mobile_optimizations);
 		presenceQueueTimeout = (Spinner) findViewById(R.id.presence_queue_timeout);

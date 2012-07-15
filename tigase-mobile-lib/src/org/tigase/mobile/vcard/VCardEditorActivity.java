@@ -3,6 +3,7 @@ package org.tigase.mobile.vcard;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 
+import org.tigase.mobile.Constants;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -22,6 +23,8 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
@@ -36,6 +39,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +56,7 @@ public class VCardEditorActivity extends Activity {
 
 	private static final int ERROR_TOAST = 3;
 
+	private static final int PICK_ACCOUNT = 2;
 	private static final int PICK_IMAGE = 1;
 
 	private static final int PUBLISHED_TOAST = 1;
@@ -238,6 +243,7 @@ public class VCardEditorActivity extends Activity {
 		return null;
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PICK_IMAGE && data != null && data.getData() != null) {
@@ -256,9 +262,19 @@ public class VCardEditorActivity extends Activity {
 						Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), values);
 			}
 		}
+		else if (requestCode == PICK_ACCOUNT) {
+			if (data == null || data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) == null) {
+				this.finish();
+				return;
+			}
+			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+			setAccountJid(JID.jidInstance(accName));
+			this.invalidateOptionsMenu();
+		}
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -273,12 +289,25 @@ public class VCardEditorActivity extends Activity {
 			}
 		});
 
-		final Account account = (Account) getIntent().getExtras().get("account");
+		JID jid = null;
+		Account account = (Account) getIntent().getExtras().get("account");
 		if (account != null) {
 			jid = JID.jidInstance(account.name);
 		} else {
 			jid = JID.jidInstance((String) getIntent().getExtras().get("account_jid"));
 		}
+				
+		if (account != null && Build.VERSION_CODES.ICE_CREAM_SANDWICH < Build.VERSION.SDK_INT) {
+			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
+		}
+		else {
+			setAccountJid(jid);
+		}
+	}
+	
+	protected void setAccountJid(JID jid_) {
+		this.jid = jid_;
 
 		final Cursor cursor = getContentResolver().query(
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), null, null, null, null);
@@ -320,9 +349,11 @@ public class VCardEditorActivity extends Activity {
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		menu.clear();
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(jid.getBareJid());
-		if (jaxmpp.isConnected()) {
-			inflater.inflate(R.menu.vcard_editor_menu, menu);
+		if (jid != null) {
+			final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(jid.getBareJid());
+			if (jaxmpp.isConnected()) {
+				inflater.inflate(R.menu.vcard_editor_menu, menu);
+			}
 		}
 		return true;
 	}
