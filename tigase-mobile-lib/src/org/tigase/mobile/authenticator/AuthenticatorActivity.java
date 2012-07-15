@@ -24,6 +24,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -32,6 +33,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.Editable;
@@ -529,11 +531,20 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	}
 
+	@SuppressLint("NewApi")
 	protected void onCreationError(String errorMessage) {
 		Bundle b = new Bundle();
 		b.putString("msg", errorMessage);
 		hideProgress();
-		showDialog(CREATION_ERROR_DIALOG, b);
+		if (Build.VERSION_CODES.FROYO > Build.VERSION.SDK_INT) {
+			showDialog(CREATION_ERROR_DIALOG, b);			
+		}
+		else {
+			Dialog dlg = onCreateDialog(CREATION_ERROR_DIALOG, b);
+			if (dlg != null) {
+				dlg.show();
+			}
+		}
 	}
 
 	@Override
@@ -543,7 +554,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		// textview
 		String tmp;
 		flipper.setDisplayedChild(savedInstanceState.getInt("page", PAGE_WELCOME));
-		tmp = savedInstanceState.getString("", null);
+		tmp = savedInstanceState.getString("");
 		if (tmp != null)
 			screenTitle.setText(tmp);
 
