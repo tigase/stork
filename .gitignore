@@ -1,5 +1,7 @@
 tigase-mobile-lib/bin/
 tigase-mobile-lib/gen/
+tigase-mobile-commons/bin/
+tigase-mobile-commons/gen/
 tigase-mobile-phone-free/bin/
 tigase-mobile-phone-free/gen/
 tigase-mobile-phone-pro/bin/

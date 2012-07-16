@@ -147,6 +147,7 @@
     <string name="service_invalid_jid_or_password">Invalid JID or password</string>
     <string name="service_invalid_password">Invalid password for %s</string>
     <string name="service_incoming_file_notification_title">Incoming file %1$s from %2$s</string>
+    <string name="service_incoming_file_notification_text"></string>
     <string name="service_error_notification_title">Error</string>
     <string name="service_disconnected_notification_title">Disconnected</string>
     <string name="service_no_network_notification_text">Disconnected</string>

@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="7"
-        android:targetSdkVersion="14" />
+        android:targetSdkVersion="16" />
 
     <application
         android:name="org.tigase.mobile.MessengerApplication"
@@ -173,9 +173,16 @@
             android:name="org.tigase.mobile.db.providers.ChatHistoryProvider"
             android:authorities="org.tigase.mobile.db.providers.ChatHistoryProvider" >
         </provider>
+        
+        <service android:name="org.tigase.mobile.service.ExtXmppService" 
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="org.tigase.mobile.service.ExtXmppService" />
+            </intent-filter>
+		</service>
     </application>
 
-    <!-- <uses-permission android:name="android.permission.VIBRATE" /> -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />

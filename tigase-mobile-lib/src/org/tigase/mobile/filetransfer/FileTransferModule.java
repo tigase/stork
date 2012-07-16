@@ -33,22 +33,21 @@ public class FileTransferModule implements XmppModule {
 	}
 
 	public static final String XMLNS_BS = "http://jabber.org/protocol/bytestreams";
-	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
-	public static final String XMLNS_SI_FILE = "http://jabber.org/protocol/si/profile/file-transfer";
 
+	public static final String XMLNS_SI = "http://jabber.org/protocol/si";
+
+	public static final String XMLNS_SI_FILE = "http://jabber.org/protocol/si/profile/file-transfer";	
+	
 	private static final Criteria CRIT = ElementCriteria.name("iq").add(
 			new Or(ElementCriteria.name("query", XMLNS_BS), ElementCriteria.name("si", new String[] { "xmlns", "profile" },
 					new String[] { XMLNS_SI, XMLNS_SI_FILE })));
 	private static final String[] FEATURES = new String[] { XMLNS_BS, XMLNS_SI, XMLNS_SI_FILE };
-	
 	private static final Logger log = Logger.getLogger(FileTransferModule.class.getCanonicalName());
 
 	public static final EventType ProgressEventType = new EventType();
-
 	public static final EventType RequestEventType = new EventType();
 
 	public static final EventType StreamhostsEventType = new EventType();
-
 
 	private final Observable observable;
 

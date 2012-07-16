@@ -1,12 +1,12 @@
 package org.tigase.mobile;
 
-import org.tigase.mobile.db.providers.AvatarHelper;
 import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBMUCManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.service.JaxmppService;
 import org.tigase.mobile.sync.SyncAdapter;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;

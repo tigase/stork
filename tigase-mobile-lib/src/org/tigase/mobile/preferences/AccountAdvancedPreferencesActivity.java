@@ -1,5 +1,6 @@
 package org.tigase.mobile.preferences;
 
+import org.tigase.mobile.Constants;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
@@ -12,9 +13,13 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -24,38 +29,28 @@ import android.widget.Spinner;
 
 public class AccountAdvancedPreferencesActivity extends Activity {
 
+	private static final String TAG = "AccountAdvancedPreferencesActivity";
+	
+	private static final int PICK_ACCOUNT = 1;
+	
 	private CompoundButton mobileOptimizations;
 	private Spinner presenceQueueTimeout;
 	private CompoundButton geolocationListen;
 	private CompoundButton geolocationPublish;
 	private Spinner geolocationPrecision;
 
-	private Account getAccount(final AccountManager accountManager) {
-		Account account = null;
-
-		if (getIntent().getExtras().get("account") != null) {
-			account = (Account) getIntent().getExtras().get("account");
-		} else {
-			String jidStr = (String) getIntent().getExtras().get("account_jid");
-			for (Account acc : accountManager.getAccounts()) {
-				if (jidStr.equals(jidStr)) {
-					account = acc;
-					break;
-				}
-			}
-		}
-
-		return account;
-	}
-
 	private final MultiJaxmpp getMulti() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
 	}
 
-	private final boolean isMobileAvailable(JaxmppCore jaxmpp, String feature) {
+	public static final boolean isMobileAvailable(JaxmppCore jaxmpp, String feature) {
+		if (jaxmpp == null) return false;
+		if (jaxmpp.getSessionObject() == null) return false;
 		final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-		if (sf == null)
+		if (sf == null) {
+			Log.v(TAG, "no stream features available for = " + jaxmpp.getSessionObject().getUserBareJid().toString());
 			return false;
+		}
 
 		try {
 			Element m = sf.getChildrenNS("mobile", feature);
@@ -68,21 +63,69 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		return true;
 	}
 
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_ACCOUNT) {
+			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+			if (accName == null) {
+				this.finish();
+				return;
+			}
+			final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+			Account account = null;
+			for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+				if (acc.name.equals(accName)) {
+					account = acc;
+					break;
+				}
+			}
+			setAccount(account);
+		}
+	}
+	
+	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 
-		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
-		final Account account = getAccount(accountManager);
-		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
-
 		setContentView(R.layout.account_advanced_preferences);
+		
+		Account account = null;
+		String jidStr = null;
+		
+		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+		if (getIntent().getExtras().get("account") != null) {
+			account = (Account) getIntent().getExtras().get("account");
+		} else {
+			jidStr = (String) getIntent().getExtras().get("account_jid");
+			for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+				if (jidStr.equals(jidStr)) {
+					account = acc;
+					break;
+				}
+			}
+		}
+		
+		if (jidStr == null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
+		}
+		else {
+			setAccount(account);
+		}
+		
+	}
+
+	public void setAccount(final Account account) {		
+		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
+		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
 
 		mobileOptimizations = (CompoundButton) findViewById(R.id.mobile_optimizations);
 		presenceQueueTimeout = (Spinner) findViewById(R.id.presence_queue_timeout);
 
-		boolean available_v1 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V1);
-		boolean available_v2 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V2);
+		boolean available_v1 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V1)
+				|| Features.MOBILE_V1.equals(accountManager.getUserData(account, Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY));
+		boolean available_v2 = isMobileAvailable(getMulti().get(accountJid), Features.MOBILE_V2)
+				|| Features.MOBILE_V2.equals(accountManager.getUserData(account, Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY));
 		mobileOptimizations.setEnabled(available_v1 || available_v2);
 		presenceQueueTimeout.setEnabled(available_v1 && !available_v2);
 

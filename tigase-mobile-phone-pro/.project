@@ -3,6 +3,7 @@
 	<name>tigase-mobile-phone-pro</name>
 	<comment></comment>
 	<projects>
+		<project>tigase-mobile</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

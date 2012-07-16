@@ -7,6 +7,7 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -42,62 +43,34 @@ public class IncomingFileActivity extends Activity {
 	private JID sender;
 	private String senderName;
 	private String sid;
+	private String tag;
 	private String store = "Download";
 
 	public void accept(View view) {
 		Log.v(TAG, "incoming file accepted");
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-		final JID sender = this.sender;
-		final String id = this.id;
-		final String sid = this.sid;
-		final String filename = this.filename;
-		final String mimetype = this.mimetype;
-		final File destination = getPathToSave(this.filename);
-		final long filesize = this.filesize;
-		new Thread() {
-			@Override
-			public void run() {
-				FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
-				try {
-					RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
-					final FileTransfer ft = new FileTransfer(jaxmpp, sender, ri != null ? ri.getName() : null, filename,
-							filesize, destination);
-					ft.mimetype = mimetype;
-					ft.setSid(sid);
-					AndroidFileTransferUtility.registerFileTransferForStreamhost(sid, ft);
-					ftModule.acceptStreamInitiation(sender, id, Features.BYTESTREAMS);
-				} catch (JaxmppException e) {
-					Log.e(TAG, "Could not send stream initiation accept", e);
-				}
-			}
-		}.start();
 
+		Intent intent = new Intent(getApplicationContext(), JaxmppService.class);
+		intent.putExtra("tag", tag);
+		intent.putExtra("account", account.toString());
+		intent.putExtra("sender", sender.toString());
+		intent.putExtra("id", id);
+		intent.putExtra("sid", sid);
+		intent.putExtra("filename", filename);
+		if (filesize != null) {
+			intent.putExtra("filesize", filesize);
+		}
+		intent.setAction(JaxmppService.ACTION_FILETRANSFER);
+		intent.putExtra("filetransferAction", "accept");
+		intent.putExtra("mimetype", mimetype);
+		intent.putExtra("store", store);
+		
+		startService(intent);
+		
 		finish();
 	}
 
 	private Jaxmpp getJaxmpp(BareJID account) {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
-	}
-
-	private File getPathToSave(String filename) {
-		File path = null;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-			String type = Environment.DIRECTORY_DOWNLOADS;
-			if (store != null) {
-				if ("Pictures".equals(store)) {
-					type = Environment.DIRECTORY_PICTURES;
-				} else if ("Music".equals(store)) {
-					type = Environment.DIRECTORY_MUSIC;
-				} else if ("Movies".equals(store)) {
-					type = Environment.DIRECTORY_MOVIES;
-				}
-			}
-			path = Environment.getExternalStoragePublicDirectory(type);
-		}
-		if (path == null) {
-			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
-		}
-		return new File(path, filename);
 	}
 
 	// @Override
@@ -130,33 +103,6 @@ public class IncomingFileActivity extends Activity {
 	// return true;
 	// }
 
-	private String guessMimeType() {
-		int idx = filename.lastIndexOf(".");
-		if (idx == -1) {
-			return null;
-		}
-		String suffix = this.filename.substring(idx + 1).toLowerCase();
-		if (suffix.equals("png")) {
-			return "image/png";
-		} else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
-			return "image/jpeg";
-		} else if (suffix.equals("avi")) {
-			return "video/avi";
-		} else if (suffix.equals(".mkv")) {
-			return "video/x-matroska";
-		} else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
-			return "video/mpeg";
-		} else if (suffix.equals(".mp3")) {
-			return "audio/mpeg3";
-		} else if (suffix.equals(".ogg")) {
-			return "audio/ogg";
-		} else if (suffix.equals(".pdf")) {
-			return "application/pdf";
-		} else {
-			return null;
-		}
-	}
-
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -164,6 +110,7 @@ public class IncomingFileActivity extends Activity {
 		setContentView(R.layout.incoming_file);
 
 		Intent intent = getIntent();
+		tag = intent.getStringExtra("tag");
 		account = JID.jidInstance(intent.getStringExtra("account"));
 		sender = JID.jidInstance(intent.getStringExtra("sender"));
 		id = intent.getStringExtra("id");
@@ -184,7 +131,7 @@ public class IncomingFileActivity extends Activity {
 		}
 		mimetype = intent.getStringExtra("mimetype");
 		if (mimetype == null) {
-			mimetype = guessMimeType();
+			mimetype = AndroidFileTransferUtility.guessMimeType(filename);
 		}
 		Log.v(TAG, "got mimetype = " + mimetype);
 
@@ -249,19 +196,20 @@ public class IncomingFileActivity extends Activity {
 	}
 
 	public void reject(View view) {
-		Log.v(TAG, "incoming file rejected");
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-		new Thread() {
-			@Override
-			public void run() {
-				FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
-				try {
-					ftModule.rejectStreamInitiation(sender, id);
-				} catch (JaxmppException e) {
-					Log.e(TAG, "Could not send stream initiation reject", e);
-				}
-			}
-		}.start();
+		Intent intent = new Intent(getApplicationContext(), JaxmppService.class);
+		intent.putExtra("tag", tag);
+		intent.putExtra("account", account.toString());
+		intent.putExtra("sender", sender.toString());
+		intent.putExtra("id", id);
+		intent.putExtra("sid", sid);
+		intent.putExtra("filename", filename);
+		if (filesize != null) {
+			intent.putExtra("filesize", filesize);
+		}
+		intent.setAction(JaxmppService.ACTION_FILETRANSFER);
+		intent.putExtra("filetransferAction", "reject");
+		
+		startService(intent);
 
 		finish();
 	}

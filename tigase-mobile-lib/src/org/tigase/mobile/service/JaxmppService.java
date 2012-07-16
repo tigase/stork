@@ -1,5 +1,6 @@
 package org.tigase.mobile.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -8,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,6 +30,7 @@ import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
+import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -92,6 +95,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -195,6 +199,7 @@ public class JaxmppService extends Service {
 	}
 
 	private static final String ACTION_KEEPALIVE = "org.tigase.mobile.service.JaxmppService.KEEP_ALIVE";
+	public static final String ACTION_FILETRANSFER = "org.tigase.mobile.service.JaxmppService.ACTION_FILETRANSFER";
 
 	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
 
@@ -393,6 +398,8 @@ public class JaxmppService extends Service {
 		}.start();
 	}
 
+	// added to fix Eclipse error
+	@SuppressLint("NewApi")
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
@@ -882,6 +889,23 @@ public class JaxmppService extends Service {
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
 				JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
+				
+				// is it good place to change availability of server features?
+				AccountManager accountManager = AccountManager.get(getApplicationContext());
+				String jidStr = jaxmpp.getSessionObject().getUserBareJid().toString();
+				for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
+					if (jidStr.equals(acc.name)) {
+						Account account = acc;
+						Map<String, String> data = new HashMap<String, String>();
+						AuthenticatorActivity.processJaxmppForFeatures(jaxmpp, data);
+						for (String key : data.keySet()) {
+							String value = data.get(key);
+							accountManager.setUserData(account, key, value);
+						}
+						break;
+					}
+				}
+				
 				if (mobileModeEnabled) {
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
@@ -1142,26 +1166,23 @@ public class JaxmppService extends Service {
 		notificationManager.cancel(NOTIFICATION_ID);
 	}
 
+	@SuppressLint("NewApi")
 	private void notificationFileTransferRequest(FileTransferRequestEvent ev) {
 		long whenNotify = System.currentTimeMillis();
-		String tag = ev.getSender().toString() + ":" + ev.getSid();
-
 		Jaxmpp jaxmpp = getMulti().get(ev.getSessionObject());
+		String tag = ev.getSender().toString() + " -> "
+				+ jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID).toString() + " file = "
+				+ ev.getFilename();
+
 		RosterItem ri = jaxmpp.getRoster().get(ev.getSender().getBareJid());
 
 		int ico = android.R.drawable.stat_sys_download;
 		String notificationTitle = getResources().getString(R.string.service_incoming_file_notification_title,
 				ev.getFilename(), ri != null && ri.getName() != null ? ri.getName() : ev.getSender().getBareJid().toString());
-		String notificationText = "";
+		String notificationText = getResources().getString(R.string.service_incoming_file_notification_text,
+				ev.getFilename());
 
-		Notification notification = new Notification(ico, notificationTitle, whenNotify);
-		notification.flags |= Notification.FLAG_AUTO_CANCEL;
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.defaults |= Notification.DEFAULT_SOUND;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
-
+		
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = new Intent(context, IncomingFileActivity.class);
@@ -1170,6 +1191,7 @@ public class JaxmppService extends Service {
 		intent.putExtra("id", ev.getId());
 		intent.putExtra("sid", ev.getSid());
 		intent.putExtra("filename", ev.getFilename());
+		intent.putExtra("tag", tag);
 		if (ev.getFilesize() != null) {
 			intent.putExtra("filesize", ev.getFilesize());
 		}
@@ -1177,8 +1199,70 @@ public class JaxmppService extends Service {
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT
 				| PendingIntent.FLAG_ONE_SHOT);
-		notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
+		
+		
+		Notification notification = null;
+		if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+			Notification.Builder builder = new Notification.Builder(getApplicationContext());
+			builder.setDefaults(Notification.DEFAULT_SOUND);
+			builder.setSmallIcon(ico).setContentTitle(notificationTitle);
+			builder.setAutoCancel(true).setLights(Color.GREEN, 500, 500);
+			builder.setContentIntent(pendingIntent).setContentText(notificationText);
+			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+				builder.setPriority(Notification.PRIORITY_HIGH).setOngoing(true);
+				// intent to reject
+				Intent intentReject = new Intent(context, JaxmppService.class);
+				intentReject.putExtra("tag", tag);
+				intentReject.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+				intentReject.putExtra("sender", ev.getSender().toString());
+				intentReject.putExtra("id", ev.getId());
+				intentReject.putExtra("sid", ev.getSid());
+				intentReject.putExtra("filename", ev.getFilename());
+				if (ev.getFilesize() != null) {
+					intentReject.putExtra("filesize", ev.getFilesize());
+				}
+				intentReject.putExtra("mimetype", ev.getMimetype());
+				intentReject.setAction(ACTION_FILETRANSFER);
+				intentReject.putExtra("filetransferAction", "reject");
+				builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.reject), 
+						PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
+						| PendingIntent.FLAG_ONE_SHOT));
+				// intent to accept 
+				Intent intentAccept = new Intent(context, JaxmppService.class);
+				intentAccept.putExtra("tag", tag);
+				intentAccept.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+				intentAccept.putExtra("sender", ev.getSender().toString());
+				intentAccept.putExtra("id", ev.getId());
+				intentAccept.putExtra("sid", ev.getSid());
+				intentAccept.putExtra("filename", ev.getFilename());
+				if (ev.getFilesize() != null) {
+					intentAccept.putExtra("filesize", ev.getFilesize());
+				}
+				intentAccept.putExtra("mimetype", ev.getMimetype());
+				intentAccept.setAction(ACTION_FILETRANSFER);
+				intentAccept.putExtra("filetransferAction", "accept");
+				builder.addAction(android.R.drawable.ic_menu_save, getString(R.string.accept), 
+						PendingIntent.getService(context, 2, intentAccept, PendingIntent.FLAG_CANCEL_CURRENT
+						| PendingIntent.FLAG_ONE_SHOT));
 
+				notification = builder.build();
+			}
+			else {
+				notification = builder.getNotification();
+			}
+			notification.flags |= Notification.FLAG_SHOW_LIGHTS;			
+		}
+		else {
+			notification = new Notification(ico, notificationTitle, whenNotify);
+			notification.flags |= Notification.FLAG_AUTO_CANCEL;
+			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+			notification.defaults |= Notification.DEFAULT_SOUND;
+			notification.ledARGB = Color.GREEN;
+			notification.ledOffMS = 500;
+			notification.ledOnMS = 500;
+			notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
+		}
+		
 		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
 	}
 
@@ -1311,6 +1395,7 @@ public class JaxmppService extends Service {
 
 	}
 
+	@SuppressLint("NewApi")
 	private void notificationUpdateFileTransferProgress(FileTransfer ft) {
 		long whenNotify = System.currentTimeMillis();
 		String tag = ft.toString();
@@ -1349,7 +1434,7 @@ public class JaxmppService extends Service {
 
 		case active:
 			flags |= Notification.FLAG_ONGOING_EVENT;
-			flags |= Notification.FLAG_NO_CLEAR;
+			flags |= Notification.FLAG_NO_CLEAR;			
 			notificationText = getResources().getString(R.string.service_file_transfer_progress, ft.getProgress());
 			break;
 
@@ -1365,9 +1450,6 @@ public class JaxmppService extends Service {
 			break;
 		}
 
-		Notification notification = new Notification(ico, notificationTitle, whenNotify);
-		notification.flags = flags;
-
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = null;
@@ -1379,8 +1461,34 @@ public class JaxmppService extends Service {
 			intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		}
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-		notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
 
+		Notification notification = null;
+		if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+			Notification.Builder builder = new Notification.Builder(getApplicationContext());
+			builder.setSmallIcon(ico);
+			FileTransfer.State state = ft.getState();
+			builder.setDefaults(0).setContentTitle(notificationTitle);
+			builder.setContentText(notificationText);
+			boolean finished = state == FileTransfer.State.error || state == FileTransfer.State.finished;
+			builder.setAutoCancel(finished);
+			builder.setOngoing(!finished);
+			builder.setContentIntent(pendingIntent);
+			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT && !finished) {
+				builder.setProgress(100, ft.getProgress(), state == FileTransfer.State.connecting || state == FileTransfer.State.negotiating);
+			}
+			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+				notification = builder.build();
+			}
+			else {
+				notification = builder.getNotification();
+			}
+		}
+		else {
+			notification = new Notification(ico, notificationTitle, whenNotify);
+			notification.flags = flags;
+
+			notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
+		}
 		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
 	}
 
@@ -1626,6 +1734,8 @@ public class JaxmppService extends Service {
 			Log.i(TAG, "onStart()");
 	}
 
+	// added to fix Eclipse error
+	@SuppressLint("NewApi")
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)
@@ -1635,6 +1745,10 @@ public class JaxmppService extends Service {
 			if (intent.getAction().equals(ACTION_KEEPALIVE)) {
 				keepAlive();
 			}
+			else if (intent.getAction().equals(ACTION_FILETRANSFER)) {
+				processFileTransferAction(intent);
+			}
+			
 		} else {
 
 			SocketThread.startTreads();
@@ -1666,6 +1780,59 @@ public class JaxmppService extends Service {
 		return START_STICKY;
 	}
 
+	protected void processFileTransferAction(Intent intent) {
+		final JID account = JID.jidInstance(intent.getStringExtra("account"));
+		final JID sender = JID.jidInstance(intent.getStringExtra("sender"));
+		final String id = intent.getStringExtra("id");
+		final String sid = intent.getStringExtra("sid");		
+		final String filename = intent.getStringExtra("filename");
+		final String tag = intent.getStringExtra("tag");
+		
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
+		if ("reject".equals(intent.getStringExtra("filetransferAction"))) {
+			Log.v(TAG, "incoming file rejected");
+			notificationManager.cancel(tag, FILE_TRANSFER_NOTIFICATION_ID);
+			new Thread() {
+				@Override
+				public void run() {
+					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					try {
+						ftModule.rejectStreamInitiation(sender, id);
+					} catch (JaxmppException e) {
+						Log.e(TAG, "Could not send stream initiation reject", e);
+					}
+				}
+			}.start();
+		}
+		else if ("accept".equals(intent.getStringExtra("filetransferAction"))) {
+			String mimetype = intent.getStringExtra("mimetype");
+			if (mimetype == null) {
+				mimetype = AndroidFileTransferUtility.guessMimeType(filename);
+			}
+			String store = intent.getStringExtra("store");
+			final File destination = AndroidFileTransferUtility.getPathToSave(filename, mimetype, store);
+			final long filesize = intent.getLongExtra("filesize", 0);
+			RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
+			final FileTransfer ft = new FileTransfer(jaxmpp, sender, ri != null ? ri.getName() : null, filename,
+					filesize, destination);
+			ft.mimetype = mimetype;
+			new Thread() {
+				@Override
+				public void run() {
+					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					try {
+						ft.setSid(sid);
+						AndroidFileTransferUtility.registerFileTransferForStreamhost(sid, ft);
+						ftModule.acceptStreamInitiation(sender, id, Features.BYTESTREAMS);
+					} catch (JaxmppException e) {
+						Log.e(TAG, "Could not send stream initiation accept", e);
+					}
+				}
+			}.start();
+			
+		}
+	}
+	
 	protected void onSubscribeRequest(PresenceEvent be) {
 		String notiticationTitle = getResources().getString(R.string.service_authentication_request_notification_title,
 				be.getJid());
@@ -1736,7 +1903,7 @@ public class JaxmppService extends Service {
 			if (jaxmpp == null)
 				return;
 			final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
-			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid),
+			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid), (long) 3*60*1000,
 					new VCardAsyncCallback() {
 
 						@Override
@@ -2103,4 +2270,5 @@ public class JaxmppService extends Service {
 		// Synchronize contact status
 		SyncAdapter.syncContactStatus(getApplicationContext(), be);
 	}
+	
 }

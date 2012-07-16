@@ -580,6 +580,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					viewPager.getAdapter().notifyDataSetChanged();
 				}
 				try {
+					// NPE - why be.getMessage() is null here?
+					if (be.getMessage() == null || be.getMessage().getFrom() == null) return;
 					BareJID from = be.getMessage().getFrom().getBareJid();
 					RosterItem it = be.getSessionObject().getRoster().get(from);
 					if (it != null) {

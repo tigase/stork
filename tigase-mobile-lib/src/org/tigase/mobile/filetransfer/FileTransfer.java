@@ -155,6 +155,20 @@ public class FileTransfer {
 		return state;
 	}
 
+	public void outgoingConnected() throws JaxmppException {
+		try {
+			Log.v(TAG, "activation for " + buddyJid.toString() + " succeeded");
+			state = State.active;
+			updateProgress();
+			outgoingBuffer = readData();
+			service.sendData(outgoingBuffer);
+		} catch (Exception ex) {
+			Log.e(TAG, "stopping channel due to exception", ex);
+			transferError("not able to send file");
+			stop();
+		}
+	}
+
 	private void outgoingConnectedToProxy(final FileTransferModule ftModule) throws JaxmppException {
 		ftModule.requestActivate(proxyJid, sid, buddyJid.toString(), new ActivateCallback() {
 
@@ -166,15 +180,7 @@ public class FileTransfer {
 
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
-				Log.v(TAG, "activation for " + buddyJid.toString() + " succeeded");
-				state = State.active;
-				updateProgress();
-				try {
-					outgoingBuffer = readData();
-					service.sendData(outgoingBuffer);
-				} catch (Exception ex) {
-					stop();
-				}
+				outgoingConnected();
 			}
 
 			@Override
@@ -243,6 +249,10 @@ public class FileTransfer {
 
 	public void setProxyJid(JID jid) {
 		this.proxyJid = jid;
+	}
+
+	public void setService(Socks5IOService serv) {
+		this.service = serv;
 	}
 
 	public void setSid(String sid) {
