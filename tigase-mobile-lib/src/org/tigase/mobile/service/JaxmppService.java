@@ -126,7 +126,6 @@ import android.net.NetworkInfo;
 import android.net.SSLCertificateSocketFactory;
 import android.net.SSLSessionCache;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -212,21 +211,7 @@ public class JaxmppService extends Service {
 
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
-	private static Executor executor = new Executor() {
-
-		@Override
-		public void execute(final Runnable command) {
-			AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
-
-				@Override
-				protected Void doInBackground(Void... params) {
-					command.run();
-					return null;
-				}
-			};
-			t.execute();
-		}
-	};
+	private static Executor executor = new StanzaExecutor();
 
 	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
 
