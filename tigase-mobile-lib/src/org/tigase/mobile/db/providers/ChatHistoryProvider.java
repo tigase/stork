@@ -177,8 +177,20 @@ public class ChatHistoryProvider extends ContentProvider {
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		if (match(uri) != CHAT_ITEM_URI_INDICATOR)
+		if (match(uri) != CHAT_ITEM_URI_INDICATOR) {
+			if (match(uri) == CHAT_URI_INDICATOR) {
+				final SQLiteDatabase db = dbHelper.getWritableDatabase();
+				String jid = uri.getLastPathSegment();
+				int changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_JID + "='" + jid + "' AND "
+						+ ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null);
+				
+				if (changed > 0) {
+					getContext().getContentResolver().notifyChange(uri, null);
+				}
+				return changed;
+			}
 			throw new IllegalArgumentException("Unknown URI ");
+		}
 
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		long pk = Long.parseLong(uri.getLastPathSegment());

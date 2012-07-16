@@ -48,6 +48,7 @@ import org.tigase.mobile.net.SocketThread;
 import org.tigase.mobile.pubsub.GeolocationModule;
 import org.tigase.mobile.roster.AuthRequestActivity;
 import org.tigase.mobile.sync.SyncAdapter;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
@@ -112,6 +113,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Criteria;
@@ -787,7 +789,7 @@ public class JaxmppService extends Service {
 					} else {
 						values.put(ChatTableMetaData.FIELD_BODY, msg.getBody());
 					}
-					values.put(ChatTableMetaData.FIELD_STATE, 0);
+					values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_INCOMING_UNREAD);
 					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
 
 					getContentResolver().insert(uri, values);
@@ -2170,6 +2172,7 @@ public class JaxmppService extends Service {
 		usedNetworkType = type;
 	}
 
+	@SuppressLint("NewApi")
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
@@ -2177,20 +2180,12 @@ public class JaxmppService extends Service {
 				event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().toString();
-
+		
 		String notiticationTitle = getResources().getString(R.string.service_message_from_notification_title, n);
 		String expandedNotificationText = notiticationTitle;
 
 		long whenNotify = System.currentTimeMillis();
-		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
-		notification.flags = Notification.FLAG_AUTO_CANCEL;
-		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		Notification notification = null;
 
 		final Context context = getApplicationContext();
 
@@ -2202,8 +2197,71 @@ public class JaxmppService extends Service {
 		if (event.getChat() != null)
 			intent.putExtra("chatId", event.getChat().getId());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);		
+		
+		if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+			Notification.Builder builder = new Notification.Builder(context);
+			builder.setContentTitle(notiticationTitle).setLights(Color.GREEN, 500, 500);
+			Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
+			builder.setSmallIcon(ico).setContentIntent(pendingIntent);
+			if (avatar != AvatarHelper.mPlaceHolderBitmap) {
+				builder.setLargeIcon(avatar);
+			}
+			Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(event.getChat().getJid().getBareJid().toString()));
+			Cursor c = getContentResolver().query(uri, null, ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null, null);
+			try {
+				int count = c.getCount();
+				int fieldBodyIdx = c.getColumnIndex(ChatTableMetaData.FIELD_BODY);
+				
+				if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+					Notification.InboxStyle style = new Notification.InboxStyle();
+					int used = 0;
+					while (c.moveToNext() && used < 3) {
+						String body = c.getString(fieldBodyIdx);
+						style.addLine(body);
+						used++;
+					}
+					if (count > 3) {
+						style.setSummaryText("...");						
+					}
+					else if (count <= 3) {
+						style.setSummaryText("");
+					}
+					builder.setStyle(style);
+				}
+				else {
+				}
+				builder.setNumber(count).setAutoCancel(true);
+			} 
+			catch (Exception ex) {
+				Log.e(TAG, "exception preparing notification", ex);
+			}
+			finally {
+				c.close();
+			}
+		
+			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+				builder.setPriority(Notification.PRIORITY_HIGH);
+				notification = builder.build();
+			}
+			else {
+				notification = builder.getNotification();
+			}
+			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		}
+		else {		
+			notification = new Notification(ico, notiticationTitle, whenNotify);
+			notification.flags = Notification.FLAG_AUTO_CANCEL;
+			// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+			notification.defaults |= Notification.DEFAULT_SOUND;
+
+			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+			notification.ledARGB = Color.GREEN;
+			notification.ledOffMS = 500;
+			notification.ledOnMS = 500;
+
+			notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+		}
 
 		if (currentChatIdFocus != event.getChat().getId())
 			notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);

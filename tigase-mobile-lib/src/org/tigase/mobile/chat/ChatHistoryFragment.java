@@ -21,6 +21,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -295,6 +296,12 @@ public class ChatHistoryFragment extends Fragment {
 				if (DEBUG)
 					Log.d(TAG, "Found chat with " + chat.getJid() + " (id=" + chatId + ")");
 
+				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(c.getChat().getJid().getBareJid().toString()));
+				ContentValues values = new ContentValues();
+				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, c.getChat().getJid().getBareJid().toString());
+				values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_INCOMING);
+				getActivity().getContentResolver().update(uri, values, null, null);
+				
 				return;
 			}
 		}

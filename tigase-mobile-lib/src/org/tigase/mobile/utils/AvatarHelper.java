@@ -6,6 +6,7 @@ import org.tigase.mobile.db.providers.RosterProvider;
 
 //import tigase.jaxmpp.R;
 import tigase.jaxmpp.core.client.BareJID;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -24,7 +25,7 @@ public class AvatarHelper {
 	private static final String TAG = "AvatarHelper";
 	
 	private static Context context;
-	private static Bitmap mPlaceHolderBitmap;
+	public static Bitmap mPlaceHolderBitmap;
 	private static LruCache<BareJID,Bitmap> avatarCache;	
 	
 	public static void initilize(Context context_) {
@@ -40,6 +41,7 @@ public class AvatarHelper {
 
 		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
 				avatarCache = new LruCache<BareJID, Bitmap>(cacheSize) {
+					@SuppressLint("NewApi")
 					@Override
 					protected int sizeOf(BareJID key, Bitmap bitmap) {
 						// The cache size will be measured in bytes rather than
@@ -83,7 +85,7 @@ public class AvatarHelper {
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inJustDecodeBounds = true;
 					BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-					options.inSampleSize = calculateSize(options, 64, 64);
+					options.inSampleSize = calculateSize(options, 96, 96);
 					options.inJustDecodeBounds = false;
 					bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
 					if (bmp != null) {
