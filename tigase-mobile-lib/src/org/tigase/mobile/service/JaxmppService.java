@@ -154,13 +154,20 @@ public class JaxmppService extends Service {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			final int page = intent.getIntExtra("page", -1);
-			final long chatId = intent.getLongExtra("chatId", -1);
 
 			onPageChanged(page);
 
-			currentChatIdFocus = chatId;
+			final long chatId = intent.getLongExtra("chatId", -1);
+			final long roomId = intent.getLongExtra("roomId", -1);
 
-			notificationManager.cancel("chatId:" + chatId, CHAT_NOTIFICATION_ID);
+			if (chatId != -1) {
+				currentChatIdFocus = chatId;
+				currentRoomIdFocus = -1;
+				notificationManager.cancel("chatId:" + chatId, CHAT_NOTIFICATION_ID);
+			} else if (roomId != -1) {
+				currentChatIdFocus = -1;
+				currentRoomIdFocus = roomId;
+			}
 		}
 	}
 
@@ -200,9 +207,9 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private static final String ACTION_KEEPALIVE = "org.tigase.mobile.service.JaxmppService.KEEP_ALIVE";
 	public static final String ACTION_FILETRANSFER = "org.tigase.mobile.service.JaxmppService.ACTION_FILETRANSFER";
 
+	private static final String ACTION_KEEPALIVE = "org.tigase.mobile.service.JaxmppService.KEEP_ALIVE";
 	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
@@ -655,6 +662,8 @@ public class JaxmppService extends Service {
 
 	private long currentChatIdFocus = -1;
 
+	private long currentRoomIdFocus = -1;
+
 	private final Listener<FileTransferProgressEvent> fileTransferProgressListener;
 
 	private final Listener<FileTransferRequestEvent> fileTransferRequestListener;
@@ -891,7 +900,7 @@ public class JaxmppService extends Service {
 			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
 				sendUnsentMessages();
 				JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
-				
+
 				// is it good place to change availability of server features?
 				AccountManager accountManager = AccountManager.get(getApplicationContext());
 				String jidStr = jaxmpp.getSessionObject().getUserBareJid().toString();
@@ -907,7 +916,7 @@ public class JaxmppService extends Service {
 						break;
 					}
 				}
-				
+
 				if (mobileModeEnabled) {
 					setMobileMode(jaxmpp, mobileModeEnabled);
 				}
@@ -1181,10 +1190,8 @@ public class JaxmppService extends Service {
 		int ico = android.R.drawable.stat_sys_download;
 		String notificationTitle = getResources().getString(R.string.service_incoming_file_notification_title,
 				ev.getFilename(), ri != null && ri.getName() != null ? ri.getName() : ev.getSender().getBareJid().toString());
-		String notificationText = getResources().getString(R.string.service_incoming_file_notification_text,
-				ev.getFilename());
+		String notificationText = getResources().getString(R.string.service_incoming_file_notification_text, ev.getFilename());
 
-		
 		String expandedNotificationTitle = notificationTitle;
 		Context context = getApplicationContext();
 		Intent intent = new Intent(context, IncomingFileActivity.class);
@@ -1201,8 +1208,7 @@ public class JaxmppService extends Service {
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT
 				| PendingIntent.FLAG_ONE_SHOT);
-		
-		
+
 		Notification notification = null;
 		if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
 			Notification.Builder builder = new Notification.Builder(getApplicationContext());
@@ -1226,10 +1232,12 @@ public class JaxmppService extends Service {
 				intentReject.putExtra("mimetype", ev.getMimetype());
 				intentReject.setAction(ACTION_FILETRANSFER);
 				intentReject.putExtra("filetransferAction", "reject");
-				builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.reject), 
+				builder.addAction(
+						android.R.drawable.ic_menu_close_clear_cancel,
+						getString(R.string.reject),
 						PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
-						| PendingIntent.FLAG_ONE_SHOT));
-				// intent to accept 
+								| PendingIntent.FLAG_ONE_SHOT));
+				// intent to accept
 				Intent intentAccept = new Intent(context, JaxmppService.class);
 				intentAccept.putExtra("tag", tag);
 				intentAccept.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
@@ -1243,18 +1251,18 @@ public class JaxmppService extends Service {
 				intentAccept.putExtra("mimetype", ev.getMimetype());
 				intentAccept.setAction(ACTION_FILETRANSFER);
 				intentAccept.putExtra("filetransferAction", "accept");
-				builder.addAction(android.R.drawable.ic_menu_save, getString(R.string.accept), 
+				builder.addAction(
+						android.R.drawable.ic_menu_save,
+						getString(R.string.accept),
 						PendingIntent.getService(context, 2, intentAccept, PendingIntent.FLAG_CANCEL_CURRENT
-						| PendingIntent.FLAG_ONE_SHOT));
+								| PendingIntent.FLAG_ONE_SHOT));
 
 				notification = builder.build();
-			}
-			else {
+			} else {
 				notification = builder.getNotification();
 			}
-			notification.flags |= Notification.FLAG_SHOW_LIGHTS;			
-		}
-		else {
+			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		} else {
 			notification = new Notification(ico, notificationTitle, whenNotify);
 			notification.flags |= Notification.FLAG_AUTO_CANCEL;
 			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
@@ -1264,7 +1272,7 @@ public class JaxmppService extends Service {
 			notification.ledOnMS = 500;
 			notification.setLatestEventInfo(context, expandedNotificationTitle, notificationText, pendingIntent);
 		}
-		
+
 		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
 	}
 
@@ -1436,7 +1444,7 @@ public class JaxmppService extends Service {
 
 		case active:
 			flags |= Notification.FLAG_ONGOING_EVENT;
-			flags |= Notification.FLAG_NO_CLEAR;			
+			flags |= Notification.FLAG_NO_CLEAR;
 			notificationText = getResources().getString(R.string.service_file_transfer_progress, ft.getProgress());
 			break;
 
@@ -1476,16 +1484,15 @@ public class JaxmppService extends Service {
 			builder.setOngoing(!finished);
 			builder.setContentIntent(pendingIntent);
 			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT && !finished) {
-				builder.setProgress(100, ft.getProgress(), state == FileTransfer.State.connecting || state == FileTransfer.State.negotiating);
+				builder.setProgress(100, ft.getProgress(), state == FileTransfer.State.connecting
+						|| state == FileTransfer.State.negotiating);
 			}
 			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 				notification = builder.build();
-			}
-			else {
+			} else {
 				notification = builder.getNotification();
 			}
-		}
-		else {
+		} else {
 			notification = new Notification(ico, notificationTitle, whenNotify);
 			notification.flags = flags;
 
@@ -1746,11 +1753,10 @@ public class JaxmppService extends Service {
 		if (intent != null && intent.getAction() != null) {
 			if (intent.getAction().equals(ACTION_KEEPALIVE)) {
 				keepAlive();
-			}
-			else if (intent.getAction().equals(ACTION_FILETRANSFER)) {
+			} else if (intent.getAction().equals(ACTION_FILETRANSFER)) {
 				processFileTransferAction(intent);
 			}
-			
+
 		} else {
 
 			SocketThread.startTreads();
@@ -1782,59 +1788,6 @@ public class JaxmppService extends Service {
 		return START_STICKY;
 	}
 
-	protected void processFileTransferAction(Intent intent) {
-		final JID account = JID.jidInstance(intent.getStringExtra("account"));
-		final JID sender = JID.jidInstance(intent.getStringExtra("sender"));
-		final String id = intent.getStringExtra("id");
-		final String sid = intent.getStringExtra("sid");		
-		final String filename = intent.getStringExtra("filename");
-		final String tag = intent.getStringExtra("tag");
-		
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-		if ("reject".equals(intent.getStringExtra("filetransferAction"))) {
-			Log.v(TAG, "incoming file rejected");
-			notificationManager.cancel(tag, FILE_TRANSFER_NOTIFICATION_ID);
-			new Thread() {
-				@Override
-				public void run() {
-					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
-					try {
-						ftModule.rejectStreamInitiation(sender, id);
-					} catch (JaxmppException e) {
-						Log.e(TAG, "Could not send stream initiation reject", e);
-					}
-				}
-			}.start();
-		}
-		else if ("accept".equals(intent.getStringExtra("filetransferAction"))) {
-			String mimetype = intent.getStringExtra("mimetype");
-			if (mimetype == null) {
-				mimetype = AndroidFileTransferUtility.guessMimeType(filename);
-			}
-			String store = intent.getStringExtra("store");
-			final File destination = AndroidFileTransferUtility.getPathToSave(filename, mimetype, store);
-			final long filesize = intent.getLongExtra("filesize", 0);
-			RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
-			final FileTransfer ft = new FileTransfer(jaxmpp, sender, ri != null ? ri.getName() : null, filename,
-					filesize, destination);
-			ft.mimetype = mimetype;
-			new Thread() {
-				@Override
-				public void run() {
-					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
-					try {
-						ft.setSid(sid);
-						AndroidFileTransferUtility.registerFileTransferForStreamhost(sid, ft);
-						ftModule.acceptStreamInitiation(sender, id, Features.BYTESTREAMS);
-					} catch (JaxmppException e) {
-						Log.e(TAG, "Could not send stream initiation accept", e);
-					}
-				}
-			}.start();
-			
-		}
-	}
-	
 	protected void onSubscribeRequest(PresenceEvent be) {
 		String notiticationTitle = getResources().getString(R.string.service_authentication_request_notification_title,
 				be.getJid());
@@ -1862,6 +1815,58 @@ public class JaxmppService extends Service {
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("authRequest:" + be.getJid(), AUTH_REQUEST_NOTIFICATION_ID, notification);
+	}
+
+	protected void processFileTransferAction(Intent intent) {
+		final JID account = JID.jidInstance(intent.getStringExtra("account"));
+		final JID sender = JID.jidInstance(intent.getStringExtra("sender"));
+		final String id = intent.getStringExtra("id");
+		final String sid = intent.getStringExtra("sid");
+		final String filename = intent.getStringExtra("filename");
+		final String tag = intent.getStringExtra("tag");
+
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
+		if ("reject".equals(intent.getStringExtra("filetransferAction"))) {
+			Log.v(TAG, "incoming file rejected");
+			notificationManager.cancel(tag, FILE_TRANSFER_NOTIFICATION_ID);
+			new Thread() {
+				@Override
+				public void run() {
+					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					try {
+						ftModule.rejectStreamInitiation(sender, id);
+					} catch (JaxmppException e) {
+						Log.e(TAG, "Could not send stream initiation reject", e);
+					}
+				}
+			}.start();
+		} else if ("accept".equals(intent.getStringExtra("filetransferAction"))) {
+			String mimetype = intent.getStringExtra("mimetype");
+			if (mimetype == null) {
+				mimetype = AndroidFileTransferUtility.guessMimeType(filename);
+			}
+			String store = intent.getStringExtra("store");
+			final File destination = AndroidFileTransferUtility.getPathToSave(filename, mimetype, store);
+			final long filesize = intent.getLongExtra("filesize", 0);
+			RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
+			final FileTransfer ft = new FileTransfer(jaxmpp, sender, ri != null ? ri.getName() : null, filename, filesize,
+					destination);
+			ft.mimetype = mimetype;
+			new Thread() {
+				@Override
+				public void run() {
+					FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					try {
+						ft.setSid(sid);
+						AndroidFileTransferUtility.registerFileTransferForStreamhost(sid, ft);
+						ftModule.acceptStreamInitiation(sender, id, Features.BYTESTREAMS);
+					} catch (JaxmppException e) {
+						Log.e(TAG, "Could not send stream initiation accept", e);
+					}
+				}
+			}.start();
+
+		}
 	}
 
 	protected void reconnectIfAvailable(final SessionObject sessionObject) {
@@ -1905,7 +1910,7 @@ public class JaxmppService extends Service {
 			if (jaxmpp == null)
 				return;
 			final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
-			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid), (long) 3*60*1000,
+			jaxmpp.getModulesManager().getModule(VCardModule.class).retrieveVCard(JID.jidInstance(jid), (long) 3 * 60 * 1000,
 					new VCardAsyncCallback() {
 
 						@Override
@@ -2165,7 +2170,7 @@ public class JaxmppService extends Service {
 				event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().toString();
-		
+
 		String notiticationTitle = getResources().getString(R.string.service_message_from_notification_title, n);
 		String expandedNotificationText = notiticationTitle;
 
@@ -2182,8 +2187,8 @@ public class JaxmppService extends Service {
 		if (event.getChat() != null)
 			intent.putExtra("chatId", event.getChat().getId());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);		
-		
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
 		if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
 			Notification.Builder builder = new Notification.Builder(context);
 			builder.setContentTitle(notiticationTitle).setLights(Color.GREEN, 500, 500);
@@ -2192,12 +2197,14 @@ public class JaxmppService extends Service {
 			if (avatar != AvatarHelper.mPlaceHolderBitmap) {
 				builder.setLargeIcon(avatar);
 			}
-			Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(event.getChat().getJid().getBareJid().toString()));
-			Cursor c = getContentResolver().query(uri, null, ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null, null);
+			Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
+					+ Uri.encode(event.getChat().getJid().getBareJid().toString()));
+			Cursor c = getContentResolver().query(uri, null,
+					ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null, null);
 			try {
 				int count = c.getCount();
 				int fieldBodyIdx = c.getColumnIndex(ChatTableMetaData.FIELD_BODY);
-				
+
 				if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 					Notification.InboxStyle style = new Notification.InboxStyle();
 					int used = 0;
@@ -2207,34 +2214,28 @@ public class JaxmppService extends Service {
 						used++;
 					}
 					if (count > 3) {
-						style.setSummaryText("...");						
-					}
-					else if (count <= 3) {
+						style.setSummaryText("...");
+					} else if (count <= 3) {
 						style.setSummaryText("");
 					}
 					builder.setStyle(style);
-				}
-				else {
+				} else {
 				}
 				builder.setNumber(count).setAutoCancel(true);
-			} 
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				Log.e(TAG, "exception preparing notification", ex);
-			}
-			finally {
+			} finally {
 				c.close();
 			}
-		
+
 			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 				builder.setPriority(Notification.PRIORITY_HIGH);
 				notification = builder.build();
-			}
-			else {
+			} else {
 				notification = builder.getNotification();
 			}
 			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		}
-		else {		
+		} else {
 			notification = new Notification(ico, notiticationTitle, whenNotify);
 			notification.flags = Notification.FLAG_AUTO_CANCEL;
 			// notification.flags |= Notification.FLAG_ONGOING_EVENT;
@@ -2328,5 +2329,5 @@ public class JaxmppService extends Service {
 		// Synchronize contact status
 		SyncAdapter.syncContactStatus(getApplicationContext(), be);
 	}
-	
+
 }

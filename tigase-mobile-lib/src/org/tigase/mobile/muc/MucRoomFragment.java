@@ -85,6 +85,10 @@ public class MucRoomFragment extends Fragment {
 				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + room.getRoomJid()), null, null, null, null);
 	}
 
+	public Room getRoom() {
+		return room;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
