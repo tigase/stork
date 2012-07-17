@@ -8,10 +8,12 @@ import org.tigase.mobile.R;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Dialog;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
@@ -30,6 +32,8 @@ public class JoinMucDialog extends DialogFragment {
 		frag.setArguments(args);
 		return frag;
 	}
+
+	private AsyncTask<Room, Void, Void> task;
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -78,9 +82,11 @@ public class JoinMucDialog extends DialogFragment {
 					@Override
 					public void run() {
 						try {
-							jaxmpp.getModulesManager().getModule(MucModule.class).join(roomName.getEditableText().toString(),
-									mucServer.getEditableText().toString(), nickname.getEditableText().toString(),
-									password.getEditableText().toString());
+							Room room = jaxmpp.getModulesManager().getModule(MucModule.class).join(
+									roomName.getEditableText().toString(), mucServer.getEditableText().toString(),
+									nickname.getEditableText().toString(), password.getEditableText().toString());
+							if (task != null)
+								task.execute(room);
 						} catch (Exception e) {
 							Log.w("MUC", "", e);
 							// TODO Auto-generated catch block
@@ -94,5 +100,9 @@ public class JoinMucDialog extends DialogFragment {
 		});
 
 		return dialog;
+	}
+
+	public void setAsyncTask(AsyncTask<Room, Void, Void> r) {
+		this.task = r;
 	}
 }

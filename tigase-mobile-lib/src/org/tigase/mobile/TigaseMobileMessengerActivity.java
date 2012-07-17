@@ -36,6 +36,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Dialog;
@@ -50,6 +51,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -191,12 +193,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private int findChatPage(Bundle incomingExtras) {
 		if (incomingExtras != null) {
-			String s_jid = incomingExtras.getString("jid");
 			long chatId = incomingExtras.getLong("chatId", -1);
+			long roomId = incomingExtras.getLong("roomId", -1);
 			incomingExtras = null;
 			if (DEBUG)
 				Log.d(TAG, "Intent with data? chatId=" + chatId);
-			if (s_jid != null && chatId != -1) {
+			if (roomId != -1) {
+				final Integer idx = findRoom(roomId);
+				if (idx != null) {
+					int currentPage = idx + (isXLarge() ? 1 : 2);
+					if (DEBUG)
+						Log.d(TAG, "Set current page " + currentPage);
+					return currentPage;
+				}
+			} else if (chatId != -1) {
 				final Integer idx = findChat(chatId);
 				if (idx != null) {
 					int currentPage = idx + (isXLarge() ? 1 : 2);
@@ -207,6 +217,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		}
 		return -1;
+	}
+
+	protected Integer findRoom(final long chatId) {
+		List<ChatWrapper> l = getChatList();
+		for (int i = 0; i < l.size(); i++) {
+			ChatWrapper c = l.get(i);
+			if (c.isRoom() && c.getRoom().getId() == chatId)
+				return i;
+		}
+		return null;
 	}
 
 	protected ChatWrapper getChatByPageIndex(int page) {
@@ -431,6 +451,18 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					return POSITION_NONE;
 				} else if (object instanceof RosterFragment) {
 					return 1;
+				} else if (object instanceof MucRoomFragment) {
+					Log.v(TAG, "got chat history fragment");
+					Room room = ((MucRoomFragment) object).getRoom();
+					if (room != null) {
+						Integer position = findRoom(room.getId());
+						if (position != null) {
+							if (isXLarge())
+								return 1 + position;
+							return 2 + position;
+						}
+					}
+					return POSITION_NONE;
 				} else if (object instanceof ChatHistoryFragment) {
 					Log.v(TAG, "got chat history fragment");
 					Chat chat = ((ChatHistoryFragment) object).getChat();
@@ -578,18 +610,22 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					viewPager.getAdapter().notifyDataSetChanged();
 				} else if (be.getType() == MessageModule.ChatClosed) {
 					viewPager.getAdapter().notifyDataSetChanged();
+				} else if (be.getType() == MucModule.RoomClosed) {
+					viewPager.getAdapter().notifyDataSetChanged();
+				} else if (be.getType() == MucModule.JoinRequested) {
+					viewPager.getAdapter().notifyDataSetChanged();
 				}
 				try {
 					// NPE - why be.getMessage() is null here?
-					if (be.getMessage() == null || be.getMessage().getFrom() == null) return;
+					if (be.getMessage() == null || be.getMessage().getFrom() == null)
+						return;
 					BareJID from = be.getMessage().getFrom().getBareJid();
 					RosterItem it = be.getSessionObject().getRoster().get(from);
 					if (it != null) {
 						Uri insertedItem = ContentUris.withAppendedId(Uri.parse(RosterProvider.CONTENT_URI), it.getId());
 						getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
 					}
-				}
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					Log.e(TAG, ex.getMessage(), ex);
 				}
 			}
@@ -612,6 +648,23 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.joinMucRoom) {
 			JoinMucDialog newFragment = JoinMucDialog.newInstance();
+			AsyncTask<Room, Void, Void> r = new AsyncTask<Room, Void, Void>() {
+
+				@Override
+				protected Void doInBackground(Room... params) {
+					final Integer idx = findRoom(params[0].getId());
+
+					viewPager.post(new Runnable() {
+
+						@Override
+						public void run() {
+							viewPager.setCurrentItem(idx + (isXLarge() ? 1 : 2));
+						}
+					});
+					return null;
+				}
+			};
+			newFragment.setAsyncTask(r);
 			newFragment.show(getSupportFragmentManager(), "dialog");
 			return true;
 		} else if (item.getItemId() == android.R.id.home) {
@@ -666,15 +719,25 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 					Log.w(TAG, "Chat close problem!", e);
 				}
 			} else {
-				Room room = wrapper.getRoom();
+				final Room room = wrapper.getRoom();
 				final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
 						room.getSessionObject());
 				final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
-				try {
-					cm.leave(room);
-				} catch (JaxmppException e) {
-					Log.w(TAG, "Chat close problem!", e);
-				}
+
+				AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
+
+					@Override
+					protected Void doInBackground(Void... params) {
+						try {
+							cm.leave(room);
+						} catch (JaxmppException e) {
+							Log.w(TAG, "Chat close problem!", e);
+						}
+						return null;
+					}
+				};
+
+				t.execute();
 			}
 
 			viewPager.setCurrentItem(1);
@@ -723,6 +786,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
@@ -751,30 +815,40 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		}
 		if (currentPage > 1 || (currentPage > 0 && serviceActive && isXLarge())) {
-			inflater.inflate(R.menu.chat_main_menu, menu);
+			final ChatWrapper wrapper = getChatByPageIndex(this.currentPage);
 
-			// Share button support
-			MenuItem share = menu.findItem(R.id.shareButton);
-			Chat chat = getChatByPageIndex(this.currentPage).getChat();
-			if (chat == null)
+			if (wrapper.isChat()) {
+				inflater.inflate(R.menu.chat_main_menu, menu);
+
+				// Share button support
+				MenuItem share = menu.findItem(R.id.shareButton);
+
+				final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+						wrapper.getChat().getSessionObject());
+				try {
+					JID jid = wrapper.getChat().getJid();
+					boolean visible = false;
+					if (jid.getResource() == null) {
+						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+					}
+					if (jid != null) {
+						visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, wrapper.getChat().getJid(),
+								FileTransferUtility.FEATURES);
+					}
+					share.setVisible(visible);
+				} catch (XMLException e) {
+				}
+
+				if (isXLarge())
+					menu.findItem(R.id.showChatsButton).setVisible(false);
+
+			} else if (wrapper.isRoom()) {
+				inflater.inflate(R.menu.muc_main_menu, menu);
+
+				return true;
+			} else
 				return false;
-			final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
-					chat.getSessionObject());
-			try {
-				JID jid = chat.getJid();
-				boolean visible = false;
-				if (jid.getResource() == null) {
-					jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
-				}
-				if (jid != null) {
-					visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
-				}
-				share.setVisible(visible);
-			} catch (XMLException e) {
-			}
 
-			if (isXLarge())
-				menu.findItem(R.id.showChatsButton).setVisible(false);
 		}
 		return true;
 	}
@@ -858,6 +932,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewPager.postDelayed(r, 750);
 	}
 
+	@SuppressLint("NewApi")
 	private void updateActionBar() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			ActionBar actionBar = getActionBar();
