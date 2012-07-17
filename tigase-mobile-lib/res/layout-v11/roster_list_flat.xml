@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+<!--     <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="26dp"
+        android:background="@android:drawable/title_bar_tall"
+        android:padding="0dp" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/connection_status"
+            android:paddingLeft="5dp"
+            android:text="@string/app_name"
+            android:textColor="@color/title_bar_text_color"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/connection_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:paddingRight="5dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/user_offline" >
+        </ImageView>
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="26dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:padding="3dp" />
+    </RelativeLayout>  -->
+
+    <ListView
+        android:id="@+id/rosterList"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/topBar"
+        android:divider="#e5e4e5"
+        android:dividerHeight="1px"
+        android:saveEnabled="true" />
+
+</RelativeLayout>

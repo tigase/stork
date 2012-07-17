@@ -108,7 +108,9 @@ public class MucRoomFragment extends Fragment {
 		this.progressBar = (ProgressBar) view.findViewById(R.id.progressBar1);
 
 		TextView title = (TextView) view.findViewById(R.id.textView1);
-		title.setText(room.getRoomJid().toString());
+		if (title != null) {
+			title.setText(room.getRoomJid().toString());
+		}
 
 		this.ed = (EditText) view.findViewById(R.id.chat_message_entry);
 		this.ed.setOnKeyListener(new OnKeyListener() {

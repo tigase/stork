@@ -193,22 +193,28 @@ public class ChatView extends RelativeLayout {
 		this.chat = chat;
 		if (chat == null)
 			return;
+		
+		// Not needed - handled in TigaseMobileMessengerActivity - set as ActionBar subtitle
 		TextView t = (TextView) findViewById(R.id.textView1);
-		JaxmppCore jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get(
-				chat.getSessionObject());
+		if (t != null) {
+			JaxmppCore jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get(
+					chat.getSessionObject());
 
-		if (jaxmpp == null)
-			throw new RuntimeException("Account " + chat.getSessionObject().getUserBareJid() + " is unknown!");
+			if (jaxmpp == null)
+				throw new RuntimeException("Account " + chat.getSessionObject().getUserBareJid() + " is unknown!");
 
-		RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
-		t.setText("Chat with "
-				+ (ri == null ? chat.getJid().getBareJid().toString()
-						: (new RosterDisplayTools(getContext())).getDisplayName(ri)));
+			RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
+			t.setText("Chat with "
+					+ (ri == null ? chat.getJid().getBareJid().toString()
+							: (new RosterDisplayTools(getContext())).getDisplayName(ri)));
+		}
 	}
 
 	public void setImagePresence(final CPresence cp) {
 		final ImageView itemPresence = (ImageView) findViewById(R.id.user_presence);
 
+		if (itemPresence == null) return;
+		
 		itemPresence.post(new Runnable() {
 
 			@Override
@@ -252,6 +258,8 @@ public class ChatView extends RelativeLayout {
 
 	public void updateClientIndicator() {
 		final ImageView clientTypeIndicator = (ImageView) findViewById(R.id.client_type_indicator);
+		if (clientTypeIndicator == null) return;
+		
 		clientTypeIndicator.setVisibility(View.INVISIBLE);
 		if (chat != null) {
 			try {

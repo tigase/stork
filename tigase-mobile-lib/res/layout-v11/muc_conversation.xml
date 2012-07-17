@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    class="org.tigase.mobile.chat.ChatView"
+    android:orientation="vertical" >
+
+<!--    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="26dp"
+        android:background="@android:drawable/title_bar_tall"
+        android:padding="0dp" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/user_presence"
+            android:paddingLeft="5dp"
+            android:textColor="@color/title_bar_text_color"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/user_presence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:paddingRight="5dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/user_offline" >
+        </ImageView>
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="26dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:padding="3dp" />
+
+        <ImageView
+            android:id="@+id/client_type_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignRight="@+id/textView1"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:paddingRight="5dp"
+            android:scaleType="centerInside"
+            android:visibility="invisible" />
+    </RelativeLayout> -->
+
+    <ListView
+        android:id="@+id/chat_conversation_history"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/chat_send_section"
+        android:layout_below="@+id/topBar"
+        android:layout_weight="1" >
+    </ListView>
+
+    <LinearLayout
+        android:id="@+id/chat_send_section"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/my_border" >
+
+        <EditText
+            android:id="@+id/chat_message_entry"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dip"
+            android:layout_weight="1"
+            android:imeOptions="actionDone|flagNoEnterAction"
+            android:inputType="textMultiLine" >
+
+            <requestFocus />
+        </EditText>
+
+        <Button
+            android:id="@+id/chat_send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="@string/chatSendButton" />
+    </LinearLayout>
+
+</RelativeLayout>
