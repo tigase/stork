@@ -7,7 +7,9 @@ import org.tigase.mobile.accountstatus.AccountsStatusFragment;
 import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
+import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
+import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
@@ -40,6 +42,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -262,14 +265,21 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		} else if (msg > 1) {
 			((MessengerApplication) getApplication()).getTracker().trackPageView("/chatPage");
 			final ChatWrapper chat = getChatByPageIndex(msg);
-			if (chat != null && chat.isChat())
+			if (chat != null && chat.isChat()) {
+				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getChat().getJid().getBareJid().toString()));
+				ContentValues values = new ContentValues();
+				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, chat.getChat().getJid().getBareJid().toString());
+				values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_INCOMING);
+				getContentResolver().update(uri, values, null, null);
+
 				intent.putExtra("chatId", chat.getChat().getId());
+			}
 			else if (chat != null && chat.isRoom())
 				intent.putExtra("roomId", chat.getRoom().getId());
 		}
 
 		sendBroadcast(intent);
-
+		
 		helper.updateActionBar();
 		helper.invalidateOptionsMenu();
 	}

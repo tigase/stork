@@ -44,7 +44,7 @@ import android.widget.TextView;
 
 public class ChatHistoryFragment extends Fragment {
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	private static final String TAG = "tigase";
 
@@ -295,12 +295,6 @@ public class ChatHistoryFragment extends Fragment {
 				this.chat = c.getChat();
 				if (DEBUG)
 					Log.d(TAG, "Found chat with " + chat.getJid() + " (id=" + chatId + ")");
-
-				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(c.getChat().getJid().getBareJid().toString()));
-				ContentValues values = new ContentValues();
-				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, c.getChat().getJid().getBareJid().toString());
-				values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_INCOMING);
-				getActivity().getContentResolver().update(uri, values, null, null);
 				
 				return;
 			}
