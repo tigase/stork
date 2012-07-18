@@ -131,7 +131,7 @@ public class RosterFragment extends Fragment {
 
 	private Cursor c;
 
-//	private ImageView connectionStatus;
+	private ImageView connectionStatus;
 
 	private final Listener<ConnectorEvent> connectorListener;
 
@@ -408,8 +408,8 @@ public class RosterFragment extends Fragment {
 			});
 
 		}
-		// No connection status icon - we have notifications and accounts view
-//		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
+		// there can be no connection status icon - we have notifications and accounts view in Android >= 3.0
+		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
 		this.progressBar = (ProgressBar) layout.findViewById(R.id.progressBar1);
 
 		if (DEBUG)
@@ -643,26 +643,27 @@ public class RosterFragment extends Fragment {
 		else
 			st = State.connected;
 
-		// No connection status icon - we have notifications and accounts view
-//		connectionStatus.post(new Runnable() {
-//
-//			@Override
-//			public void run() {
-//				if (st == State.connected) {
-//					connectionStatus.setImageResource(R.drawable.user_available);
-//					connectionStatus.setVisibility(View.VISIBLE);
-//					progressBar.setVisibility(View.GONE);
-//				} else if (st == State.disconnected) {
-//					connectionStatus.setImageResource(R.drawable.user_offline);
-//					connectionStatus.setVisibility(View.VISIBLE);
-//					progressBar.setVisibility(View.GONE);
-//				} else {
-//					connectionStatus.setVisibility(View.GONE);
-//					progressBar.setVisibility(View.VISIBLE);
-//				}
-//			}
-//		});
+		// there can be no connection status icon - we have notifications and accounts view in Android >= 3.0
+		if (connectionStatus != null) {
+			connectionStatus.post(new Runnable() {
 
+				@Override
+				public void run() {
+					if (st == State.connected) {
+						connectionStatus.setImageResource(R.drawable.user_available);
+						connectionStatus.setVisibility(View.VISIBLE);
+						progressBar.setVisibility(View.GONE);
+					} else if (st == State.disconnected) {
+						connectionStatus.setImageResource(R.drawable.user_offline);
+						connectionStatus.setVisibility(View.VISIBLE);
+						progressBar.setVisibility(View.GONE);
+					} else {
+						connectionStatus.setVisibility(View.GONE);
+						progressBar.setVisibility(View.VISIBLE);
+					}
+				}
+			});
+		}
 	}
 
 }
