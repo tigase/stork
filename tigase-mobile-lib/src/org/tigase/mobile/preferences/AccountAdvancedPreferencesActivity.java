@@ -5,7 +5,9 @@ import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
+import org.tigase.mobile.service.GeolocationFeature;
 import org.tigase.mobile.service.JaxmppService;
+import org.tigase.mobile.service.MobileModeFeature;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -129,29 +131,29 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		mobileOptimizations.setEnabled(available_v1 || available_v2);
 		presenceQueueTimeout.setEnabled(available_v1 && !available_v2);
 
-		String valueStr = accountManager.getUserData(account, JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED);
+		String valueStr = accountManager.getUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED);
 		boolean enabled = valueStr == null || Boolean.valueOf(valueStr);
 		mobileOptimizations.setChecked(enabled);
 		mobileOptimizations.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				accountManager.setUserData(account, JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, String.valueOf(isChecked));
-				getMulti().get(accountJid).getSessionObject().setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED,
+				accountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED, String.valueOf(isChecked));
+				getMulti().get(accountJid).getSessionObject().setUserProperty(MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED,
 						isChecked);
 			}
 
 		});
 
-		valueStr = accountManager.getUserData(account, JaxmppService.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
+		valueStr = accountManager.getUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
 		int position = (valueStr == null) ? 1 : ((Integer.parseInt(valueStr) / 3) - 1);
 		presenceQueueTimeout.setSelection(position);
 		presenceQueueTimeout.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
 				int value = 3 * (position + 1);
-				accountManager.setUserData(account, JaxmppService.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT, String.valueOf(value));
-				getMulti().get(accountJid).getSessionObject().setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT,
+				accountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT, String.valueOf(value));
+				getMulti().get(accountJid).getSessionObject().setUserProperty(MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT,
 						value);
 			}
 
@@ -164,37 +166,37 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		geolocationPublish = (CompoundButton) findViewById(R.id.geolocation_publish);
 		geolocationPrecision = (Spinner) findViewById(R.id.geolocation_percision);
 		if (geolocationPublish != null) {
-			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_LISTEN_ENABLED);
+			valueStr = accountManager.getUserData(account, GeolocationFeature.GEOLOCATION_LISTEN_ENABLED);
 			geolocationListen.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
 			geolocationListen.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					accountManager.setUserData(account, JaxmppService.GEOLOCATION_LISTEN_ENABLED, String.valueOf(isChecked));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_LISTEN_ENABLED, String.valueOf(isChecked));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());					
+					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());					
 				}				
 			});
-			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_PUBLISH_ENABLED);
+			valueStr = accountManager.getUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_ENABLED);
 			geolocationPublish.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
 			geolocationPublish.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					accountManager.setUserData(account, JaxmppService.GEOLOCATION_PUBLISH_ENABLED, String.valueOf(isChecked));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_ENABLED, String.valueOf(isChecked));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
+					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 					geolocationPrecision.setEnabled(isChecked);
 				}
 			});			
-			valueStr = accountManager.getUserData(account, JaxmppService.GEOLOCATION_PUBLISH_PRECISION);
+			valueStr = accountManager.getUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_PRECISION);
 			int precision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;
 			geolocationPrecision.setSelection(precision);
 			geolocationPrecision.setOnItemSelectedListener(new OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
 					int precision = position;
-					accountManager.setUserData(account, JaxmppService.GEOLOCATION_PUBLISH_PRECISION, String.valueOf(precision));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_PRECISION, String.valueOf(precision));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					JaxmppService.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
+					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 				}
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {

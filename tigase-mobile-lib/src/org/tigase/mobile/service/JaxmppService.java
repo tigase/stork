@@ -199,7 +199,7 @@ public class JaxmppService extends Service {
 			}
 
 			if (screenOff != null) {
-				setMobileMode(screenOff);
+				mobileModeFeature.setMobileMode(screenOff);
 			}
 		}
 	}
@@ -212,27 +212,17 @@ public class JaxmppService extends Service {
 
 	private static Executor executor = new StanzaExecutor();
 
-	private static boolean focused;
-
-	public static final String GEOLOCATION_LISTEN_ENABLED = "geolocation#listen_enabled";
-
-	public static final String GEOLOCATION_PUBLISH_ENABLED = "geolocation#publish_enabled";
-
-	public static final String GEOLOCATION_PUBLISH_PRECISION = "geolocation#publish_precision";
+	protected static boolean focused;
 
 	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
-
-	public static final String MOBILE_OPTIMIZATIONS_ENABLED = Features.MOBILE_V1 + "#enabled";
-
-	public static final String MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT = Features.MOBILE_V1 + "#presence_queue_timeout";
 
 	private static boolean serviceActive = false;
 
 	private static final String TAG = "JaxmppService";
 
-	private static String userStatusMessage = null;
+	protected static String userStatusMessage = null;
 
-	private static Show userStatusShow = Show.online;
+	protected static Show userStatusShow = Show.online;
 
 	private static Date calculateNextRestart(final int delayInSecs, final int errorCounter) {
 		long timeInSecs = delayInSecs;
@@ -297,104 +287,6 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	public static void sendCurrentLocation(JaxmppCore jaxmpp, Context context) {
-		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		try {
-			updateLocation(jaxmpp, location, context);
-		} catch (JaxmppException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Method used to update geolocation settings on connected or disconnected
-	 * instance of JaxmppCore with proper handling of this situation
-	 * 
-	 * @param account
-	 * @param jaxmpp
-	 * @param context
-	 */
-	public static void updateGeolocationSettings(final Account account, final JaxmppCore jaxmpp, final Context context) {
-		new Thread() {
-			@Override
-			public void run() {
-				AccountManager accountManager = AccountManager.get(context);
-
-				// update of geolocation listen setting
-				Boolean listenOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED);
-				if (listenOld == null)
-					listenOld = false;
-				String valueStr = accountManager.getUserData(account, GEOLOCATION_LISTEN_ENABLED);
-				boolean listenNew = (valueStr != null && Boolean.parseBoolean(valueStr));
-
-				jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED, listenNew);
-				if (listenNew != listenOld) {
-					if (listenNew) {
-						GeolocationModule geolocationModule = new GeolocationModule(context);
-						jaxmpp.getModulesManager().register(geolocationModule);
-						geolocationModule.init(jaxmpp);
-					} else {
-						GeolocationModule module = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
-						module.deinit(jaxmpp);
-						jaxmpp.getModulesManager().unregister(module);
-					}
-					jaxmpp.getSessionObject().setProperty(CapabilitiesModule.VERIFICATION_STRING_KEY, null);
-					if (jaxmpp.isConnected()) {
-						SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-						PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
-						try {
-							if (focused) {
-								int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);
-								presenceModule.setPresence(userStatusShow, userStatusMessage, pr);
-							} else {
-								int pr = prefs.getInt(Preferences.AWAY_PRIORITY_KEY, 0);
-								presenceModule.setPresence(Show.away, "Auto away", pr);
-							}
-						} catch (JaxmppException ex) {
-							ex.printStackTrace();
-						}
-					}
-				}
-
-				// update of geolocation publish setting
-				Boolean publishOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED);
-				if (publishOld == null) {
-					publishOld = false;
-				}
-				valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_ENABLED);
-				boolean publishNew = (valueStr != null && Boolean.parseBoolean(valueStr));
-
-				if (jaxmpp.isConnected() && publishNew != publishOld) {
-					if (publishNew) {
-						jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
-						JaxmppService.sendCurrentLocation(jaxmpp, context);
-					} else {
-						try {
-							JaxmppService.updateLocation(jaxmpp, null, context);
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-						jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
-					}
-				}
-				jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED, publishNew);
-
-				// update of geolocation publish precision
-				Integer precisionOld = jaxmpp.getSessionObject().getProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION);
-				if (precisionOld == null)
-					precisionOld = 0;
-				valueStr = accountManager.getUserData(account, GEOLOCATION_PUBLISH_PRECISION);
-				int precisionNew = (valueStr != null) ? Integer.parseInt(valueStr) : 0;
-
-				jaxmpp.getSessionObject().setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION, precisionNew);
-				if (jaxmpp.isConnected() && precisionOld != precisionNew) {
-					JaxmppService.sendCurrentLocation(jaxmpp, context);
-				}
-			}
-		}.start();
-	}
-
 	// added to fix Eclipse error
 	@SuppressLint("NewApi")
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
@@ -412,21 +304,6 @@ public class JaxmppService extends Service {
 			String hostname = accountManager.getUserData(account, AccountsTableMetaData.FIELD_HOSTNAME);
 			String resource = accountManager.getUserData(account, AccountsTableMetaData.FIELD_RESOURCE);
 			hostname = hostname == null ? null : hostname.trim();
-
-			String valueStr = accountManager.getUserData(account, MOBILE_OPTIMIZATIONS_ENABLED);
-			boolean mobileOptimizations = (valueStr == null || Boolean.parseBoolean(valueStr));
-			// valueStr = accountManager.getUserData(account,
-			// GEOLOCATION_LISTEN_ENABLED);
-			// boolean geolocationListen = (valueStr != null &&
-			// Boolean.parseBoolean(valueStr));
-			// valueStr = accountManager.getUserData(account,
-			// GEOLOCATION_PUBLISH_ENABLED);
-			// boolean geolocationPublish = (valueStr != null &&
-			// Boolean.parseBoolean(valueStr));
-			// valueStr = accountManager.getUserData(account,
-			// GEOLOCATION_PUBLISH_PRECISION);
-			// int geolocationPrecision = (valueStr != null) ?
-			// Integer.parseInt(valueStr) : 0;
 
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new DefaultSessionObject();
@@ -466,14 +343,6 @@ public class JaxmppService extends Service {
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
-				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
-				// sessionObject.setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED,
-				// geolocationListen);
-				// sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED,
-				// geolocationPublish);
-				// sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_PRECISION,
-				// geolocationPrecision);
-
 				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
 					@Override
 					public void modulesInit() {
@@ -503,7 +372,6 @@ public class JaxmppService extends Service {
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
-				sessionObject.setUserProperty(JaxmppService.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
 				// sessionObject.setUserProperty(JaxmppService.GEOLOCATION_LISTEN_ENABLED,
 				// geolocationListen);
 				// sessionObject.setUserProperty(JaxmppService.GEOLOCATION_PUBLISH_ENABLED,
@@ -514,7 +382,8 @@ public class JaxmppService extends Service {
 
 			Jaxmpp jaxmpp = multi.get(jid);
 			if (jaxmpp != null) {
-				updateGeolocationSettings(account, jaxmpp, context);
+				MobileModeFeature.updateSettings(account, jaxmpp, context);
+				GeolocationFeature.updateGeolocationSettings(account, jaxmpp, context);
 			}
 
 			accountsJids.remove(jid);
@@ -537,105 +406,6 @@ public class JaxmppService extends Service {
 				}).start();
 			}
 		}
-	}
-
-	public static void updateLocation(final JaxmppCore jaxmpp, Location location, Context context) throws JaxmppException {
-		if (!jaxmpp.isConnected())
-			return;
-		Boolean enabled = (Boolean) jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_ENABLED);
-		if (enabled == null || !enabled.booleanValue())
-			return;
-
-		int precision = jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_PRECISION);
-
-		final IQ iq = IQ.create();
-		iq.setType(StanzaType.set);
-		iq.setId("pubsub1");
-		Element pubsub = new DefaultElement("pubsub");
-		pubsub.setXMLNS("http://jabber.org/protocol/pubsub");
-		iq.addChild(pubsub);
-		Element publish = new DefaultElement("publish");
-		publish.setAttribute("node", "http://jabber.org/protocol/geoloc");
-		pubsub.addChild(publish);
-		Element item = new DefaultElement("item");
-		publish.addChild(item);
-		Element geoloc = new DefaultElement("geoloc");
-		geoloc.setXMLNS("http://jabber.org/protocol/geoloc");
-		item.addChild(geoloc);
-		if (location != null) {
-			if (precision > 2) {
-				Element lat = new DefaultElement("lat");
-				lat.setValue(String.valueOf(location.getLatitude()));
-				geoloc.addChild(lat);
-				Element lon = new DefaultElement("lon");
-				lon.setValue(String.valueOf(location.getLongitude()));
-				geoloc.addChild(lon);
-				Element alt = new DefaultElement("alt");
-				alt.setValue(String.valueOf(location.getAltitude()));
-				geoloc.addChild(alt);
-			}
-
-			if (context != null) {
-				try {
-					Geocoder geocoder = new Geocoder(context);
-					List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-					if (!addresses.isEmpty()) {
-						Address address = addresses.get(0);
-						// precision == 0
-						if (address.getCountryName() != null) {
-							Element country = new DefaultElement("country");
-							country.setValue(address.getCountryName());
-							geoloc.addChild(country);
-						}
-						// precision == 1
-						if (precision >= 1) {
-							if (address.getLocality() != null) {
-								Element locality = new DefaultElement("locality");
-								locality.setValue(address.getLocality());
-								geoloc.addChild(locality);
-							}
-							// precision == 1
-							if (address.getPostalCode() != null) {
-								Element postalcode = new DefaultElement("postalcode");
-								postalcode.setValue(address.getPostalCode());
-								geoloc.addChild(postalcode);
-							}
-						}
-						// precision == 2
-						if (precision >= 2) {
-							if (address.getThoroughfare() != null) {
-								Element street = new DefaultElement("street");
-								street.setValue(address.getThoroughfare());
-								geoloc.addChild(street);
-							}
-						}
-					} else if (precision < 3) {
-						// nothing to send - exiting
-						return;
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else if (precision < 3) {
-				// nothing to send - exiting
-				return;
-			}
-		}
-
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					jaxmpp.send(iq);
-				} catch (XMLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JaxmppException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}.start();
 	}
 
 	private AccountModifyReceiver accountModifyReceiver;
@@ -662,18 +432,14 @@ public class JaxmppService extends Service {
 
 	private Listener<AuthEvent> invalidAuthListener;
 
+	private final GeolocationFeature geolocationFeature;
+	
 	private long keepaliveInterval = 3 * 60 * 1000;
-
-	private Criteria locationCriteria = new Criteria();
-
-	private long locationInterval = 5 * 60 * 1000;
-
-	private final LocationListener locationListener;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
-	private boolean mobileModeEnabled = false;
-
+	private final MobileModeFeature mobileModeFeature;
+	
 	private Listener<MucEvent> mucListener;
 
 	private ConnReceiver myConnReceiver;
@@ -700,13 +466,11 @@ public class JaxmppService extends Service {
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
-	private TimerTask setMobileModeTask;
-
 	private final Listener<Connector.ConnectorEvent> stateChangeListener;
 
 	private Listener<PresenceEvent> subscribeRequestListener;
 
-	private final Timer timer = new Timer();
+	protected final Timer timer = new Timer();
 
 	private int usedNetworkType = -1;
 
@@ -907,10 +671,9 @@ public class JaxmppService extends Service {
 					}
 				}
 
-				if (mobileModeEnabled) {
-					setMobileMode(jaxmpp, mobileModeEnabled);
-				}
-				sendCurrentLocation(jaxmpp);
+				mobileModeFeature.accountConnected(jaxmpp);
+				
+				GeolocationFeature.sendCurrentLocation(jaxmpp, JaxmppService.this);
 				notificationUpdate();
 				rejoinToRooms(be.getSessionObject());
 			}
@@ -955,27 +718,9 @@ public class JaxmppService extends Service {
 			}
 
 		};
-
-		locationListener = new LocationListener() {
-
-			@Override
-			public void onLocationChanged(Location location) {
-				updateLocation(location);
-			}
-
-			@Override
-			public void onProviderDisabled(String provider) {
-			}
-
-			@Override
-			public void onProviderEnabled(String provider) {
-			}
-
-			@Override
-			public void onStatusChanged(String provider, int status, Bundle extras) {
-			}
-
-		};
+		
+		this.mobileModeFeature = new MobileModeFeature(this);
+		this.geolocationFeature = new GeolocationFeature(this);
 
 	}
 
@@ -1085,7 +830,7 @@ public class JaxmppService extends Service {
 				@Override
 				public void run() {
 					try {
-						updateLocation(j, null);
+						GeolocationFeature.updateLocation(j, null, null);
 						((Jaxmpp) j).disconnect(false);
 					} catch (Exception e) {
 						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserBareJid(), e);
@@ -1114,7 +859,7 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private final MultiJaxmpp getMulti() {
+	protected final MultiJaxmpp getMulti() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
 	}
 
@@ -1375,9 +1120,8 @@ public class JaxmppService extends Service {
 		serviceActive = false;
 		timer.cancel();
 
-		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.removeUpdates(locationListener);
-
+		geolocationFeature.unregisterLocationListener();
+		
 		clearLocalJaxmppProperties();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
@@ -1512,13 +1256,7 @@ public class JaxmppService extends Service {
 
 			connectAllJaxmpp(null);
 
-			LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-				locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
-			} else {
-				locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationInterval, 100,
-						locationListener);
-			}
+			geolocationFeature.unregisterLocationListener();
 		}
 
 		return START_STICKY;
@@ -1703,23 +1441,6 @@ public class JaxmppService extends Service {
 
 	}
 
-	private void sendCurrentLocation() {
-		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		for (JaxmppCore jaxmpp : getMulti().get()) {
-			try {
-				updateLocation(jaxmpp, location);
-			} catch (JaxmppException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private void sendCurrentLocation(JaxmppCore jaxmpp) {
-		sendCurrentLocation(jaxmpp, this);
-	}
-
 	protected void sendUnsentMessages() {
 		final Cursor c = getApplication().getContentResolver().query(Uri.parse(ChatHistoryProvider.UNSENT_MESSAGES_URI), null,
 				null, null, null);
@@ -1783,84 +1504,6 @@ public class JaxmppService extends Service {
 		}
 	}
 
-	private void setMobileMode(final boolean enable) {
-		if (setMobileModeTask != null) {
-			setMobileModeTask.cancel();
-			setMobileModeTask = null;
-		}
-
-		Log.v(TAG, "setting mobile mode to = " + enable);
-
-		mobileModeEnabled = enable;
-
-		if (enable) {
-			setMobileModeTask = new TimerTask() {
-
-				@Override
-				public void run() {
-					setMobileModeTask = null;
-					try {
-						for (JaxmppCore jaxmpp : getMulti().get()) {
-							setMobileMode(jaxmpp, enable);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Can't set mobile mode!", e);
-					}
-				}
-			};
-			timer.schedule(setMobileModeTask, 1000 * 60);
-		} else {
-			(new Thread() {
-				@Override
-				public void run() {
-					try {
-						for (JaxmppCore jaxmpp : getMulti().get()) {
-							setMobileMode(jaxmpp, enable);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Can't set mobile mode!", e);
-					}
-				}
-			}).start();
-		}
-	}
-
-	protected void setMobileMode(JaxmppCore jaxmpp, boolean enable) throws JaxmppException {
-		if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
-			final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
-			if (sf == null)
-				return;
-
-			String xmlns = null;
-			Element m = sf.getChildrenNS("mobile", Features.MOBILE_V2);
-			if (m != null) {
-				xmlns = Features.MOBILE_V2;
-			} else {
-				m = sf.getChildrenNS("mobile", Features.MOBILE_V1);
-				if (m != null) {
-					xmlns = Features.MOBILE_V1;
-				}
-			}
-			if (xmlns == null || (enable && !((Boolean) jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_ENABLED))))
-				return;
-
-			IQ iq = IQ.create();
-			iq.setType(StanzaType.set);
-			Element mobile = new DefaultElement("mobile");
-			mobile.setXMLNS(xmlns);
-			mobile.setAttribute("enable", String.valueOf(enable));
-			if (Features.MOBILE_V1.equals(xmlns)) {
-				Integer timeout = jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT);
-				if (timeout != null) {
-					timeout = timeout * 60 * 1000;
-					mobile.setAttribute("timeout", String.valueOf(timeout));
-				}
-			}
-			iq.addChild(mobile);
-			jaxmpp.send(iq);
-		}
-	}
-
 	private void setRecconnect(boolean reconnectAvailable) {
 		if (DEBUG)
 			Log.d(TAG, "Reconnect is now set to " + reconnectAvailable, new Exception("TRACE"));
@@ -1896,21 +1539,6 @@ public class JaxmppService extends Service {
 		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
 		alarmMgr.cancel(pi);
-	}
-
-	public void updateLocation(final JaxmppCore jaxmpp, Location location) throws JaxmppException {
-		updateLocation(jaxmpp, location, this);
-	}
-
-	private void updateLocation(Location location) {
-		for (JaxmppCore jaxmpp : getMulti().get()) {
-			try {
-				updateLocation(jaxmpp, location);
-			} catch (JaxmppException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 	}
 
 	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {
