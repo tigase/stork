@@ -4,6 +4,7 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
 import org.tigase.mobile.service.JaxmppService;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
@@ -280,6 +281,7 @@ public class AccountsStatusFragment extends Fragment {
 				final TextView accountDescription = (TextView) v.findViewById(R.id.account_item_description);
 				final ImageView accountStatus = (ImageView) v.findViewById(R.id.account_status);
 				final ProgressBar progressBar = (ProgressBar) v.findViewById(R.id.account_status_progress);
+				final ImageView accountAvatar = (ImageView) v.findViewById(R.id.imageView1);
 
 				final boolean established = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID) != null;
 				State st = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
@@ -297,6 +299,8 @@ public class AccountsStatusFragment extends Fragment {
 
 				accountName.setText(jaxmpp.getSessionObject().getUserBareJid().toString());
 
+				AvatarHelper.setAvatarToImageView(jaxmpp.getSessionObject().getUserBareJid(), accountAvatar);
+				
 				if (st == State.connected) {
 					accountStatus.setImageResource(R.drawable.user_available);
 					accountStatus.setVisibility(View.VISIBLE);

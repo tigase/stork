@@ -41,9 +41,19 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/frameLayout1"
+        android:layout_toLeftOf="@+id/imageView1"
         android:paddingLeft="10sp"
         android:textSize="18sp"
         android:textStyle="bold" >
     </TextView>
+    
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="50sp"
+        android:layout_height="50sp"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/user_avatar" >
 
+    </ImageView>
+    
 </RelativeLayout>
