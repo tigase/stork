@@ -33,10 +33,12 @@ public class ChatTableMetaData implements BaseColumns {
 
 	public static final String FIELD_TIMESTAMP = "timestamp";
 
+	public static final String INDEX_JID = "chat_history_jid_index";
+
 	public final static int STATE_INCOMING = 0;
 
 	public final static int STATE_INCOMING_UNREAD = 3;
-	
+
 	public final static int STATE_OUT_NOT_SENT = 1;
 
 	public final static int STATE_OUT_SENT = 2;

@@ -14,6 +14,8 @@ public class VCardsCacheTableMetaData implements BaseColumns {
 
 	public static final String FIELD_TIMESTAMP = "subscription";
 
+	public static final String INDEX_JID = "vcards_cache_jid_index";
+
 	public static final String TABLE_NAME = "vcards_cache";
 
 }

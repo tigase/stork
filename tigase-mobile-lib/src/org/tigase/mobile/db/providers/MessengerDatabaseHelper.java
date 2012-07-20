@@ -19,7 +19,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 2;
+	public static final Integer DATABASE_VERSION = 3;
 
 	private static final String TAG = "tigase";
 
@@ -42,6 +42,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += ChatTableMetaData.FIELD_BODY + " TEXT, ";
 		sql += ChatTableMetaData.FIELD_STATE + " INTEGER";
 		sql += ");";
+		db.execSQL(sql);
+
+		sql = "CREATE INDEX IF NOT EXISTS ";
+		sql += ChatTableMetaData.INDEX_JID;
+		sql += " ON " + ChatTableMetaData.TABLE_NAME + " (";
+		sql += ChatTableMetaData.FIELD_JID;
+		sql += ")";
 		db.execSQL(sql);
 
 		sql = "CREATE TABLE " + OpenChatsTableMetaData.TABLE_NAME + " (";
@@ -73,6 +80,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += VCardsCacheTableMetaData.FIELD_DATA + " BLOB, ";
 		sql += VCardsCacheTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 		sql += ");";
+		db.execSQL(sql);
+
+		sql = "CREATE INDEX IF NOT EXISTS ";
+		sql += VCardsCacheTableMetaData.INDEX_JID;
+		sql += " ON " + VCardsCacheTableMetaData.TABLE_NAME + " (";
+		sql += VCardsCacheTableMetaData.FIELD_JID;
+		sql += ")";
 		db.execSQL(sql);
 
 		sql = "CREATE TABLE " + CapsIdentitiesTableMetaData.TABLE_NAME + " (";
@@ -112,13 +126,21 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += GeolocationTableMetaData.FIELD_STREET + " TEXT ";
 		sql += ");";
 		db.execSQL(sql);
+
+		sql = "CREATE INDEX IF NOT EXISTS ";
+		sql += GeolocationTableMetaData.INDEX_JID;
+		sql += " ON " + GeolocationTableMetaData.TABLE_NAME + " (";
+		sql += GeolocationTableMetaData.FIELD_JID;
+		sql += ")";
+		db.execSQL(sql);
+
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i(TAG, "Database upgrade from version " + oldVersion + " to " + newVersion);
 
-		if (oldVersion == 1) {
+		if (oldVersion < 2) {
 			String sql = "CREATE TABLE " + OpenMUCTableMetaData.TABLE_NAME + " (";
 			sql += OpenMUCTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
 			sql += OpenMUCTableMetaData.FIELD_ACCOUNT + " TEXT, ";
@@ -128,10 +150,8 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			sql += OpenMUCTableMetaData.FIELD_TIMESTAMP + " DATETIME";
 			sql += ");";
 			db.execSQL(sql);
-		}
 
-		if (oldVersion < 2) {
-			String sql = "CREATE TABLE " + GeolocationTableMetaData.TABLE_NAME + " (";
+			sql = "CREATE TABLE " + GeolocationTableMetaData.TABLE_NAME + " (";
 			sql += GeolocationTableMetaData.FIELD_ID + " INTEGER PRIMARY KEY, ";
 			sql += GeolocationTableMetaData.FIELD_JID + " TEXT, ";
 			sql += GeolocationTableMetaData.FIELD_LON + " REAL, ";
@@ -141,6 +161,29 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			sql += GeolocationTableMetaData.FIELD_LOCALITY + " TEXT, ";
 			sql += GeolocationTableMetaData.FIELD_STREET + " TEXT ";
 			sql += ");";
+			db.execSQL(sql);
+		}
+
+		if (oldVersion < 3) {
+			String sql = "CREATE INDEX IF NOT EXISTS ";
+			sql += ChatTableMetaData.INDEX_JID;
+			sql += " ON " + ChatTableMetaData.TABLE_NAME + " (";
+			sql += ChatTableMetaData.FIELD_JID;
+			sql += ")";
+			db.execSQL(sql);
+
+			sql = "CREATE INDEX IF NOT EXISTS ";
+			sql += VCardsCacheTableMetaData.INDEX_JID;
+			sql += " ON " + VCardsCacheTableMetaData.TABLE_NAME + " (";
+			sql += VCardsCacheTableMetaData.FIELD_JID;
+			sql += ")";
+			db.execSQL(sql);
+
+			sql = "CREATE INDEX IF NOT EXISTS ";
+			sql += GeolocationTableMetaData.INDEX_JID;
+			sql += " ON " + GeolocationTableMetaData.TABLE_NAME + " (";
+			sql += GeolocationTableMetaData.FIELD_JID;
+			sql += ")";
 			db.execSQL(sql);
 		}
 	}
