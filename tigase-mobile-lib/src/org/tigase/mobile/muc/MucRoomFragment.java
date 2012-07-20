@@ -22,6 +22,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -36,7 +39,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class MucRoomFragment extends Fragment {
+public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
 	private static final boolean DEBUG = false;
 
@@ -60,6 +63,10 @@ public class MucRoomFragment extends Fragment {
 
 	private ChatView layout;
 
+	private ListView lv;
+
+	private MucAdapter mucAdapter;
+
 	private Listener<MucEvent> mucListener;
 
 	private SharedPreferences prefs;
@@ -80,11 +87,6 @@ public class MucRoomFragment extends Fragment {
 		};
 	}
 
-	private Cursor getCursor() {
-		return getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + room.getRoomJid()), null, null, null, null);
-	}
-
 	public Room getRoom() {
 		return room;
 	}
@@ -102,6 +104,35 @@ public class MucRoomFragment extends Fragment {
 			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getRoomById(id);
 			this.room = ch.getRoom();
 		}
+
+		Cursor c = getActivity().getApplicationContext().getContentResolver().query(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + room.getRoomJid()), null, null, null, null);
+
+		this.mucAdapter = new MucAdapter(getActivity().getApplicationContext(), R.layout.muc_chat_item, c, room);
+		getLoaderManager().initLoader(0, null, this);
+		mucAdapter.registerDataSetObserver(new DataSetObserver() {
+
+			@Override
+			public void onChanged() {
+				super.onChanged();
+				if (DEBUG)
+					Log.i(TAG, "Changed!");
+				if (lv != null)
+					lv.post(new Runnable() {
+
+						@Override
+						public void run() {
+							lv.setSelection(Integer.MAX_VALUE);
+						}
+					});
+			}
+		});
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+		return new CursorLoader(getActivity().getApplicationContext(), Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
+				+ room.getRoomJid()), null, null, null, null);
 	}
 
 	@Override
@@ -143,27 +174,9 @@ public class MucRoomFragment extends Fragment {
 			}
 		});
 
-		Cursor c = getCursor();
+		this.lv = (ListView) view.findViewById(R.id.chat_conversation_history);
 
-		final ListView lv = (ListView) view.findViewById(R.id.chat_conversation_history);
-		MucAdapter ad = new MucAdapter(inflater.getContext(), R.layout.muc_chat_item, c, room);
-		lv.setAdapter(ad);
-		ad.registerDataSetObserver(new DataSetObserver() {
-
-			@Override
-			public void onChanged() {
-				super.onChanged();
-				if (DEBUG)
-					Log.i(TAG, "Changed!");
-				lv.post(new Runnable() {
-
-					@Override
-					public void run() {
-						lv.setSelection(Integer.MAX_VALUE);
-					}
-				});
-			}
-		});
+		lv.setAdapter(mucAdapter);
 
 		lv.post(new Runnable() {
 
@@ -182,6 +195,16 @@ public class MucRoomFragment extends Fragment {
 		jaxmpp.removeListener(MucModule.StateChange, this.mucListener);
 
 		super.onDestroy();
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> arg0) {
+		mucAdapter.swapCursor(null);
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		mucAdapter.swapCursor(cursor);
 	}
 
 	protected void onMucEvent(MucEvent be) {

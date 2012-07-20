@@ -4,7 +4,6 @@ import java.sql.Date;
 
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
@@ -12,23 +11,37 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class MucAdapter extends SimpleCursorAdapter {
 
+	static class ViewHolder {
+		ImageView avatar;
+		TextView nickname;
+		TextView timestamp;
+		TextView webview;
+	}
+
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID /*, VCardsCacheTableMetaData.FIELD_DATA*/ };
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID /*
+																		 * ,
+																		 * VCardsCacheTableMetaData
+																		 * .
+																		 * FIELD_DATA
+																		 */};
+
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
 	private final Room room;
 
 	public MucAdapter(Context context, int layout, Cursor c, Room room) {
-		super(context, layout, c, cols, names);
+		super(context, layout, c, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
 		this.room = room;
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -46,7 +59,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
 			holder.avatar = (ImageView) view.findViewById(R.id.user_avatar);
 		}
-		
+
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
 		// byte[] avatarData =
@@ -81,12 +94,5 @@ public class MucAdapter extends SimpleCursorAdapter {
 		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
 		holder.timestamp.setText(df.format(t));
 
-	}
-	
-	static class ViewHolder {
-		TextView nickname;
-		TextView webview;
-		TextView timestamp;
-		ImageView avatar;
 	}
 }

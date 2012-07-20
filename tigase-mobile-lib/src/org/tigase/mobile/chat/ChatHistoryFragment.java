@@ -21,13 +21,15 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.text.ClipboardManager;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -42,7 +44,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class ChatHistoryFragment extends Fragment {
+public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
 	private static final boolean DEBUG = true;
 
@@ -66,9 +68,13 @@ public class ChatHistoryFragment extends Fragment {
 
 	private Chat chat;
 
+	private ChatAdapter chatAdapter;
+
 	private Listener<MessageEvent> chatUpdateListener;
 
 	private ChatView layout;
+
+	private ListView lv;
 
 	private final Listener<PresenceEvent> presenceListener;
 
@@ -94,6 +100,11 @@ public class ChatHistoryFragment extends Fragment {
 		};
 	}
 
+	private void clearMessageHistory() {
+		getActivity().getApplicationContext().getContentResolver().delete(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null);
+	}
+
 	private void copyMessageBody(final long id) {
 		ClipboardManager clipMan = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 		Cursor cc = null;
@@ -114,14 +125,10 @@ public class ChatHistoryFragment extends Fragment {
 
 	private Cursor getChatEntry(long id) {
 		Cursor cursor = getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString()) + "/" + id), null, null, null, null);
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString()) + "/" + id),
+				null, null, null, null);
 		cursor.moveToNext();
 		return cursor;
-	}
-
-	private Cursor getCursor() {
-		return getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null, null, null);
 	}
 
 	@Override
@@ -151,6 +158,30 @@ public class ChatHistoryFragment extends Fragment {
 			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
 			setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
 		}
+
+		Cursor c = getActivity().getApplicationContext().getContentResolver().query(
+				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null,
+				null, null);
+
+		this.chatAdapter = new ChatAdapter(getActivity().getApplicationContext(), R.layout.chat_item, c);
+		getLoaderManager().initLoader(0, null, this);
+		chatAdapter.registerDataSetObserver(new DataSetObserver() {
+
+			@Override
+			public void onChanged() {
+				super.onChanged();
+				if (DEBUG)
+					Log.i(TAG, "Changed!");
+				lv.post(new Runnable() {
+
+					@Override
+					public void run() {
+						lv.setSelection(Integer.MAX_VALUE);
+					}
+				});
+			}
+		});
+
 	}
 
 	@Override
@@ -158,6 +189,12 @@ public class ChatHistoryFragment extends Fragment {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		MenuInflater m = new MenuInflater(getActivity());
 		m.inflate(R.menu.chat_context_menu, menu);
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+		return new CursorLoader(getActivity().getApplicationContext(), Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
+				+ Uri.encode(chat.getJid().getBareJid().toString())), null, null, null, null);
 	}
 
 	@Override
@@ -184,9 +221,7 @@ public class ChatHistoryFragment extends Fragment {
 			throw new RuntimeException("Chat not specified!");
 		}
 
-		Cursor c = getCursor();
-
-		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
+		this.lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
 		registerForContextMenu(lv);
 		// lv.setOnItemLongClickListener(new OnItemLongClickListener() {
 		//
@@ -199,44 +234,37 @@ public class ChatHistoryFragment extends Fragment {
 		// }
 		// });
 
-		ChatAdapter ad = new ChatAdapter(inflater.getContext(), R.layout.chat_item, c);
-		lv.setAdapter(ad);
-		ad.registerDataSetObserver(new DataSetObserver() {
+		lv.setAdapter(chatAdapter);
 
-			@Override
-			public void onChanged() {
-				super.onChanged();
-				if (DEBUG)
-					Log.i(TAG, "Changed!");
-				lv.post(new Runnable() {
-
-					@Override
-					public void run() {
-						lv.setSelection(Integer.MAX_VALUE);
-					}
-				});
-			}
-		});
 		return layout;
 	}
 
 	@Override
 	public void onDestroyView() {
-		Cursor c = getCursor();
-		if (c != null) {
-			if (DEBUG)
-				Log.d(TAG, "Closing cursor");
-			c.close();
-		}
+		// Cursor c = chatAdapter.getCursor();
+		// if (c != null) {
+		// if (DEBUG)
+		// Log.d(TAG, "Closing cursor");
+		// c.close();
+		// }
 		super.onDestroyView();
 	}
 
 	@Override
+	public void onLoaderReset(Loader<Cursor> arg0) {
+		chatAdapter.swapCursor(null);
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		chatAdapter.swapCursor(cursor);
+	}
+
+	@Override
 	public void onResume() {
-		final ListView lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
-		if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {
-			((ChatAdapter) lv.getAdapter()).swapCursor(getCursor());
-		}
+		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {
+		// ((ChatAdapter) lv.getAdapter()).swapCursor(getCursor());
+		// }
 
 		super.onResume();
 
@@ -295,7 +323,7 @@ public class ChatHistoryFragment extends Fragment {
 				this.chat = c.getChat();
 				if (DEBUG)
 					Log.d(TAG, "Found chat with " + chat.getJid() + " (id=" + chatId + ")");
-				
+
 				return;
 			}
 		}
@@ -364,8 +392,4 @@ public class ChatHistoryFragment extends Fragment {
 		}
 	}
 
-	private void clearMessageHistory() {
-		getActivity().getApplicationContext().getContentResolver().delete(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getJid().getBareJid().toString())), null, null);
-	}
 }

@@ -6,8 +6,6 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -17,27 +15,40 @@ import tigase.jaxmpp.core.client.xmpp.utils.EscapeUtils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class ChatAdapter extends SimpleCursorAdapter {
 
-	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
-			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID/*, VCardsCacheTableMetaData.FIELD_DATA*/ };
-	private final static int[] names = new int[] { R.id.chat_item_body };
+	static class ViewHolder {
+		ImageView avatar;
+		ImageView msgStatus;
+		TextView nickname;
+		TextView timestamp;
+		TextView webview;
+	}
 
+	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
+			ChatTableMetaData.FIELD_STATE, ChatTableMetaData.FIELD_JID /*
+																		 * ,
+																		 * VCardsCacheTableMetaData
+																		 * .
+																		 * FIELD_DATA
+																		 */};
+
+	private final static int[] names = new int[] { R.id.chat_item_body };
 	private String nickname;
+
 	private final RosterDisplayTools rdt;
 
 	public ChatAdapter(Context context, int layout, Cursor c) {
-		super(context, layout, c, cols, names);
+		super(context, layout, c, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 		this.rdt = new RosterDisplayTools(context);
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -103,28 +114,21 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		holder.timestamp.setText(df.format(t));
 
 	}
-	
+
 	private void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
 		// old implementation
-//		Bitmap bmp = AvatarHelper.getAvatar(jid, cursor, VCardsCacheTableMetaData.FIELD_DATA);
-//		if (bmp != null) {
-//			avatar.setImageBitmap(bmp);
-//		} else {
-//			avatar.setImageResource(R.drawable.user_avatar);
-//		}
-		
+		// Bitmap bmp = AvatarHelper.getAvatar(jid, cursor,
+		// VCardsCacheTableMetaData.FIELD_DATA);
+		// if (bmp != null) {
+		// avatar.setImageBitmap(bmp);
+		// } else {
+		// avatar.setImageResource(R.drawable.user_avatar);
+		// }
+
 		// roster uses this below
-		//AvatarHelper.setAvatarToImageView(jid, avatar);
-		// but it is not good as in chat async avatar loading while here 
+		// AvatarHelper.setAvatarToImageView(jid, avatar);
+		// but it is not good as in chat async avatar loading while here
 		// synchronized loading is better as we can use results from cache
 		avatar.setImageBitmap(AvatarHelper.getAvatar(jid));
-	}
-	
-	static class ViewHolder {
-		TextView nickname;
-		TextView webview;
-		TextView timestamp;
-		ImageView avatar;
-		ImageView msgStatus;
 	}
 }
