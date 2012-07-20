@@ -47,8 +47,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
 	private final RosterDisplayTools rdt;
 
-	public ChatAdapter(Context context, int layout, Cursor c) {
-		super(context, layout, c, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+	public ChatAdapter(Context context, int layout) {
+		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 		this.rdt = new RosterDisplayTools(context);
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

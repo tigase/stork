@@ -40,8 +40,8 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 	private final Room room;
 
-	public MucAdapter(Context context, int layout, Cursor c, Room room) {
-		super(context, layout, c, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+	public MucAdapter(Context context, int layout, Room room) {
+		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
 		this.room = room;
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

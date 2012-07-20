@@ -105,10 +105,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 			this.room = ch.getRoom();
 		}
 
-		Cursor c = getActivity().getApplicationContext().getContentResolver().query(
-				Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + room.getRoomJid()), null, null, null, null);
-
-		this.mucAdapter = new MucAdapter(getActivity().getApplicationContext(), R.layout.muc_chat_item, c, room);
+		this.mucAdapter = new MucAdapter(getActivity().getApplicationContext(), R.layout.muc_chat_item, room);
 		getLoaderManager().initLoader(0, null, this);
 		mucAdapter.registerDataSetObserver(new DataSetObserver() {
 
