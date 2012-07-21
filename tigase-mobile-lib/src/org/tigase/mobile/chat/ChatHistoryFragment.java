@@ -5,23 +5,32 @@ import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
@@ -30,12 +39,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.ViewPager;
 import android.text.ClipboardManager;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -151,8 +162,9 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		this.setHasOptionsMenu(true);
 		super.onCreate(savedInstanceState);
-
+		
 		if (getArguments() != null) {
 			long id = getArguments().getLong("chatId");
 			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
@@ -193,6 +205,31 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 				+ Uri.encode(chat.getJid().getBareJid().toString())), null, null, null, null);
 	}
 
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.chat_main_menu, menu);
+
+		// Share button support
+		MenuItem share = menu.findItem(R.id.shareButton);
+		
+		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+				chat.getSessionObject());
+		try {
+			JID jid = chat.getJid();
+			boolean visible = false;
+			if (jid.getResource() == null) {
+				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+			}
+			if (jid != null) {
+				visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(),
+						FileTransferUtility.FEATURES);
+			}
+			share.setVisible(visible);
+		} catch (XMLException e) {
+		}
+
+	}
+	
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
@@ -256,6 +293,41 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 		chatAdapter.swapCursor(cursor);
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.showChatsButton) {
+			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
+			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
+		}
+		else if (item.getItemId() == R.id.closeChatButton) {
+			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+					chat.getSessionObject());			
+			ViewPager viewPager = (ViewPager) ((TigaseMobileMessengerActivity)this.getActivity()).viewPager;
+			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
+			try {
+				cm.close(chat);
+				viewPager.setCurrentItem(1);
+				if (DEBUG)
+					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
+			} catch (JaxmppException e) {
+				Log.w(TAG, "Chat close problem!", e);
+			}			
+		} else if (item.getItemId() == R.id.shareImageButton) {
+			Log.v(TAG, "share selected for = " + chat.getJid().toString());
+			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
+			pickerIntent.setType("image/*");
+			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+			startActivityForResult(pickerIntent, TigaseMobileMessengerActivity.SELECT_FOR_SHARE);
+		} else if (item.getItemId() == R.id.shareVideoButton) {
+			Log.v(TAG, "share selected for = " + chat.getJid().toString());
+			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
+			pickerIntent.setType("video/*");
+			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+			startActivityForResult(pickerIntent, TigaseMobileMessengerActivity.SELECT_FOR_SHARE);
+		}
+		return true;
+	}
+	
 	@Override
 	public void onResume() {
 		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {

@@ -72,7 +72,7 @@ public class MultiJaxmpp {
 		}
 	}
 
-	private final ArrayList<ChatWrapper> chats = new ArrayList<ChatWrapper>();
+	private final List<ChatWrapper> chats = Collections.synchronizedList( new ArrayList<ChatWrapper>() );
 
 	private final HashMap<BareJID, JaxmppCore> jaxmpps = new HashMap<BareJID, JaxmppCore>();
 
@@ -85,14 +85,16 @@ public class MultiJaxmpp {
 
 			@Override
 			public void handleEvent(BaseEvent be) throws JaxmppException {
-				if (be.getType() == MessageModule.ChatCreated) {
-					chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
-				} else if (be.getType() == MessageModule.ChatClosed) {
-					chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
-				} else if (be.getType() == MucModule.RoomClosed) {
-					chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
-				} else if (be.getType() == MucModule.JoinRequested) {
-					chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
+				synchronized (chats) {
+					if (be.getType() == MessageModule.ChatCreated) {
+						chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
+					} else if (be.getType() == MessageModule.ChatClosed) {
+						chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
+					} else if (be.getType() == MucModule.RoomClosed) {
+						chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
+					} else if (be.getType() == MucModule.JoinRequested) {
+						chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
+					}
 				}
 				observable.fireEvent(be);
 			}
@@ -148,7 +150,9 @@ public class MultiJaxmpp {
 	}
 
 	public List<ChatWrapper> getChats() {
-		return Collections.unmodifiableList(chats);
+		synchronized (chats) {
+			return Collections.unmodifiableList(chats);
+		}
 	}
 
 	public ChatWrapper getRoomById(final long id) {

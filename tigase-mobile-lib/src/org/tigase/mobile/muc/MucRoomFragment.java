@@ -2,18 +2,24 @@ package org.tigase.mobile.muc;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.chat.ChatView;
+import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
+import tigase.jaxmpp.j2se.Jaxmpp;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -25,9 +31,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
@@ -94,6 +104,9 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		this.setHasOptionsMenu(true);
+		
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
@@ -132,6 +145,11 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 				+ room.getRoomJid()), null, null, null, null);
 	}
 
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.muc_main_menu, menu);
+	}
+		
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View view = inflater.inflate(R.layout.muc_conversation, container, false);
@@ -207,7 +225,42 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	protected void onMucEvent(MucEvent be) {
 		updatePresenceImage();
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.showChatsButton) {
+			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
+			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
+		}
+		else if (item.getItemId() == R.id.closeChatButton) {
+			final ViewPager viewPager = ((TigaseMobileMessengerActivity)this.getActivity()).viewPager;
+			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(room.getSessionObject());
+			final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
 
+			viewPager.setCurrentItem(1);
+			AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					try {
+						cm.leave(room);
+					} catch (JaxmppException e) {
+						Log.w(TAG, "Chat close problem!", e);
+					}
+					return null;
+				}
+
+				@Override
+				protected void onPostExecute(Void param) {
+					viewPager.setCurrentItem(1);
+				}
+			};
+
+			t.execute();
+		}
+		return true;
+	}
+	
 	@Override
 	public void onResume() {
 		super.onResume();

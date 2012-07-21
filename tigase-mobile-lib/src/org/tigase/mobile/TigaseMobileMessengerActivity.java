@@ -31,6 +31,7 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.AbstractMessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
@@ -143,7 +144,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
 
-	private ViewPager viewPager;
+	public ViewPager viewPager;
 
 	private ViewPager viewRoster;;
 
@@ -154,8 +155,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void handleEvent(BaseEvent be) throws JaxmppException {
-				if (be instanceof MessageEvent)
-					onMessageEvent((MessageEvent) be);
+				if (be instanceof AbstractMessageEvent)
+					onMessageEvent((AbstractMessageEvent) be);
 			}
 		};
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
@@ -607,7 +608,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			Log.d(TAG, "onDetachedFromWindow()");
 	}
 
-	protected void onMessageEvent(final MessageEvent be) {
+	protected void onMessageEvent(final AbstractMessageEvent be) {
 		Runnable action = new Runnable() {
 
 			@Override
@@ -675,6 +676,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			return true;
 		} else if (item.getItemId() == android.R.id.home) {
 			viewPager.setCurrentItem(1);
+			return true;
 		} else if (item.getItemId() == R.id.showHideOffline) {
 			boolean x = mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE);
 			Editor editor = mPreferences.edit();
@@ -682,6 +684,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			editor.commit();
 			Uri insertedItem = Uri.parse(RosterProvider.CONTENT_URI);
 			getApplicationContext().getContentResolver().notifyChange(insertedItem, null);
+			return true;
 			// insertedItem =
 			// Uri.parse("content://org.tigase.mobile.db.providers.RosterProvider");
 			// getApplicationContext().getContentResolver().notifyChange(insertedItem,
@@ -699,84 +702,33 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				ft.addToBackStack(null);
 				AccountSelectorDialogFragment newFragment = AccountSelectorDialogFragment.newInstance();
 				newFragment.show(ft, "account:select:dialog");
+				return true;
 			} else if (accounts != null && accounts.length == 1) {
 				Intent intent = new Intent(this, ContactEditActivity.class);
 				intent.putExtra("account", accounts[0].name);
 				startActivityForResult(intent, 0);
+				return true;
 			}
 		} else if (item.getItemId() == R.id.aboutButton) {
 			showDialog(ABOUT_DIALOG);
-		} else if (item.getItemId() == R.id.showChatsButton) {
-			Intent chatListActivity = new Intent(this, ChatListActivity.class);
-			this.startActivityForResult(chatListActivity, REQUEST_CHAT);
-		} else if (item.getItemId() == R.id.closeChatButton) {
-			final int p = this.currentPage;
-			ChatWrapper wrapper = getChatByPageIndex(p);
-			if (wrapper.isChat()) {
-				Chat chat = wrapper.getChat();
-				final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
-						chat.getSessionObject());
-				final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
-				try {
-					cm.close(chat);
-					if (DEBUG)
-						Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
-				} catch (JaxmppException e) {
-					Log.w(TAG, "Chat close problem!", e);
-				}
-			} else {
-				final Room room = wrapper.getRoom();
-				final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
-						room.getSessionObject());
-				final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
-
-				AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
-
-					@Override
-					protected Void doInBackground(Void... params) {
-						try {
-							cm.leave(room);
-						} catch (JaxmppException e) {
-							Log.w(TAG, "Chat close problem!", e);
-						}
-						return null;
-					}
-				};
-
-				t.execute();
-			}
-
-			viewPager.setCurrentItem(1);
-		} else if (item.getItemId() == R.id.shareImageButton) {
-			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p).getChat();
-			Log.v(TAG, "share selected for = " + chat.getJid().toString());
-			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
-			pickerIntent.setType("image/*");
-			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-			startActivityForResult(pickerIntent, SELECT_FOR_SHARE);
-		} else if (item.getItemId() == R.id.shareVideoButton) {
-			final int p = this.currentPage;
-			Chat chat = getChatByPageIndex(p).getChat();
-			Log.v(TAG, "share selected for = " + chat.getJid().toString());
-			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
-			pickerIntent.setType("video/*");
-			pickerIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-			startActivityForResult(pickerIntent, SELECT_FOR_SHARE);
+			return true;
 		} else if (item.getItemId() == R.id.propertiesButton) {
 			Intent intent = new Intent().setClass(this, MessengerPreferenceActivity.class);
 			this.startActivityForResult(intent, 0);
+			return true;
 		} else if (item.getItemId() == R.id.disconnectButton) {
 			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, false).commit();
 			stopService(new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class));
+			return true;
 		} else if (item.getItemId() == R.id.connectButton) {
 			mPreferences.edit().putBoolean(Preferences.SERVICE_ACTIVATED, true).commit();
 
 			Intent intent = new Intent(TigaseMobileMessengerActivity.this, JaxmppService.class);
 			intent.putExtra("focused", true);
 			startService(intent);
-		}
-		return true;
+			return true;
+		}		
+		return false;
 	}
 
 	@Override
@@ -794,12 +746,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		menu.clear();
-		Log.v(TAG, "current page " + currentPage);
-		Log.v(TAG, "xlarge = " + helper.isXLarge());
-		final boolean serviceActive = JaxmppService.isServiceActive();
 		if (currentPage == 0 || currentPage == 1 || helper.isXLarge()) {
+			MenuInflater inflater = getMenuInflater();
+			Log.v(TAG, "current page " + currentPage);
+			Log.v(TAG, "xlarge = " + helper.isXLarge());
+			final boolean serviceActive = JaxmppService.isServiceActive();
+
+			menu.clear();
 			inflater.inflate(R.menu.main_menu, menu);
 
 			MenuItem con = menu.findItem(R.id.connectButton);
@@ -815,44 +768,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			MenuItem add = menu.findItem(R.id.contactAdd);
 			helper.setShowAsAction(add, MenuItem.SHOW_AS_ACTION_IF_ROOM);
 			add.setVisible(serviceActive);
-
 		}
-		if (currentPage > 1 || (currentPage > 0 && serviceActive && helper.isXLarge())) {
-			final ChatWrapper wrapper = getChatByPageIndex(this.currentPage);
-			if (wrapper.isChat()) {
-				inflater.inflate(R.menu.chat_main_menu, menu);
-
-				// Share button support
-				MenuItem share = menu.findItem(R.id.shareButton);
-
-				final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
-						wrapper.getChat().getSessionObject());
-				try {
-					JID jid = wrapper.getChat().getJid();
-					boolean visible = false;
-					if (jid.getResource() == null) {
-						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
-					}
-					if (jid != null) {
-						visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, wrapper.getChat().getJid(),
-								FileTransferUtility.FEATURES);
-					}
-					share.setVisible(visible);
-				} catch (XMLException e) {
-				}
-
-				if (helper.isXLarge())
-					menu.findItem(R.id.showChatsButton).setVisible(false);
-
-			} else if (wrapper.isRoom()) {
-				inflater.inflate(R.menu.muc_main_menu, menu);
-
-				return true;
-			} else
-				return false;
-		}
-	
-		return true;
+		
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
