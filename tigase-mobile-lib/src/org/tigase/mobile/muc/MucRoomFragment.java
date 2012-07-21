@@ -105,7 +105,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 			this.room = ch.getRoom();
 		}
 
-		this.mucAdapter = new MucAdapter(getActivity().getApplicationContext(), R.layout.muc_chat_item, room);
+		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room);
 		getLoaderManager().initLoader(0, null, this);
 		mucAdapter.registerDataSetObserver(new DataSetObserver() {
 

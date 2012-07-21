@@ -159,7 +159,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 			setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
 		}
 
-		this.chatAdapter = new ChatAdapter(getActivity().getApplicationContext(), R.layout.chat_item);
+		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
 		getLoaderManager().initLoader(0, null, this);
 		chatAdapter.registerDataSetObserver(new DataSetObserver() {
 
