@@ -7,8 +7,6 @@ import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
-import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.CPresence;
 import org.tigase.mobile.utils.AvatarHelper;
 
@@ -19,12 +17,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,17 +90,21 @@ public class ChatListActivity extends Activity {
 			if (wrapper.isChat()) {
 				Chat chat = wrapper.getChat();
 
-//				final Cursor cursor = getContentResolver().query(
-//						Uri.parse(RosterProvider.CONTENT_URI + "/" + chat.getJid().getBareJid()), null, null, null, null);
-//				Bitmap avatarBmp = null;
-//				try {
-//					cursor.moveToNext();
-//					avatarBmp = AvatarHelper.getAvatar(chat.getJid().getBareJid(), cursor, RosterTableMetaData.FIELD_AVATAR);
-//				} catch (Exception ex) {
-//					Log.v("ChatListActivity", "no avatar for " + chat.getJid().getBareJid().toString());
-//				} finally {
-//					cursor.close();
-//				}
+				// final Cursor cursor = getContentResolver().query(
+				// Uri.parse(RosterProvider.CONTENT_URI + "/" +
+				// chat.getJid().getBareJid()), null, null, null, null);
+				// Bitmap avatarBmp = null;
+				// try {
+				// cursor.moveToNext();
+				// avatarBmp =
+				// AvatarHelper.getAvatar(chat.getJid().getBareJid(), cursor,
+				// RosterTableMetaData.FIELD_AVATAR);
+				// } catch (Exception ex) {
+				// Log.v("ChatListActivity", "no avatar for " +
+				// chat.getJid().getBareJid().toString());
+				// } finally {
+				// cursor.close();
+				// }
 
 				String x;
 				RosterStore roster = multi.get(chat.getSessionObject()).getRoster();
@@ -143,15 +140,17 @@ public class ChatListActivity extends Activity {
 
 				tv.setText(x);
 
-//				if (avatarBmp != null) {
-//					avatar.setImageBitmap(avatarBmp);
-//				} else {
-//					avatar.setImageResource(R.drawable.user_avatar);
-//				}
+				// if (avatarBmp != null) {
+				// avatar.setImageBitmap(avatarBmp);
+				// } else {
+				// avatar.setImageResource(R.drawable.user_avatar);
+				// }
 				AvatarHelper.setAvatarToImageView(chat.getJid().getBareJid(), avatar);
 			} else {
 				Room room = wrapper.getRoom();
 				tv.setText(room.getRoomJid().toString());
+				avatar.setImageResource(R.drawable.group_chat);
+				itemPresence.setVisibility(View.INVISIBLE);
 			}
 
 			return imageView;
