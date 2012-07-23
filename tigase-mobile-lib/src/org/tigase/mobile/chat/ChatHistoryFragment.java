@@ -12,6 +12,7 @@ import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.roster.CPresence;
 
@@ -26,7 +27,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -59,7 +62,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 
 	private static final boolean DEBUG = true;
 
-	private static final String TAG = "tigase";
+	private static final String TAG = "tigase-chat";
 
 	public static Fragment newInstance(String account, long chatId) {
 		ChatHistoryFragment f = new ChatHistoryFragment();
@@ -142,6 +145,24 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 		return cursor;
 	}
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == TigaseMobileMessengerActivity.SELECT_FOR_SHARE && resultCode == Activity.RESULT_OK) {
+			Uri selected = data.getData();
+			String mimetype = data.getType();
+			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
+			JID jid = chat.getJid();
+			if (jid.getResource() == null) {
+				final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+						ri.getSessionObject());
+				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+			}
+			if (jid != null) {
+				AndroidFileTransferUtility.startFileTransfer(getActivity(), ri, chat.getJid(), selected, mimetype);
+			}
+		}
+	}
+	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.detailsMessage) {
@@ -297,7 +318,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
-			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
+			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
 		}
 		else if (item.getItemId() == R.id.closeChatButton) {
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
