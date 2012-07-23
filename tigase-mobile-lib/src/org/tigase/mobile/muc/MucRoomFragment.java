@@ -102,7 +102,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	public Room getRoom() {
 		return room;
 	}
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -241,7 +241,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.SHOW_OCCUPANTS);
 		} else if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
-			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
+			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
 		} else if (item.getItemId() == R.id.closeChatButton) {
 			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
