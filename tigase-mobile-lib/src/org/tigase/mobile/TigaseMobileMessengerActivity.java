@@ -112,15 +112,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private static final boolean DEBUG = true;
 
-	public final static int JOIN_MUC_DIALOG = 3;
-
-	public static final int REQUEST_CHAT = 1;
+	public static final int REQUEST_CHAT = 3;
 
 	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
 
 	// private ListView rosterList;
 
 	public static final int SELECT_FOR_SHARE = 2;
+
+	public static final int SHOW_OCCUPANTS = 3;
 
 	private final static String STATE_CURRENT_PAGE_KEY = "currentPage";
 
@@ -135,6 +135,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private final TigaseMobileMessengerActivityHelper helper;
 
 	private SharedPreferences mPreferences;
+
 	private BroadcastReceiver mucErrorReceiver;
 
 	private OnSharedPreferenceChangeListener prefChangeListener;

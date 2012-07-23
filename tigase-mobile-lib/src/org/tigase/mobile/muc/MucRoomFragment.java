@@ -232,7 +232,14 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == R.id.showChatsButton) {
+		if (item.getItemId() == R.id.showOccupantsButton) {
+			Intent chatListActivity = new Intent(getActivity(), OccupantsListActivity.class);
+			chatListActivity.putExtra("roomId", room.getId());
+			chatListActivity.putExtra("roomJid", room.getRoomJid().toString());
+			chatListActivity.putExtra("account", room.getSessionObject().getUserBareJid().toString());
+
+			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.SHOW_OCCUPANTS);
+		} else if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
 			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
 		} else if (item.getItemId() == R.id.closeChatButton) {

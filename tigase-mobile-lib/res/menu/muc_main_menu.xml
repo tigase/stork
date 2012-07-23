@@ -13,5 +13,9 @@
         android:showAsAction="ifRoom"
         android:title="@string/showChatsButton">
     </item>
+    <item
+        android:id="@+id/showOccupantsButton"
+        android:title="@string/muc_occupants_list_title">
+    </item>
 
 </menu>
