@@ -6,7 +6,6 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.accountstatus.AccountsStatusFragment;
 import org.tigase.mobile.authenticator.AuthenticatorActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
-import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
@@ -27,12 +26,9 @@ import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.BaseEvent;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.AbstractMessageEvent;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -50,7 +46,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -138,8 +133,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private int currentPage = -1;
 
 	private final TigaseMobileMessengerActivityHelper helper;
-	
+
 	private SharedPreferences mPreferences;
+	private BroadcastReceiver mucErrorReceiver;
+
 	private OnSharedPreferenceChangeListener prefChangeListener;
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
@@ -150,7 +147,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public TigaseMobileMessengerActivity() {
 		helper = TigaseMobileMessengerActivityHelper.createInstance(this);
-		
+
+		this.mucErrorReceiver = new BroadcastReceiver() {
+
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				showMucError(intent.getExtras());
+			}
+		};
+
 		this.chatListener = new Listener<BaseEvent>() {
 
 			@Override
@@ -247,7 +252,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	protected List<ChatWrapper> getChatList() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
 	}
-	
+
 	public int getCurrentPage() {
 		return currentPage;
 	}
@@ -267,20 +272,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			((MessengerApplication) getApplication()).getTracker().trackPageView("/chatPage");
 			final ChatWrapper chat = getChatByPageIndex(msg);
 			if (chat != null && chat.isChat()) {
-				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(chat.getChat().getJid().getBareJid().toString()));
+				Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
+						+ Uri.encode(chat.getChat().getJid().getBareJid().toString()));
 				ContentValues values = new ContentValues();
 				values.put(ChatTableMetaData.FIELD_AUTHOR_JID, chat.getChat().getJid().getBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_INCOMING);
 				getContentResolver().update(uri, values, null, null);
 
 				intent.putExtra("chatId", chat.getChat().getId());
-			}
-			else if (chat != null && chat.isRoom())
+			} else if (chat != null && chat.isRoom())
 				intent.putExtra("roomId", chat.getRoom().getId());
 		}
 
 		sendBroadcast(intent);
-		
+
 		helper.updateActionBar();
 		helper.invalidateOptionsMenu();
 	}
@@ -326,6 +331,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onCreate()");
 
+		IntentFilter filter = new IntentFilter(JaxmppService.MUC_ERROR_MSG);
+		registerReceiver(mucErrorReceiver, filter);
+
 		super.onCreate(savedInstanceState);
 		this.mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		this.mPreferences.registerOnSharedPreferenceChangeListener(prefChangeListener);
@@ -348,16 +356,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			intent.putExtra("new", true);
 			startActivity(intent);
 			// finish();
-		}
-
-		Bundle bundle = getIntent().getExtras();
-		if (bundle != null && bundle.getBoolean("error", false)) {
-			bundle.putBoolean("error", false);
-			String account = bundle.getString("account");
-			String message = bundle.getString("message");
-
-			ErrorDialog newFragment = ErrorDialog.newInstance(account, message);
-			newFragment.show(getSupportFragmentManager(), "dialog");
 		}
 
 		if (savedInstanceState != null && currentPage == -1) {
@@ -563,6 +561,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	protected void onDestroy() {
+		unregisterReceiver(mucErrorReceiver);
+
 		this.mPreferences.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 		super.onDestroy();
 	}
@@ -649,6 +649,20 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		this.currentPage = findChatPage(intent.getExtras());
 
 		helper.updateActionBar();
+
+		Bundle bundle = intent.getExtras();
+		if (bundle != null && bundle.getBoolean("mucError", false)) {
+			bundle.putBoolean("mucError", false);
+
+			showMucError(bundle);
+		} else if (bundle != null && bundle.getBoolean("error", false)) {
+			bundle.putBoolean("error", false);
+			String account = bundle.getString("account");
+			String message = bundle.getString("message");
+
+			ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
+			newFragment.show(getSupportFragmentManager(), "dialog");
+		}
 	}
 
 	@Override
@@ -727,7 +741,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			intent.putExtra("focused", true);
 			startService(intent);
 			return true;
-		}		
+		}
 		return false;
 	}
 
@@ -769,7 +783,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			helper.setShowAsAction(add, MenuItem.SHOW_AS_ACTION_IF_ROOM);
 			add.setVisible(serviceActive);
 		}
-		
+
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -850,6 +864,15 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		};
 		viewPager.postDelayed(r, 750);
+	}
+
+	private void showMucError(final Bundle bundle) {
+		String room = "Room: " + bundle.getString("roomJid");
+		String message = bundle.getString("errorCondition");
+		String account = bundle.getString("account");
+
+		ErrorDialog newFragment = ErrorDialog.newInstance("Muc error", account, "Room: " + room + "\n\n" + message);
+		newFragment.show(getSupportFragmentManager(), "dialog");
 	}
 
 }

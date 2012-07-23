@@ -9,9 +9,10 @@ import android.support.v4.app.DialogFragment;
 
 public class ErrorDialog extends DialogFragment {
 
-	public static ErrorDialog newInstance(final String account, final String message) {
+	public static ErrorDialog newInstance(final String title, final String account, final String message) {
 		ErrorDialog frag = new ErrorDialog();
 		Bundle args = new Bundle();
+		args.putString("title", title);
 		args.putString("account", account);
 		args.putString("message", message);
 		frag.setArguments(args);
@@ -22,10 +23,11 @@ public class ErrorDialog extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		final String account = getArguments().getString("account");
 		final String message = getArguments().getString("message");
+		final String title = getArguments().getString("title");
 
 		Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setIcon(android.R.drawable.ic_dialog_alert);
-		builder.setTitle("Error");
+		builder.setTitle(title);
 
 		builder.setMessage("Account: " + account + '\n' + '\n' + message);
 		builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {

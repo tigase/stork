@@ -2,18 +2,16 @@ package org.tigase.mobile.muc;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
-import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
@@ -85,7 +83,11 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 
 	private Room room;
 
+	private Button sendButton;
+
 	private ImageView stateImage;
+
+	private View view;
 
 	public MucRoomFragment() {
 		this.mucListener = new Listener<MucModule.MucEvent>() {
@@ -104,9 +106,9 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		this.setHasOptionsMenu(true);
-		
+
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
@@ -149,10 +151,10 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.muc_main_menu, menu);
 	}
-		
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		final View view = inflater.inflate(R.layout.muc_conversation, container, false);
+		this.view = inflater.inflate(R.layout.muc_conversation, container, false);
 
 		this.stateImage = (ImageView) view.findViewById(R.id.user_presence);
 		this.progressBar = (ProgressBar) view.findViewById(R.id.progressBar1);
@@ -163,6 +165,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 		}
 
 		this.ed = (EditText) view.findViewById(R.id.chat_message_entry);
+		ed.setEnabled(room.getState() == State.joined);
 		this.ed.setOnKeyListener(new OnKeyListener() {
 
 			@Override
@@ -176,8 +179,9 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 			}
 		});
 
-		final Button b = (Button) view.findViewById(R.id.chat_send_button);
-		b.setOnClickListener(new OnClickListener() {
+		this.sendButton = (Button) view.findViewById(R.id.chat_send_button);
+		sendButton.setEnabled(room.getState() == State.joined);
+		sendButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
@@ -225,16 +229,16 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	protected void onMucEvent(MucEvent be) {
 		updatePresenceImage();
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
-			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
-		}
-		else if (item.getItemId() == R.id.closeChatButton) {
-			final ViewPager viewPager = ((TigaseMobileMessengerActivity)this.getActivity()).viewPager;
-			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(room.getSessionObject());
+			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
+		} else if (item.getItemId() == R.id.closeChatButton) {
+			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
+			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+					room.getSessionObject());
 			final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
 
 			viewPager.setCurrentItem(1);
@@ -260,7 +264,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -302,23 +306,43 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	}
 
 	private void updatePresenceImage() {
-		if (stateImage != null) {
-			stateImage.post(new Runnable() {
+		Runnable r = new Runnable() {
 
-				@Override
-				public void run() {
-					if (room.getState() == State.not_joined) {
-						progressBar.setVisibility(View.GONE);
-						stateImage.setImageResource(R.drawable.user_offline);
-					} else if (room.getState() == State.requested) {
-						progressBar.setVisibility(View.VISIBLE);
-						stateImage.setVisibility(View.GONE);
-					} else if (room.getState() == State.joined) {
-						progressBar.setVisibility(View.GONE);
-						stateImage.setImageResource(R.drawable.user_available);
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+
+				Log.i(TAG, "STATE: " + room.getState());
+
+				if (ed != null) {
+					if (room.getState() == State.joined && !ed.isEnabled()) {
+						ed.setEnabled(true);
+						sendButton.setEnabled(true);
+					} else if (room.getState() != State.joined && ed.isEnabled()) {
+						ed.setEnabled(false);
+						sendButton.setEnabled(false);
 					}
 				}
-			});
-		}
+				if (stateImage != null) {
+					stateImage.post(new Runnable() {
+
+						@Override
+						public void run() {
+							if (room.getState() == State.not_joined) {
+								progressBar.setVisibility(View.GONE);
+								stateImage.setImageResource(R.drawable.user_offline);
+							} else if (room.getState() == State.requested) {
+								progressBar.setVisibility(View.VISIBLE);
+								stateImage.setVisibility(View.GONE);
+							} else if (room.getState() == State.joined) {
+								progressBar.setVisibility(View.GONE);
+								stateImage.setImageResource(R.drawable.user_available);
+							}
+						}
+					});
+				}
+			}
+		};
+		view.post(r);
 	}
 }

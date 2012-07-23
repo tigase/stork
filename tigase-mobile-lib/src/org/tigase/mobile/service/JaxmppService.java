@@ -1,14 +1,12 @@
 package org.tigase.mobile.service;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -43,7 +41,6 @@ import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
 import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import org.tigase.mobile.filetransfer.StreamhostsEvent;
 import org.tigase.mobile.net.SocketThread;
-import org.tigase.mobile.pubsub.GeolocationModule;
 import org.tigase.mobile.sync.SyncAdapter;
 import org.tigase.mobile.ui.NotificationHelper;
 
@@ -60,7 +57,6 @@ import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.connector.StreamError;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xml.DefaultElement;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
@@ -84,7 +80,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
-import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
@@ -108,19 +103,12 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.location.Address;
-import android.location.Criteria;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.SSLCertificateSocketFactory;
 import android.net.SSLSessionCache;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -160,9 +148,8 @@ public class JaxmppService extends Service {
 			} else if (roomId != -1) {
 				currentChatIdFocus = -1;
 				currentRoomIdFocus = roomId;
-			}
-			else {
-				currentChatIdFocus = -1;				
+			} else {
+				currentChatIdFocus = -1;
 				currentRoomIdFocus = -1;
 			}
 		}
@@ -215,6 +202,8 @@ public class JaxmppService extends Service {
 	protected static boolean focused;
 
 	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
+
+	public static final String MUC_ERROR_MSG = "org.tigase.mobile.MUC_ERROR_MSG";
 
 	private static boolean serviceActive = false;
 
@@ -430,25 +419,25 @@ public class JaxmppService extends Service {
 
 	private ClientFocusReceiver focusChangeReceiver;
 
+	private final GeolocationFeature geolocationFeature;
+
 	private Listener<AuthEvent> invalidAuthListener;
 
-	private final GeolocationFeature geolocationFeature;
-	
 	private long keepaliveInterval = 3 * 60 * 1000;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
 	private final MobileModeFeature mobileModeFeature;
-	
+
 	private Listener<MucEvent> mucListener;
 
 	private ConnReceiver myConnReceiver;
 
 	private ScreenStateReceiver myScreenStateReceiver;
 
+	// private NotificationManager notificationManager;
+
 	private NotificationHelper notificationHelper;
-	
-//	private NotificationManager notificationManager;
 
 	private NotificationVariant notificationVariant = NotificationVariant.always;
 
@@ -485,7 +474,7 @@ public class JaxmppService extends Service {
 
 		if (DEBUG)
 			Log.i(TAG, "creating");
-		
+
 		this.presenceSendListener = new Listener<PresenceModule.PresenceEvent>() {
 
 			@Override
@@ -537,7 +526,9 @@ public class JaxmppService extends Service {
 					} else {
 						values.put(ChatTableMetaData.FIELD_BODY, msg.getBody());
 					}
-					values.put(ChatTableMetaData.FIELD_STATE, currentChatIdFocus != be.getChat().getId() ? ChatTableMetaData.STATE_INCOMING_UNREAD : ChatTableMetaData.STATE_INCOMING);
+					values.put(ChatTableMetaData.FIELD_STATE,
+							currentChatIdFocus != be.getChat().getId() ? ChatTableMetaData.STATE_INCOMING_UNREAD
+									: ChatTableMetaData.STATE_INCOMING);
 					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
 
 					getContentResolver().insert(uri, values);
@@ -550,7 +541,9 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(MucModule.MucEvent be) throws JaxmppException {
-				if (be.getRoom() != null && be.getMessage() != null && be.getMessage().getBody() != null) {
+				if (be.getType() == MucModule.PresenceError) {
+					onMucPresenceError(be);
+				} else if (be.getRoom() != null && be.getMessage() != null && be.getMessage().getBody() != null) {
 
 					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getRoom().getRoomJid().toString());
 
@@ -672,7 +665,7 @@ public class JaxmppService extends Service {
 				}
 
 				mobileModeFeature.accountConnected(jaxmpp);
-				
+
 				GeolocationFeature.sendCurrentLocation(jaxmpp, JaxmppService.this);
 				notificationUpdate();
 				rejoinToRooms(be.getSessionObject());
@@ -718,7 +711,7 @@ public class JaxmppService extends Service {
 			}
 
 		};
-		
+
 		this.mobileModeFeature = new MobileModeFeature(this);
 		this.geolocationFeature = new GeolocationFeature(this);
 
@@ -978,8 +971,8 @@ public class JaxmppService extends Service {
 				"Account", // Action
 				"Error", // Label
 				0);
-	}	
-	
+	}
+
 	private void notificationUpdateReconnect(Date d) {
 		if (this.notificationVariant == NotificationVariant.only_connected) {
 			notificationHelper.cancelNotification();
@@ -991,7 +984,7 @@ public class JaxmppService extends Service {
 		String expandedNotificationText = "Next try on " + s.format(d);
 		notificationHelper.notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", expandedNotificationText);
 	}
-	
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -1095,6 +1088,7 @@ public class JaxmppService extends Service {
 
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().addListener(MucModule.MucMessageReceived, this.mucListener);
+		getMulti().addListener(MucModule.PresenceError, this.mucListener);
 		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
 		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
@@ -1108,8 +1102,8 @@ public class JaxmppService extends Service {
 
 		updateJaxmppInstances(getMulti(), getContentResolver(), getResources(), getApplicationContext());
 
-		
-//		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// this.notificationManager = (NotificationManager)
+		// getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationHelper = NotificationHelper.createIntstance(this);
 
 		notificationUpdate();
@@ -1121,7 +1115,7 @@ public class JaxmppService extends Service {
 		timer.cancel();
 
 		geolocationFeature.unregisterLocationListener();
-		
+
 		clearLocalJaxmppProperties();
 		this.prefs.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
 
@@ -1157,6 +1151,7 @@ public class JaxmppService extends Service {
 
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().removeListener(MucModule.MucMessageReceived, this.mucListener);
+		getMulti().removeListener(MucModule.PresenceError, this.mucListener);
 
 		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
@@ -1170,6 +1165,33 @@ public class JaxmppService extends Service {
 		SocketThread.stopThreads();
 
 		super.onDestroy();
+	}
+
+	protected void onMucPresenceError(MucEvent be) throws XMLException {
+		Intent intent = new Intent();
+
+		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+		intent.putExtra("mucError", true);
+		intent.putExtra("account", be.getSessionObject().getUserBareJid().toString());
+		intent.putExtra("roomId", be.getRoom().getId());
+		intent.putExtra("roomJid", be.getRoom().getRoomJid().toString());
+
+		ErrorCondition c = be.getPresence().getErrorCondition();
+		if (c != null) {
+			intent.putExtra("errorCondition", c.name());
+		} else {
+			intent.putExtra("errorCondition", "-");
+		}
+
+		if (focused) {
+			intent.setAction(MUC_ERROR_MSG);
+			sendBroadcast(intent);
+		} else {
+			intent.setClass(getApplicationContext(), TigaseMobileMessengerActivity.class);
+			notificationHelper.showMucError(be.getRoom().getRoomJid().toString(), intent);
+		}
 	}
 
 	public void onNetworkChanged(final NetworkInfo netInfo) {
@@ -1516,7 +1538,7 @@ public class JaxmppService extends Service {
 		usedNetworkType = type;
 	}
 
-	protected void showChatNotification(final MessageEvent event) throws XMLException {		
+	protected void showChatNotification(final MessageEvent event) throws XMLException {
 		if (currentChatIdFocus != event.getChat().getId()) {
 			notificationHelper.notifyNewChatMessage(event);
 		}

@@ -21,7 +21,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -30,205 +29,23 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
 
 public abstract class NotificationHelper {
 
+	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
+
+	public static final int CHAT_NOTIFICATION_ID = 132008;
+
+	public static final int ERROR_NOTIFICATION_ID = 5398717;
+
+	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
+
+	public static final int NOTIFICATION_ID = 5398777;
+
 	protected static final String TAG = "NotificationHelper";
 
-	public static final int AUTH_REQUEST_NOTIFICATION_ID = 132108;
-	
-	public static final int CHAT_NOTIFICATION_ID = 132008;
-	
-	public static final int ERROR_NOTIFICATION_ID = 5398717;
-	
-	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
-	
-	public static final int NOTIFICATION_ID = 5398777;
-	
-	public static NotificationHelper createIntstance(Context context) {
-		if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-			return new NotificationHelperJellyBean(context);
-		}
-		if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
-			return new NotificationHelperICS(context);
-		}
-		else if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
-			return new NotificationHelperHoneycomb(context);
-		}
-		else {
-			return new NotificationHelperBase(context);
-		}
-	}
-	
-	protected final Context context;
-	protected final NotificationManager notificationManager;
-	
-	protected NotificationHelper(Context context) {
-		this.context = context;
-		this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-	}
-	
-	private final MultiJaxmpp getMulti() {
-		return ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
-	}
-	
-	public void notifyFileTransferRequest(FileTransferRequestEvent ev) {
-		Jaxmpp jaxmpp = getMulti().get(ev.getSessionObject());
-		String tag = ev.getSender().toString() + " -> "
-				+ jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID).toString() + " file = "
-				+ ev.getFilename();
-
-		RosterItem ri = jaxmpp.getRoster().get(ev.getSender().getBareJid());
-
-		int ico = android.R.drawable.stat_sys_download;
-		String title = context.getResources().getString(R.string.service_incoming_file_notification_title,
-				ev.getFilename(), ri != null && ri.getName() != null ? ri.getName() : ev.getSender().getBareJid().toString());
-		String text = context.getResources().getString(R.string.service_incoming_file_notification_text, ev.getFilename());
-
-		Notification notification = prepareFileTransferRequestNotification(ico, title, text, ev, jaxmpp, tag);
-		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);		
-	}
-	
-	protected abstract Notification prepareFileTransferRequestNotification(int ico, String title, String text, FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag);
-	
-	public void notifyFileTransferProgress(FileTransfer ft) {
-		String tag = ft.toString();
-
-		int ico = ft.outgoing ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
-		String notificationTitle;
-		if (ft.outgoing)
-			notificationTitle = context.getResources().getString(R.string.service_file_transfer_sending_file, ft.filename,
-					(ft.buddyName != null) ? ft.buddyName : ft.buddyJid.toString());
-		else
-			notificationTitle = context.getResources().getString(R.string.service_file_transfer_receiving_file, ft.filename,
-					(ft.buddyName != null) ? ft.buddyName : ft.buddyJid.toString());
-
-		String notificationText = "";
-
-		switch (ft.getState()) {
-		case error:
-			ico = android.R.drawable.stat_notify_error;
-			notificationText = ft.errorMessage;
-			break;
-
-		case negotiating:
-			notificationText = context.getResources().getString(R.string.service_file_transfer_negotiating);
-			break;
-
-		case connecting:
-			notificationText = context.getResources().getString(R.string.service_file_transfer_connecting);
-			break;
-
-		case active:
-			notificationText = context.getResources().getString(R.string.service_file_transfer_progress, ft.getProgress());
-			break;
-
-		case finished:
-			notificationText = context.getResources().getString(R.string.service_file_transfer_finished);
-			if (!ft.outgoing) {
-				AndroidFileTransferUtility.refreshMediaScanner(context.getApplicationContext(), ft.destination);
-			}
-			break;
-		default:
-			break;
-		}
-		
-		Notification notification = prepareFileTransferProgressNotification(ico, notificationTitle, notificationText, ft);
-		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);		
-	}
-
-	public void notifyNewChatMessage(MessageEvent event) throws XMLException {
-		int ico = R.drawable.ic_stat_message;
-
-		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
-				event.getMessage().getFrom().getBareJid());
-		if (n == null)
-			n = event.getMessage().getFrom().toString();
-
-		String notificationTitle = context.getResources().getString(R.string.app_name);
-		String notificationText = context.getResources().getString(R.string.service_message_from_notification_title, n);
-		
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		intent.setAction("messageFrom-" + event.getMessage().getFrom());
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		intent.putExtra("jid", "" + event.getMessage().getFrom());
-		if (event.getChat() != null)
-			intent.putExtra("chatId", event.getChat().getId());
-
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);		
-		
-		Notification notification = prepareChatNotification(ico, notificationTitle, notificationText, pendingIntent, event);
-		
-		notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
-	}
-	
-	public void notifySubscribeRequest(PresenceEvent be) {
-		String notiticationTitle = context.getResources().getString(R.string.service_authentication_request_notification_title,
-				be.getJid());
-		String expandedNotificationText = notiticationTitle;
-
-		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
-		notification.flags = Notification.FLAG_AUTO_CANCEL;
-		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
-
-		final Context context = this.context.getApplicationContext();
-
-		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
-		Intent intent = new Intent(context, AuthRequestActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		intent.putExtra("jid", "" + be.getJid());
-		intent.putExtra("account", "" + be.getSessionObject().getUserBareJid());
-
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
-
-		notificationManager.notify("authRequest:" + be.getJid(), AUTH_REQUEST_NOTIFICATION_ID, notification);
-	}
-	
-	protected abstract Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent, MessageEvent event) throws XMLException;
-	
-	protected abstract Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft);	
-
-	protected PendingIntent createFileTransferProgressPendingIntent(FileTransfer ft) {
-		Context context = this.context.getApplicationContext();
-		Intent intent = null;
-		if (!ft.outgoing && ft.getState() == FileTransfer.State.finished && ft.mimetype != null) {
-			intent = new Intent();
-			intent.setAction(Intent.ACTION_VIEW);
-			intent.setDataAndType(Uri.fromFile(ft.destination), ft.mimetype);
-		} else {
-			intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		}
-		return PendingIntent.getActivity(context, 0, intent, 0);		
-	}
-
-	
-	protected PendingIntent createFileTransferRequestPendingIntent(FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-		Context context = this.context.getApplicationContext();
-		Intent intent = new Intent(context, IncomingFileActivity.class);
-		intent.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
-		intent.putExtra("sender", ev.getSender().toString());
-		intent.putExtra("id", ev.getId());
-		intent.putExtra("sid", ev.getSid());
-		intent.putExtra("filename", ev.getFilename());
-		intent.putExtra("tag", tag);
-		if (ev.getFilesize() != null) {
-			intent.putExtra("filesize", ev.getFilesize());
-		}
-		intent.putExtra("mimetype", ev.getMimetype());
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT
-				| PendingIntent.FLAG_ONE_SHOT);		
-	}
-	
-	public static Intent createFileTransferAcceptIntent(Context context, FileTransferRequestEvent ev, BareJID account, String tag) {
+	public static Intent createFileTransferAcceptIntent(Context context, FileTransferRequestEvent ev, BareJID account,
+			String tag) {
 		// intent to accept
 		Intent intentAccept = new Intent(context, JaxmppService.class);
 		intentAccept.putExtra("tag", tag);
@@ -243,11 +60,12 @@ public abstract class NotificationHelper {
 		intentAccept.putExtra("mimetype", ev.getMimetype());
 		intentAccept.setAction(JaxmppService.ACTION_FILETRANSFER);
 		intentAccept.putExtra("filetransferAction", "accept");
-		
+
 		return intentAccept;
 	}
-	
-	public static Intent createFileTransferRejectIntent(Context context, FileTransferRequestEvent ev, BareJID account, String tag) {
+
+	public static Intent createFileTransferRejectIntent(Context context, FileTransferRequestEvent ev, BareJID account,
+			String tag) {
 		Intent intentReject = new Intent(context, JaxmppService.class);
 		intentReject.putExtra("tag", tag);
 		intentReject.putExtra("account", account.toString());
@@ -261,20 +79,76 @@ public abstract class NotificationHelper {
 		intentReject.putExtra("mimetype", ev.getMimetype());
 		intentReject.setAction(JaxmppService.ACTION_FILETRANSFER);
 		intentReject.putExtra("filetransferAction", "reject");
-		
+
 		return intentReject;
 	}
-	
-	public void cancelChatNotification(String tag) {
-		notificationManager.cancel(tag, NotificationHelper.CHAT_NOTIFICATION_ID);		
+
+	public static NotificationHelper createIntstance(Context context) {
+		if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
+			return new NotificationHelperJellyBean(context);
+		}
+		if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
+			return new NotificationHelperICS(context);
+		} else if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
+			return new NotificationHelperHoneycomb(context);
+		} else {
+			return new NotificationHelperBase(context);
+		}
 	}
-	
+
+	protected final Context context;
+
+	protected final NotificationManager notificationManager;
+
+	protected NotificationHelper(Context context) {
+		this.context = context;
+		this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+	}
+
+	public void cancelChatNotification(String tag) {
+		notificationManager.cancel(tag, NotificationHelper.CHAT_NOTIFICATION_ID);
+	}
+
 	public void cancelFileTransferRequestNotification(String tag) {
 		notificationManager.cancel(tag, FILE_TRANSFER_NOTIFICATION_ID);
 	}
 
 	public void cancelNotification() {
 		notificationManager.cancel(NOTIFICATION_ID);
+	}
+
+	protected PendingIntent createFileTransferProgressPendingIntent(FileTransfer ft) {
+		Context context = this.context.getApplicationContext();
+		Intent intent = null;
+		if (!ft.outgoing && ft.getState() == FileTransfer.State.finished && ft.mimetype != null) {
+			intent = new Intent();
+			intent.setAction(Intent.ACTION_VIEW);
+			intent.setDataAndType(Uri.fromFile(ft.destination), ft.mimetype);
+		} else {
+			intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		}
+		return PendingIntent.getActivity(context, 0, intent, 0);
+	}
+
+	protected PendingIntent createFileTransferRequestPendingIntent(FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+		Context context = this.context.getApplicationContext();
+		Intent intent = new Intent(context, IncomingFileActivity.class);
+		intent.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+		intent.putExtra("sender", ev.getSender().toString());
+		intent.putExtra("id", ev.getId());
+		intent.putExtra("sid", ev.getSid());
+		intent.putExtra("filename", ev.getFilename());
+		intent.putExtra("tag", tag);
+		if (ev.getFilesize() != null) {
+			intent.putExtra("filesize", ev.getFilesize());
+		}
+		intent.putExtra("mimetype", ev.getMimetype());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+	}
+
+	private final MultiJaxmpp getMulti() {
+		return ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
 	}
 
 	public void notificationUpdate(final int ico, final String notiticationTitle, final String expandedNotificationText) {
@@ -334,6 +208,157 @@ public abstract class NotificationHelper {
 		account.setProperty("messenger#error", message);
 
 		notificationManager.notify("error:" + account.getUserBareJid().toString(), ERROR_NOTIFICATION_ID, notification);
+
+	}
+
+	public void notifyFileTransferProgress(FileTransfer ft) {
+		String tag = ft.toString();
+
+		int ico = ft.outgoing ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
+		String notificationTitle;
+		if (ft.outgoing)
+			notificationTitle = context.getResources().getString(R.string.service_file_transfer_sending_file, ft.filename,
+					(ft.buddyName != null) ? ft.buddyName : ft.buddyJid.toString());
+		else
+			notificationTitle = context.getResources().getString(R.string.service_file_transfer_receiving_file, ft.filename,
+					(ft.buddyName != null) ? ft.buddyName : ft.buddyJid.toString());
+
+		String notificationText = "";
+
+		switch (ft.getState()) {
+		case error:
+			ico = android.R.drawable.stat_notify_error;
+			notificationText = ft.errorMessage;
+			break;
+
+		case negotiating:
+			notificationText = context.getResources().getString(R.string.service_file_transfer_negotiating);
+			break;
+
+		case connecting:
+			notificationText = context.getResources().getString(R.string.service_file_transfer_connecting);
+			break;
+
+		case active:
+			notificationText = context.getResources().getString(R.string.service_file_transfer_progress, ft.getProgress());
+			break;
+
+		case finished:
+			notificationText = context.getResources().getString(R.string.service_file_transfer_finished);
+			if (!ft.outgoing) {
+				AndroidFileTransferUtility.refreshMediaScanner(context.getApplicationContext(), ft.destination);
+			}
+			break;
+		default:
+			break;
+		}
+
+		Notification notification = prepareFileTransferProgressNotification(ico, notificationTitle, notificationText, ft);
+		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
+	}
+
+	public void notifyFileTransferRequest(FileTransferRequestEvent ev) {
+		Jaxmpp jaxmpp = getMulti().get(ev.getSessionObject());
+		String tag = ev.getSender().toString() + " -> "
+				+ jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID).toString() + " file = "
+				+ ev.getFilename();
+
+		RosterItem ri = jaxmpp.getRoster().get(ev.getSender().getBareJid());
+
+		int ico = android.R.drawable.stat_sys_download;
+		String title = context.getResources().getString(R.string.service_incoming_file_notification_title, ev.getFilename(),
+				ri != null && ri.getName() != null ? ri.getName() : ev.getSender().getBareJid().toString());
+		String text = context.getResources().getString(R.string.service_incoming_file_notification_text, ev.getFilename());
+
+		Notification notification = prepareFileTransferRequestNotification(ico, title, text, ev, jaxmpp, tag);
+		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
+	}
+
+	public void notifyNewChatMessage(MessageEvent event) throws XMLException {
+		int ico = R.drawable.ic_stat_message;
+
+		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
+				event.getMessage().getFrom().getBareJid());
+		if (n == null)
+			n = event.getMessage().getFrom().toString();
+
+		String notificationTitle = context.getResources().getString(R.string.app_name);
+		String notificationText = context.getResources().getString(R.string.service_message_from_notification_title, n);
+
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		intent.setAction("messageFrom-" + event.getMessage().getFrom());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("jid", "" + event.getMessage().getFrom());
+		if (event.getChat() != null)
+			intent.putExtra("chatId", event.getChat().getId());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+		Notification notification = prepareChatNotification(ico, notificationTitle, notificationText, pendingIntent, event);
+
+		notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
+	}
+
+	public void notifySubscribeRequest(PresenceEvent be) {
+		String notiticationTitle = context.getResources().getString(R.string.service_authentication_request_notification_title,
+				be.getJid());
+		String expandedNotificationText = notiticationTitle;
+
+		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		final Context context = this.context.getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+		Intent intent = new Intent(context, AuthRequestActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("jid", "" + be.getJid());
+		intent.putExtra("account", "" + be.getSessionObject().getUserBareJid());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("authRequest:" + be.getJid(), AUTH_REQUEST_NOTIFICATION_ID, notification);
+	}
+
+	protected abstract Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MessageEvent event) throws XMLException;
+
+	protected abstract Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft);
+
+	protected abstract Notification prepareFileTransferRequestNotification(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag);
+
+	public void showMucError(String room, Intent intent) {
+		String notiticationTitle = context.getResources().getString(R.string.service_error_notification_title);
+		String expandedNotificationText = "Error in MUC";
+
+		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		final Context context = this.context.getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("error:" + room, ERROR_NOTIFICATION_ID, notification);
 
 	}
 
