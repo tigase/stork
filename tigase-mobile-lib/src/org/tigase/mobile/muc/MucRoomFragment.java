@@ -149,6 +149,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		menu.clear();
 		inflater.inflate(R.menu.muc_main_menu, menu);
 	}
 

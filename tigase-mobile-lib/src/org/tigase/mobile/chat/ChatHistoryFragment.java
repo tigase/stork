@@ -228,6 +228,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		menu.clear();
 		inflater.inflate(R.menu.chat_main_menu, menu);
 
 		// Share button support
