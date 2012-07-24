@@ -674,7 +674,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(this, ChatListActivity.class);
-			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
+			this.startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
+			return true;
 		}
 		else if (item.getItemId() == R.id.joinMucRoom) {
 			JoinMucDialog newFragment = JoinMucDialog.newInstance();
