@@ -13,14 +13,16 @@ public class NotificationHelperICS extends NotificationHelperHoneycomb {
 		super(context);
 	}
 
-	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text, FileTransfer ft) {
+	@Override
+	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text,
+			FileTransfer ft) {
 		Notification.Builder builder = super.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
 
 		FileTransfer.State state = ft.getState();
 		builder.setProgress(100, ft.getProgress(), state == FileTransfer.State.connecting
 				|| state == FileTransfer.State.negotiating);
-		
+
 		return builder;
 	}
-	
+
 }

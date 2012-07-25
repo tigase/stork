@@ -2,7 +2,6 @@ package org.tigase.mobile.db.providers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
@@ -10,7 +9,6 @@ import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.RosterTableMetaData;
-import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -22,7 +20,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore.Predicate;
 import android.content.Context;
 import android.database.AbstractCursor;
-import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
@@ -33,12 +30,16 @@ public class RosterCursor extends AbstractCursor {
 	private final static boolean DEBUG = false;
 
 	// is should not be used - use AvatarHelper class instead
-//	private HashMap<RosterItem, byte[]> avatarCache = new HashMap<RosterItem, byte[]>();
+	// private HashMap<RosterItem, byte[]> avatarCache = new HashMap<RosterItem,
+	// byte[]>();
 
 	private final String[] COLUMN_NAMES = { RosterTableMetaData.FIELD_ID, RosterTableMetaData.FIELD_JID,
 			RosterTableMetaData.FIELD_NAME, RosterTableMetaData.FIELD_ASK, RosterTableMetaData.FIELD_SUBSCRIPTION,
 			RosterTableMetaData.FIELD_DISPLAY_NAME, RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_GROUP_NAME,
-			RosterTableMetaData.FIELD_STATUS_MESSAGE, /*RosterTableMetaData.FIELD_AVATAR,*/ RosterTableMetaData.FIELD_ACCOUNT };
+			RosterTableMetaData.FIELD_STATUS_MESSAGE, /*
+													 * RosterTableMetaData.
+													 * FIELD_AVATAR,
+													 */RosterTableMetaData.FIELD_ACCOUNT };
 
 	private final Context context;
 
@@ -102,10 +103,10 @@ public class RosterCursor extends AbstractCursor {
 			return rdt.getStatusMessageOf(item);
 		}
 		case 9: {
-//			RosterItem item = items.get(mPos);
-//			return readAvatar(item);
-//		}
-//		case 10: {
+			// RosterItem item = items.get(mPos);
+			// return readAvatar(item);
+			// }
+			// case 10: {
 			RosterItem item = items.get(mPos);
 			BareJID jid = item.getSessionObject().getUserBareJid();
 			return jid == null ? null : jid.toString();
@@ -234,32 +235,35 @@ public class RosterCursor extends AbstractCursor {
 		}
 	}
 
-//	private byte[] readAvatar(RosterItem item) {
-//		// if (item.getData("photo") == null)
-//		// return null;
-////		if (avatarCache.containsKey(item)) {
-////			if (DEBUG)
-////				Log.d("tigase", "Getting from cache avatar of user " + item.getJid());
-////			return avatarCache.get(item);
-////		}
-//		if (DEBUG)
-//			Log.d("tigase", "Reading avatar of user " + item.getJid());
-//		final Cursor c = db.rawQuery("SELECT * FROM " + VCardsCacheTableMetaData.TABLE_NAME + " WHERE "
-//				+ VCardsCacheTableMetaData.FIELD_JID + "='" + item.getJid() + "'", null);
-//		try {
-//			while (c.moveToNext()) {
-//				String sha = c.getString(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_HASH));
-//				item.setData("photo", sha);
-//				byte[] data = c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-////				avatarCache.put(item, data);
-//				return data;
-//			}
-//			return null;
-//		} finally {
-//			c.close();
-//		}
-//
-//	}
+	// private byte[] readAvatar(RosterItem item) {
+	// // if (item.getData("photo") == null)
+	// // return null;
+	// // if (avatarCache.containsKey(item)) {
+	// // if (DEBUG)
+	// // Log.d("tigase", "Getting from cache avatar of user " + item.getJid());
+	// // return avatarCache.get(item);
+	// // }
+	// if (DEBUG)
+	// Log.d("tigase", "Reading avatar of user " + item.getJid());
+	// final Cursor c = db.rawQuery("SELECT * FROM " +
+	// VCardsCacheTableMetaData.TABLE_NAME + " WHERE "
+	// + VCardsCacheTableMetaData.FIELD_JID + "='" + item.getJid() + "'", null);
+	// try {
+	// while (c.moveToNext()) {
+	// String sha =
+	// c.getString(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_HASH));
+	// item.setData("photo", sha);
+	// byte[] data =
+	// c.getBlob(c.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+	// // avatarCache.put(item, data);
+	// return data;
+	// }
+	// return null;
+	// } finally {
+	// c.close();
+	// }
+	//
+	// }
 
 	@Override
 	public boolean requery() {

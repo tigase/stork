@@ -14,8 +14,8 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
-import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
@@ -37,8 +37,8 @@ public class GeolocationFeature {
 
 	public static final String GEOLOCATION_PUBLISH_ENABLED = "geolocation#publish_enabled";
 
-	public static final String GEOLOCATION_PUBLISH_PRECISION = "geolocation#publish_precision";	
-	
+	public static final String GEOLOCATION_PUBLISH_PRECISION = "geolocation#publish_precision";
+
 	public static void sendCurrentLocation(JaxmppCore jaxmpp, Context context) {
 		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -240,10 +240,10 @@ public class GeolocationFeature {
 
 	private Criteria locationCriteria = new Criteria();
 
-	private long locationInterval = 5 * 60 * 1000;	
-	
+	private long locationInterval = 5 * 60 * 1000;
+
 	private final LocationListener locationListener;
-	
+
 	public GeolocationFeature(JaxmppService service) {
 		jaxmppService = service;
 
@@ -266,7 +266,7 @@ public class GeolocationFeature {
 			public void onStatusChanged(String provider, int status, Bundle extras) {
 			}
 
-		};		
+		};
 	}
 
 	@SuppressLint("NewApi")
@@ -275,16 +275,10 @@ public class GeolocationFeature {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
 			locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
 		} else {
-			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationInterval, 100,
-					locationListener);
-		}			
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationInterval, 100, locationListener);
+		}
 	}
-	
-	public void unregisterLocationListener() {
-		LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.removeUpdates(locationListener);		
-	}
-	
+
 	public void sendCurrentLocation() {
 		LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
 		Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -296,6 +290,11 @@ public class GeolocationFeature {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void unregisterLocationListener() {
+		LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.removeUpdates(locationListener);
 	}
 
 	public void updateLocation(Location location) {

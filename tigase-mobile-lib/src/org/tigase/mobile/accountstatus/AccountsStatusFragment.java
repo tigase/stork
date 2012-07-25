@@ -300,7 +300,7 @@ public class AccountsStatusFragment extends Fragment {
 				accountName.setText(jaxmpp.getSessionObject().getUserBareJid().toString());
 
 				AvatarHelper.setAvatarToImageView(jaxmpp.getSessionObject().getUserBareJid(), accountAvatar);
-				
+
 				if (st == State.connected) {
 					accountStatus.setImageResource(R.drawable.user_available);
 					accountStatus.setVisibility(View.VISIBLE);

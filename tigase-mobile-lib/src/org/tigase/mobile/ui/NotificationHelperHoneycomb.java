@@ -9,7 +9,6 @@ import org.tigase.mobile.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
-
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -18,7 +17,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
 
 @TargetApi(11)
@@ -26,51 +24,6 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 
 	protected NotificationHelperHoneycomb(Context context) {
 		super(context);
-	}
-
-	@Override
-	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-
-		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
-		Notification notification = builder.getNotification();
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		return notification;
-	}
-
-	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-
-		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
-		builder.setDefaults(Notification.DEFAULT_SOUND).setOngoing(true);
-		builder.setSmallIcon(ico).setContentTitle(title);
-		builder.setAutoCancel(true).setLights(Color.GREEN, 500, 500);
-
-		PendingIntent pendingIntent = this.createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
-		builder.setContentIntent(pendingIntent).setContentText(text);
-
-		return builder;
-	}
-
-	@Override
-	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
-		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
-		return builder.getNotification();
-	}
-
-	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text,
-			FileTransfer ft) {
-		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
-		builder.setSmallIcon(ico);
-		FileTransfer.State state = ft.getState();
-		builder.setDefaults(0).setContentTitle(title).setContentText(text);
-
-		boolean finished = state == FileTransfer.State.error || state == FileTransfer.State.finished;
-		builder.setAutoCancel(finished).setOngoing(!finished);
-
-		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
-		builder.setContentIntent(pendingIntent);
-		return builder;
 	}
 
 	@Override
@@ -112,6 +65,51 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 
 	protected void prepareChatNotificationUnreadMessages(Notification.Builder builder, Cursor c) {
 
+	}
+
+	@Override
+	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
+		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
+		return builder.getNotification();
+	}
+
+	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text,
+			FileTransfer ft) {
+		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
+		builder.setSmallIcon(ico);
+		FileTransfer.State state = ft.getState();
+		builder.setDefaults(0).setContentTitle(title).setContentText(text);
+
+		boolean finished = state == FileTransfer.State.error || state == FileTransfer.State.finished;
+		builder.setAutoCancel(finished).setOngoing(!finished);
+
+		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
+		builder.setContentIntent(pendingIntent);
+		return builder;
+	}
+
+	@Override
+	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+
+		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+		Notification notification = builder.getNotification();
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		return notification;
+	}
+
+	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+
+		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
+		builder.setDefaults(Notification.DEFAULT_SOUND).setOngoing(true);
+		builder.setSmallIcon(ico).setContentTitle(title);
+		builder.setAutoCancel(true).setLights(Color.GREEN, 500, 500);
+
+		PendingIntent pendingIntent = this.createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
+		builder.setContentIntent(pendingIntent).setContentText(text);
+
+		return builder;
 	}
 
 }

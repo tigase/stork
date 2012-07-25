@@ -289,7 +289,7 @@ public class RosterFragment extends Fragment {
 							String val = location.getAsString(GeolocationTableMetaData.FIELD_STREET);
 							Log.v(TAG, "Street = " + String.valueOf(val));
 							if (val != null) {
-								str += val;			
+								str += val;
 							}
 							val = location.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
 							Log.v(TAG, "Locality = " + String.valueOf(val));
@@ -297,7 +297,7 @@ public class RosterFragment extends Fragment {
 								if (!str.isEmpty()) {
 									str += " ";
 								}
-								str += val;			
+								str += val;
 							}
 							val = location.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
 							Log.v(TAG, "Country = " + String.valueOf(val));
@@ -305,14 +305,13 @@ public class RosterFragment extends Fragment {
 								if (!str.isEmpty()) {
 									str += " ";
 								}
-								str += val;			
+								str += val;
 							}
 							if (!str.isEmpty()) {
 								str = str.replace(' ', '+');
 								uriStr = "geo:0,0?q=" + str;
 							}
-						}
-						else {
+						} else {
 							Log.v(TAG, "latitude = " + String.valueOf(lat));
 							Log.v(TAG, "longitude = " + String.valueOf(lon));
 							uriStr = "geo:" + String.valueOf(lat) + "," + String.valueOf(lon) + "?z=14";
@@ -327,7 +326,7 @@ public class RosterFragment extends Fragment {
 					}
 				}
 			}
-			
+
 			menu.setGroupVisible(R.id.contactsOnlineGroup, sessionEstablished);
 		}
 	}
@@ -408,7 +407,8 @@ public class RosterFragment extends Fragment {
 			});
 
 		}
-		// there can be no connection status icon - we have notifications and accounts view in Android >= 3.0
+		// there can be no connection status icon - we have notifications and
+		// accounts view in Android >= 3.0
 		this.connectionStatus = (ImageView) layout.findViewById(R.id.connection_status);
 		this.progressBar = (ProgressBar) layout.findViewById(R.id.progressBar1);
 
@@ -643,7 +643,8 @@ public class RosterFragment extends Fragment {
 		else
 			st = State.connected;
 
-		// there can be no connection status icon - we have notifications and accounts view in Android >= 3.0
+		// there can be no connection status icon - we have notifications and
+		// accounts view in Android >= 3.0
 		if (connectionStatus != null) {
 			connectionStatus.post(new Runnable() {
 

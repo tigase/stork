@@ -145,14 +145,14 @@ public class RosterProvider extends ContentProvider {
 				}
 				values.put(VCardsCacheTableMetaData.FIELD_JID, jid);
 				values.put(VCardsCacheTableMetaData.FIELD_TIMESTAMP, (new Date()).getTime());
-				db.insert(VCardsCacheTableMetaData.TABLE_NAME, null, values);				
+				db.insert(VCardsCacheTableMetaData.TABLE_NAME, null, values);
 				db.setTransactionSuccessful();
 			} finally {
 				db.endTransaction();
 			}
 
 			AvatarHelper.clearAvatar(BareJID.bareJIDInstance(jid));
-			
+
 			for (JaxmppCore jaxmpp : ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get()) {
 				RosterItem rosterItem = jaxmpp.getRoster().get(BareJID.bareJIDInstance(jid));
 				if (rosterItem != null) {

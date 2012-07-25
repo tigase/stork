@@ -6,7 +6,6 @@ import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
 import org.tigase.mobile.service.GeolocationFeature;
-import org.tigase.mobile.service.JaxmppService;
 import org.tigase.mobile.service.MobileModeFeature;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -31,23 +30,15 @@ import android.widget.Spinner;
 
 public class AccountAdvancedPreferencesActivity extends Activity {
 
-	private static final String TAG = "AccountAdvancedPreferencesActivity";
-	
 	private static final int PICK_ACCOUNT = 1;
-	
-	private CompoundButton mobileOptimizations;
-	private Spinner presenceQueueTimeout;
-	private CompoundButton geolocationListen;
-	private CompoundButton geolocationPublish;
-	private Spinner geolocationPrecision;
 
-	private final MultiJaxmpp getMulti() {
-		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
-	}
+	private static final String TAG = "AccountAdvancedPreferencesActivity";
 
 	public static final boolean isMobileAvailable(JaxmppCore jaxmpp, String feature) {
-		if (jaxmpp == null) return false;
-		if (jaxmpp.getSessionObject() == null) return false;
+		if (jaxmpp == null)
+			return false;
+		if (jaxmpp.getSessionObject() == null)
+			return false;
 		final Element sf = jaxmpp.getSessionObject().getStreamFeatures();
 		if (sf == null) {
 			Log.v(TAG, "no stream features available for = " + jaxmpp.getSessionObject().getUserBareJid().toString());
@@ -65,6 +56,18 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		return true;
 	}
 
+	private CompoundButton geolocationListen;
+	private Spinner geolocationPrecision;
+	private CompoundButton geolocationPublish;
+	private CompoundButton mobileOptimizations;
+
+	private Spinner presenceQueueTimeout;
+
+	private final MultiJaxmpp getMulti() {
+		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
+	}
+
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PICK_ACCOUNT) {
 			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
@@ -83,17 +86,17 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			setAccount(account);
 		}
 	}
-	
+
 	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 
 		setContentView(R.layout.account_advanced_preferences);
-		
+
 		Account account = null;
 		String jidStr = null;
-		
+
 		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
 		if (getIntent().getExtras().get("account") != null) {
 			account = (Account) getIntent().getExtras().get("account");
@@ -106,18 +109,18 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 				}
 			}
 		}
-		
+
 		if (jidStr == null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
-			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
-		}
-		else {
+			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
+					new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+			this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+		} else {
 			setAccount(account);
 		}
-		
+
 	}
 
-	public void setAccount(final Account account) {		
+	public void setAccount(final Account account) {
 		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
 		final BareJID accountJid = BareJID.bareJIDInstance(account.name);
 
@@ -153,8 +156,8 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
 				int value = 3 * (position + 1);
 				accountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT, String.valueOf(value));
-				getMulti().get(accountJid).getSessionObject().setUserProperty(MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT,
-						value);
+				getMulti().get(accountJid).getSessionObject().setUserProperty(
+						MobileModeFeature.MOBILE_OPTIMIZATIONS_QUEUE_TIMEOUT, value);
 			}
 
 			@Override
@@ -171,22 +174,24 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			geolocationListen.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_LISTEN_ENABLED, String.valueOf(isChecked));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_LISTEN_ENABLED,
+							String.valueOf(isChecked));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
-					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());					
-				}				
+					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
+				}
 			});
 			valueStr = accountManager.getUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_ENABLED);
 			geolocationPublish.setChecked(valueStr != null && Boolean.parseBoolean(valueStr));
 			geolocationPublish.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_ENABLED, String.valueOf(isChecked));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_ENABLED,
+							String.valueOf(isChecked));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
 					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 					geolocationPrecision.setEnabled(isChecked);
 				}
-			});			
+			});
 			valueStr = accountManager.getUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_PRECISION);
 			int precision = (valueStr != null) ? Integer.parseInt(valueStr) : 0;
 			geolocationPrecision.setSelection(precision);
@@ -194,13 +199,15 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 				@Override
 				public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
 					int precision = position;
-					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_PRECISION, String.valueOf(precision));
+					accountManager.setUserData(account, GeolocationFeature.GEOLOCATION_PUBLISH_PRECISION,
+							String.valueOf(precision));
 					JaxmppCore jaxmpp = getMulti().get(accountJid);
 					GeolocationFeature.updateGeolocationSettings(account, jaxmpp, getApplicationContext());
 				}
+
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {
-				}				
+				}
 			});
 			geolocationPrecision.setEnabled(geolocationPublish.isChecked());
 		}
@@ -213,5 +220,5 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			dlg.show();
 		}
 	}
-	
+
 }

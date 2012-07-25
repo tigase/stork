@@ -25,18 +25,27 @@ import android.util.Log;
 
 public class GeolocationModule implements XmppModule {
 
-	private static final String TAG = "GeolocationModule";
-
 	public static final String XMLNS = "http://jabber.org/protocol/geoloc";
 
 	public static final String[] FEATURES = { XMLNS + "+notify" };
 
-	private Listener<PubSubEvent> listener;
+	private static final String TAG = "GeolocationModule";
+
+	private static final String WHERE_BY_JID = GeolocationTableMetaData.FIELD_JID + " = ? ";
 
 	private MessengerDatabaseHelper dbHelper;
 
+	private Listener<PubSubEvent> listener;
+
 	public GeolocationModule(Context context) {
 		dbHelper = new MessengerDatabaseHelper(context);
+	}
+
+	public void deinit(JaxmppCore jaxmpp) {
+		if (listener == null)
+			return;
+		jaxmpp.removeListener(PubSubModule.NotificationReceived, listener);
+		listener = null;
 	}
 
 	@Override
@@ -49,8 +58,40 @@ public class GeolocationModule implements XmppModule {
 		return FEATURES;
 	}
 
-	@Override
-	public void process(Element element) throws XMPPException, XMLException, JaxmppException {
+	public ContentValues getLocationForJid(BareJID jid) {
+		final SQLiteDatabase db = dbHelper.getWritableDatabase();
+		ContentValues location = null;
+		final Cursor c = db.query(GeolocationTableMetaData.TABLE_NAME, new String[] { GeolocationTableMetaData.FIELD_LON,
+				GeolocationTableMetaData.FIELD_LAT, GeolocationTableMetaData.FIELD_ALT, GeolocationTableMetaData.FIELD_COUNTRY,
+				GeolocationTableMetaData.FIELD_LOCALITY, GeolocationTableMetaData.FIELD_STREET }, WHERE_BY_JID,
+				new String[] { jid.toString() }, null, null, null);
+		try {
+			while (c.moveToNext()) {
+				location = new ContentValues();
+
+				int col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LON);
+				if (!c.isNull(col)) {
+					location.put(GeolocationTableMetaData.FIELD_LON, c.getDouble(col));
+				}
+				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LAT);
+				if (!c.isNull(col)) {
+					location.put(GeolocationTableMetaData.FIELD_LAT, c.getDouble(col));
+				}
+				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_ALT);
+				if (!c.isNull(col)) {
+					location.put(GeolocationTableMetaData.FIELD_ALT, c.getDouble(col));
+				}
+				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_COUNTRY);
+				location.put(GeolocationTableMetaData.FIELD_COUNTRY, c.getString(col));
+				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LOCALITY);
+				location.put(GeolocationTableMetaData.FIELD_LOCALITY, c.getString(col));
+				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_STREET);
+				location.put(GeolocationTableMetaData.FIELD_STREET, c.getString(col));
+			}
+		} finally {
+			c.close();
+		}
+		return location;
 	}
 
 	public void init(final JaxmppCore jaxmpp) {
@@ -124,14 +165,20 @@ public class GeolocationModule implements XmppModule {
 		jaxmpp.addListener(PubSubModule.NotificationReceived, listener);
 	}
 
-	public void deinit(JaxmppCore jaxmpp) {
-		if (listener == null)
-			return;
-		jaxmpp.removeListener(PubSubModule.NotificationReceived, listener);
-		listener = null;
+	@Override
+	public void process(Element element) throws XMPPException, XMLException, JaxmppException {
 	}
 
-	private static final String WHERE_BY_JID = GeolocationTableMetaData.FIELD_JID + " = ? ";
+	public void removeLocalityForJid(BareJID jid) {
+		final SQLiteDatabase db = dbHelper.getWritableDatabase();
+		db.beginTransaction();
+		try {
+			db.delete(GeolocationTableMetaData.TABLE_NAME, WHERE_BY_JID, new String[] { jid.toString() });
+			db.setTransactionSuccessful();
+		} finally {
+			db.endTransaction();
+		}
+	}
 
 	public void setLocalityForJid(BareJID jid, ContentValues locality) {
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -147,52 +194,5 @@ public class GeolocationModule implements XmppModule {
 		} finally {
 			db.endTransaction();
 		}
-	}
-
-	public void removeLocalityForJid(BareJID jid) {
-		final SQLiteDatabase db = dbHelper.getWritableDatabase();
-		db.beginTransaction();
-		try {
-			db.delete(GeolocationTableMetaData.TABLE_NAME, WHERE_BY_JID, new String[] { jid.toString() });
-			db.setTransactionSuccessful();
-		} finally {
-			db.endTransaction();
-		}
-	}
-
-	public ContentValues getLocationForJid(BareJID jid) {
-		final SQLiteDatabase db = dbHelper.getWritableDatabase();
-		ContentValues location = null;
-		final Cursor c = db.query(GeolocationTableMetaData.TABLE_NAME, new String[] { GeolocationTableMetaData.FIELD_LON,
-				GeolocationTableMetaData.FIELD_LAT, GeolocationTableMetaData.FIELD_ALT, GeolocationTableMetaData.FIELD_COUNTRY,
-				GeolocationTableMetaData.FIELD_LOCALITY, GeolocationTableMetaData.FIELD_STREET }, WHERE_BY_JID,
-				new String[] { jid.toString() }, null, null, null);
-		try {
-			while (c.moveToNext()) {
-				location = new ContentValues();
-
-				int col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LON);
-				if (!c.isNull(col)) {
-					location.put(GeolocationTableMetaData.FIELD_LON, c.getDouble(col));
-				}
-				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LAT);
-				if (!c.isNull(col)) {
-					location.put(GeolocationTableMetaData.FIELD_LAT, c.getDouble(col));
-				}
-				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_ALT);
-				if (!c.isNull(col)) {
-					location.put(GeolocationTableMetaData.FIELD_ALT, c.getDouble(col));
-				}
-				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_COUNTRY);
-				location.put(GeolocationTableMetaData.FIELD_COUNTRY, c.getString(col));
-				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_LOCALITY);
-				location.put(GeolocationTableMetaData.FIELD_LOCALITY, c.getString(col));
-				col = c.getColumnIndex(GeolocationTableMetaData.FIELD_STREET);
-				location.put(GeolocationTableMetaData.FIELD_STREET, c.getString(col));
-			}
-		} finally {
-			c.close();
-		}
-		return location;
 	}
 }

@@ -261,8 +261,7 @@ public class VCardEditorActivity extends Activity {
 				getContentResolver().insert(
 						Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), values);
 			}
-		}
-		else if (requestCode == PICK_ACCOUNT) {
+		} else if (requestCode == PICK_ACCOUNT) {
 			if (data == null || data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) == null) {
 				this.finish();
 				return;
@@ -296,40 +295,14 @@ public class VCardEditorActivity extends Activity {
 		} else {
 			jid = JID.jidInstance((String) getIntent().getExtras().get("account_jid"));
 		}
-				
+
 		if (account != null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
-			this.startActivityForResult(intentChooser, PICK_ACCOUNT);			
-		}
-		else {
+			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
+					new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+			this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+		} else {
 			setAccountJid(jid);
 		}
-	}
-	
-	protected void setAccountJid(JID jid_) {
-		this.jid = jid_;
-
-		final Cursor cursor = getContentResolver().query(
-				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), null, null, null, null);
-		try {
-			cursor.moveToNext();
-			byte[] buffer = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-			Bitmap bmp = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
-			avatar.setImageBitmap(bmp);
-		} catch (Exception ex) {
-
-		} finally {
-			cursor.close();
-		}
-
-		downloadVCard();
-
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(jid.getBareJid());
-		boolean enabled = jaxmpp.isConnected();
-		((TextView) findViewById(R.id.fullname)).setEnabled(enabled);
-		((TextView) findViewById(R.id.nickname)).setEnabled(enabled);
-		((TextView) findViewById(R.id.birthday)).setEnabled(enabled);
-		((TextView) findViewById(R.id.email)).setEnabled(enabled);
 	}
 
 	@Override
@@ -423,6 +396,32 @@ public class VCardEditorActivity extends Activity {
 
 			dialog.show();
 		}
+	}
+
+	protected void setAccountJid(JID jid_) {
+		this.jid = jid_;
+
+		final Cursor cursor = getContentResolver().query(
+				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.getBareJid().toString())), null, null, null, null);
+		try {
+			cursor.moveToNext();
+			byte[] buffer = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
+			Bitmap bmp = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
+			avatar.setImageBitmap(bmp);
+		} catch (Exception ex) {
+
+		} finally {
+			cursor.close();
+		}
+
+		downloadVCard();
+
+		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(jid.getBareJid());
+		boolean enabled = jaxmpp.isConnected();
+		((TextView) findViewById(R.id.fullname)).setEnabled(enabled);
+		((TextView) findViewById(R.id.nickname)).setEnabled(enabled);
+		((TextView) findViewById(R.id.birthday)).setEnabled(enabled);
+		((TextView) findViewById(R.id.email)).setEnabled(enabled);
 	}
 
 	/**

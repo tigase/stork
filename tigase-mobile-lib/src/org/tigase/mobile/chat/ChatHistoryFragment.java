@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
-import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
@@ -33,7 +33,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
@@ -162,7 +161,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.detailsMessage) {
@@ -185,7 +184,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 	public void onCreate(Bundle savedInstanceState) {
 		this.setHasOptionsMenu(true);
 		super.onCreate(savedInstanceState);
-		
+
 		if (getArguments() != null) {
 			long id = getArguments().getLong("chatId");
 			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
@@ -233,7 +232,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 
 		// Share button support
 		MenuItem share = menu.findItem(R.id.shareButton);
-		
+
 		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 				chat.getSessionObject());
 		try {
@@ -243,15 +242,14 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
 			}
 			if (jid != null) {
-				visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(),
-						FileTransferUtility.FEATURES);
+				visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
 			}
 			share.setVisible(visible);
 		} catch (XMLException e) {
 		}
 
 	}
-	
+
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
@@ -319,12 +317,11 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.showChatsButton) {
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
-			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);			
-		}
-		else if (item.getItemId() == R.id.closeChatButton) {
+			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
+		} else if (item.getItemId() == R.id.closeChatButton) {
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
-					chat.getSessionObject());			
-			ViewPager viewPager = (ViewPager) ((TigaseMobileMessengerActivity)this.getActivity()).viewPager;
+					chat.getSessionObject());
+			ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
 			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
 			try {
 				cm.close(chat);
@@ -333,7 +330,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
 			} catch (JaxmppException e) {
 				Log.w(TAG, "Chat close problem!", e);
-			}			
+			}
 		} else if (item.getItemId() == R.id.shareImageButton) {
 			Log.v(TAG, "share selected for = " + chat.getJid().toString());
 			Intent pickerIntent = new Intent(Intent.ACTION_PICK);
@@ -349,7 +346,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void onResume() {
 		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {

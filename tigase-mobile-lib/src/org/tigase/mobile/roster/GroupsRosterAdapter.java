@@ -13,7 +13,12 @@ import android.widget.SimpleCursorTreeAdapter;
 public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 
 	private final static String[] cols = new String[] { RosterTableMetaData.FIELD_JID, RosterTableMetaData.FIELD_DISPLAY_NAME,
-			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE/*, RosterTableMetaData.FIELD_AVATAR */};
+			RosterTableMetaData.FIELD_PRESENCE, RosterTableMetaData.FIELD_STATUS_MESSAGE /*
+																						 * ,
+																						 * RosterTableMetaData
+																						 * .
+																						 * FIELD_AVATAR
+																						 */};
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 
 	static Context staticContext;
@@ -48,5 +53,5 @@ public class GroupsRosterAdapter extends SimpleCursorTreeAdapter {
 		return context.getContentResolver().query(Uri.parse(RosterProvider.CONTENT_URI), null, null, new String[] { group },
 				null);
 	}
-	
+
 }

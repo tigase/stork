@@ -149,7 +149,7 @@ public class MessengerApplication extends Application {
 		super.onCreate();
 
 		AvatarHelper.initilize(getApplicationContext());
-		
+
 		tracker = GoogleAnalyticsTracker.getInstance();
 		tracker.startNewSession(getResources().getString(R.string.TrackingID), 300, this);
 

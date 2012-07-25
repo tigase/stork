@@ -2,6 +2,7 @@ package org.tigase.mobile.roster;
 
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.RosterTableMetaData;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;

@@ -11,7 +11,7 @@ public class Account implements Parcelable {
 		@Override
 		public Account createFromParcel(Parcel source) {
 			String jid = source.readString();
-			boolean[] bools = new boolean[1]; 
+			boolean[] bools = new boolean[1];
 			source.readBooleanArray(bools);
 			return new Account(BareJID.bareJIDInstance(jid), bools[0]);
 		}
@@ -20,28 +20,28 @@ public class Account implements Parcelable {
 		public Account[] newArray(int size) {
 			return new Account[size];
 		}
-		
+
 	};
-	
-	private BareJID jid;
+
 	private boolean connected;
-	
+	private BareJID jid;
+
 	public Account(BareJID jid, boolean connected) {
 		this.jid = jid;
 		this.connected = connected;
 	}
-	
-	public BareJID getJid() {
-		return jid;
-	}
-	
-	public boolean isConnected() {
-		return connected;
-	}
-	
+
 	@Override
 	public int describeContents() {
 		return 0;
+	}
+
+	public BareJID getJid() {
+		return jid;
+	}
+
+	public boolean isConnected() {
+		return connected;
 	}
 
 	@Override

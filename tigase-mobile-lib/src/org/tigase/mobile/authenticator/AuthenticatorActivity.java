@@ -61,8 +61,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public class UserCreateAccountTask extends AsyncTask<String, Void, String> {
 
-		private Map<String, String> data = new HashMap<String, String>();
 		private final Jaxmpp contact = new Jaxmpp();
+		private Map<String, String> data = new HashMap<String, String>();
 
 		private String errorMessage;
 
@@ -243,11 +243,24 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public static final String PARAM_CONFIRM_CREDENTIALS = "confirmCredentials";
 
-	private final static int PROGRESS_DIALOG = 1;
-	
 	private static final int PICK_ACCOUNT = 1;
 
+	private final static int PROGRESS_DIALOG = 1;
+
 	private static final String TAG = "AuthenticatorActivity";
+
+	public static void processJaxmppForFeatures(JaxmppCore contact, Map<String, String> data) {
+		String mobile = null;
+		boolean mobileV1 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V1);
+		if (mobileV1) {
+			mobile = Features.MOBILE_V1;
+		}
+		boolean mobileV2 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V2);
+		if (mobileV2) {
+			mobile = Features.MOBILE_V2;
+		}
+		data.put(Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY, mobile);
+	}
 
 	private ViewFlipper flipper;
 
@@ -416,12 +429,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
+	@Override
 	@SuppressLint({ "ParserError", "ParserError" })
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PICK_ACCOUNT) {
 			if (resultCode == RESULT_OK) {
 				Intent intent = getIntent();
-				if (intent == null) return;
+				if (intent == null)
+					return;
 				String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
 				if (accName == null) {
 					this.finish();
@@ -437,21 +452,20 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 				intent = intent.putExtra("account", account);
 				this.setIntent(intent);
-				
+
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 				flipper.addView(prepareWelcomeScreen(inflater));
 				flipper.addView(prepareAddAccount(inflater));
-				flipper.addView(prepareCreateAccount(inflater));				
-				
+				flipper.addView(prepareCreateAccount(inflater));
+
 				flipper.setDisplayedChild(account == null ? PAGE_CREATE : PAGE_ADD);
-			}
-			else {
-				this.finish();				
+			} else {
+				this.finish();
 			}
 		}
 	}
-	
+
 	protected void onAuthenticationCancel() {
 		Log.i(TAG, "onAuthenticationCancel()");
 
@@ -503,24 +517,23 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		if (account != null) {
 			screenTitle.setText("Account edit");
 			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-				Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+				Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
+						new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
 				this.startActivityForResult(intentChooser, PICK_ACCOUNT);
-			}
-			else {
+			} else {
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				
+
 				flipper.addView(prepareWelcomeScreen(inflater));
 				flipper.addView(prepareAddAccount(inflater));
-				flipper.addView(prepareCreateAccount(inflater));				
+				flipper.addView(prepareCreateAccount(inflater));
 				flipper.setDisplayedChild(PAGE_ADD);
 			}
-		}
-		else {
+		} else {
 			final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			
+
 			flipper.addView(prepareWelcomeScreen(inflater));
 			flipper.addView(prepareAddAccount(inflater));
-			flipper.addView(prepareCreateAccount(inflater));				
+			flipper.addView(prepareCreateAccount(inflater));
 		}
 
 	}
@@ -590,9 +603,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		b.putString("msg", errorMessage);
 		hideProgress();
 		if (Build.VERSION_CODES.FROYO > Build.VERSION.SDK_INT) {
-			showDialog(CREATION_ERROR_DIALOG, b);			
-		}
-		else {
+			showDialog(CREATION_ERROR_DIALOG, b);
+		} else {
 			Dialog dlg = onCreateDialog(CREATION_ERROR_DIALOG, b);
 			if (dlg != null) {
 				dlg.show();
@@ -952,19 +964,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		});
 
 		return v;
-	}
-
-	public static void processJaxmppForFeatures(JaxmppCore contact, Map<String, String> data) {
-		String mobile = null;
-		boolean mobileV1 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V1);
-		if (mobileV1) {
-			mobile = Features.MOBILE_V1;
-		}
-		boolean mobileV2 = AccountAdvancedPreferencesActivity.isMobileAvailable(contact, Features.MOBILE_V2);
-		if (mobileV2) {
-			mobile = Features.MOBILE_V2;
-		}
-		data.put(Constants.MOBILE_OPTIMIZATIONS_AVAILABLE_KEY, mobile);
 	}
 
 	private void updateVisibility(int visibility, View... views) {

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.db.VCardsCacheTableMetaData;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -181,9 +180,9 @@ public class ChatHistoryProvider extends ContentProvider {
 			if (match(uri) == CHAT_URI_INDICATOR) {
 				final SQLiteDatabase db = dbHelper.getWritableDatabase();
 				String jid = uri.getLastPathSegment();
-				int changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_JID + "='" + jid + "' AND "
-						+ ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null);
-				
+				int changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_JID + "='" + jid
+						+ "' AND " + ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null);
+
 				if (changed > 0) {
 					getContext().getContentResolver().notifyChange(uri, null);
 				}

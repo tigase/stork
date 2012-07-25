@@ -115,7 +115,7 @@ public class Socks5IOService extends IOService<Object> {
 					log.warning("bad protocol version!");
 					forceStop();
 				} else {
-					int count = (int) buf.get();
+					int count = buf.get();
 					boolean ok = false;
 					for (int i = 0; i < count; i++) {
 						if (buf.get() == 0x00) {

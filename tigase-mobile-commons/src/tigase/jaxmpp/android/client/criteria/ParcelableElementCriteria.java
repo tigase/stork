@@ -1,9 +1,9 @@
 package tigase.jaxmpp.android.client.criteria;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import tigase.jaxmpp.core.client.criteria.Criteria;
 import tigase.jaxmpp.core.client.criteria.ElementCriteria;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class ParcelableElementCriteria extends ElementCriteria implements Parcelable {
 
@@ -19,14 +19,14 @@ public class ParcelableElementCriteria extends ElementCriteria implements Parcel
 			source.readStringArray(keys);
 			String[] values = new String[size];
 			source.readStringArray(values);
-			
+
 			ParcelableElementCriteria criteria = new ParcelableElementCriteria(name, keys, values);
 			// nextCriteria
 			Criteria nextCriteria = (Criteria) source.readValue(null);
 			if (nextCriteria != null) {
 				criteria.add(nextCriteria);
 			}
-			
+
 			return criteria;
 		}
 
@@ -34,9 +34,9 @@ public class ParcelableElementCriteria extends ElementCriteria implements Parcel
 		public ParcelableElementCriteria[] newArray(int size) {
 			return new ParcelableElementCriteria[size];
 		}
-		
+
 	};
-	
+
 	public static final ParcelableElementCriteria emptyP() {
 		return new ParcelableElementCriteria(null, null, null);
 	}
@@ -56,8 +56,7 @@ public class ParcelableElementCriteria extends ElementCriteria implements Parcel
 	public static final ParcelableElementCriteria xmlnsP(String xmlns) {
 		return new ParcelableElementCriteria(null, new String[] { "xmlns" }, new String[] { xmlns });
 	}
-	
-	
+
 	public ParcelableElementCriteria(String name, String[] attname, String[] attValue) {
 		super(name, attname, attValue);
 	}
@@ -74,7 +73,7 @@ public class ParcelableElementCriteria extends ElementCriteria implements Parcel
 		int size = this.attrs.size();
 		String[] keys = this.attrs.keySet().toArray(new String[size]);
 		String[] values = new String[size];
-		for (int i=0; i<keys.length; i++) {
+		for (int i = 0; i < keys.length; i++) {
 			values[i] = this.attrs.get(keys[i]);
 		}
 		dest.writeInt(size);

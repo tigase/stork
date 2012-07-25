@@ -1,8 +1,5 @@
 package org.tigase.mobile.filetransfer;
 
-import java.io.File;
-
-import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
@@ -11,7 +8,6 @@ import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
@@ -20,9 +16,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -43,8 +37,8 @@ public class IncomingFileActivity extends Activity {
 	private JID sender;
 	private String senderName;
 	private String sid;
-	private String tag;
 	private String store = "Download";
+	private String tag;
 
 	public void accept(View view) {
 		Log.v(TAG, "incoming file accepted");
@@ -63,9 +57,9 @@ public class IncomingFileActivity extends Activity {
 		intent.putExtra("filetransferAction", "accept");
 		intent.putExtra("mimetype", mimetype);
 		intent.putExtra("store", store);
-		
+
 		startService(intent);
-		
+
 		finish();
 	}
 
@@ -208,7 +202,7 @@ public class IncomingFileActivity extends Activity {
 		}
 		intent.setAction(JaxmppService.ACTION_FILETRANSFER);
 		intent.putExtra("filetransferAction", "reject");
-		
+
 		startService(intent);
 
 		finish();

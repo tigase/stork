@@ -102,7 +102,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 	public Room getRoom() {
 		return room;
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

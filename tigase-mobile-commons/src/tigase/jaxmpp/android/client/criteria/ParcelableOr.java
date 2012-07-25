@@ -1,9 +1,9 @@
 package tigase.jaxmpp.android.client.criteria;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import tigase.jaxmpp.core.client.criteria.Criteria;
 import tigase.jaxmpp.core.client.criteria.Or;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class ParcelableOr extends Or implements Parcelable {
 
@@ -20,7 +20,7 @@ public class ParcelableOr extends Or implements Parcelable {
 			return new ParcelableOr[size];
 		}
 	};
-	
+
 	public ParcelableOr(Criteria[] criteria) {
 		super(criteria);
 	}
@@ -35,5 +35,4 @@ public class ParcelableOr extends Or implements Parcelable {
 		dest.writeArray(this.crits);
 	}
 
-	
 }

@@ -23,53 +23,16 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 	}
 
 	@Override
-	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-
-		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
-		Notification notification = builder.build();
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		return notification;
-	}
-
-	@Override
-	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
-		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
-		return builder.build();
-	}
-	
-	@Override
-	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-		Notification.Builder builder = super.prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
-		
-		Intent intentReject = NotificationHelper.createFileTransferRejectIntent(context, ev, jaxmpp.getSessionObject().getUserBareJid(), tag);
-		builder.addAction(
-				android.R.drawable.ic_menu_close_clear_cancel,
-				context.getString(R.string.reject),
-				PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
-						| PendingIntent.FLAG_ONE_SHOT));
-
-		Intent intentAccept = NotificationHelper.createFileTransferRejectIntent(context, ev, jaxmpp.getSessionObject().getUserBareJid(), tag);
-		builder.addAction(
-				android.R.drawable.ic_menu_save,
-				context.getString(R.string.accept),
-				PendingIntent.getService(context, 2, intentAccept, PendingIntent.FLAG_CANCEL_CURRENT
-						| PendingIntent.FLAG_ONE_SHOT));
-		
-		return builder;
-	}
-
-	@Override
-	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent, MessageEvent event) throws XMLException {
+	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MessageEvent event) throws XMLException {
 		Notification.Builder builder = prepareChatNotificationInt(ico, title, text, pendingIntent, event);
 		Notification notification = builder.build();
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		return notification;
 	}
-	
+
 	@Override
-	protected void prepareChatNotificationUnreadMessages(Notification.Builder builder, Cursor c) { 
+	protected void prepareChatNotificationUnreadMessages(Notification.Builder builder, Cursor c) {
 		Notification.InboxStyle style = new Notification.InboxStyle();
 		int count = c.getCount();
 		int used = 0;
@@ -85,5 +48,45 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 			style.setSummaryText("");
 		}
 		builder.setStyle(style);
+	}
+
+	@Override
+	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
+		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
+		return builder.build();
+	}
+
+	@Override
+	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+
+		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+		Notification notification = builder.build();
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		return notification;
+	}
+
+	@Override
+	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+		Notification.Builder builder = super.prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+
+		Intent intentReject = NotificationHelper.createFileTransferRejectIntent(context, ev,
+				jaxmpp.getSessionObject().getUserBareJid(), tag);
+		builder.addAction(
+				android.R.drawable.ic_menu_close_clear_cancel,
+				context.getString(R.string.reject),
+				PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
+						| PendingIntent.FLAG_ONE_SHOT));
+
+		Intent intentAccept = NotificationHelper.createFileTransferRejectIntent(context, ev,
+				jaxmpp.getSessionObject().getUserBareJid(), tag);
+		builder.addAction(
+				android.R.drawable.ic_menu_save,
+				context.getString(R.string.accept),
+				PendingIntent.getService(context, 2, intentAccept, PendingIntent.FLAG_CANCEL_CURRENT
+						| PendingIntent.FLAG_ONE_SHOT));
+
+		return builder;
 	}
 }

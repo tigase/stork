@@ -20,28 +20,28 @@ public class Avatar implements Parcelable {
 		public Avatar[] newArray(int size) {
 			return new Avatar[size];
 		}
-		
+
 	};
-	
-	private BareJID jid;
+
 	private Bitmap image;
-	
+	private BareJID jid;
+
 	public Avatar(BareJID jid, Bitmap image) {
 		this.jid = jid;
 		this.image = image;
 	}
-	
-	public BareJID getJid() {
-		return jid;
-	}
-	
-	public Bitmap getImage() {
-		return image;
-	}
-	
+
 	@Override
 	public int describeContents() {
 		return 0;
+	}
+
+	public Bitmap getImage() {
+		return image;
+	}
+
+	public BareJID getJid() {
+		return jid;
 	}
 
 	@Override

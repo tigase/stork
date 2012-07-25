@@ -42,6 +42,10 @@ public class OccupantsListActivity extends Activity {
 			occupants.addAll(room.getPresences().values());
 		}
 
+		public void add(Occupant occupant) {
+			occupants.add(occupant);
+		}
+
 		@Override
 		public int getCount() {
 			return occupants.size();
@@ -95,25 +99,21 @@ public class OccupantsListActivity extends Activity {
 			return view;
 		}
 
-		public void update(Occupant occupant) {
-			occupants.remove(occupant);
-			occupants.add(occupant);
-		}
-
 		public void remove(Occupant occupant) {
 			occupants.remove(occupant);
 		}
 
-		public void add(Occupant occupant) {
+		public void update(Occupant occupant) {
+			occupants.remove(occupant);
 			occupants.add(occupant);
 		}
 	}
 
-	private final Listener<MucEvent> mucListener;
-	private Room room;
-	private MucModule mucModule;
 	private OccupantsAdapter adapter;
+	private final Listener<MucEvent> mucListener;
+	private MucModule mucModule;
 	private ListView occupantsList;
+	private Room room;
 
 	public OccupantsListActivity() {
 		mucListener = new Listener<MucEvent>() {
@@ -124,6 +124,33 @@ public class OccupantsListActivity extends Activity {
 					onRoomEvent(be);
 			}
 		};
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		setContentView(R.layout.muc_occupants_list);
+
+		long roomId = getIntent().getLongExtra("roomId", -1);
+
+		room = ((MessengerApplication) getApplication()).getMultiJaxmpp().getRoomById(roomId).getRoom();
+		mucModule = ((MessengerApplication) getApplication()).getMultiJaxmpp().get(room.getSessionObject()).getModulesManager().getModule(
+				MucModule.class);
+		mucModule.addListener(mucListener);
+
+		occupantsList = (ListView) findViewById(R.id.occupants_list);
+
+		adapter = new OccupantsAdapter(getApplicationContext(), room);
+		occupantsList.setAdapter(adapter);
+
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (mucModule != null)
+			mucModule.removeListener(mucListener);
+		super.onDestroy();
 	}
 
 	protected void onRoomEvent(final MucEvent be) {
@@ -145,33 +172,6 @@ public class OccupantsListActivity extends Activity {
 
 			}
 		});
-	}
-
-	@Override
-	protected void onDestroy() {
-		if (mucModule != null)
-			mucModule.removeListener(mucListener);
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		setContentView(R.layout.muc_occupants_list);
-
-		long roomId = getIntent().getLongExtra("roomId", -1);
-
-		room = ((MessengerApplication) getApplication()).getMultiJaxmpp().getRoomById(roomId).getRoom();
-		mucModule = ((MessengerApplication) getApplication()).getMultiJaxmpp().get(room.getSessionObject()).getModulesManager().getModule(
-				MucModule.class);
-		mucModule.addListener(mucListener);
-
-		occupantsList = (ListView) findViewById(R.id.occupants_list);
-
-		adapter = new OccupantsAdapter(getApplicationContext(), room);
-		occupantsList.setAdapter(adapter);
-
 	}
 
 }

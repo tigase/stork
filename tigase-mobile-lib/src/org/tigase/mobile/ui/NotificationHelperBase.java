@@ -1,6 +1,5 @@
 package org.tigase.mobile.ui;
 
-import org.tigase.mobile.R;
 import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransfer;
 import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
@@ -8,7 +7,6 @@ import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -20,29 +18,30 @@ public class NotificationHelperBase extends NotificationHelper {
 		super(context);
 	}
 
-
 	@Override
-	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text, FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MessageEvent event) throws XMLException {
 		long whenNotify = System.currentTimeMillis();
 		Notification notification = new Notification(ico, title, whenNotify);
-		notification.flags |= Notification.FLAG_AUTO_CANCEL;
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
 		notification.ledOffMS = 500;
 		notification.ledOnMS = 500;
-		
-		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ev, jaxmpp, tag);		
+
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
 		return notification;
 	}
-	
+
 	@Override
 	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
 		long whenNotify = System.currentTimeMillis();
 		int flags = 0;
-		
+
 		switch (ft.getState()) {
 		case error:
 			flags |= Notification.FLAG_AUTO_CANCEL;
@@ -73,34 +72,33 @@ public class NotificationHelperBase extends NotificationHelper {
 			break;
 		default:
 			break;
-		}		
-		
+		}
+
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = flags;
 
 		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
-		
+
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
-		
-		return notification;		
+
+		return notification;
 	}
 
-
 	@Override
-	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent, MessageEvent event) throws XMLException {
+	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
+			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
 		long whenNotify = System.currentTimeMillis();
 		Notification notification = new Notification(ico, title, whenNotify);
-		notification.flags = Notification.FLAG_AUTO_CANCEL;
-		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
-
+		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.defaults |= Notification.DEFAULT_SOUND;
 		notification.ledARGB = Color.GREEN;
 		notification.ledOffMS = 500;
 		notification.ledOnMS = 500;
-		
+
+		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
-		
+
 		return notification;
 	}
 

@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -113,6 +111,63 @@ public class AndroidFileTransferUtility {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
 	}
 
+	@SuppressLint("NewApi")
+	public static File getPathToSave(String filename, String mimetype, String store) {
+		File path = null;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+			String type = Environment.DIRECTORY_DOWNLOADS;
+			if (store != null) {
+				if ("Pictures".equals(store)) {
+					type = Environment.DIRECTORY_PICTURES;
+				} else if ("Music".equals(store)) {
+					type = Environment.DIRECTORY_MUSIC;
+				} else if ("Movies".equals(store)) {
+					type = Environment.DIRECTORY_MOVIES;
+				}
+			} else {
+				if (mimetype.startsWith("video/")) {
+					type = Environment.DIRECTORY_MOVIES;
+				} else if (mimetype.startsWith("audio/")) {
+					type = Environment.DIRECTORY_MUSIC;
+				} else if (mimetype.startsWith("image/")) {
+					type = Environment.DIRECTORY_PICTURES;
+				}
+			}
+			path = Environment.getExternalStoragePublicDirectory(type);
+		}
+		if (path == null) {
+			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
+		}
+		return new File(path, filename);
+	}
+
+	public static String guessMimeType(String filename) {
+		int idx = filename.lastIndexOf(".");
+		if (idx == -1) {
+			return null;
+		}
+		String suffix = filename.substring(idx + 1).toLowerCase();
+		if (suffix.equals("png")) {
+			return "image/png";
+		} else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
+			return "image/jpeg";
+		} else if (suffix.equals("avi")) {
+			return "video/avi";
+		} else if (suffix.equals(".mkv")) {
+			return "video/x-matroska";
+		} else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
+			return "video/mpeg";
+		} else if (suffix.equals(".mp3")) {
+			return "audio/mpeg3";
+		} else if (suffix.equals(".ogg")) {
+			return "audio/ogg";
+		} else if (suffix.equals(".pdf")) {
+			return "application/pdf";
+		} else {
+			return null;
+		}
+	}
+
 	public static void onStreamhostsReceived(FileTransfer ft, List<Streamhost> hosts) {
 		registerFileTransferForConnection(ft);
 		List<Streamhost> hostsLocal = new ArrayList<Streamhost>();
@@ -123,6 +178,7 @@ public class AndroidFileTransferUtility {
 					serverSocketChannel.configureBlocking(true);
 					serverSocketChannel.socket().bind(new InetSocketAddress(0));
 					new Thread() {
+						@Override
 						public void run() {
 							while (true) {
 								try {
@@ -284,63 +340,5 @@ public class AndroidFileTransferUtility {
 			}
 		}.start();
 	}
-	
-	@SuppressLint("NewApi")
-	public static File getPathToSave(String filename, String mimetype, String store) {
-		File path = null;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-			String type = Environment.DIRECTORY_DOWNLOADS;
-			if (store != null) {
-				if ("Pictures".equals(store)) {
-					type = Environment.DIRECTORY_PICTURES;
-				} else if ("Music".equals(store)) {
-					type = Environment.DIRECTORY_MUSIC;
-				} else if ("Movies".equals(store)) {
-					type = Environment.DIRECTORY_MOVIES;
-				}
-			}
-			else {
-				if (mimetype.startsWith("video/")) {
-					type = Environment.DIRECTORY_MOVIES;
-				} else if (mimetype.startsWith("audio/")) {
-					type = Environment.DIRECTORY_MUSIC;
-				} else if (mimetype.startsWith("image/")) {
-					type = Environment.DIRECTORY_PICTURES;
-				}				
-			}
-			path = Environment.getExternalStoragePublicDirectory(type);
-		}
-		if (path == null) {
-			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
-		}
-		return new File(path, filename);
-	}
-	
-	public static String guessMimeType(String filename) {
-		int idx = filename.lastIndexOf(".");
-		if (idx == -1) {
-			return null;
-		}
-		String suffix = filename.substring(idx + 1).toLowerCase();
-		if (suffix.equals("png")) {
-			return "image/png";
-		} else if (suffix.equals("jpg") || suffix.equals("jpeg")) {
-			return "image/jpeg";
-		} else if (suffix.equals("avi")) {
-			return "video/avi";
-		} else if (suffix.equals(".mkv")) {
-			return "video/x-matroska";
-		} else if (suffix.equals(".mpg") || suffix.equals(".mp4")) {
-			return "video/mpeg";
-		} else if (suffix.equals(".mp3")) {
-			return "audio/mpeg3";
-		} else if (suffix.equals(".ogg")) {
-			return "audio/ogg";
-		} else if (suffix.equals(".pdf")) {
-			return "application/pdf";
-		} else {
-			return null;
-		}
-	}
-	
+
 }

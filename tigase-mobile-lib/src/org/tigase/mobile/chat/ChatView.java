@@ -193,8 +193,9 @@ public class ChatView extends RelativeLayout {
 		this.chat = chat;
 		if (chat == null)
 			return;
-		
-		// Not needed - handled in TigaseMobileMessengerActivity - set as ActionBar subtitle
+
+		// Not needed - handled in TigaseMobileMessengerActivity - set as
+		// ActionBar subtitle
 		TextView t = (TextView) findViewById(R.id.textView1);
 		if (t != null) {
 			JaxmppCore jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get(
@@ -213,8 +214,9 @@ public class ChatView extends RelativeLayout {
 	public void setImagePresence(final CPresence cp) {
 		final ImageView itemPresence = (ImageView) findViewById(R.id.user_presence);
 
-		if (itemPresence == null) return;
-		
+		if (itemPresence == null)
+			return;
+
 		itemPresence.post(new Runnable() {
 
 			@Override
@@ -258,8 +260,9 @@ public class ChatView extends RelativeLayout {
 
 	public void updateClientIndicator() {
 		final ImageView clientTypeIndicator = (ImageView) findViewById(R.id.client_type_indicator);
-		if (clientTypeIndicator == null) return;
-		
+		if (clientTypeIndicator == null)
+			return;
+
 		clientTypeIndicator.setVisibility(View.INVISIBLE);
 		if (chat != null) {
 			try {

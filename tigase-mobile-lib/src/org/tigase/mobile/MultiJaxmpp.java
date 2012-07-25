@@ -72,7 +72,7 @@ public class MultiJaxmpp {
 		}
 	}
 
-	private final List<ChatWrapper> chats = Collections.synchronizedList( new ArrayList<ChatWrapper>() );
+	private final List<ChatWrapper> chats = Collections.synchronizedList(new ArrayList<ChatWrapper>());
 
 	private final HashMap<BareJID, JaxmppCore> jaxmpps = new HashMap<BareJID, JaxmppCore>();
 
