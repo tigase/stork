@@ -51,64 +51,67 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 
 		return builder;
 	}
-	
+
 	@Override
 	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
 		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
 		return builder.getNotification();
 	}
 
-	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text, FileTransfer ft) {
+	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text,
+			FileTransfer ft) {
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
 		builder.setSmallIcon(ico);
 		FileTransfer.State state = ft.getState();
 		builder.setDefaults(0).setContentTitle(title).setContentText(text);
-		
+
 		boolean finished = state == FileTransfer.State.error || state == FileTransfer.State.finished;
 		builder.setAutoCancel(finished).setOngoing(!finished);
-		
+
 		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
 		builder.setContentIntent(pendingIntent);
 		return builder;
 	}
 
 	@Override
-	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent, MessageEvent event) throws XMLException {
+	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MessageEvent event) throws XMLException {
 		Notification.Builder builder = prepareChatNotificationInt(ico, title, text, pendingIntent, event);
 		Notification notification = builder.getNotification();
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		return notification;
 	}
-	
-	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent, MessageEvent event) throws XMLException {
+
+	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
+			MessageEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
 		builder.setContentTitle(title).setLights(Color.GREEN, 500, 500);
+		builder.setDefaults(Notification.DEFAULT_SOUND);
 		Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 		if (avatar != AvatarHelper.mPlaceHolderBitmap) {
 			builder.setLargeIcon(avatar);
 		}
 
-		Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
-				+ Uri.encode(event.getChat().getJid().getBareJid().toString()));
+		Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + Uri.encode(event.getChat().getJid().getBareJid().toString()));
 		Cursor c = context.getContentResolver().query(uri, null,
 				ChatTableMetaData.FIELD_STATE + "=" + ChatTableMetaData.STATE_INCOMING_UNREAD, null, null);
 		try {
 			int count = c.getCount();
 			builder.setNumber(count);
 
-			prepareChatNotificationUnreadMessages(builder, c);			
+			prepareChatNotificationUnreadMessages(builder, c);
 		} catch (Exception ex) {
 			Log.e(TAG, "exception preparing notification", ex);
 		} finally {
 			c.close();
 		}
-		
+
 		return builder;
 	}
-	
-	protected void prepareChatNotificationUnreadMessages(Notification.Builder builder, Cursor c) { 
-		
+
+	protected void prepareChatNotificationUnreadMessages(Notification.Builder builder, Cursor c) {
+
 	}
-	
+
 }
