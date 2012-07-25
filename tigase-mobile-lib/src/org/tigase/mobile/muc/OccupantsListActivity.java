@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -35,11 +37,8 @@ public class OccupantsListActivity extends Activity {
 
 		private final ArrayList<Occupant> occupants = new ArrayList<Occupant>();
 
-		private final Room room;
-
 		public OccupantsAdapter(Context mContext, Room room) {
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			this.room = room;
 			occupants.addAll(room.getPresences().values());
 			notifyDataSetChanged();
 		}
@@ -79,7 +78,8 @@ public class OccupantsListActivity extends Activity {
 			final TextView nicknameTextView = (TextView) view.findViewById(R.id.occupant_nickname);
 			final TextView statusTextView = (TextView) view.findViewById(R.id.occupant_status_description);
 			final ImageView occupantIcon = (ImageView) view.findViewById(R.id.occupant_icon);
-			
+			final ImageView occupantPresence = (ImageView) view.findViewById(R.id.occupant_presence);
+
 			try {
 				nicknameTextView.setText(occupant.getNickname());
 				
@@ -97,6 +97,37 @@ public class OccupantsListActivity extends Activity {
 					break;
 				default:
 					occupantIcon.setVisibility(View.INVISIBLE);
+					break;
+				}
+
+				final CPresence s = RosterDisplayTools.getShowOf(occupant.getPresence());
+				switch (s) {
+				case chat:
+					occupantPresence.setImageResource(R.drawable.user_free_for_chat);
+					break;
+				case online:
+					occupantPresence.setImageResource(R.drawable.user_available);
+					break;
+				case away:
+					occupantPresence.setImageResource(R.drawable.user_away);
+					break;
+				case xa:
+					occupantPresence.setImageResource(R.drawable.user_extended_away);
+					break;
+				case dnd:
+					occupantPresence.setImageResource(R.drawable.user_busy);
+					break;
+				case requested:
+					occupantPresence.setImageResource(R.drawable.user_ask);
+					break;
+				case error:
+					occupantPresence.setImageResource(R.drawable.user_error);
+					break;
+				case offline_nonauth:
+					occupantPresence.setImageResource(R.drawable.user_noauth);
+					break;
+				default:
+					occupantPresence.setImageResource(R.drawable.user_offline);
 					break;
 				}
 
