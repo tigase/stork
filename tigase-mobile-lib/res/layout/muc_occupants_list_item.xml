@@ -13,7 +13,7 @@
             android:id="@+id/occupant_icon"
             android:layout_width="26sp"
             android:layout_height="50sp"
-            android:src="@drawable/user_offline" >
+            android:src="@drawable/occupant_moderator" >
         </ImageView>
     </FrameLayout>
 
@@ -33,7 +33,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/occupant_avatar"
+        android:layout_toLeftOf="@+id/occupant_presence"
         android:layout_toRightOf="@+id/frameLayout1"
         android:paddingLeft="10sp"
         android:textSize="18sp"
@@ -41,11 +41,11 @@
     </TextView>
 
     <ImageView
-        android:id="@+id/occupant_avatar"
-        android:layout_width="50sp"
+        android:id="@+id/occupant_presence"
+        android:layout_width="26sp"
         android:layout_height="50sp"
         android:layout_alignParentRight="true"
-        android:src="@drawable/user_avatar" >
+        android:src="@drawable/user_offline" >
     </ImageView>
 
 </RelativeLayout>

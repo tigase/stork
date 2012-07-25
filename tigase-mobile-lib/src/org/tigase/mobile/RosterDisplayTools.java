@@ -5,6 +5,7 @@ import org.tigase.mobile.roster.CPresence;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
@@ -16,6 +17,27 @@ import android.content.Context;
 import android.util.Log;
 
 public class RosterDisplayTools {
+
+	public static CPresence getShowOf(final Presence p) throws XMLException {
+		CPresence r = CPresence.offline;
+		if (p != null) {
+			if (p.getType() == StanzaType.error) {
+				r = CPresence.error;
+			} else if (p.getType() == StanzaType.unavailable)
+				r = CPresence.offline;
+			else if (p.getShow() == Show.online)
+				r = CPresence.online;
+			else if (p.getShow() == Show.away)
+				r = CPresence.away;
+			else if (p.getShow() == Show.chat)
+				r = CPresence.chat;
+			else if (p.getShow() == Show.dnd)
+				r = CPresence.dnd;
+			else if (p.getShow() == Show.xa)
+				r = CPresence.xa;
+		}
+		return r;
+	}
 
 	private final MultiJaxmpp multi;
 
@@ -68,23 +90,7 @@ public class RosterDisplayTools {
 			if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.from)
 				return CPresence.offline_nonauth;
 			p = p == null ? presence.getBestPresence(item.getJid()) : p;
-			CPresence r = CPresence.offline;
-			if (p != null) {
-				if (p.getType() == StanzaType.error) {
-					r = CPresence.error;
-				} else if (p.getType() == StanzaType.unavailable)
-					r = CPresence.offline;
-				else if (p.getShow() == Show.online)
-					r = CPresence.online;
-				else if (p.getShow() == Show.away)
-					r = CPresence.away;
-				else if (p.getShow() == Show.chat)
-					r = CPresence.chat;
-				else if (p.getShow() == Show.dnd)
-					r = CPresence.dnd;
-				else if (p.getShow() == Show.xa)
-					r = CPresence.xa;
-			}
+			CPresence r = getShowOf(p);
 			return r;
 		} catch (Exception e) {
 			Log.e("tigase", "Can't calculate presence", e);
