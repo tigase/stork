@@ -2,20 +2,42 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="5px" >
+    android:padding="0sp" >
 
-    <FrameLayout
-        android:id="@+id/frameLayout1"
+    <ImageView
+        android:id="@+id/occupant_avatar"
+        android:layout_width="50sp"
+        android:layout_height="50sp"
+        android:src="@drawable/user_avatar" >
+    </ImageView>
+
+    <ImageView
+        android:id="@+id/occupant_icon"
         android:layout_width="26sp"
-        android:layout_height="50sp" >
+        android:layout_height="26sp"
+        android:layout_alignBottom="@+id/occupant_avatar"
+        android:layout_alignRight="@+id/occupant_avatar"
+        android:adjustViewBounds="true"
+        android:cropToPadding="true"
+        android:gravity="center"
+        android:paddingRight="5sp"
+        android:scaleType="centerInside"
+        android:src="@drawable/occupant_moderator"
+        android:textSize="16sp" />
 
-        <ImageView
-            android:id="@+id/occupant_icon"
-            android:layout_width="26sp"
-            android:layout_height="50sp"
-            android:src="@drawable/occupant_moderator" >
-        </ImageView>
-    </FrameLayout>
+    <ImageView
+        android:id="@+id/occupant_presence"
+        android:layout_width="26sp"
+        android:layout_height="50sp"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/occupant_nickname"
+        android:adjustViewBounds="true"
+        android:cropToPadding="true"
+        android:gravity="center"
+        android:paddingRight="5sp"
+        android:scaleType="centerInside"
+        android:src="@drawable/user_offline"
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/occupant_status_description"
@@ -23,6 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/occupant_nickname"
         android:layout_below="@+id/occupant_nickname"
+        android:layout_toLeftOf="@+id/occupant_presence"
         android:paddingLeft="10sp"
         android:singleLine="true"
         android:textSize="14sp" >
@@ -34,18 +57,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/occupant_presence"
-        android:layout_toRightOf="@+id/frameLayout1"
+        android:layout_toRightOf="@+id/occupant_avatar"
         android:paddingLeft="10sp"
+        android:singleLine="true"
         android:textSize="18sp"
         android:textStyle="bold" >
     </TextView>
-
-    <ImageView
-        android:id="@+id/occupant_presence"
-        android:layout_width="26sp"
-        android:layout_height="50sp"
-        android:layout_alignParentRight="true"
-        android:src="@drawable/user_offline" >
-    </ImageView>
 
 </RelativeLayout>
