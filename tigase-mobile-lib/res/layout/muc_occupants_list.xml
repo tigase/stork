@@ -6,7 +6,10 @@
     <ListView
         android:id="@+id/occupants_list"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:divider="#e5e4e5"
+        android:dividerHeight="1px"
+        android:saveEnabled="true" >
     </ListView>
 
 </RelativeLayout>

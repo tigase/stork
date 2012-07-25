@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -40,10 +41,12 @@ public class OccupantsListActivity extends Activity {
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			this.room = room;
 			occupants.addAll(room.getPresences().values());
+			notifyDataSetChanged();
 		}
 
 		public void add(Occupant occupant) {
 			occupants.add(occupant);
+			notifyDataSetChanged();
 		}
 
 		@Override
@@ -61,7 +64,7 @@ public class OccupantsListActivity extends Activity {
 		public long getItemId(int position) {
 			return occupants.get(position).hashCode();
 		}
-
+		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view;
@@ -70,15 +73,20 @@ public class OccupantsListActivity extends Activity {
 			} else {
 				view = convertView;
 			}
-
+			
 			final Occupant occupant = (Occupant) getItem(position);
 
 			final TextView nicknameTextView = (TextView) view.findViewById(R.id.occupant_nickname);
 			final TextView statusTextView = (TextView) view.findViewById(R.id.occupant_status_description);
 			final ImageView occupantIcon = (ImageView) view.findViewById(R.id.occupant_icon);
-
+			
 			try {
 				nicknameTextView.setText(occupant.getNickname());
+				
+				// looks like enabled text is still gray but darker than disabled item
+				// but setting color in code fixes color of displayed text
+				nicknameTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+				statusTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
 
 				String status = occupant.getPresence().getStatus();
 				statusTextView.setText(status == null ? "" : status);
@@ -95,17 +103,19 @@ public class OccupantsListActivity extends Activity {
 			} catch (XMLException e) {
 				Log.e(TAG, "Can't show occupant", e);
 			}
-
+			
 			return view;
 		}
-
+		
 		public void remove(Occupant occupant) {
 			occupants.remove(occupant);
+			notifyDataSetChanged();
 		}
 
 		public void update(Occupant occupant) {
 			occupants.remove(occupant);
 			occupants.add(occupant);
+			notifyDataSetChanged();
 		}
 	}
 
@@ -143,7 +153,6 @@ public class OccupantsListActivity extends Activity {
 
 		adapter = new OccupantsAdapter(getApplicationContext(), room);
 		occupantsList.setAdapter(adapter);
-
 	}
 
 	@Override
