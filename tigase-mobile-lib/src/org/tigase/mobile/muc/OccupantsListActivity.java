@@ -3,10 +3,13 @@ package org.tigase.mobile.muc;
 import java.util.ArrayList;
 
 import org.tigase.mobile.MessengerApplication;
-import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.R;
 
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.app.Activity;
@@ -17,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -66,15 +70,88 @@ public class OccupantsListActivity extends Activity {
 			final Occupant occupant = (Occupant) getItem(position);
 
 			final TextView nicknameTextView = (TextView) view.findViewById(R.id.occupant_nickname);
+			final TextView statusTextView = (TextView) view.findViewById(R.id.occupant_status_description);
+			final ImageView occupantIcon = (ImageView) view.findViewById(R.id.occupant_icon);
 
 			try {
 				nicknameTextView.setText(occupant.getNickname());
+
+				String status = occupant.getPresence().getStatus();
+				statusTextView.setText(status == null ? "" : status);
+				switch (occupant.getRole()) {
+				case moderator:
+					occupantIcon.setImageResource(R.drawable.occupant_moderator);
+					occupantIcon.setVisibility(View.VISIBLE);
+					break;
+				default:
+					occupantIcon.setVisibility(View.INVISIBLE);
+					break;
+				}
+
 			} catch (XMLException e) {
 				Log.e(TAG, "Can't show occupant", e);
 			}
 
 			return view;
 		}
+
+		public void update(Occupant occupant) {
+			occupants.remove(occupant);
+			occupants.add(occupant);
+		}
+
+		public void remove(Occupant occupant) {
+			occupants.remove(occupant);
+		}
+
+		public void add(Occupant occupant) {
+			occupants.add(occupant);
+		}
+	}
+
+	private final Listener<MucEvent> mucListener;
+	private Room room;
+	private MucModule mucModule;
+	private OccupantsAdapter adapter;
+	private ListView occupantsList;
+
+	public OccupantsListActivity() {
+		mucListener = new Listener<MucEvent>() {
+
+			@Override
+			public void handleEvent(MucEvent be) throws JaxmppException {
+				if (be.getRoom() == room && adapter != null)
+					onRoomEvent(be);
+			}
+		};
+	}
+
+	protected void onRoomEvent(final MucEvent be) {
+		occupantsList.post(new Runnable() {
+
+			@Override
+			public void run() {
+				if (be.getType() == MucModule.OccupantComes) {
+					adapter.add(be.getOccupant());
+				} else if (be.getType() == MucModule.OccupantLeaved) {
+					adapter.remove(be.getOccupant());
+				} else if (be.getType() == MucModule.OccupantChangedPresence) {
+					adapter.update(be.getOccupant());
+				} else if (be.getType() == MucModule.OccupantChangedNick) {
+					adapter.update(be.getOccupant());
+				}
+
+				adapter.notifyDataSetChanged();
+
+			}
+		});
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (mucModule != null)
+			mucModule.removeListener(mucListener);
+		super.onDestroy();
 	}
 
 	@Override
@@ -85,11 +162,14 @@ public class OccupantsListActivity extends Activity {
 
 		long roomId = getIntent().getLongExtra("roomId", -1);
 
-		ChatWrapper room = ((MessengerApplication) getApplication()).getMultiJaxmpp().getRoomById(roomId);
+		room = ((MessengerApplication) getApplication()).getMultiJaxmpp().getRoomById(roomId).getRoom();
+		mucModule = ((MessengerApplication) getApplication()).getMultiJaxmpp().get(room.getSessionObject()).getModulesManager().getModule(
+				MucModule.class);
+		mucModule.addListener(mucListener);
 
-		ListView occupantsList = (ListView) findViewById(R.id.occupants_list);
+		occupantsList = (ListView) findViewById(R.id.occupants_list);
 
-		OccupantsAdapter adapter = new OccupantsAdapter(getApplicationContext(), room.getRoom());
+		adapter = new OccupantsAdapter(getApplicationContext(), room);
 		occupantsList.setAdapter(adapter);
 
 	}
