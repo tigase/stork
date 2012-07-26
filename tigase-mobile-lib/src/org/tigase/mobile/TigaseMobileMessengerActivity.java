@@ -493,21 +493,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 
-			@Override
-			protected String makeFragmentName(int viewId, int index) {
-				viewId = 1;
-				if (index == 0)
-					return "android:switcher:" + viewId + ":accounts";
-				else if (index == 1)
-					return "android:switcher:" + viewId + ":roster";
-				else {
-					ChatWrapper wrapper = getChatByPageIndex(index);
-					String name = "android:switcher:" + viewId + ":" + wrapper;
-					if (DEBUG)
-						Log.d(TAG, "Chat page name: " + name);
-					return name;
-				}
-			}
 		};
 
 		viewPager.setAdapter(this.adapter);

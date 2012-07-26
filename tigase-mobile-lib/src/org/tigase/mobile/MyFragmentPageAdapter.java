@@ -5,26 +5,27 @@ import org.tigase.mobile.roster.RosterFragment;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-public abstract class MyFragmentPageAdapter extends PagerAdapter {
+public abstract class MyFragmentPageAdapter extends FragmentStatePagerAdapter {
 
 	private static final boolean DEBUG = false;
 
 	private static final String TAG = "MyFragmentPageAdapter";
 
 	private Fragment mCurrentPrimaryItem = null;
+
 	private FragmentTransaction mCurTransaction = null;
 	private final FragmentManager mFragmentManager;
-
 	protected boolean refreshRoster;
 
 	public MyFragmentPageAdapter(FragmentManager fm) {
-		mFragmentManager = fm;
+		super(fm);
+		this.mFragmentManager = fm;
 	}
 
 	@Override
@@ -50,6 +51,7 @@ public abstract class MyFragmentPageAdapter extends PagerAdapter {
 	/**
 	 * Return the Fragment associated with a specified position.
 	 */
+	@Override
 	public abstract Fragment getItem(int position);
 
 	@Override
