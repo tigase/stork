@@ -3,6 +3,7 @@ package org.tigase.mobile.chat;
 import java.util.Date;
 import java.util.List;
 
+import org.tigase.mobile.FragmentWithUID;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
@@ -57,7 +58,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallbacks<Cursor> {
 
 	private static final boolean DEBUG = true;
 
@@ -192,7 +193,7 @@ public class ChatHistoryFragment extends Fragment implements LoaderCallbacks<Cur
 		}
 
 		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
-		getLoaderManager().initLoader(0, null, this);
+		getLoaderManager().initLoader(id, null, this);
 		chatAdapter.registerDataSetObserver(new DataSetObserver() {
 
 			@Override

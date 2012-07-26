@@ -1,5 +1,6 @@
 package org.tigase.mobile.muc;
 
+import org.tigase.mobile.FragmentWithUID;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
@@ -47,7 +48,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<Cursor> {
 
 	private static final boolean DEBUG = false;
 
@@ -121,7 +122,7 @@ public class MucRoomFragment extends Fragment implements LoaderCallbacks<Cursor>
 		}
 
 		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room);
-		getLoaderManager().initLoader(0, null, this);
+		getLoaderManager().initLoader(id, null, this);
 		mucAdapter.registerDataSetObserver(new DataSetObserver() {
 
 			@Override
