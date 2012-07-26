@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+    
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="50sp"
+        android:layout_height="50sp"
+        android:src="@drawable/group_chat" >
+    </ImageView>
+    
+    <TextView
+        android:id="@+id/bookmark_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bookmark_title"
+        android:layout_toRightOf="@id/imageView1"
+        android:hint="Description"
+        android:textSize="14sp" >
+    </TextView>
+    
+    <TextView
+        android:id="@+id/bookmark_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@id/imageView1"
+        android:gravity="fill_horizontal"
+        android:hint="Title"
+        android:lines="1"
+        android:paddingLeft="10sp"
+        android:singleLine="true"
+        android:textSize="18sp" >
+
+    </TextView>
+        
+</RelativeLayout>

@@ -168,5 +168,7 @@
     <string name="service_message_from_notification_title">Message from %s</string>
     <string name="join_muc_room">Join conference</string>
     <string name="muc_occupants_list_title">Occupants</string>
-    
+
+    <string name="bookmarks_show">Bookmarks</string>
+    <string name="bookmarks">Bookmarks</string>
 </resources>

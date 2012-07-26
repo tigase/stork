@@ -5,6 +5,7 @@ import java.util.List;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.accountstatus.AccountsStatusFragment;
 import org.tigase.mobile.authenticator.AuthenticatorActivity;
+import org.tigase.mobile.bookmarks.BookmarksActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
@@ -738,6 +739,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			intent.putExtra("focused", true);
 			startService(intent);
 			return true;
+		} else if (item.getItemId() == R.id.bookmarksShow) {
+			Intent intent = new Intent(TigaseMobileMessengerActivity.this, BookmarksActivity.class);
+			startActivityForResult(intent, REQUEST_CHAT);
+			return true;
 		}
 		return false;
 	}
@@ -779,6 +784,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			MenuItem add = menu.findItem(R.id.contactAdd);
 			helper.setShowAsAction(add, MenuItem.SHOW_AS_ACTION_IF_ROOM);
 			add.setVisible(serviceActive);
+
+			MenuItem bookmarks = menu.findItem(R.id.bookmarksShow);
+			bookmarks.setVisible(serviceActive);
 		}
 
 		return super.onPrepareOptionsMenu(menu);

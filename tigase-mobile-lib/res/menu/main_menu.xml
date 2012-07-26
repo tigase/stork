@@ -18,6 +18,10 @@
         android:title="@string/contact_add">
     </item>
     <item
+        android:id="@+id/bookmarksShow"
+        android:title="@string/bookmarks_show">
+    </item>
+    <item
         android:id="@+id/joinMucRoom"
         android:title="@string/join_muc_room">
     </item>

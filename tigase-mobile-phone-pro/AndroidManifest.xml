@@ -18,6 +18,11 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
+            android:name="org.tigase.mobile.bookmarks.BookmarksActivity"
+            android:label="@string/bookmarks"
+            android:theme="@style/XTheme.Light" >
+        </activity>
+        <activity
             android:name="org.tigase.mobile.chatlist.ChatListActivity"
             android:label="@string/chat_list_title"
             android:theme="@style/XTheme.Light" >

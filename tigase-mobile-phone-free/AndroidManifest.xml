@@ -18,6 +18,11 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
+            android:name="org.tigase.mobile.muc.OccupantsListActivity"
+            android:label="@string/muc_occupants_list_title"
+            android:theme="@style/XTheme.Light" >
+        </activity>        
+        <activity
             android:name="org.tigase.mobile.chatlist.ChatListActivity"
             android:label="@string/chat_list_title"
             android:theme="@style/XTheme.Light" >

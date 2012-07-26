@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="26dp"
+        android:background="@android:drawable/title_bar_tall"
+        android:padding="0dp" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:paddingLeft="5dp"
+            android:text="@string/bookmarks"
+            android:textColor="@color/title_bar_text_color"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+    
+    <ListView
+        android:id="@+id/bookmarksList"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/topBar"
+        android:divider="#e5e4e5"
+        android:dividerHeight="1px"
+        android:saveEnabled="true" />
+    
+</RelativeLayout>
