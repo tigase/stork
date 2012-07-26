@@ -122,7 +122,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		}
 
 		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room);
-		getLoaderManager().initLoader(id, null, this);
+		getLoaderManager().initLoader(fragmentUID, null, this);
 		mucAdapter.registerDataSetObserver(new DataSetObserver() {
 
 			@Override

@@ -6,6 +6,6 @@ public class FragmentWithUID extends Fragment {
 
 	private static int idC = 10;
 
-	protected final int id = (++idC);
+	protected final int fragmentUID = (++idC);
 
 }

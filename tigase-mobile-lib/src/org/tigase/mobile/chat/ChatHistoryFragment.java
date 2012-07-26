@@ -193,7 +193,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		}
 
 		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
-		getLoaderManager().initLoader(id, null, this);
+		getLoaderManager().initLoader(fragmentUID, null, this);
 		chatAdapter.registerDataSetObserver(new DataSetObserver() {
 
 			@Override
