@@ -471,12 +471,17 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 	protected void updatePresence() {
 		if (chat != null) {
-
 			CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getSessionObject(),
 					chat.getJid().getBareJid());
 			System.out.println("Updating presence to " + cp);
 			// ((MessengerApplication)getActivity().getApplication()).getMultiJaxmpp().get(chat.getSessionObject());
 			layout.setImagePresence(cp);
+
+			TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
+			if (activity != null &&  activity.helper != null && chat != null) {
+				activity.helper.updateActionBar(chat.hashCode());
+			}
+
 		}
 	}
 

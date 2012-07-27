@@ -349,6 +349,11 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 							}
 						}
 					});
+				}				
+				
+				TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
+				if (activity != null &&  activity.helper != null && room != null) {
+					activity.helper.updateActionBar(room.hashCode());
 				}
 			}
 		};

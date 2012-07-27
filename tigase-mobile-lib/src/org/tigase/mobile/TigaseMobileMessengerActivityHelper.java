@@ -1,5 +1,9 @@
 package org.tigase.mobile;
 
+import java.util.List;
+
+import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
+
 import android.content.res.Configuration;
 import android.os.Build;
 import android.view.MenuItem;
@@ -32,6 +36,9 @@ public class TigaseMobileMessengerActivityHelper {
 	public void setShowAsAction(MenuItem item, int value) {
 	};
 
+	public void updateActionBar(int itemHashCode) {
+	}
+	
 	public void updateActionBar() {
 	}
 

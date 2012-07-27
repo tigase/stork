@@ -132,7 +132,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private int currentPage = -1;
 
-	private final TigaseMobileMessengerActivityHelper helper;
+	public final TigaseMobileMessengerActivityHelper helper;
 
 	private SharedPreferences mPreferences;
 
