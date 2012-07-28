@@ -208,27 +208,47 @@ public class RosterCursor extends AbstractCursor {
 			r.addAll(jaxmpp.getRoster().getAll(pr));
 		}
 
-		MergeSort.sort(r, new Comparator<RosterItem>() {
+		String sorting = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.ROSTER_SORTING_KEY, "status");
+		
+		if ("status".equals(sorting)) {
+			MergeSort.sort(r, new Comparator<RosterItem>() {
 
-			@Override
-			public int compare(RosterItem object1, RosterItem object2) {
-				try {
-					CPresence s1 = rdt.getShowOf(object1);
-					CPresence s2 = rdt.getShowOf(object2);
+				@Override
+				public int compare(RosterItem object1, RosterItem object2) {
+					try {
+						CPresence s1 = rdt.getShowOf(object1);
+						CPresence s2 = rdt.getShowOf(object2);
 
-					int sc = s2.getId().compareTo(s1.getId());
-					if (sc != 0)
-						return sc;
+						int sc = s2.getId().compareTo(s1.getId());
+						if (sc != 0)
+							return sc;
 
-					String n1 = rdt.getDisplayName(object1);
-					String n2 = rdt.getDisplayName(object2);
+						String n1 = rdt.getDisplayName(object1);
+						String n2 = rdt.getDisplayName(object2);
 
-					return n1.compareTo(n2);
-				} catch (Exception e) {
-					return 0;
+						return n1.compareTo(n2);
+					} catch (Exception e) {
+						return 0;
+					}
 				}
-			}
-		});
+			});
+		}
+		else if ("name".endsWith(sorting)) {
+			MergeSort.sort(r, new Comparator<RosterItem>() {
+
+				@Override
+				public int compare(RosterItem object1, RosterItem object2) {
+					try {
+						String n1 = rdt.getDisplayName(object1);
+						String n2 = rdt.getDisplayName(object2);
+
+						return n1.compareTo(n2);
+					} catch (Exception e) {
+						return 0;
+					}
+				}
+			});			
+		}
 		synchronized (this.items) {
 			this.items.clear();
 			this.items.addAll(r);

@@ -37,7 +37,13 @@
             android:entryValues="@array/roster_layout_options_values"
             android:key="roster_layout"
             android:title="Roster layout" />
-
+        <ListPreference
+            android:defaultValue="status"
+            android:entries="@array/roster_sorting_options"
+            android:entryValues="@array/roster_sorting_options_values"
+            android:key="roster_sorting"
+            android:title="Roster sorting" />
+        
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="enter_to_send"

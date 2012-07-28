@@ -21,6 +21,14 @@
         <item>flat</item>
         <item>groups</item>
     </string-array>
+    <string-array name="roster_sorting_options">
+        <item>Name</item>
+        <item>Status</item>
+    </string-array>
+    <string-array name="roster_sorting_options_values">
+        <item>name</item>
+        <item>status</item>
+    </string-array>
     <string-array name="free_account_hostnames">
         <item>sure.im</item>
         <item>jabber.me</item>

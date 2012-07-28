@@ -169,7 +169,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-				if (Preferences.ROSTER_LAYOUT_KEY.equals(key)) {
+				if (Preferences.ROSTER_LAYOUT_KEY.equals(key) || Preferences.ROSTER_SORTING_KEY.equals(key)) {
 					((MyFragmentPageAdapter) viewPager.getAdapter()).setRefreshRoster(true);
 					viewPager.getAdapter().notifyDataSetChanged();
 				}
