@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:padding="5px" >
+    android:padding="5px"
+    tools:ignore="HardcodedText,PxUsage" >
 
     <ScrollView
         android:id="@+id/scrollView1"
@@ -16,7 +18,8 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical"
-            android:padding="5px" >
+            android:padding="5px"
+            tools:ignore="ScrollViewSize" >
 
             <TextView
                 android:id="@+id/textView1"
@@ -30,11 +33,19 @@
                 android:layout_height="wrap_content" />
 
             <EditText
+                android:id="@+id/muc_name"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Bookmark name"
+                android:inputType="textNoSuggestions" />
+
+            <EditText
                 android:id="@+id/muc_roomName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="Room name"
-                android:inputType="textNoSuggestions" >
+                android:inputType="textNoSuggestions"
+                tools:ignore="HardcodedText" >
 
                 <requestFocus />
             </EditText>
@@ -44,7 +55,9 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="MUC Server"
-                android:inputType="textNoSuggestions" >
+                android:inputType="textNoSuggestions"
+                tools:ignore="HardcodedText" >
+
             </EditText>
 
             <EditText
@@ -60,7 +73,8 @@
                 android:layout_height="2dip"
                 android:layout_alignParentTop="true"
                 android:layout_centerVertical="true"
-                android:background="@color/account_dialog_separator" />
+                android:background="@color/account_dialog_separator"
+                tools:ignore="ObsoleteLayoutParam" />
 
             <EditText
                 android:id="@+id/muc_password"
@@ -68,6 +82,12 @@
                 android:layout_height="wrap_content"
                 android:hint="Password"
                 android:inputType="textPassword" />
+
+            <CheckBox
+                android:id="@+id/muc_autojoin"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Auto join" />
         </LinearLayout>
     </ScrollView>
 
