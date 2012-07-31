@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="title_bar_text_color">#ffffff</color>
-    
-	<color name="message_mine_text">#000000</color>
-	<color name="message_his_text">#000000</color>
 
-	<color name="message_panel_background">#808080</color>
+    <color name="title_bar_text_color">#ffffff</color>
+    <color name="message_mine_text">#000000</color>
+    <color name="message_his_text">#000000</color>
+    <color name="mucmessage_mine_text">#000000</color>
+    <color name="mucmessage_his_text">#000000</color>
+    <color name="mucmessage_mine_background">#ffffff</color>
+    <color name="mucmessage_his_background">#effbff</color>
+    <color name="mucmessage_mine_nickname">#000000</color>
+    <color name="mucmessage_his_nickname_0">#0000FF</color>
+    <color name="mucmessage_his_nickname_1">#A020F0</color>
+    <color name="mucmessage_his_nickname_2">#FFA500</color>
+    <color name="mucmessage_his_nickname_3">#008B00</color>
+    <color name="mucmessage_his_nickname_4">#FF0000</color>
+    <color name="mucmessage_his_nickname_5">#9400D3</color>
+    <color name="mucmessage_his_nickname_6">#FF1493</color>
+    <color name="mucmessage_his_nickname_7">#FF4500</color>
+    <color name="mucmessage_his_nickname_8">#8B6914</color>
+    <color name="mucmessage_his_nickname_9">#808000</color>
+    <color name="mucmessage_his_nickname_10">#6B4226</color>
+    <color name="mucmessage_his_nickname_11">#5C4033</color>
+    <color name="mucmessage_his_nickname_12">#23238E</color>
+    <color name="mucmessage_his_nickname_13">#2F4F4F</color>
+    <color name="mucmessage_his_nickname_14">#8B2323</color>
+    <color name="mucmessage_his_nickname_15">#008B45</color>
+    <color name="mucmessage_his_nickname_16">#8b1a1a</color>
+    <color name="message_panel_background">#808080</color>
+    <color name="account_dialog_separator">#4c4d4d</color>
+    <color name="message_mine_background">#ffffff</color>
+    <color name="message_his_background">#effbff</color>
 
-	<color name="account_dialog_separator">#4c4d4d</color>
-		
-
-	<color name="message_mine_background">#ffffff</color>
-	<color name="message_his_background">#effbff</color>
 </resources>

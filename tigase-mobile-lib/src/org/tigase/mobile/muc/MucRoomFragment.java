@@ -331,7 +331,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 						ed.setEnabled(false);
 						sendButton.setEnabled(false);
 					}
-				}
+				}System.out.println();
 				if (stateImage != null) {
 					stateImage.post(new Runnable() {
 
