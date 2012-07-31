@@ -75,15 +75,75 @@ public class MucAdapter extends SimpleCursorAdapter {
 		holder.nickname.setText(nick);
 
 		if (nick.equals(room.getNickname())) {
-			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_mine_text));
-			holder.webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
-			holder.timestamp.setTextColor(context.getResources().getColor(R.color.message_mine_text));
-			view.setBackgroundColor(context.getResources().getColor(R.color.message_mine_background));
+			holder.nickname.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_nickname));
+			holder.webview.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
+			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
+			view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_mine_background));
 		} else {
-			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
-			holder.webview.setTextColor(context.getResources().getColor(R.color.message_his_text));
-			holder.timestamp.setTextColor(context.getResources().getColor(R.color.message_his_text));
-			view.setBackgroundColor(context.getResources().getColor(R.color.message_his_background));
+			int color = Math.abs(nick.hashCode()) % 17;
+			int colorRes;
+
+			switch (color) {
+			case 0:
+				colorRes = R.color.mucmessage_his_nickname_0;
+				break;
+			case 1:
+				colorRes = R.color.mucmessage_his_nickname_1;
+				break;
+			case 2:
+				colorRes = R.color.mucmessage_his_nickname_2;
+				break;
+			case 3:
+				colorRes = R.color.mucmessage_his_nickname_3;
+				break;
+			case 4:
+				colorRes = R.color.mucmessage_his_nickname_4;
+				break;
+			case 5:
+				colorRes = R.color.mucmessage_his_nickname_5;
+				break;
+			case 6:
+				colorRes = R.color.mucmessage_his_nickname_6;
+				break;
+			case 7:
+				colorRes = R.color.mucmessage_his_nickname_7;
+				break;
+			case 8:
+				colorRes = R.color.mucmessage_his_nickname_8;
+				break;
+			case 9:
+				colorRes = R.color.mucmessage_his_nickname_9;
+				break;
+			case 10:
+				colorRes = R.color.mucmessage_his_nickname_10;
+				break;
+			case 11:
+				colorRes = R.color.mucmessage_his_nickname_11;
+				break;
+			case 12:
+				colorRes = R.color.mucmessage_his_nickname_12;
+				break;
+			case 13:
+				colorRes = R.color.mucmessage_his_nickname_13;
+				break;
+			case 14:
+				colorRes = R.color.mucmessage_his_nickname_14;
+				break;
+			case 15:
+				colorRes = R.color.mucmessage_his_nickname_15;
+				break;
+			case 16:
+				colorRes = R.color.mucmessage_his_nickname_16;
+				break;
+			default:
+				colorRes = R.color.mucmessage_his_nickname_0;
+				break;
+			}
+
+			holder.nickname.setTextColor(context.getResources().getColor(colorRes));
+			holder.webview.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
+			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
+			view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_his_background));
 		}
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);

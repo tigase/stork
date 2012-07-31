@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-	android:layout_height="?android:attr/actionBarSize" >
+    android:layout_height="?android:attr/actionBarSize" >
 
     <TextView
         android:id="@+id/title"
@@ -11,31 +11,35 @@
         android:layout_alignParentTop="true"
         android:hint="Tigase Messenger"
         android:singleLine="true"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-    
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textStyle="bold" />
+
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/title"
         android:layout_centerVertical="true" >
-        
-    <ImageView
-        android:id="@+id/status"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:layout_alignParentLeft="true"
-        android:padding="1dp" />
-    
-    <TextView
-        android:id="@+id/description"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5sp"
-        android:layout_toRightOf="@+id/status"
-        android:ellipsize="end"
-        android:hint="Description"
-        android:singleLine="true"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
 
+        <ImageView
+            android:id="@+id/status"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_alignBottom="@+id/description"
+            android:layout_alignParentLeft="true"
+            android:padding="1dp"
+            android:src="@drawable/user_offline" />
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5sp"
+            android:layout_toRightOf="@+id/status"
+            android:ellipsize="end"
+            android:gravity="bottom"
+            android:hint="Description"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </RelativeLayout>
+
 </RelativeLayout>
