@@ -51,6 +51,7 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
@@ -58,6 +59,7 @@ import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -139,7 +141,7 @@ public class RosterFragment extends Fragment {
 
 	private ContextMenuInfo lastMenuInfo;
 
-	private ListView listView;
+	private AbsListView listView;
 
 	private ProgressBar progressBar;
 
@@ -345,11 +347,13 @@ public class RosterFragment extends Fragment {
 			layout = inflater.inflate(R.layout.roster_list, null);
 		} else if ("flat".equals(this.rosterLayout)) {
 			layout = inflater.inflate(R.layout.roster_list_flat, null);
+		} else if ("grid".equals(this.rosterLayout)) {
+			layout = inflater.inflate(R.layout.roster_list_grid, null);
 		} else {
 			throw new RuntimeException("Unknown roster layout");
 		}
 
-		listView = (ListView) layout.findViewById(R.id.rosterList);
+		listView = (AbsListView) layout.findViewById(R.id.rosterList);
 		listView.setTextFilterEnabled(true);
 		registerForContextMenu(listView);
 
@@ -380,7 +384,7 @@ public class RosterFragment extends Fragment {
 					return true;
 				}
 			});
-		} else if (listView instanceof ListView) {
+		} else if (listView instanceof ListView || listView instanceof GridView) {
 			if (c != null) {
 				getActivity().stopManagingCursor(c);
 			}
@@ -389,9 +393,15 @@ public class RosterFragment extends Fragment {
 
 			getActivity().startManagingCursor(c);
 			// FlatRosterAdapter.staticContext = inflater.getContext();
-
-			this.adapter = new FlatRosterAdapter(inflater.getContext(), c);
-			listView.setAdapter((ListAdapter) adapter);
+			
+			if (listView instanceof ListView) {
+				this.adapter = new FlatRosterAdapter(inflater.getContext(), c, R.layout.roster_item);
+				((ListView) listView).setAdapter((ListAdapter) adapter);
+			}			
+			else if (listView instanceof GridView) {								
+				this.adapter = new FlatRosterAdapter(inflater.getContext(), c, R.layout.roster_grid_item);
+				((GridView) listView).setAdapter((ListAdapter) adapter);
+			}
 			listView.setOnItemClickListener(new OnItemClickListener() {
 
 				@Override
@@ -404,7 +414,7 @@ public class RosterFragment extends Fragment {
 
 					getActivity().getApplicationContext().sendBroadcast(intent);
 				}
-			});
+			});			
 
 		}
 		// there can be no connection status icon - we have notifications and

@@ -6,6 +6,7 @@ import org.tigase.mobile.db.RosterTableMetaData;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
+import android.widget.GridView;
 import android.widget.SimpleCursorAdapter;
 
 public class FlatRosterAdapter extends SimpleCursorAdapter {
@@ -14,15 +15,22 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 	private final static int[] names = new int[] { R.id.roster_item_jid };
 	protected int[] mFrom;
 
-	public FlatRosterAdapter(Context context, Cursor c) {
-		super(context, R.layout.roster_item, c, cols, names);
-
+	private int layoutId = 0;
+	
+	public FlatRosterAdapter(Context context, Cursor c, int layoutId) {
+//		super(context, R.layout.roster_item, c, cols, names);		
+		super(context, layoutId, c, cols, names);
+		this.layoutId = layoutId;
 		findColumns(cols, c);
 	}
-
+	
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 		// GroupRosterAdapter and FlatRosterAdapter are using code
+		if (layoutId == R.layout.roster_grid_item) {
+			view.setLayoutParams(new GridView.LayoutParams(GridView.LayoutParams.WRAP_CONTENT, GridView.LayoutParams.WRAP_CONTENT));
+		}
+		
 		RosterAdapterHelper.bindView(view, context, cursor);
 	}
 
@@ -31,7 +39,7 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 		int count = from.length;
 		if (mFrom == null) {
 			mFrom = new int[count];
-		}
+		}		
 		if (mCursor != null) {
 			for (i = 0; i < count; i++) {
 				mFrom[i] = mCursor.getColumnIndexOrThrow(from[i]);
@@ -39,7 +47,7 @@ public class FlatRosterAdapter extends SimpleCursorAdapter {
 		} else {
 			for (i = 0; i < count; i++) {
 				mFrom[i] = -1;
-			}
+			}			
 		}
 	}
 

@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 //import tigase.jaxmpp.R;
 
@@ -38,7 +39,16 @@ public class AvatarHelper {
 				inSampleSize = Math.round((float) width / (float) reqWidth);
 			}
 		}
-		return inSampleSize;
+		int scale = 1;
+		while (inSampleSize > scale) {
+			scale *= 2;
+		}
+		// is it needed?
+//		if (inSampleSize < scale) {
+//			scale /= 2;
+//		}
+		return scale;
+//		return inSampleSize;
 	}
 
 	public static boolean cancelPotentialWork(BareJID jid, ImageView imageView) {
@@ -130,7 +140,9 @@ public class AvatarHelper {
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inJustDecodeBounds = true;
 					BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-					options.inSampleSize = calculateSize(options, 96, 96);
+//					options.inSampleSize = calculateSize(options, 96, 96);
+					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+					options.inSampleSize = calculateSize(options, 120, 120);
 					options.inJustDecodeBounds = false;
 					bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
 					if (bmp != null) {
@@ -163,4 +175,5 @@ public class AvatarHelper {
 			task.execute(jid);
 		}
 	}
+
 }

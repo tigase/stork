@@ -16,10 +16,12 @@
     <string-array name="roster_layout_options">
         <item>Flat</item>
         <item>With groups</item>
+        <item>Grid</item>
     </string-array>
     <string-array name="roster_layout_options_values">
         <item>flat</item>
         <item>groups</item>
+        <item>grid</item>
     </string-array>
     <string-array name="roster_sorting_options">
         <item>Name</item>

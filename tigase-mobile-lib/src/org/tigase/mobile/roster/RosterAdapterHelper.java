@@ -77,36 +77,38 @@ public class RosterAdapterHelper {
 		final BareJID jid = BareJID.bareJIDInstance(cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_JID)));
 		final Jaxmpp jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 
-		holder.clientTypeIndicator.setVisibility(View.INVISIBLE);
+		if (holder.clientTypeIndicator != null) {
+			holder.clientTypeIndicator.setVisibility(View.INVISIBLE);
 
-		CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
-		try {
-			final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
-			for (Presence p : jaxmpp.getPresence().getPresences(jid).values()) {
-				if (p.getType() != null)
-					continue;
-				Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
-				if (c == null)
-					continue;
-				String node = c.getAttribute("node");
-				String ver = c.getAttribute("ver");
+			CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+			try {
+				final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
+				for (Presence p : jaxmpp.getPresence().getPresences(jid).values()) {
+					if (p.getType() != null)
+						continue;
+					Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+					if (c == null)
+						continue;
+					String node = c.getAttribute("node");
+					String ver = c.getAttribute("ver");
 
-				Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
-				if (id != null) {
-					String tmp = id.getCategory() + "/" + id.getType();
-					if (tmp.equals("client/phone") && node.equals(nodeName)) {
-						holder.clientTypeIndicator.setImageResource(R.drawable.client_messenger);
-						holder.clientTypeIndicator.setVisibility(View.VISIBLE);
-						break;
-					} else if (tmp.equals("client/phone")) {
-						holder.clientTypeIndicator.setImageResource(R.drawable.client_mobile);
-						holder.clientTypeIndicator.setVisibility(View.VISIBLE);
-						break;
+					Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
+					if (id != null) {
+						String tmp = id.getCategory() + "/" + id.getType();
+						if (tmp.equals("client/phone") && node.equals(nodeName)) {
+							holder.clientTypeIndicator.setImageResource(R.drawable.client_messenger);
+							holder.clientTypeIndicator.setVisibility(View.VISIBLE);
+							break;
+						} else if (tmp.equals("client/phone")) {
+							holder.clientTypeIndicator.setImageResource(R.drawable.client_mobile);
+							holder.clientTypeIndicator.setVisibility(View.VISIBLE);
+							break;
+						}
 					}
 				}
+			} catch (Exception e) {
+				// TODO: handle exception
 			}
-		} catch (Exception e) {
-			// TODO: handle exception
 		}
 
 		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(jid);
@@ -148,32 +150,33 @@ public class RosterAdapterHelper {
 				break;
 			}
 
-		String status = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_STATUS_MESSAGE));
-		if (status != null) {
-			holder.itemDescription.setText(Html.fromHtml(status));
-		} else {
-			status = "";
-			// TODO: is it fast enough?
-			GeolocationModule geoModule = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
-			if (geoModule != null) {
-				ContentValues geoValue = geoModule.getLocationForJid(jid);
-				if (geoValue != null) {
-					String locality = geoValue.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
-					if (locality != null) {
-						status = locality;
-					}
-					String country = geoValue.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
-					if (country != null) {
-						if (!status.isEmpty()) {
-							status += ", ";
+		if (holder.itemDescription != null) {
+			String status = cursor.getString(cursor.getColumnIndex(RosterTableMetaData.FIELD_STATUS_MESSAGE));
+			if (status != null) {
+				holder.itemDescription.setText(Html.fromHtml(status));
+			} else {
+				status = "";
+				// TODO: is it fast enough?				
+				GeolocationModule geoModule = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+				if (geoModule != null) {
+					ContentValues geoValue = geoModule.getLocationForJid(jid);
+					if (geoValue != null) {
+						String locality = geoValue.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
+						if (locality != null) {
+							status = locality;
 						}
-						status += country;
+						String country = geoValue.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
+						if (country != null) {
+							if (status.length() > 0) {
+								status += ", ";
+							}
+							status += country;
+						}
 					}
 				}
+				holder.itemDescription.setText(status);
 			}
-			holder.itemDescription.setText(status);
 		}
-
 		AvatarHelper.setAvatarToImageView(jid, holder.itemAvatar);
 	}
 
