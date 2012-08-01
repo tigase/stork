@@ -333,6 +333,8 @@ public class JaxmppService extends Service {
 				else
 					sessionObject.setUserProperty(SessionObject.RESOURCE, null);
 
+				sessionObject.setUserProperty(JaxmppCore.AUTOADD_STANZA_ID_KEY, Boolean.TRUE);
+
 				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
 					@Override
 					public void modulesInit() {
