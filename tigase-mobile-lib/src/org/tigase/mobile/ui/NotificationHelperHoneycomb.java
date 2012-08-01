@@ -9,6 +9,7 @@ import org.tigase.mobile.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -29,6 +30,15 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	@Override
 	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
 			MessageEvent event) throws XMLException {
+		Notification.Builder builder = prepareChatNotificationInt(ico, title, text, pendingIntent, event);
+		Notification notification = builder.getNotification();
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		return notification;
+	}
+
+	@Override
+	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MucEvent event) throws XMLException {
 		Notification.Builder builder = prepareChatNotificationInt(ico, title, text, pendingIntent, event);
 		Notification notification = builder.getNotification();
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
@@ -59,6 +69,16 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 		} finally {
 			c.close();
 		}
+
+		return builder;
+	}
+
+	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
+			MucEvent event) throws XMLException {
+		Notification.Builder builder = new Notification.Builder(context);
+		builder.setContentTitle(title).setLights(Color.GREEN, 500, 500);
+		builder.setDefaults(Notification.DEFAULT_SOUND);
+		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 
 		return builder;
 	}

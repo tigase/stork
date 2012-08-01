@@ -148,6 +148,7 @@ public class JaxmppService extends Service {
 			} else if (roomId != -1) {
 				currentChatIdFocus = -1;
 				currentRoomIdFocus = roomId;
+				notificationHelper.cancelChatNotification("roomId:" + roomId);
 			} else {
 				currentChatIdFocus = -1;
 				currentRoomIdFocus = -1;
@@ -545,19 +546,21 @@ public class JaxmppService extends Service {
 					onMucPresenceError(be);
 				} else if (be.getRoom() != null && be.getMessage() != null && be.getMessage().getBody() != null) {
 
+					String msg = be.getMessage().getBody();
+
 					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getRoom().getRoomJid().toString());
 
 					ContentValues values = new ContentValues();
 					values.put(ChatTableMetaData.FIELD_JID, be.getRoom().getRoomJid().toString());
 					values.put(ChatTableMetaData.FIELD_AUTHOR_NICKNAME, be.getNickname());
 					values.put(ChatTableMetaData.FIELD_TIMESTAMP, be.getDate().getTime());
-					values.put(ChatTableMetaData.FIELD_BODY, be.getMessage().getBody());
+					values.put(ChatTableMetaData.FIELD_BODY, msg);
 					values.put(ChatTableMetaData.FIELD_STATE, 0);
 					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
 
 					getContentResolver().insert(uri, values);
 
-					// showChatNotification(be);
+					showMucMessageNotification(be);
 				}
 			}
 		};
@@ -1539,8 +1542,19 @@ public class JaxmppService extends Service {
 	}
 
 	protected void showChatNotification(final MessageEvent event) throws XMLException {
-		if (currentChatIdFocus != event.getChat().getId()) {
+		if (!focused || currentChatIdFocus != event.getChat().getId()) {
 			notificationHelper.notifyNewChatMessage(event);
+		}
+	}
+
+	protected void showMucMessageNotification(final MucEvent be) throws XMLException {
+		String nick = be.getRoom().getNickname();
+		String msg = be.getMessage().getBody();
+
+		if (msg.toLowerCase().contains(nick.toLowerCase())) {
+			if (!focused || currentRoomIdFocus != be.getRoom().getId()) {
+				notificationHelper.notifyNewChatMessage(be);
+			}
 		}
 	}
 

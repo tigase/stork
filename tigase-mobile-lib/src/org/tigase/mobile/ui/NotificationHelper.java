@@ -18,6 +18,7 @@ import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
@@ -299,6 +300,32 @@ public abstract class NotificationHelper {
 		notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 	}
 
+	public void notifyNewChatMessage(MucEvent event) throws XMLException {
+		int ico = R.drawable.ic_stat_message;
+
+		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
+				event.getMessage().getFrom().getBareJid());
+		if (n == null)
+			n = event.getMessage().getFrom().toString();
+
+		String notificationTitle = context.getResources().getString(R.string.app_name);
+		String notificationText = context.getResources().getString(R.string.service_message_from_notification_title, n);
+
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		intent.setAction("messageFrom-" + event.getMessage().getFrom());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra("roomJid", "" + event.getRoom().getRoomJid().toString());
+		if (event.getRoom() != null)
+			intent.putExtra("roomId", event.getRoom().getId());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+		Notification notification = prepareChatNotification(ico, notificationTitle, notificationText, pendingIntent, event);
+
+		notificationManager.notify("roomId:" + event.getRoom().getId(), CHAT_NOTIFICATION_ID, notification);
+
+	}
+
 	public void notifySubscribeRequest(PresenceEvent be) {
 		String notiticationTitle = context.getResources().getString(R.string.service_authentication_request_notification_title,
 				be.getJid());
@@ -330,6 +357,9 @@ public abstract class NotificationHelper {
 
 	protected abstract Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
 			MessageEvent event) throws XMLException;
+
+	protected abstract Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MucEvent event) throws XMLException;
 
 	protected abstract Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft);
 

@@ -8,6 +8,7 @@
     <color name="mucmessage_his_text">#000000</color>
     <color name="mucmessage_mine_background">#ffffff</color>
     <color name="mucmessage_his_background">#effbff</color>
+    <color name="mucmessage_his_background_marked">#FFEFEF</color>
     <color name="mucmessage_mine_nickname">#000000</color>
     <color name="mucmessage_his_nickname_0">#0000FF</color>
     <color name="mucmessage_his_nickname_1">#A020F0</color>

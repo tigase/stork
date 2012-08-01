@@ -7,6 +7,7 @@ import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -21,6 +22,25 @@ public class NotificationHelperBase extends NotificationHelper {
 	@Override
 	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
 			MessageEvent event) throws XMLException {
+		long whenNotify = System.currentTimeMillis();
+		Notification notification = new Notification(ico, title, whenNotify);
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		notification.setLatestEventInfo(context, title, text, pendingIntent);
+
+		return notification;
+	}
+
+	@Override
+	protected Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
+			MucEvent event) throws XMLException {
 		long whenNotify = System.currentTimeMillis();
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
