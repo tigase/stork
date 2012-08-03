@@ -94,6 +94,8 @@ public class BookmarksActivity extends FragmentActivity {
 
 		@Override
 		public void onBookmarksReceived(final List<Element> bookmarks) {
+			if (bookmarks == null) return;
+			
 			listView.post(new Runnable() {
 				public void run() {
 					for (Element elem : bookmarks) {
