@@ -35,6 +35,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
@@ -449,4 +450,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	private void setSyncMarker(Account account, long marker) {
 		accountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
 	}
+	
+	public static Uri getAvatarUriFromContacts(ContentResolver resolver, BareJID jid) {
+		final Cursor c = resolver.query(DataQuery.CONTENT_URI, new String[] { ContactsContract.RawContacts.CONTACT_ID }, Data.DATA1
+				+ "=? AND ( " + Data.DATA5 + "= 7 OR " + Data.DATA5 + "= 5 )",
+				new String[] { jid.toString() }, null);
+		if (c.moveToNext()) {
+			long id = c.getLong(c.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
+			c.close();
+			return ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, id);
+		}
+		else {			
+			c.close();
+			return null;
+		}
+	}
+	
 }

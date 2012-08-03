@@ -1,8 +1,11 @@
 package org.tigase.mobile.utils;
 
+import java.io.InputStream;
+
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.sync.SyncAdapter;
 
 import tigase.jaxmpp.core.client.BareJID;
 import android.annotation.SuppressLint;
@@ -13,6 +16,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.ContactsContract;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
@@ -135,6 +139,7 @@ public class AvatarHelper {
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
 		try {
 			if (cursor.moveToNext()) {
+				// we found avatar in our store
 				byte[] avatar = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
 				if (avatar != null) {
 					BitmapFactory.Options options = new BitmapFactory.Options();
@@ -145,8 +150,28 @@ public class AvatarHelper {
 					options.inSampleSize = calculateSize(options, 120, 120);
 					options.inJustDecodeBounds = false;
 					bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-					if (bmp != null) {
-						avatarCache.put(jid, bmp);
+				}
+			}
+			else {
+				// no avatar in our store - checking for avatar in Android contacts
+				Uri photoUri = SyncAdapter.getAvatarUriFromContacts(context.getContentResolver(), jid);				
+				if (photoUri != null) {
+					InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(),
+							photoUri);
+					if (input != null) {
+						BitmapFactory.Options options = new BitmapFactory.Options();
+						options.inJustDecodeBounds = true;
+						BitmapFactory.decodeStream(input, null, options);
+						// options.inSampleSize = calculateSize(options, 96,
+						// 96);
+						input.close();
+						input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(),
+								photoUri);
+						options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+						options.inSampleSize = calculateSize(options, 120, 120);
+						options.inJustDecodeBounds = false;
+						bmp = BitmapFactory.decodeStream(input, null, options);
+						input.close();
 					}
 				}
 			}
@@ -157,6 +182,9 @@ public class AvatarHelper {
 		}
 		if (bmp == null) {
 			avatarCache.put(jid, mPlaceHolderBitmap);
+		}
+		else {
+			avatarCache.put(jid, bmp);			
 		}
 		return bmp;
 	}
