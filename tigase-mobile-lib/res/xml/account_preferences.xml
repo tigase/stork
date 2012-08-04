@@ -2,21 +2,21 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
     <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
         android:title="@string/preferencesTitle" android:enabled="true" 
-        android:key="key">
+        android:key="auth">
             <intent
                 android:action="org.tigase.mobile.account.preference.MAIN" 
                 android:targetClass="authenticator.AuthenticatorActivity.class" />
     </PreferenceScreen>    
     <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
         android:title="@string/accountVCard" android:enabled="true" 
-        android:key="key">
+        android:key="vcard">
             <intent
                 android:action="org.tigase.mobile.account.personalInfo.EDIT" 
                 android:targetClass="vcard.VCardEditorActivity.class" />
     </PreferenceScreen>    
    <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
         android:title="@string/account_advanced_preferences" android:enabled="true" 
-        android:key="key">
+        android:key="advanced">
             <intent
                 android:action="org.tigase.mobile.account.advancedPreferences.EDIT" 
                 android:targetClass="preferences.AccountAdvancedPreferencesActivity.class" />        

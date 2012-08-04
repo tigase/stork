@@ -18,11 +18,6 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
-            android:name="org.tigase.mobile.muc.OccupantsListActivity"
-            android:label="@string/muc_occupants_list_title"
-            android:theme="@style/XTheme.Light" >
-        </activity>        
-        <activity
             android:name="org.tigase.mobile.chatlist.ChatListActivity"
             android:label="@string/chat_list_title"
             android:theme="@style/XTheme.Light" >
@@ -109,6 +104,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>               
+        <activity
+            android:name="org.tigase.mobile.preferences.AccountPreferenceActivity"
+            android:configChanges="orientation"
+            android:label="@string/account_advanced_preferences"
+            android:theme="@style/XTheme" >
+        </activity>
         <activity android:name="org.tigase.mobile.filetransfer.SendFileActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

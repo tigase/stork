@@ -91,7 +91,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>        
-		<activity android:name=".filetransfer.SendFileActivity" >
+        <activity
+            android:name=".preferences.AccountPreferenceActivity"
+            android:configChanges="orientation"
+            android:label="@string/account_advanced_preferences"
+            android:theme="@style/XTheme" >
+        </activity>        
+   		<activity android:name=".filetransfer.SendFileActivity" >
     		<intent-filter>
         		<action android:name="android.intent.action.SEND" />
         		<category android:name="android.intent.category.DEFAULT" />

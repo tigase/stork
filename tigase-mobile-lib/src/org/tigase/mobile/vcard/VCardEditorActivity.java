@@ -289,11 +289,11 @@ public class VCardEditorActivity extends Activity {
 		});
 
 		JID jid = null;
-		Account account = (Account) getIntent().getExtras().get("account");
+		Account account = (Account) getIntent().getParcelableExtra("account");
 		if (account != null) {
 			jid = JID.jidInstance(account.name);
 		} else {
-			jid = JID.jidInstance((String) getIntent().getExtras().get("account_jid"));
+			jid = JID.jidInstance((String) getIntent().getStringExtra("account_jid"));
 		}
 
 		if (account != null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {

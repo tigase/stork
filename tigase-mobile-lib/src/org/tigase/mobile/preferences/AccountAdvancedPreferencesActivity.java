@@ -98,10 +98,10 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		String jidStr = null;
 
 		final AccountManager accountManager = AccountManager.get(this.getApplicationContext());
-		if (getIntent().getExtras().get("account") != null) {
-			account = (Account) getIntent().getExtras().get("account");
+		if (getIntent().getParcelableExtra("account") != null) {
+			account = (Account) getIntent().getParcelableExtra("account");
 		} else {
-			jidStr = (String) getIntent().getExtras().get("account_jid");
+			jidStr = (String) getIntent().getStringExtra("account_jid");
 			for (Account acc : accountManager.getAccountsByType(Constants.ACCOUNT_TYPE)) {
 				if (jidStr.equals(jidStr)) {
 					account = acc;

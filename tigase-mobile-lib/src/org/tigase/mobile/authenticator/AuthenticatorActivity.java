@@ -513,7 +513,25 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		final Intent intent = getIntent();
 
-		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
+		final Account account;
+		if (intent.getParcelableExtra("account") != null) {
+			account = (Account) intent.getParcelableExtra("account");
+		}
+		else if (intent.getStringExtra("account_jid") != null) {
+			String jid = intent.getStringExtra("account_jid");
+			Account[] accounts = mAccountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
+			Account acc = null;
+			for (Account tmpacc : accounts) {
+				if (tmpacc.name.equals(jid)) {
+					acc = tmpacc;
+				}
+			}
+			account = acc;
+		}
+		else {
+			account = null;
+		}
+		
 		if (account != null) {
 			screenTitle.setText("Account edit");
 			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
