@@ -494,6 +494,24 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 
+			protected String makeFragmentName(int viewId, int index) {
+				if (index == 0) {
+					return "accounts";
+				}
+				else if (!helper.isXLarge() && index == 1) {
+					return "roster";
+				}
+				else {
+					int pos = index - 2;
+					if (pos < getChatList().size()) {
+						return getChatList().get(pos).toString();
+					}
+					else {
+						return null;
+					}
+				}
+			}
+			
 		};
 
 		viewPager.setAdapter(this.adapter);
