@@ -48,7 +48,7 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
 			MessageEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
-		builder.setContentTitle(title).setLights(Color.GREEN, 500, 500);
+		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
 		builder.setDefaults(Notification.DEFAULT_SOUND);
 		Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
@@ -76,7 +76,7 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
 			MucEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
-		builder.setContentTitle(title).setLights(Color.GREEN, 500, 500);
+		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
 		builder.setDefaults(Notification.DEFAULT_SOUND);
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 
