@@ -189,6 +189,15 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		if (getArguments() != null) {
 			long id = getArguments().getLong("chatId");
 			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
+			if (ch == null) {
+				throw new NullPointerException("ChatWrapper is null with id = " + id);
+			}
+			if (ch.getChat() == null) {
+				throw new NullPointerException("ChatWrapper.getChat() is null with id = " + id);
+			}
+			if (ch.getChat().getSessionObject() == null) {
+				throw new NullPointerException("ChatWrapper.getChat().getSessionObject() is null with id = " + id);
+			}
 			setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
 		}
 
