@@ -1555,7 +1555,7 @@ public class JaxmppService extends Service {
 
 		if (msg.toLowerCase().contains(nick.toLowerCase())) {
 			if (!focused || currentRoomIdFocus != be.getRoom().getId()) {
-				notificationHelper.notifyNewChatMessage(be);
+				notificationHelper.notifyNewMucMessage(be);
 			}
 		}
 	}

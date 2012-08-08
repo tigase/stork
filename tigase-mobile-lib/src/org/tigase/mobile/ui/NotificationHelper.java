@@ -300,16 +300,16 @@ public abstract class NotificationHelper {
 		notificationManager.notify("chatId:" + event.getChat().getId(), CHAT_NOTIFICATION_ID, notification);
 	}
 
-	public void notifyNewChatMessage(MucEvent event) throws XMLException {
+	public void notifyNewMucMessage(MucEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
 		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
 				event.getMessage().getFrom().getBareJid());
 		if (n == null)
-			n = event.getMessage().getFrom().toString();
+			n = event.getMessage().getFrom().getBareJid().toString();
 
 		String notificationTitle = n;
-		String notificationText = context.getResources().getString(R.string.service_new_message);
+		String notificationText = context.getResources().getString(R.string.service_mentioned_you_in_message, event.getMessage().getFrom().getResource());
 
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		intent.setAction("messageFrom-" + event.getMessage().getFrom());
