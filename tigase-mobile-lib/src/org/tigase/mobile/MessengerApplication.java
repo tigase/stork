@@ -36,7 +36,7 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class MessengerApplication extends Application {
 
-	private MultiJaxmpp multiJaxmpp;
+	private static MultiJaxmpp multiJaxmpp;
 
 	private GoogleAnalyticsTracker tracker;
 
@@ -92,7 +92,7 @@ public class MessengerApplication extends Application {
 	}
 
 	private void createMultiJaxmpp() {
-		this.multiJaxmpp = new MultiJaxmpp();
+		multiJaxmpp = new MultiJaxmpp();
 
 		Listener<PresenceEvent> presenceListener = new Listener<PresenceModule.PresenceEvent>() {
 
