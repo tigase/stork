@@ -1,7 +1,6 @@
 package org.tigase.mobile.bookmarks;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +26,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -44,26 +40,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView.MultiChoiceModeListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.muc.JoinMucDialog;
 
-@SuppressLint("NewApi")
 public class BookmarksActivity extends FragmentActivity {
 
 	private static final int DIALOG_EDIT_BOOKMARK = 1;
 
-	private class Bookmark {
+	public static class Bookmark {
 
 		public Bookmark() {
 			id = UUID.randomUUID().toString();
@@ -79,16 +69,13 @@ public class BookmarksActivity extends FragmentActivity {
 		protected boolean autojoin;
 	}
 
-	private ActionMode.Callback mActionModeCallback = null;
-	private ActionMode mActionMode = null;
-
 	private class BookmarksAsyncCallbackImpl extends BookmarksAsyncCallback {
 
 		private final BareJID accountJid;
-		private final ArrayAdapter<Bookmark> adapter;
+		private final BookmarksAdapter adapter;
 
-		public BookmarksAsyncCallbackImpl(BareJID accountJid, ArrayAdapter<Bookmark> adapter) {
-			this.adapter = adapter;
+		public BookmarksAsyncCallbackImpl(BareJID accountJid, BookmarksAdapter adapter2) {
+			this.adapter = adapter2;
 			this.accountJid = accountJid;
 		}
 
@@ -124,16 +111,20 @@ public class BookmarksActivity extends FragmentActivity {
 							Log.e(TAG, "exception processing bookmarks", ex);
 						}
 					}
-					adapter.sort(new Comparator<Bookmark>() {
-
-						@Override
-						public int compare(Bookmark lhs, Bookmark rhs) {
-							if (lhs == null || rhs == null)
-								return -1;
-							return lhs.name.compareTo(rhs.name);
-						}
-
-					});
+					
+					for (int i=0; i<adapter.getGroupCount(); i++) {
+						listView.expandGroup(i);
+					}
+//					adapter.sort(new Comparator<Bookmark>() {
+//
+//						@Override
+//						public int compare(Bookmark lhs, Bookmark rhs) {
+//							if (lhs == null || rhs == null)
+//								return -1;
+//							return lhs.name.compareTo(rhs.name);
+//						}
+//
+//					});
 				}
 			});
 		}
@@ -152,61 +143,29 @@ public class BookmarksActivity extends FragmentActivity {
 	};
 
 	private static final String TAG = "BookmarksActivity";
-	private ArrayAdapter<Bookmark> adapter;
+	private BookmarksAdapter adapter;
 
-	private ListView listView;
+	private ExpandableListView listView;
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.bookmarks_list);
-
-		listView = (ListView) this.findViewById(R.id.bookmarksList);
-
-		adapter = new ArrayAdapter<Bookmark>(this, R.layout.bookmarks_list_item) {
-			@Override
-			public View getView(int position, View convertView, ViewGroup parent) {
-				View v = convertView;
-				if (v == null) {
-					v = getLayoutInflater().inflate(R.layout.bookmarks_list_item, null);
-				}
-				TextView titleView = (TextView) v.findViewById(R.id.bookmark_title);
-				TextView descriptionView = (TextView) v.findViewById(R.id.bookmark_description);
-
-				Bookmark bookmark = getItem(position);
-				titleView.setText(bookmark.name);
-				descriptionView.setText("Join " + (bookmark.nick != null ? "as " + bookmark.nick : "") + " to "
-						+ bookmark.jid.toString());
-
-				return v;
-			}
-
-			// public void notifyDataSetChanged() {
-			// sort(new Comparator<Bookmark>() {
-			//
-			// @Override
-			// public int compare(Bookmark lhs, Bookmark rhs) {
-			// if (lhs == null || rhs == null)
-			// return -1;
-			// return lhs.name.compareTo(rhs.name);
-			// }
-			//
-			// });
-			//
-			// super.notifyDataSetChanged();
-			// }
-		};
+				
+		listView = (ExpandableListView) this.findViewById(R.id.bookmarksList);
+				
+		adapter = new BookmarksAdapter(this);
+		
 		listView.setAdapter(adapter);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			initializeContextActions();
 		}
 
-		listView.setOnItemClickListener(new OnItemClickListener() {
-
+		listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
-				final Bookmark bookmark = adapter.getItem(position);
+			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+				final Bookmark bookmark = (Bookmark) adapter.getChild(groupPosition, childPosition);
 
 				new Thread() {
 					@Override
@@ -226,6 +185,8 @@ public class BookmarksActivity extends FragmentActivity {
 						}
 					}
 				}.start();
+				
+				return true;
 			}
 
 		});
@@ -289,84 +250,53 @@ public class BookmarksActivity extends FragmentActivity {
 	@TargetApi(11)
 	private void initializeContextActions() {
 
-		// mActionModeCallback = new ActionMode.Callback() {
-		//
-		// // Called when the action mode is created; startActionMode() was
-		// called
-		// @Override
-		// public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-		// // Inflate a menu resource providing context menu items
-		// MenuInflater inflater = mode.getMenuInflater();
-		// inflater.inflate(R.menu.bookmarks_context_menu, menu);
-		//
-		// mActionMode = mode;
-		//
-		// return true;
-		// }
-		//
-		// // Called each time the action mode is shown. Always called after
-		// onCreateActionMode, but
-		// // may be called multiple times if the mode is invalidated.
-		// @Override
-		// public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-		// return false; // Return false if nothing is done
-		// }
-		//
-		// // Called when the user selects a contextual menu item
-		// @Override
-		// public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-		// if (item.getItemId() == R.id.edit) {
-		// mode.finish(); // Action picked, so close the CAB
-		// return true;
-		// } else if (item.getItemId() == R.id.remove) {
-		// return true;
-		// } else {
-		// return false;
-		// }
-		//
-		// }
-		//
-		// // Called when the user exits the action mode
-		// @Override
-		// public void onDestroyActionMode(ActionMode mode) {
-		// mActionMode = null;
-		// }
-		// };
-
 		listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 		listView.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 
 			@Override
 			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-				// long[] ids = listView.getCheckedItemIds();
 				SparseBooleanArray selection = listView.getCheckedItemPositions();
+
 				if (item.getItemId() == R.id.edit) {
-					for (int pos = 0; pos < adapter.getCount(); pos++) {
-						// if (ids[0] == adapter.getItemId(pos)) {
-						if (selection.get(pos)) {
-							editItem(adapter.getItem(pos));
+					for (int i=0; i<selection.size(); i++) {
+						if (selection.valueAt(i)) {
+							int pos = selection.keyAt(i);
+							
+							Bookmark bookmark = getBookmarkFromFlatPosition(pos);					
+							editItem(bookmark);
 						}
 					}
 					mode.finish(); // Action picked, so close the CAB
-					return true;
+					return true;							
 				} else if (item.getItemId() == R.id.remove) {
 					List<Bookmark> items = new ArrayList<Bookmark>();
-					// for (long id : ids) {
-					for (int pos = 0; pos < adapter.getCount(); pos++) {
-						if (selection.get(pos)) {
-							// if (id == adapter.getItemId(pos)) {
-							items.add(adapter.getItem(pos));
+					for (int i=0; i<selection.size(); i++) {
+						if (selection.valueAt(i)) {
+							int pos = selection.keyAt(i);
+							
+							Bookmark bookmark = getBookmarkFromFlatPosition(pos);					
+							if (bookmark != null) {
+								items.add(bookmark);
+							}
 						}
 					}
-					// }
 					removeItems(items);
 					mode.finish();
 					return true;
 				} else {
 					return false;
 				}
+				
 			}
 
+			private Bookmark getBookmarkFromFlatPosition(int pos) {
+				long packed = listView.getExpandableListPosition(pos);
+				int child = ExpandableListView.getPackedPositionChild(packed);
+				int group = ExpandableListView.getPackedPositionGroup(packed);
+				
+				return (Bookmark) adapter.getChild(group, child);									
+			}
+			
 			@Override
 			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 				MenuInflater inflater = mode.getMenuInflater();
@@ -407,13 +337,13 @@ public class BookmarksActivity extends FragmentActivity {
 	}
 
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
 		if (item.getItemId() == R.id.edit) {
-			Bookmark bookmark = adapter.getItem(info.position);
+			Bookmark bookmark = adapter.getChildById(info.id);
 			editItem(bookmark);
 			return true;
 		} else if (item.getItemId() == R.id.remove) {
-			Bookmark bookmark = adapter.getItem(info.position);
+			Bookmark bookmark = adapter.getChildById(info.id);
 			List<Bookmark> bookmarks = new ArrayList<Bookmark>();
 			bookmarks.add(bookmark);
 			removeItems(bookmarks);
@@ -467,16 +397,11 @@ public class BookmarksActivity extends FragmentActivity {
 		String id = data.getString("id");
 		BareJID account = BareJID.bareJIDInstance(data.getString("account"));
 
-		List<Bookmark> bookmarks = new ArrayList<Bookmark>();
+		List<Bookmark> bookmarks = adapter.getChildrenForGroup(account);
 		Bookmark bookmark = null;
-		for (int i = 0; i < adapter.getCount(); i++) {
-			Bookmark item = adapter.getItem(i);
-			if (account.equals(item.accountJid)) {
-				bookmarks.add(item);
-
-				if (id != null && id.equals(item.id)) {
-					bookmark = item;
-				}
+		for (Bookmark item : bookmarks) {
+			if (id != null && id.equals(item.id)) {
+				bookmark = item;
 			}
 		}
 
@@ -497,19 +422,19 @@ public class BookmarksActivity extends FragmentActivity {
 			@Override
 			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
 				refresh();
-				Toast.makeText(BookmarksActivity.this, "Could not remove bookmark", 5).show();
+				Toast.makeText(BookmarksActivity.this, "Could not remove bookmark", Toast.LENGTH_SHORT).show();
 			}
 
 			@Override
 			public void onSuccess(Stanza responseStanza) throws JaxmppException {
 				refresh();
-				Toast.makeText(BookmarksActivity.this, "Bookmark saved", 5).show();
+				Toast.makeText(BookmarksActivity.this, "Bookmark saved", Toast.LENGTH_SHORT).show();
 			}
 
 			@Override
 			public void onTimeout() throws JaxmppException {
 				refresh();
-				Toast.makeText(BookmarksActivity.this, "Request timed out", 5).show();
+				Toast.makeText(BookmarksActivity.this, "Request timed out", Toast.LENGTH_SHORT).show();
 			}
 
 		});
@@ -517,15 +442,9 @@ public class BookmarksActivity extends FragmentActivity {
 
 	public void removeItems(List<Bookmark> bookmarks) {
 		Map<BareJID, List<Bookmark>> map = new HashMap<BareJID, List<Bookmark>>();
-		for (int i = 0; i < adapter.getCount(); i++) {
-			Bookmark bookmark = adapter.getItem(i);
-			List<Bookmark> list = map.get(bookmark.accountJid);
-			if (list == null) {
-				list = new ArrayList<Bookmark>();
-				map.put(bookmark.accountJid, list);
-			}
-
-			list.add(bookmark);
+		for (int i = 0; i < adapter.getGroupCount(); i++) {
+			BareJID account = (BareJID) adapter.getGroup(i);
+			map.put(account, adapter.getChildrenForGroup(account));
 		}
 
 		Set<BareJID> changedAccounts = new HashSet<BareJID>();
@@ -543,19 +462,19 @@ public class BookmarksActivity extends FragmentActivity {
 				@Override
 				public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
 					refresh();
-					Toast.makeText(BookmarksActivity.this, "Could not remove bookmark", 5).show();
+					Toast.makeText(BookmarksActivity.this, "Could not remove bookmark", Toast.LENGTH_SHORT).show();
 				}
 
 				@Override
 				public void onSuccess(Stanza responseStanza) throws JaxmppException {
 					refresh();
-					Toast.makeText(BookmarksActivity.this, "Bookmarks removed", 5).show();
+					Toast.makeText(BookmarksActivity.this, "Bookmarks removed", Toast.LENGTH_SHORT).show();
 				}
 
 				@Override
 				public void onTimeout() throws JaxmppException {
 					refresh();
-					Toast.makeText(BookmarksActivity.this, "Request timed out", 5).show();
+					Toast.makeText(BookmarksActivity.this, "Request timed out", Toast.LENGTH_SHORT).show();
 				}
 
 			});
