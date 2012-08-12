@@ -123,16 +123,18 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 			if (ch == null) {
 				String msg = ChatHistoryFragment.prepareAdditionalDebug(multi);
-				throw new NullPointerException("ChatWrapper is null with id = " + id + '\n' + msg);
-			}
-			if (ch.getRoom() == null) {
-				throw new NullPointerException("ChatWrapper.getRoom() is null with id = " + id);
-			}
-			if (ch.getRoom().getSessionObject() == null) {
-				throw new NullPointerException("ChatWrapper.getRoom().getSessionObject() is null with id = " + id);
-			}
+				Log.v(TAG, "ChatWrapper is null with id = " + id + '\n' + msg);
+				((TigaseMobileMessengerActivity) getActivity()).viewPager.getAdapter().notifyDataSetChanged();
+			} else {
+				if (ch.getRoom() == null) {
+					throw new NullPointerException("ChatWrapper.getRoom() is null with id = " + id);
+				}
+				if (ch.getRoom().getSessionObject() == null) {
+					throw new NullPointerException("ChatWrapper.getRoom().getSessionObject() is null with id = " + id);
+				}
 
-			this.room = ch.getRoom();
+				this.room = ch.getRoom();
+			}
 		}
 
 		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room);
