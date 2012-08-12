@@ -19,6 +19,7 @@ import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -79,6 +80,35 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	}
 
 	// private Cursor c;
+
+	public static String prepareAdditionalDebug(final MultiJaxmpp multi) {
+		try {
+			String s = "Known wrappers: [";
+
+			for (ChatWrapper w : multi.getChats()) {
+				if (w.isChat()) {
+					s += "CHAT=" + w.getChat().getId() + " ";
+				} else if (w.isRoom()) {
+					s += "ROOM=" + w.getRoom().getId() + " ";
+				} else {
+					s += "SOMETHINGELSE ";
+				}
+			}
+			s += "] ";
+
+			s += "Known JAXMPP: [";
+			for (JaxmppCore j : multi.get()) {
+				s += j.getSessionObject().getUserBareJid().toString() + " ";
+			}
+			s += "] ";
+
+			return s;
+		} catch (Exception e) {
+			Log.e(TAG, "WTF?", e);
+			return "Exception: " + e.getMessage();
+		}
+
+	}
 
 	private Chat chat;
 
@@ -188,9 +218,11 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 		if (getArguments() != null) {
 			long id = getArguments().getLong("chatId");
-			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getChatById(id);
+			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
+			ChatWrapper ch = multi.getChatById(id);
 			if (ch == null) {
-				throw new NullPointerException("ChatWrapper is null with id = " + id);
+				String msg = prepareAdditionalDebug(multi);
+				throw new NullPointerException("ChatWrapper is null with id = " + id + '\n' + msg);
 			}
 			if (ch.getChat() == null) {
 				throw new NullPointerException("ChatWrapper.getChat() is null with id = " + id);
@@ -487,7 +519,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			layout.setImagePresence(cp);
 
 			TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
-			if (activity != null &&  activity.helper != null && chat != null) {
+			if (activity != null && activity.helper != null && chat != null) {
 				activity.helper.updateActionBar(chat.hashCode());
 			}
 

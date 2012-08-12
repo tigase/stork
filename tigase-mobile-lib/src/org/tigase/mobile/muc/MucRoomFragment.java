@@ -7,6 +7,7 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
+import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
@@ -117,7 +118,20 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 		if (getArguments() != null) {
 			long id = getArguments().getLong("roomId");
-			ChatWrapper ch = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp().getRoomById(id);
+			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
+			ChatWrapper ch = multi.getRoomById(id);
+
+			if (ch == null) {
+				String msg = ChatHistoryFragment.prepareAdditionalDebug(multi);
+				throw new NullPointerException("ChatWrapper is null with id = " + id + '\n' + msg);
+			}
+			if (ch.getRoom() == null) {
+				throw new NullPointerException("ChatWrapper.getRoom() is null with id = " + id);
+			}
+			if (ch.getRoom().getSessionObject() == null) {
+				throw new NullPointerException("ChatWrapper.getRoom().getSessionObject() is null with id = " + id);
+			}
+
 			this.room = ch.getRoom();
 		}
 
@@ -331,7 +345,8 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 						ed.setEnabled(false);
 						sendButton.setEnabled(false);
 					}
-				}System.out.println();
+				}
+				System.out.println();
 				if (stateImage != null) {
 					stateImage.post(new Runnable() {
 
@@ -349,10 +364,10 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 							}
 						}
 					});
-				}				
-				
+				}
+
 				TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
-				if (activity != null &&  activity.helper != null && room != null) {
+				if (activity != null && activity.helper != null && room != null) {
 					activity.helper.updateActionBar(room.hashCode());
 				}
 			}
