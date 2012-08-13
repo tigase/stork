@@ -176,6 +176,34 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	}
 
 	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		if (getArguments() != null) {
+			long id = getArguments().getLong("chatId");
+			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
+			ChatWrapper ch = multi.getChatById(id);
+			
+			if (ch == null) {				
+				String msg = prepareAdditionalDebug(multi);
+				Log.v(TAG, "ChatWrapper is null with id = " + id + '\n' + msg);
+				((TigaseMobileMessengerActivity) getActivity()).viewPager.getAdapter().notifyDataSetChanged();
+			}
+			else {
+				if (ch.getChat() == null) {
+					throw new NullPointerException("ChatWrapper.getChat() is null with id = " + id);
+				}
+				if (ch.getChat().getSessionObject() == null) {
+					throw new NullPointerException("ChatWrapper.getChat().getSessionObject() is null with id = " + id);
+				}
+				setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
+			}
+		}
+		layout.setChat(chat);		
+		getLoaderManager().initLoader(fragmentUID, null, this);
+	}
+	
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == TigaseMobileMessengerActivity.SELECT_FOR_SHARE && resultCode == Activity.RESULT_OK) {
 			Uri selected = data.getData();
@@ -216,29 +244,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		this.setHasOptionsMenu(true);
 		super.onCreate(savedInstanceState);
 
-		if (getArguments() != null) {
-			long id = getArguments().getLong("chatId");
-			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
-			ChatWrapper ch = multi.getChatById(id);
-			
-			if (ch == null) {				
-				String msg = prepareAdditionalDebug(multi);
-				Log.v(TAG, "ChatWrapper is null with id = " + id + '\n' + msg);
-				((TigaseMobileMessengerActivity) getActivity()).viewPager.getAdapter().notifyDataSetChanged();
-			}
-			else {
-				if (ch.getChat() == null) {
-					throw new NullPointerException("ChatWrapper.getChat() is null with id = " + id);
-				}
-				if (ch.getChat().getSessionObject() == null) {
-					throw new NullPointerException("ChatWrapper.getChat().getSessionObject() is null with id = " + id);
-				}
-				setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
-			}
-		}
-
 		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
-		getLoaderManager().initLoader(fragmentUID, null, this);
 		chatAdapter.registerDataSetObserver(new DataSetObserver() {
 
 			@Override
@@ -300,7 +306,6 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		this.layout = (ChatView) inflater.inflate(R.layout.chat, null);
 		layout.init();
-		layout.setChat(chat);
 
 		if (DEBUG)
 			Log.d(TAG, "onActivityCreated ChatFragment " + savedInstanceState);
@@ -316,9 +321,9 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		// }
 		// }
 
-		if (chat == null) {
-			throw new RuntimeException("Chat not specified!");
-		}
+//		if (chat == null) {
+//			throw new RuntimeException("Chat not specified!");
+//		}
 
 		this.lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
 		registerForContextMenu(lv);

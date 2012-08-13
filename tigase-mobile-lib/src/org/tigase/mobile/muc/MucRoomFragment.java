@@ -106,16 +106,9 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	}
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		this.setHasOptionsMenu(true);
-
-		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
-		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
-
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		
 		if (getArguments() != null) {
 			long id = getArguments().getLong("roomId");
 			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
@@ -155,7 +148,28 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 						}
 					});
 			}
-		});
+		});		
+
+		TextView title = (TextView) view.findViewById(R.id.textView1);
+		if (title != null) {
+			title.setText(room.getRoomJid().toString());
+		}
+		ed.setEnabled(room.getState() == State.joined);
+		sendButton.setEnabled(room.getState() == State.joined);
+		lv.setAdapter(mucAdapter);	
+	}
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		this.setHasOptionsMenu(true);
+
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
+		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
+
 	}
 
 	@Override
@@ -177,13 +191,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		this.stateImage = (ImageView) view.findViewById(R.id.user_presence);
 		this.progressBar = (ProgressBar) view.findViewById(R.id.progressBar1);
 
-		TextView title = (TextView) view.findViewById(R.id.textView1);
-		if (title != null) {
-			title.setText(room.getRoomJid().toString());
-		}
-
 		this.ed = (EditText) view.findViewById(R.id.chat_message_entry);
-		ed.setEnabled(room.getState() == State.joined);
 		this.ed.setOnKeyListener(new OnKeyListener() {
 
 			@Override
@@ -198,7 +206,6 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		});
 
 		this.sendButton = (Button) view.findViewById(R.id.chat_send_button);
-		sendButton.setEnabled(room.getState() == State.joined);
 		sendButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -212,8 +219,6 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		});
 
 		this.lv = (ListView) view.findViewById(R.id.chat_conversation_history);
-
-		lv.setAdapter(mucAdapter);
 
 		lv.post(new Runnable() {
 
@@ -374,6 +379,8 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 				}
 			}
 		};
-		view.post(r);
+		if (view != null) {
+			view.post(r);
+		}
 	}
 }
