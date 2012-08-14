@@ -280,26 +280,31 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
+		
 		inflater.inflate(R.menu.chat_main_menu, menu);
 
 		// Share button support
 		MenuItem share = menu.findItem(R.id.shareButton);
 
-		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
-				chat.getSessionObject());
-		try {
-			JID jid = chat.getJid();
-			boolean visible = false;
-			if (jid.getResource() == null) {
-				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+		boolean visible = false;
+		if (chat != null) {
+			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+					chat.getSessionObject());
+			try {
+				JID jid = chat.getJid();
+				if (jid.getResource() == null) {
+					jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+				}
+				if (jid != null) {
+					visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
+				}
+			} catch (XMLException e) {
 			}
-			if (jid != null) {
-				visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
-			}
-			share.setVisible(visible);
-		} catch (XMLException e) {
 		}
-
+		else {
+			Log.v(TAG, "no chat for fragment");
+		}
+		share.setVisible(visible);
 	}
 
 	@Override
