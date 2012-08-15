@@ -162,7 +162,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		this.setRetainInstance(true);
 		this.setHasOptionsMenu(true);
 
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());

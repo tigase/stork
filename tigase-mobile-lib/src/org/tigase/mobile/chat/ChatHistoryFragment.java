@@ -243,6 +243,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	public void onCreate(Bundle savedInstanceState) {
 		this.setHasOptionsMenu(true);
 		super.onCreate(savedInstanceState);
+		this.setRetainInstance(true);
 
 		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
 		chatAdapter.registerDataSetObserver(new DataSetObserver() {
