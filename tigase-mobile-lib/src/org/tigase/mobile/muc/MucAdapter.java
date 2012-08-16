@@ -38,6 +38,49 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
+	static int getOccupantColor(final String nick) {
+		int color = Math.abs(nick.hashCode()) % 17;
+
+		switch (color) {
+		case 0:
+			return R.color.mucmessage_his_nickname_0;
+		case 1:
+			return R.color.mucmessage_his_nickname_1;
+		case 2:
+			return R.color.mucmessage_his_nickname_2;
+		case 3:
+			return R.color.mucmessage_his_nickname_3;
+		case 4:
+			return R.color.mucmessage_his_nickname_4;
+		case 5:
+			return R.color.mucmessage_his_nickname_5;
+		case 6:
+			return R.color.mucmessage_his_nickname_6;
+		case 7:
+			return R.color.mucmessage_his_nickname_7;
+		case 8:
+			return R.color.mucmessage_his_nickname_8;
+		case 9:
+			return R.color.mucmessage_his_nickname_9;
+		case 10:
+			return R.color.mucmessage_his_nickname_10;
+		case 11:
+			return R.color.mucmessage_his_nickname_11;
+		case 12:
+			return R.color.mucmessage_his_nickname_12;
+		case 13:
+			return R.color.mucmessage_his_nickname_13;
+		case 14:
+			return R.color.mucmessage_his_nickname_14;
+		case 15:
+			return R.color.mucmessage_his_nickname_15;
+		case 16:
+			return R.color.mucmessage_his_nickname_16;
+		default:
+			return R.color.mucmessage_his_nickname_0;
+		}
+	}
+
 	private final Room room;
 
 	public MucAdapter(Context context, int layout, Room room) {
@@ -82,65 +125,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
 			view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_mine_background));
 		} else {
-			int color = Math.abs(nick.hashCode()) % 17;
-			int colorRes;
-
-			switch (color) {
-			case 0:
-				colorRes = R.color.mucmessage_his_nickname_0;
-				break;
-			case 1:
-				colorRes = R.color.mucmessage_his_nickname_1;
-				break;
-			case 2:
-				colorRes = R.color.mucmessage_his_nickname_2;
-				break;
-			case 3:
-				colorRes = R.color.mucmessage_his_nickname_3;
-				break;
-			case 4:
-				colorRes = R.color.mucmessage_his_nickname_4;
-				break;
-			case 5:
-				colorRes = R.color.mucmessage_his_nickname_5;
-				break;
-			case 6:
-				colorRes = R.color.mucmessage_his_nickname_6;
-				break;
-			case 7:
-				colorRes = R.color.mucmessage_his_nickname_7;
-				break;
-			case 8:
-				colorRes = R.color.mucmessage_his_nickname_8;
-				break;
-			case 9:
-				colorRes = R.color.mucmessage_his_nickname_9;
-				break;
-			case 10:
-				colorRes = R.color.mucmessage_his_nickname_10;
-				break;
-			case 11:
-				colorRes = R.color.mucmessage_his_nickname_11;
-				break;
-			case 12:
-				colorRes = R.color.mucmessage_his_nickname_12;
-				break;
-			case 13:
-				colorRes = R.color.mucmessage_his_nickname_13;
-				break;
-			case 14:
-				colorRes = R.color.mucmessage_his_nickname_14;
-				break;
-			case 15:
-				colorRes = R.color.mucmessage_his_nickname_15;
-				break;
-			case 16:
-				colorRes = R.color.mucmessage_his_nickname_16;
-				break;
-			default:
-				colorRes = R.color.mucmessage_his_nickname_0;
-				break;
-			}
+			int colorRes = getOccupantColor(nick);
 
 			if (txt.contains(room.getNickname())) {
 				view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_his_background_marked));

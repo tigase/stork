@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -63,7 +62,7 @@ public class OccupantsListActivity extends Activity {
 		public long getItemId(int position) {
 			return occupants.get(position).hashCode();
 		}
-		
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view;
@@ -72,7 +71,7 @@ public class OccupantsListActivity extends Activity {
 			} else {
 				view = convertView;
 			}
-			
+
 			final Occupant occupant = (Occupant) getItem(position);
 
 			final TextView nicknameTextView = (TextView) view.findViewById(R.id.occupant_nickname);
@@ -82,10 +81,12 @@ public class OccupantsListActivity extends Activity {
 
 			try {
 				nicknameTextView.setText(occupant.getNickname());
-				
-				// looks like enabled text is still gray but darker than disabled item
+				int colorRes = MucAdapter.getOccupantColor(occupant.getNickname());
+
+				// looks like enabled text is still gray but darker than
+				// disabled item
 				// but setting color in code fixes color of displayed text
-				nicknameTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+				nicknameTextView.setTextColor(getResources().getColor(colorRes));
 				statusTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
 
 				String status = occupant.getPresence().getStatus();
@@ -134,10 +135,10 @@ public class OccupantsListActivity extends Activity {
 			} catch (XMLException e) {
 				Log.e(TAG, "Can't show occupant", e);
 			}
-			
+
 			return view;
 		}
-		
+
 		public void remove(Occupant occupant) {
 			occupants.remove(occupant);
 			notifyDataSetChanged();
