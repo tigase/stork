@@ -167,9 +167,9 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			if (n != null) {
 				String ttt = ed.getText().toString();
 				if (ttt == null || ttt.length() == 0) {
-					ed.setText(n + ": ");
+					ed.append(n + ": ");
 				} else {
-					ed.setText(ttt + " " + n);
+					ed.append(" " + n);
 				}
 			}
 		}
