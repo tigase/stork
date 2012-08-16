@@ -544,9 +544,12 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(MucModule.MucEvent be) throws JaxmppException {
-				if (be.getType() == MucModule.PresenceError) {
+				if (be.getType() == MucModule.OccupantLeaved) {
+					onMucOccupantLeave(be);
+				} else if (be.getType() == MucModule.PresenceError) {
 					onMucPresenceError(be);
-				} else if (be.getRoom() != null && be.getMessage() != null && be.getMessage().getBody() != null) {
+				} else if (be.getType() == MucModule.MucMessageReceived && be.getRoom() != null && be.getMessage() != null
+						&& be.getMessage().getBody() != null) {
 
 					String msg = be.getMessage().getBody();
 
@@ -1094,6 +1097,8 @@ public class JaxmppService extends Service {
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().addListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().addListener(MucModule.PresenceError, this.mucListener);
+		getMulti().addListener(MucModule.OccupantLeaved, this.mucListener);
+
 		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
 		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
@@ -1157,6 +1162,7 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().removeListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().removeListener(MucModule.PresenceError, this.mucListener);
+		getMulti().removeListener(MucModule.OccupantLeaved, this.mucListener);
 
 		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
@@ -1170,6 +1176,39 @@ public class JaxmppService extends Service {
 		SocketThread.stopThreads();
 
 		super.onDestroy();
+	}
+
+	protected void onMucOccupantLeave(final MucEvent be) throws XMLException {
+		if (be.getNickname().equals(be.getRoom().getNickname())) {
+
+			Intent intent = new Intent();
+
+			// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+			intent.putExtra("mucError", true);
+			intent.putExtra("account", be.getSessionObject().getUserBareJid().toString());
+			intent.putExtra("roomId", be.getRoom().getId());
+			intent.putExtra("roomJid", be.getRoom().getRoomJid().toString());
+
+			String c = "Removed from room";
+
+			if (be.getxMucUserElement() != null && be.getxMucUserElement().getStatuses().contains(307)) {
+				c = "Kicked from room";
+			} else if (be.getxMucUserElement() != null && be.getxMucUserElement().getStatuses().contains(301)) {
+				c = "Ban!";
+			}
+			intent.putExtra("errorMessage", c);
+
+			if (focused) {
+				intent.setAction(MUC_ERROR_MSG);
+				sendBroadcast(intent);
+			} else {
+				intent.setClass(getApplicationContext(), TigaseMobileMessengerActivity.class);
+				notificationHelper.showMucError(be.getRoom().getRoomJid().toString(), intent);
+			}
+
+		}
 	}
 
 	protected void onMucPresenceError(MucEvent be) throws XMLException {
@@ -1186,8 +1225,10 @@ public class JaxmppService extends Service {
 		ErrorCondition c = be.getPresence().getErrorCondition();
 		if (c != null) {
 			intent.putExtra("errorCondition", c.name());
+			intent.putExtra("errorMessage", c.name());
 		} else {
 			intent.putExtra("errorCondition", "-");
+			intent.putExtra("errorMessage", "-");
 		}
 
 		if (focused) {

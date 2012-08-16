@@ -19,6 +19,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -108,7 +109,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		
+
 		if (getArguments() != null) {
 			long id = getArguments().getLong("roomId");
 			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
@@ -148,7 +149,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 						}
 					});
 			}
-		});		
+		});
 
 		TextView title = (TextView) view.findViewById(R.id.textView1);
 		if (title != null) {
@@ -156,9 +157,25 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		}
 		ed.setEnabled(room.getState() == State.joined);
 		sendButton.setEnabled(room.getState() == State.joined);
-		lv.setAdapter(mucAdapter);	
+		lv.setAdapter(mucAdapter);
 	}
-	
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == TigaseMobileMessengerActivity.SHOW_OCCUPANTS && resultCode == Activity.RESULT_OK) {
+			String n = data.getStringExtra("nickname");
+			if (n != null) {
+				String ttt = ed.getText().toString();
+				if (ttt == null || ttt.length() == 0) {
+					ed.append(n + ": ");
+				} else {
+					ed.append(" " + n);
+				}
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

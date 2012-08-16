@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -16,11 +17,13 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -63,7 +66,7 @@ public class OccupantsListActivity extends Activity {
 		public long getItemId(int position) {
 			return occupants.get(position).hashCode();
 		}
-		
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View view;
@@ -72,7 +75,7 @@ public class OccupantsListActivity extends Activity {
 			} else {
 				view = convertView;
 			}
-			
+
 			final Occupant occupant = (Occupant) getItem(position);
 
 			final TextView nicknameTextView = (TextView) view.findViewById(R.id.occupant_nickname);
@@ -82,10 +85,12 @@ public class OccupantsListActivity extends Activity {
 
 			try {
 				nicknameTextView.setText(occupant.getNickname());
-				
-				// looks like enabled text is still gray but darker than disabled item
+				int colorRes = MucAdapter.getOccupantColor(occupant.getNickname());
+
+				// looks like enabled text is still gray but darker than
+				// disabled item
 				// but setting color in code fixes color of displayed text
-				nicknameTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+				nicknameTextView.setTextColor(getResources().getColor(colorRes));
 				statusTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
 
 				String status = occupant.getPresence().getStatus();
@@ -134,10 +139,10 @@ public class OccupantsListActivity extends Activity {
 			} catch (XMLException e) {
 				Log.e(TAG, "Can't show occupant", e);
 			}
-			
+
 			return view;
 		}
-		
+
 		public void remove(Occupant occupant) {
 			occupants.remove(occupant);
 			notifyDataSetChanged();
@@ -181,6 +186,24 @@ public class OccupantsListActivity extends Activity {
 		mucModule.addListener(mucListener);
 
 		occupantsList = (ListView) findViewById(R.id.occupants_list);
+		occupantsList.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+				Occupant occupant = (Occupant) parent.getItemAtPosition(position);
+
+				Intent intent = new Intent();
+
+				intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
+				try {
+					intent.putExtra("nickname", occupant.getNickname());
+				} catch (XMLException e) {
+				}
+
+				setResult(Activity.RESULT_OK, intent);
+				finish();
+			}
+		});
 
 		adapter = new OccupantsAdapter(getApplicationContext(), room);
 		occupantsList.setAdapter(adapter);
