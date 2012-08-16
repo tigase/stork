@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
+import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -16,11 +17,14 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -182,6 +186,24 @@ public class OccupantsListActivity extends Activity {
 		mucModule.addListener(mucListener);
 
 		occupantsList = (ListView) findViewById(R.id.occupants_list);
+		occupantsList.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+				Occupant occupant = (Occupant) parent.getItemAtPosition(position);
+
+				Intent intent = new Intent();
+
+				intent.setAction(TigaseMobileMessengerActivity.ROSTER_CLICK_MSG);
+				try {
+					intent.putExtra("nickname", occupant.getNickname());
+				} catch (XMLException e) {
+				}
+
+				setResult(Activity.RESULT_OK, intent);
+				finish();
+			}
+		});
 
 		adapter = new OccupantsAdapter(getApplicationContext(), room);
 		occupantsList.setAdapter(adapter);
