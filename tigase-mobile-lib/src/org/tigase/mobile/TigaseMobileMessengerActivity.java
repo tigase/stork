@@ -494,24 +494,22 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 
+			@Override
 			protected String makeFragmentName(int viewId, int index) {
 				if (index == 0) {
 					return "accounts";
-				}
-				else if (!helper.isXLarge() && index == 1) {
+				} else if (!helper.isXLarge() && index == 1) {
 					return "roster";
-				}
-				else {
+				} else {
 					int pos = index - 2;
 					if (pos < getChatList().size()) {
 						return getChatList().get(pos).toString();
-					}
-					else {
+					} else {
 						return null;
 					}
 				}
 			}
-			
+
 		};
 
 		viewPager.setAdapter(this.adapter);
@@ -891,10 +889,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private void showMucError(final Bundle bundle) {
 		String room = "Room: " + bundle.getString("roomJid");
-		String message = bundle.getString("errorCondition");
+		String message = bundle.getString("errorMessage");
 		String account = bundle.getString("account");
 
-		ErrorDialog newFragment = ErrorDialog.newInstance("Muc error", account, "Room: " + room + "\n\n" + message);
+		ErrorDialog newFragment = ErrorDialog.newInstance("Event", account, "Room: " + room + "\n\n" + message);
 		newFragment.show(getSupportFragmentManager(), "dialog");
 	}
 
