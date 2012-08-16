@@ -34,6 +34,16 @@
         android:autoLink="all"
         android:paddingLeft="5px" >
     </TextView>
+    
+     <TextView
+        android:id="@+id/chat_item_body_self"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/chat_item_nickname"
+        android:autoLink="all"
+        android:paddingLeft="5px" >
+    </TextView>
 
     <TextView
         android:id="@+id/chat_item_nickname"

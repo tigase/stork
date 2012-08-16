@@ -23,9 +23,10 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 	static class ViewHolder {
 		ImageView avatar;
+		TextView body;
+		TextView bodySelf;
 		TextView nickname;
 		TextView timestamp;
-		TextView webview;
 	}
 
 	private final static String[] cols = new String[] { ChatTableMetaData.FIELD_TIMESTAMP, ChatTableMetaData.FIELD_BODY,
@@ -98,7 +99,8 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder = new ViewHolder();
 			view.setTag(holder);
 			holder.nickname = (TextView) view.findViewById(R.id.chat_item_nickname);
-			holder.webview = (TextView) view.findViewById(R.id.chat_item_body);
+			holder.body = (TextView) view.findViewById(R.id.chat_item_body);
+			holder.bodySelf = (TextView) view.findViewById(R.id.chat_item_body_self);
 			holder.timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
 			holder.avatar = (ImageView) view.findViewById(R.id.user_avatar);
 		}
@@ -117,30 +119,45 @@ public class MucAdapter extends SimpleCursorAdapter {
 		// context.getApplicationContext()).getMultiJaxmpp().get(account);
 		holder.nickname.setText(nick);
 
-		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
+		final String bd = cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY));
 
 		if (nick.equals(room.getNickname())) {
 			holder.nickname.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_nickname));
-			holder.webview.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
+			holder.body.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
+			holder.bodySelf.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
 			view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_mine_background));
 		} else {
 			int colorRes = getOccupantColor(nick);
 
-			if (txt.contains(room.getNickname())) {
+			if (bd.contains(room.getNickname())) {
 				view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_his_background_marked));
 			} else {
 				view.setBackgroundColor(context.getResources().getColor(R.color.mucmessage_his_background));
 			}
 
 			holder.nickname.setTextColor(context.getResources().getColor(colorRes));
-			holder.webview.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
+			holder.body.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
+			holder.bodySelf.setTextColor(context.getResources().getColor(colorRes));
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
 		}
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
 
-		holder.webview.setText(Html.fromHtml(txt.replace(room.getNickname(), "<b>" + room.getNickname() + "</b>")));
+		if (bd != null && bd.startsWith("/me ")) {
+			holder.body.setVisibility(View.GONE);
+			holder.bodySelf.setVisibility(View.VISIBLE);
+			String t = bd.substring(4);
+			final String txt = EscapeUtils.escape(t);
+			holder.bodySelf.setText(Html.fromHtml(txt.replace(room.getNickname(), "<b>" + room.getNickname() + "</b>")));
+
+		} else {
+			holder.body.setVisibility(View.VISIBLE);
+			holder.bodySelf.setVisibility(View.GONE);
+			final String txt = EscapeUtils.escape(bd);
+			holder.body.setText(Html.fromHtml(txt.replace(room.getNickname(), "<b>" + room.getNickname() + "</b>")));
+		}
+
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
 		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
