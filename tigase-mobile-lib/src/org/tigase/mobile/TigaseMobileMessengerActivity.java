@@ -661,20 +661,25 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		this.currentPage = findChatPage(intent.getExtras());
 
 		helper.updateActionBar();
+		
+		final Bundle bundle = intent.getExtras();
+		viewPager.post(new Runnable() {
+			@Override
+			public void run() {
+				if (bundle != null && bundle.getBoolean("mucError", false)) {
+					bundle.putBoolean("mucError", false);
 
-		Bundle bundle = intent.getExtras();
-		if (bundle != null && bundle.getBoolean("mucError", false)) {
-			bundle.putBoolean("mucError", false);
+					showMucError(bundle);
+				} else if (bundle != null && bundle.getBoolean("error", false)) {
+					bundle.putBoolean("error", false);
+					String account = bundle.getString("account");
+					String message = bundle.getString("message");
 
-			showMucError(bundle);
-		} else if (bundle != null && bundle.getBoolean("error", false)) {
-			bundle.putBoolean("error", false);
-			String account = bundle.getString("account");
-			String message = bundle.getString("message");
-
-			ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
-			newFragment.show(getSupportFragmentManager(), "dialog");
-		}
+					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
+					newFragment.show(getSupportFragmentManager(), "dialog");
+				}
+			}
+		});
 	}
 
 	@Override
