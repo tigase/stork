@@ -1179,7 +1179,8 @@ public class JaxmppService extends Service {
 	}
 
 	protected void onMucOccupantLeave(final MucEvent be) throws XMLException {
-		if (be.getNickname().equals(be.getRoom().getNickname())) {
+		final State state = be.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		if (be.getNickname().equals(be.getRoom().getNickname()) && state == State.connected) {
 
 			Intent intent = new Intent();
 
