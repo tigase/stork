@@ -2,6 +2,7 @@ package org.tigase.mobile.chat;
 
 import java.util.Date;
 
+import org.tigase.mobile.ClientIconsTool;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
@@ -9,6 +10,7 @@ import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.roster.CPresence;
+import org.xbill.DNS.utils.hexdump;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -42,41 +44,7 @@ public class ChatView extends RelativeLayout {
 
 	private static final String TAG = "tigase";
 
-	public static Integer getResourceImage(final Presence presence, CapabilitiesModule capabilitiesModule, String nodeName)
-			throws XMLException {
-		if (presence == null)
-			return null;
-		Element c = presence.getChildrenNS("c", "http://jabber.org/protocol/caps");
-		if (c == null)
-			return null;
-		final String node = c.getAttribute("node");
-		final String ver = c.getAttribute("ver");
-		final Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
-
-		if (id == null)
-			return null;
-
-		String cc = id.getCategory() + "/" + id.getType();
-
-		if (node != null && node.equals("http://gajim.org")) {
-			return null;
-		} else if (node != null && node.equals("http://telepathy.freedesktop.org/caps")) {
-			return null;
-		} else if (id.getName() != null && id.getName().equalsIgnoreCase("kopete")) {
-			return R.drawable.client_kopete;
-		} else if (id.getName() != null && id.getName().equalsIgnoreCase("Google Talk User Account")) {
-			return R.drawable.client_gtalk;
-		} else if (id.getName() != null && id.getName().equalsIgnoreCase("adium")) {
-			return R.drawable.client_adium;
-		} else if (id.getName() != null && id.getName().equalsIgnoreCase("psi")) {
-			return R.drawable.client_psi;
-		} else if (nodeName != null && cc.equals("client/phone") && node.equals(nodeName)) {
-			return R.drawable.client_messenger;
-		} else if (cc.equals("client/phone")) {
-			return R.drawable.client_mobile;
-		} else
-			return null;
-	}
+	
 
 	private Chat chat;
 
@@ -272,7 +240,7 @@ public class ChatView extends RelativeLayout {
 				final CapabilitiesModule capabilitiesModule = ((MessengerApplication) (getContext().getApplicationContext())).getMultiJaxmpp().get(
 						chat.getSessionObject()).getModulesManager().getModule(CapabilitiesModule.class);
 
-				final Integer pp = getResourceImage(p, capabilitiesModule, nodeName);
+				final Integer pp = ClientIconsTool.getResourceImage(p, capabilitiesModule, nodeName);
 
 				if (pp != null) {
 					Runnable r = new Runnable() {

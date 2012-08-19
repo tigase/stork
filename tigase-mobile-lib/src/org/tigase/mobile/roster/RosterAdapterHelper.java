@@ -1,5 +1,6 @@
 package org.tigase.mobile.roster;
 
+import org.tigase.mobile.ClientIconsTool;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.GeolocationTableMetaData;
@@ -86,24 +87,13 @@ public class RosterAdapterHelper {
 				for (Presence p : jaxmpp.getPresence().getPresences(jid).values()) {
 					if (p.getType() != null)
 						continue;
-					Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
-					if (c == null)
-						continue;
-					String node = c.getAttribute("node");
-					String ver = c.getAttribute("ver");
 
-					Identity id = capabilitiesModule.getCache().getIdentity(node + "#" + ver);
-					if (id != null) {
-						String tmp = id.getCategory() + "/" + id.getType();
-						if (tmp.equals("client/phone") && node.equals(nodeName)) {
-							holder.clientTypeIndicator.setImageResource(R.drawable.client_messenger);
-							holder.clientTypeIndicator.setVisibility(View.VISIBLE);
-							break;
-						} else if (tmp.equals("client/phone")) {
-							holder.clientTypeIndicator.setImageResource(R.drawable.client_mobile);
-							holder.clientTypeIndicator.setVisibility(View.VISIBLE);
-							break;
-						}
+					Integer client = ClientIconsTool.getResourceImage(p, capabilitiesModule, nodeName);
+					if (client != null) {
+						holder.clientTypeIndicator.setImageResource(client);
+						holder.clientTypeIndicator.setVisibility(View.VISIBLE);
+					} else {
+						holder.clientTypeIndicator.setVisibility(View.INVISIBLE);
 					}
 				}
 			} catch (Exception e) {
@@ -156,7 +146,7 @@ public class RosterAdapterHelper {
 				holder.itemDescription.setText(Html.fromHtml(status));
 			} else {
 				status = "";
-				// TODO: is it fast enough?				
+				// TODO: is it fast enough?
 				GeolocationModule geoModule = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
 				if (geoModule != null) {
 					ContentValues geoValue = geoModule.getLocationForJid(jid);

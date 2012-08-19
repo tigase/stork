@@ -43,6 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
+            android:alpha="0.9"
             android:visibility="invisible" />
 
         <TextView

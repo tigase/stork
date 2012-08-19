@@ -66,6 +66,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/roster_item_precence"
         android:layout_toLeftOf="@+id/roster_item_precence"
+        android:alpha="0.4"
         android:visibility="invisible" />
 
 </RelativeLayout>

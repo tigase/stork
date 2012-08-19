@@ -3,10 +3,10 @@ package org.tigase.mobile.filetransfer;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.tigase.mobile.ClientIconsTool;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
-import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.roster.GroupsRosterAdapter;
@@ -173,7 +173,7 @@ public class SendFileActivity extends Activity {
 
 		for (Entry<String, Presence> entry : all.entrySet()) {
 			MenuItem mitem = menu.add(entry.getKey());
-			int iconRes = ChatView.getResourceImage(entry.getValue(), capabilitiesModule, nodeName);
+			int iconRes = ClientIconsTool.getResourceImage(entry.getValue(), capabilitiesModule, nodeName);
 			boolean enabled = FileTransferUtility.resourceContainsFeatures(jaxmpp, entry.getValue().getFrom(),
 					FileTransferUtility.FEATURES);
 			mitem.setEnabled(enabled);
