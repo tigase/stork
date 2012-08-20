@@ -456,7 +456,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 				flipper.addView(prepareWelcomeScreen(inflater));
-				flipper.addView(prepareAddAccount(inflater));
+				flipper.addView(prepareAddEditAccount(account, inflater));
 				flipper.addView(prepareCreateAccount(inflater));
 
 				flipper.setDisplayedChild(account == null ? PAGE_CREATE : PAGE_ADD);
@@ -516,8 +516,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		final Account account;
 		if (intent.getParcelableExtra("account") != null) {
 			account = (Account) intent.getParcelableExtra("account");
-		}
-		else if (intent.getStringExtra("account_jid") != null) {
+		} else if (intent.getStringExtra("account_jid") != null) {
 			String jid = intent.getStringExtra("account_jid");
 			Account[] accounts = mAccountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
 			Account acc = null;
@@ -527,11 +526,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 				}
 			}
 			account = acc;
-		}
-		else {
+		} else {
 			account = null;
 		}
-		
+
 		if (account != null) {
 			screenTitle.setText("Account edit");
 			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
@@ -542,7 +540,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 				flipper.addView(prepareWelcomeScreen(inflater));
-				flipper.addView(prepareAddAccount(inflater));
+				flipper.addView(prepareAddEditAccount(account, inflater));
 				flipper.addView(prepareCreateAccount(inflater));
 				flipper.setDisplayedChild(PAGE_ADD);
 			}
@@ -550,7 +548,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 			flipper.addView(prepareWelcomeScreen(inflater));
-			flipper.addView(prepareAddAccount(inflater));
+			flipper.addView(prepareAddEditAccount(account, inflater));
 			flipper.addView(prepareCreateAccount(inflater));
 		}
 
@@ -731,11 +729,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		super.onSaveInstanceState(outState);
 	}
 
-	private View prepareAddAccount(final LayoutInflater inflater) {
+	private View prepareAddEditAccount(final Account account, final LayoutInflater inflater) {
 		final View v = inflater.inflate(R.layout.account_edit_dialog, null);
 
 		final Intent intent = getIntent();
-		final Account account = intent.getExtras() == null ? null : (Account) intent.getExtras().get("account");
 		if (account != null) {
 			mUsername = account.name;
 			mPassword = mAccountManager.getPassword(account);
