@@ -54,7 +54,7 @@
     <string name="pref_login_ui_notification_title">Application icon</string>
 
     <!-- Accounts Create/Edit -->
-    <string name="account_add_welcome">Join to Tigase</string>
+    <string name="account_add_welcome">Join Tigase</string>
     <string name="account_add_login">I have an account</string>
     <string name="account_add_description">Hello world</string>
     <string name="account_add_create">Create a new account</string>
