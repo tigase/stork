@@ -27,6 +27,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -54,6 +55,14 @@ public class ChatView extends RelativeLayout {
 	public ChatView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+	}
+
+	void cancelEdit() {
+		if (ed == null)
+			return;
+		ed.clearComposingText();
+		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
 	}
 
 	public Chat getChat() {
