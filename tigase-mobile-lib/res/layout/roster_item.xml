@@ -27,10 +27,10 @@
         android:layout_height="50sp"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@+id/roster_item_jid"
-        android:paddingRight="5sp"
         android:adjustViewBounds="true"
         android:cropToPadding="true"
         android:gravity="center"
+        android:paddingRight="5sp"
         android:scaleType="centerInside"
         android:src="@drawable/user_offline"
         android:textSize="16sp" />
@@ -49,7 +49,7 @@
 
     <TextView
         android:id="@+id/roster_item_jid"
-        android:layout_width="fill_parent"        
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/roster_item_precence"
@@ -63,7 +63,7 @@
     <ImageView
         android:id="@+id/client_type_indicator"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="28dp"
         android:layout_alignBottom="@+id/roster_item_precence"
         android:layout_toLeftOf="@+id/roster_item_precence"
         android:alpha="0.4"

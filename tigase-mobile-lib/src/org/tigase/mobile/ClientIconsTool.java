@@ -8,9 +8,6 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 
 public class ClientIconsTool {
 
-	private ClientIconsTool() {
-	}
-
 	private static boolean check(final String node, final String ver, final Identity id, String expectedNode,
 			String expectedVer, String expectedName) {
 
@@ -56,8 +53,7 @@ public class ClientIconsTool {
 		} else if (check(node, ver, id, null, null, "adium")) {
 			icon = R.drawable.client_adium;
 		} else if (check(node, ver, id, null, null, "google talk user account")) {
-			// android
-			icon = R.drawable.client_gtalk;
+			icon = R.drawable.client_android_gtalk;
 		} else if (check(node, ver, id, "http://mail.google.com", null, null)) {
 			icon = R.drawable.client_gtalk;
 		} else if (check(node, ver, id, "http://talkgadget.google.com", null, null)) {
@@ -69,19 +65,25 @@ public class ClientIconsTool {
 		} else if (check(node, ver, id, "http://google.com", null, null)) {
 			icon = R.drawable.client_gtalk;
 		} else if (check(node, ver, id, "http://www.apple.com/ichat", null, null)) {
-			icon = null;
+			icon = R.drawable.client_ichat;
 		} else if (check(node, ver, id, null, null, "kopete")) {
 			icon = R.drawable.client_kopete;
 		} else if (check(node, ver, id, null, null, "gaim")) {
-			icon = null;
+			icon = R.drawable.client_gaim;
+		} else if (check(node, ver, id, null, null, "gajim")) {
+			icon = R.drawable.client_gajim;
 		} else if (check(node, ver, id, null, null, "psi+")) {
-			icon = null;
+			icon = R.drawable.client_psiplus;
 		} else if (check(node, ver, id, null, null, "psi-dev")) {
-			icon = null;
-		} else if (check(node, ver, id, null, null, "psi")) {
+			icon = R.drawable.client_psiplus;
+		} else if (check(node, ver, id, "http://psi-im.org", null, null)) {
 			icon = R.drawable.client_psi;
 		} else if (check(node, ver, id, null, null, "xabber")) {
-			icon = null;
+			icon = R.drawable.client_xabber;
+		} else if (check(node, ver, id, null, null, "telepathy")) {
+			icon = R.drawable.client_telepathy;
+		} else if (check(node, ver, id, null, null, "swift")) {
+			icon = R.drawable.client_swift;
 		} else
 			icon = null;
 
@@ -93,4 +95,6 @@ public class ClientIconsTool {
 
 	}
 
+	private ClientIconsTool() {
+	}
 }
