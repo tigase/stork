@@ -384,10 +384,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 			@Override
 			public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-				// if(DEBUG)Log.i(TigaseMobileMessengerActivity.TAG,
-				// "PageScrolled: "
-				// + position + ", " +
-				// positionOffset + ", " + positionOffsetPixels);
 			}
 
 			@Override
@@ -400,6 +396,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public void onPageSelected(int position) {
 				if (DEBUG)
 					Log.i(TigaseMobileMessengerActivity.TAG, "PageSelected: " + position);
+
 				currentPage = position;
 				notifyPageChange(position);
 			}

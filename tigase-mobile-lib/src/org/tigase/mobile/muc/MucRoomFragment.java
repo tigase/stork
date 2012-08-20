@@ -20,6 +20,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -43,6 +44,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -100,6 +102,14 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 				onMucEvent(be);
 			}
 		};
+	}
+
+	void cancelEdit() {
+		if (ed == null)
+			return;
+		ed.clearComposingText();
+		InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
 	}
 
 	public Room getRoom() {
@@ -283,6 +293,8 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
 			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
 		} else if (item.getItemId() == R.id.closeChatButton) {
+			cancelEdit();
+
 			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					room.getSessionObject());
@@ -310,6 +322,12 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			t.execute();
 		}
 		return true;
+	}
+
+	@Override
+	protected void onPageChange() {
+		super.onPageChange();
+		cancelEdit();
 	}
 
 	@Override

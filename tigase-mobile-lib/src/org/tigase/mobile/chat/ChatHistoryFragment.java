@@ -79,8 +79,6 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		return f;
 	}
 
-	// private Cursor c;
-
 	public static String prepareAdditionalDebug(final MultiJaxmpp multi) {
 		try {
 			String s = "Known wrappers: [";
@@ -109,6 +107,8 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		}
 
 	}
+
+	// private Cursor c;
 
 	private Chat chat;
 
@@ -374,6 +374,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			Intent chatListActivity = new Intent(getActivity(), ChatListActivity.class);
 			this.getActivity().startActivityForResult(chatListActivity, TigaseMobileMessengerActivity.REQUEST_CHAT);
 		} else if (item.getItemId() == R.id.closeChatButton) {
+			layout.cancelEdit();
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					chat.getSessionObject());
 			ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
@@ -400,6 +401,11 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			startActivityForResult(pickerIntent, TigaseMobileMessengerActivity.SELECT_FOR_SHARE);
 		}
 		return true;
+	}
+
+	@Override
+	protected void onPageChange() {
+		layout.cancelEdit();
 	}
 
 	@Override
