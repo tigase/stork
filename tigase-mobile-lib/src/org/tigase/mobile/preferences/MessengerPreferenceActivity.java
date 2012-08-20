@@ -47,7 +47,7 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 				@Override
 				public boolean onPreferenceClick(Preference preference) {
 					Intent intentChooser = AccountManager.newChooseAccountIntent(null, null,
-							new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
+							new String[] { Constants.ACCOUNT_TYPE }, true, null, null, null, null);
 					startActivityForResult(intentChooser, PICK_ACCOUNT);					
 					return true;
 				}
