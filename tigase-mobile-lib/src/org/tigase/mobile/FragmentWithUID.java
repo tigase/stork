@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
 public class FragmentWithUID extends Fragment {
@@ -23,19 +22,19 @@ public class FragmentWithUID extends Fragment {
 
 	protected final int fragmentUID = (++idC);
 
+	protected void onPageChange() {
+	}
+
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	public void onStart() {
+		super.onStart();
 		getActivity().registerReceiver(focusChangeReceiver, filter);
 	}
 
 	@Override
-	public void onDestroy() {
+	public void onStop() {
 		getActivity().unregisterReceiver(focusChangeReceiver);
-		super.onDestroy();
-	};
-
-	protected void onPageChange() {
+		super.onStop();
 	}
 
 }
