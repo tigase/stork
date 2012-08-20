@@ -393,12 +393,11 @@ public class RosterFragment extends Fragment {
 
 			getActivity().startManagingCursor(c);
 			// FlatRosterAdapter.staticContext = inflater.getContext();
-			
+
 			if (listView instanceof ListView) {
 				this.adapter = new FlatRosterAdapter(inflater.getContext(), c, R.layout.roster_item);
 				((ListView) listView).setAdapter((ListAdapter) adapter);
-			}			
-			else if (listView instanceof GridView) {								
+			} else if (listView instanceof GridView) {
 				this.adapter = new FlatRosterAdapter(inflater.getContext(), c, R.layout.roster_grid_item);
 				((GridView) listView).setAdapter((ListAdapter) adapter);
 			}
@@ -414,7 +413,7 @@ public class RosterFragment extends Fragment {
 
 					getActivity().getApplicationContext().sendBroadcast(intent);
 				}
-			});			
+			});
 
 		}
 		// there can be no connection status icon - we have notifications and

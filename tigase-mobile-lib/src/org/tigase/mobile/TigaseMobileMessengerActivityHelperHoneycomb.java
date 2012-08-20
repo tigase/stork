@@ -6,10 +6,8 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.view.MenuItem;
@@ -32,18 +30,6 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 	@Override
 	public void setShowAsAction(MenuItem item, int actionEnum) {
 		item.setShowAsAction(actionEnum);
-	}
-
-	@Override
-	public void updateActionBar(int itemHashCode) {
-		List<ChatWrapper> chats = activity.getChatList();
-		for (int i = 0; i < chats.size(); i++) {
-			ChatWrapper chat = chats.get(i);
-			if (chat.hashCode() == itemHashCode) {
-				updateActionBar();
-				return;
-			}
-		}
 	}
 
 	@Override
@@ -123,6 +109,18 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 			}
 
 		});
+	}
+
+	@Override
+	public void updateActionBar(int itemHashCode) {
+		List<ChatWrapper> chats = activity.getChatList();
+		for (int i = 0; i < chats.size(); i++) {
+			ChatWrapper chat = chats.get(i);
+			if (chat.hashCode() == itemHashCode) {
+				updateActionBar();
+				return;
+			}
+		}
 	}
 
 }

@@ -208,8 +208,9 @@ public class RosterCursor extends AbstractCursor {
 			r.addAll(jaxmpp.getRoster().getAll(pr));
 		}
 
-		String sorting = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.ROSTER_SORTING_KEY, "status");
-		
+		String sorting = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.ROSTER_SORTING_KEY,
+				"status");
+
 		if ("status".equals(sorting)) {
 			MergeSort.sort(r, new Comparator<RosterItem>() {
 
@@ -232,8 +233,7 @@ public class RosterCursor extends AbstractCursor {
 					}
 				}
 			});
-		}
-		else if ("name".endsWith(sorting)) {
+		} else if ("name".endsWith(sorting)) {
 			MergeSort.sort(r, new Comparator<RosterItem>() {
 
 				@Override
@@ -247,7 +247,7 @@ public class RosterCursor extends AbstractCursor {
 						return 0;
 					}
 				}
-			});			
+			});
 		}
 		synchronized (this.items) {
 			this.items.clear();

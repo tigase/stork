@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import org.tigase.mobile.Constants;
 import org.tigase.mobile.MessengerApplication;
-import org.tigase.mobile.bookmarks.BookmarksActivity;
 import org.tigase.mobile.R;
+import org.tigase.mobile.bookmarks.BookmarksActivity;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
@@ -28,17 +28,17 @@ import android.widget.TextView;
 
 public class JoinMucDialog extends DialogFragment {
 
+	public static JoinMucDialog newInstance() {
+		Bundle args = new Bundle();
+		return newInstance(args);
+	}
+
 	public static JoinMucDialog newInstance(Bundle args) {
 		JoinMucDialog frag = new JoinMucDialog();
 		frag.setArguments(args);
 		return frag;
 	}
 
-	public static JoinMucDialog newInstance() {
-		Bundle args = new Bundle();
-		return newInstance(args);
-	}
-	
 	private AsyncTask<Room, Void, Void> task;
 
 	@Override
@@ -68,14 +68,14 @@ public class JoinMucDialog extends DialogFragment {
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item,
 				accounts.toArray(new String[] {}));
 		accountSelector.setAdapter(adapter);
-		
+
 		Bundle data = getArguments();
-		final boolean editMode = data != null && data.containsKey("editMode") && data.getBoolean("editMode"); 
+		final boolean editMode = data != null && data.containsKey("editMode") && data.getBoolean("editMode");
 		final String id = data != null ? data.getString("id") : null;
-		
+
 		if (data != null) {
 			accountSelector.setSelection(adapter.getPosition(data.getString("account")));
-			
+
 			name.setText(data.getString("name"));
 			roomName.setText(data.getString("room"));
 			mucServer.setText(data.getString("server"));
@@ -83,15 +83,14 @@ public class JoinMucDialog extends DialogFragment {
 			password.setText(data.getString("password"));
 			autojoin.setChecked(data.getBoolean("autojoin"));
 		}
-		
+
 		if (!editMode) {
 			name.setVisibility(View.GONE);
 			autojoin.setVisibility(View.GONE);
-		}
-		else {
+		} else {
 			joinButton.setText("Save");
 		}
-		
+
 		cancelButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -105,13 +104,13 @@ public class JoinMucDialog extends DialogFragment {
 			@Override
 			public void onClick(View v) {
 				if (editMode) {
-					
+
 					BareJID account = BareJID.bareJIDInstance(accountSelector.getSelectedItem().toString());
 					final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 							account);
 
 					Bundle data = new Bundle();
-					
+
 					data.putString("id", id);
 					data.putString("account", account.toString());
 					data.putString("name", name.getText().toString());
@@ -120,13 +119,13 @@ public class JoinMucDialog extends DialogFragment {
 					data.putString("nick", nickname.getText().toString());
 					data.putString("password", password.getText().toString());
 					data.putBoolean("autojoin", autojoin.isChecked());
-					
+
 					((BookmarksActivity) getActivity()).saveItem(data);
-					
+
 					dialog.dismiss();
 					return;
 				}
-				
+
 				BareJID account = BareJID.bareJIDInstance(accountSelector.getSelectedItem().toString());
 				final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 						account);

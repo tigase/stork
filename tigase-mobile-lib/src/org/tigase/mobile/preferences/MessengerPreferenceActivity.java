@@ -7,7 +7,6 @@ import android.accounts.AccountManager;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -25,8 +24,25 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 	private static final int MISSING_SETTING = 0;
 
 	private static final int PICK_ACCOUNT = 1;
-	
+
 	private static final String TAG = "tigase";
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_ACCOUNT) {
+			if (data == null || data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) == null) {
+				// this.finish();
+				return;
+			}
+
+			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+			Log.v(TAG, "selected account = " + accName);
+			Intent intent = new Intent(this, AccountPreferenceActivity.class);
+			intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, accName);
+			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			startActivity(intent);
+		}
+	}
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -48,10 +64,10 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 				public boolean onPreferenceClick(Preference preference) {
 					Intent intentChooser = AccountManager.newChooseAccountIntent(null, null,
 							new String[] { Constants.ACCOUNT_TYPE }, true, null, null, null, null);
-					startActivityForResult(intentChooser, PICK_ACCOUNT);					
+					startActivityForResult(intentChooser, PICK_ACCOUNT);
 					return true;
 				}
-				
+
 			});
 		}
 
@@ -80,23 +96,6 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 		super.onNewIntent(intent);
 		if (intent.getBooleanExtra("missingLogin", false)) {
 			showDialog(MISSING_SETTING);
-		}		
-	}
-	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == PICK_ACCOUNT) {
-			if (data == null || data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) == null) {
-				//this.finish();
-				return;
-			}
-
-			String accName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-			Log.v(TAG, "selected account = " + accName);
-			Intent intent = new Intent(this, AccountPreferenceActivity.class);
-			intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, accName);
-			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-			startActivity(intent);
 		}
 	}
 }

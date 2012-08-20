@@ -9,10 +9,8 @@ import org.tigase.mobile.pubsub.GeolocationModule;
 import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.content.ContentValues;

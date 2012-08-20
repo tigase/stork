@@ -183,13 +183,12 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			long id = getArguments().getLong("chatId");
 			MultiJaxmpp multi = ((MessengerApplication) getActivity().getApplication()).getMultiJaxmpp();
 			ChatWrapper ch = multi.getChatById(id);
-			
-			if (ch == null) {				
+
+			if (ch == null) {
 				String msg = prepareAdditionalDebug(multi);
 				Log.v(TAG, "ChatWrapper is null with id = " + id + '\n' + msg);
 				((TigaseMobileMessengerActivity) getActivity()).viewPager.getAdapter().notifyDataSetChanged();
-			}
-			else {
+			} else {
 				if (ch.getChat() == null) {
 					throw new NullPointerException("ChatWrapper.getChat() is null with id = " + id);
 				}
@@ -199,10 +198,10 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 				setChatId(ch.getChat().getSessionObject().getUserBareJid(), ch.getChat().getId());
 			}
 		}
-		layout.setChat(chat);		
+		layout.setChat(chat);
 		getLoaderManager().initLoader(fragmentUID, null, this);
 	}
-	
+
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == TigaseMobileMessengerActivity.SELECT_FOR_SHARE && resultCode == Activity.RESULT_OK) {
@@ -281,7 +280,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
-		
+
 		inflater.inflate(R.menu.chat_main_menu, menu);
 
 		// Share button support
@@ -301,8 +300,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 				}
 			} catch (XMLException e) {
 			}
-		}
-		else {
+		} else {
 			Log.v(TAG, "no chat for fragment");
 		}
 		share.setVisible(visible);
@@ -327,9 +325,9 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		// }
 		// }
 
-//		if (chat == null) {
-//			throw new RuntimeException("Chat not specified!");
-//		}
+		// if (chat == null) {
+		// throw new RuntimeException("Chat not specified!");
+		// }
 
 		this.lv = (ListView) layout.findViewById(R.id.chat_conversation_history);
 		registerForContextMenu(lv);

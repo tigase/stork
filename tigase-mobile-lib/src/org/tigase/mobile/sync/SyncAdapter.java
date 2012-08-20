@@ -199,6 +199,19 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		return groupId;
 	}
 
+	public static Uri getAvatarUriFromContacts(ContentResolver resolver, BareJID jid) {
+		final Cursor c = resolver.query(DataQuery.CONTENT_URI, new String[] { ContactsContract.RawContacts.CONTACT_ID },
+				Data.DATA1 + "=? AND ( " + Data.DATA5 + "= 7 OR " + Data.DATA5 + "= 5 )", new String[] { jid.toString() }, null);
+		if (c.moveToNext()) {
+			long id = c.getLong(c.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
+			c.close();
+			return ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, id);
+		} else {
+			c.close();
+			return null;
+		}
+	}
+
 	private static long lookupRawContact(ContentResolver resolver, long userId) {
 		long id = 0;
 		final Cursor c = resolver.query(RawContacts.CONTENT_URI, new String[] { BaseColumns._ID }, RawContacts.ACCOUNT_TYPE
@@ -450,20 +463,5 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	private void setSyncMarker(Account account, long marker) {
 		accountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
 	}
-	
-	public static Uri getAvatarUriFromContacts(ContentResolver resolver, BareJID jid) {
-		final Cursor c = resolver.query(DataQuery.CONTENT_URI, new String[] { ContactsContract.RawContacts.CONTACT_ID }, Data.DATA1
-				+ "=? AND ( " + Data.DATA5 + "= 7 OR " + Data.DATA5 + "= 5 )",
-				new String[] { jid.toString() }, null);
-		if (c.moveToNext()) {
-			long id = c.getLong(c.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
-			c.close();
-			return ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, id);
-		}
-		else {			
-			c.close();
-			return null;
-		}
-	}
-	
+
 }

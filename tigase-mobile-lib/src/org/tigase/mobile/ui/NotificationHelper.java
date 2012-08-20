@@ -87,8 +87,7 @@ public abstract class NotificationHelper {
 	public static NotificationHelper createIntstance(Context context) {
 		if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 			return new NotificationHelperJellyBean(context);
-		}
-		else if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
+		} else if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
 			return new NotificationHelperICS(context);
 		} else if (Build.VERSION_CODES.HONEYCOMB <= Build.VERSION.SDK_INT) {
 			return new NotificationHelperHoneycomb(context);
@@ -309,7 +308,8 @@ public abstract class NotificationHelper {
 			n = event.getMessage().getFrom().getBareJid().toString();
 
 		String notificationTitle = n;
-		String notificationText = context.getResources().getString(R.string.service_mentioned_you_in_message, event.getMessage().getFrom().getResource());
+		String notificationText = context.getResources().getString(R.string.service_mentioned_you_in_message,
+				event.getMessage().getFrom().getResource());
 
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		intent.setAction("messageFrom-" + event.getMessage().getFrom());
@@ -327,8 +327,14 @@ public abstract class NotificationHelper {
 	}
 
 	public void notifySubscribeRequest(PresenceEvent be) {
-		String notiticationTitle = be.getJid().toString(); /*context.getResources().getString(R.string.service_authentication_request_notification_title,
-				be.getJid());*/
+		String notiticationTitle = be.getJid().toString(); /*
+															 * context.getResources
+															 * (
+															 * ).getString(R.string
+															 * .
+															 * service_authentication_request_notification_title
+															 * , be.getJid());
+															 */
 		String expandedNotificationText = notiticationTitle;
 
 		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
@@ -343,7 +349,8 @@ public abstract class NotificationHelper {
 
 		final Context context = this.context.getApplicationContext();
 
-		String expandedNotificationTitle = context.getResources().getString(R.string.service_authentication_request_notification_text);//context.getResources().getString(R.string.app_name);
+		String expandedNotificationTitle = context.getResources().getString(
+				R.string.service_authentication_request_notification_text);// context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, AuthRequestActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("jid", "" + be.getJid());

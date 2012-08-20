@@ -15,23 +15,23 @@ public class AccountPreferenceActivity extends PreferenceActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.account_preferences);
-		
+
 		Intent intent = getIntent();
-//	}
-//	
-//	protected void onNewIntent(Intent intent) {
-//		super.onNewIntent(intent);
+		// }
+		//
+		// protected void onNewIntent(Intent intent) {
+		// super.onNewIntent(intent);
 		String account = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-		
+
 		Log.v("PREF", "got account = " + account);
-		
+
 		Preference pref = this.findPreference("auth");
 		pref.getIntent().putExtra("account_jid", account);
 		pref = this.findPreference("vcard");
 		pref.getIntent().putExtra("account_jid", account);
 		pref = this.findPreference("advanced");
 		pref.getIntent().putExtra("account_jid", account);
-		
+
 	}
-	
+
 }

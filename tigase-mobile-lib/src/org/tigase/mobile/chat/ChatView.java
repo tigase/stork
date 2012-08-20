@@ -10,15 +10,11 @@ import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.roster.CPresence;
-import org.xbill.DNS.utils.hexdump;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.content.ContentValues;
@@ -43,8 +39,6 @@ public class ChatView extends RelativeLayout {
 	private static final boolean DEBUG = false;
 
 	private static final String TAG = "tigase";
-
-	
 
 	private Chat chat;
 

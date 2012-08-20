@@ -293,7 +293,7 @@ public class VCardEditorActivity extends Activity {
 		if (account != null) {
 			jid = JID.jidInstance(account.name);
 		} else {
-			jid = JID.jidInstance((String) getIntent().getStringExtra("account_jid"));
+			jid = JID.jidInstance(getIntent().getStringExtra("account_jid"));
 		}
 
 		if (account != null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {

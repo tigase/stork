@@ -659,7 +659,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		this.currentPage = findChatPage(intent.getExtras());
 
 		helper.updateActionBar();
-		
+
 		final Bundle bundle = intent.getExtras();
 		viewPager.post(new Runnable() {
 			@Override

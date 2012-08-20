@@ -19,8 +19,8 @@ import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.v4.util.LruCache;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
+
 //import tigase.jaxmpp.R;
 
 public class AvatarHelper {
@@ -48,11 +48,11 @@ public class AvatarHelper {
 			scale *= 2;
 		}
 		// is it needed?
-//		if (inSampleSize < scale) {
-//			scale /= 2;
-//		}
+		// if (inSampleSize < scale) {
+		// scale /= 2;
+		// }
 		return scale;
-//		return inSampleSize;
+		// return inSampleSize;
 	}
 
 	public static boolean cancelPotentialWork(BareJID jid, ImageView imageView) {
@@ -145,16 +145,16 @@ public class AvatarHelper {
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inJustDecodeBounds = true;
 					BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-//					options.inSampleSize = calculateSize(options, 96, 96);
+					// options.inSampleSize = calculateSize(options, 96, 96);
 					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 					options.inSampleSize = calculateSize(options, 120, 120);
 					options.inJustDecodeBounds = false;
 					bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
 				}
-			}
-			else {
-				// no avatar in our store - checking for avatar in Android contacts
-				Uri photoUri = SyncAdapter.getAvatarUriFromContacts(context.getContentResolver(), jid);				
+			} else {
+				// no avatar in our store - checking for avatar in Android
+				// contacts
+				Uri photoUri = SyncAdapter.getAvatarUriFromContacts(context.getContentResolver(), jid);
 				if (photoUri != null) {
 					InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(),
 							photoUri);
@@ -165,8 +165,7 @@ public class AvatarHelper {
 						// options.inSampleSize = calculateSize(options, 96,
 						// 96);
 						input.close();
-						input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(),
-								photoUri);
+						input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(), photoUri);
 						options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 						options.inSampleSize = calculateSize(options, 120, 120);
 						options.inJustDecodeBounds = false;
@@ -182,9 +181,8 @@ public class AvatarHelper {
 		}
 		if (bmp == null) {
 			avatarCache.put(jid, mPlaceHolderBitmap);
-		}
-		else {
-			avatarCache.put(jid, bmp);			
+		} else {
+			avatarCache.put(jid, bmp);
 		}
 		return bmp;
 	}
