@@ -107,9 +107,17 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	void cancelEdit() {
 		if (ed == null)
 			return;
-		ed.clearComposingText();
-		InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
+
+		ed.post(new Runnable() {
+
+			@Override
+			public void run() {
+				ed.clearComposingText();
+				InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
+			}
+		});
+
 	}
 
 	public Room getRoom() {

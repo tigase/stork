@@ -60,9 +60,17 @@ public class ChatView extends RelativeLayout {
 	void cancelEdit() {
 		if (ed == null)
 			return;
-		ed.clearComposingText();
-		InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
+
+		ed.post(new Runnable() {
+
+			@Override
+			public void run() {
+				ed.clearComposingText();
+				InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
+			}
+		});
+
 	}
 
 	public Chat getChat() {
