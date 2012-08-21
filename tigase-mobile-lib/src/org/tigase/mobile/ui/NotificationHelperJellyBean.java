@@ -79,7 +79,7 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 				PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
 						| PendingIntent.FLAG_ONE_SHOT));
 
-		Intent intentAccept = NotificationHelper.createFileTransferRejectIntent(context, ev,
+		Intent intentAccept = NotificationHelper.createFileTransferAcceptIntent(context, ev,
 				jaxmpp.getSessionObject().getUserBareJid(), tag);
 		builder.addAction(
 				android.R.drawable.ic_menu_save,
