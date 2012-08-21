@@ -60,13 +60,13 @@ public class ChatView extends RelativeLayout {
 	void cancelEdit() {
 		if (ed == null)
 			return;
+		final InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		ed.post(new Runnable() {
 
 			@Override
 			public void run() {
 				ed.clearComposingText();
-				InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
 			}
 		});
@@ -92,6 +92,14 @@ public class ChatView extends RelativeLayout {
 					return true;
 				}
 				return false;
+			}
+		});
+		this.ed.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (!hasFocus)
+					cancelEdit();
 			}
 		});
 

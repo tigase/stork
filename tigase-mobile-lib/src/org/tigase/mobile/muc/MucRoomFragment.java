@@ -42,6 +42,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -107,13 +108,13 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	void cancelEdit() {
 		if (ed == null)
 			return;
+		final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
 		ed.post(new Runnable() {
 
 			@Override
 			public void run() {
 				ed.clearComposingText();
-				InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(ed.getWindowToken(), 0);
 			}
 		});
@@ -239,6 +240,14 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 				return false;
 			}
 		});
+		this.ed.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (!hasFocus)
+					cancelEdit();
+			}
+		});
 
 		this.sendButton = (Button) view.findViewById(R.id.chat_send_button);
 		sendButton.setOnClickListener(new OnClickListener() {
@@ -330,12 +339,6 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			t.execute();
 		}
 		return true;
-	}
-
-	@Override
-	protected void onPageChange() {
-		super.onPageChange();
-		cancelEdit();
 	}
 
 	@Override
