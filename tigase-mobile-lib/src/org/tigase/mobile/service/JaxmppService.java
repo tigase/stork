@@ -88,7 +88,6 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -278,7 +277,6 @@ public class JaxmppService extends Service {
 	}
 
 	// added to fix Eclipse error
-	@SuppressLint("NewApi")
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
@@ -1293,7 +1291,6 @@ public class JaxmppService extends Service {
 	}
 
 	// added to fix Eclipse error
-	@SuppressLint("NewApi")
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)

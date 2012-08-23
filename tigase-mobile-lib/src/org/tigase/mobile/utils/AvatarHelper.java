@@ -8,7 +8,7 @@ import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.sync.SyncAdapter;
 
 import tigase.jaxmpp.core.client.BareJID;
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -109,7 +109,7 @@ public class AvatarHelper {
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
 				avatarCache = new LruCache<BareJID, Bitmap>(cacheSize) {
-					@SuppressLint("NewApi")
+					@TargetApi(12)
 					@Override
 					protected int sizeOf(BareJID key, Bitmap bitmap) {
 						// The cache size will be measured in bytes rather than

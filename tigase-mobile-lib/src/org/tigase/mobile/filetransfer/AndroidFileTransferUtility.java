@@ -30,7 +30,6 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -111,7 +110,6 @@ public class AndroidFileTransferUtility {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
 	}
 
-	@SuppressLint("NewApi")
 	public static File getPathToSave(String filename, String mimetype, String store) {
 		File path = null;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {

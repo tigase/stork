@@ -18,7 +18,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Address;
@@ -269,14 +269,19 @@ public class GeolocationFeature {
 		};
 	}
 
-	@SuppressLint("NewApi")
 	public void registerLocationListener() {
-		LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-			locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
+			registerLocationListenerGingerbread();
 		} else {
+			LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
 			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationInterval, 100, locationListener);
 		}
+	}
+
+	@TargetApi(9)
+	public void registerLocationListenerGingerbread() {
+		LocationManager locationManager = (LocationManager) jaxmppService.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.requestLocationUpdates(locationInterval, 100, locationCriteria, locationListener, null);
 	}
 
 	public void sendCurrentLocation() {

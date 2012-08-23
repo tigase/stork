@@ -24,7 +24,7 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -430,7 +430,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	@Override
-	@SuppressLint({ "ParserError", "ParserError" })
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PICK_ACCOUNT) {
 			if (resultCode == RESULT_OK) {
@@ -499,7 +498,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -532,10 +530,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		if (account != null) {
 			screenTitle.setText("Account edit");
-			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-				Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
-						new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
-				this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
+				startChooseAccountIceCream(account);
 			} else {
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -613,7 +609,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	}
 
-	@SuppressLint("NewApi")
 	protected void onCreationError(String errorMessage) {
 		Bundle b = new Bundle();
 		b.putString("msg", errorMessage);
@@ -979,6 +974,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		});
 
 		return v;
+	}
+
+	@TargetApi(14)
+	private void startChooseAccountIceCream(final Account account) {
+		Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE },
+				false, null, null, null, null);
+		this.startActivityForResult(intentChooser, PICK_ACCOUNT);
 	}
 
 	private void updateVisibility(int visibility, View... views) {
