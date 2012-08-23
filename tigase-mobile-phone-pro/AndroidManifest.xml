@@ -108,7 +108,7 @@
                 <action android:name="org.tigase.mobile.account.advancedPreferences.EDIT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity>                
+        </activity>
         <activity
             android:name="org.tigase.mobile.preferences.AccountPreferenceActivity"
             android:configChanges="orientation"

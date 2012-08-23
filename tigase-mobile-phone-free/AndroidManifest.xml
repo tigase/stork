@@ -18,6 +18,11 @@
             android:theme="@style/XTheme.Light" >
         </activity>
         <activity
+            android:name="org.tigase.mobile.bookmarks.BookmarksActivity"
+            android:label="@string/bookmarks"
+            android:theme="@style/XTheme.Light" >
+        </activity>
+        <activity
             android:name="org.tigase.mobile.chatlist.ChatListActivity"
             android:label="@string/chat_list_title"
             android:theme="@style/XTheme.Light" >
@@ -103,7 +108,7 @@
                 <action android:name="org.tigase.mobile.account.advancedPreferences.EDIT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity>               
+        </activity>
         <activity
             android:name="org.tigase.mobile.preferences.AccountPreferenceActivity"
             android:configChanges="orientation"
@@ -197,7 +202,7 @@
 		</service>
     </application>
 
-	<uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
