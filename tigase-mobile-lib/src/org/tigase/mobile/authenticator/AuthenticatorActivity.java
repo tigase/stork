@@ -530,7 +530,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		if (account != null) {
 			screenTitle.setText("Account edit");
-			if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
+			if (Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 				startChooseAccountIceCream(account);
 			} else {
 				final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);

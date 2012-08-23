@@ -109,7 +109,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			}
 		}
 
-		if (jidStr == null && Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
+		if (jidStr == null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
 			startChooseAccountIceCream(account);
 		} else {
 			setAccount(account);
