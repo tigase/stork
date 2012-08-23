@@ -613,13 +613,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		Bundle b = new Bundle();
 		b.putString("msg", errorMessage);
 		hideProgress();
-		if (Build.VERSION_CODES.FROYO > Build.VERSION.SDK_INT) {
-			showDialog(CREATION_ERROR_DIALOG, b);
-		} else {
-			Dialog dlg = onCreateDialog(CREATION_ERROR_DIALOG, b);
-			if (dlg != null) {
-				dlg.show();
-			}
+
+		Dialog dlg = onCreateDialog(CREATION_ERROR_DIALOG, b);
+		if (dlg != null) {
+			dlg.show();
 		}
 	}
 

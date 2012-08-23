@@ -310,13 +310,13 @@ public class JaxmppService extends Service {
 				// sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY,
 				// true);
 
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-					// Android from API v8 contains optimized SSLSocketFactory
-					// which reduces network usage for handshake
-					SSLSessionCache sslSessionCache = new SSLSessionCache(context);
-					SSLSocketFactory sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
-					sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY, sslSocketFactory);
-				}
+				//if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+				// Android from API v8 contains optimized SSLSocketFactory
+				// which reduces network usage for handshake
+				SSLSessionCache sslSessionCache = new SSLSessionCache(context);
+				SSLSocketFactory sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
+				sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY, sslSocketFactory);
+				//}
 
 				sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
 				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
