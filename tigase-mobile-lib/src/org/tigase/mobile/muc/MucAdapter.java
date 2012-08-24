@@ -40,6 +40,9 @@ public class MucAdapter extends SimpleCursorAdapter {
 	private final static int[] names = new int[] { R.id.chat_item_body };
 
 	static int getOccupantColor(final String nick) {
+		if (nick == null)
+			return R.color.mucmessage_his_nickname_0;
+
 		int color = Math.abs(nick.hashCode()) % 17;
 
 		switch (color) {
@@ -121,7 +124,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 		final String bd = cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY));
 
-		if (nick.equals(room.getNickname())) {
+		if (nick != null && nick.equals(room.getNickname())) {
 			holder.nickname.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_nickname));
 			holder.body.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
 			holder.bodySelf.setTextColor(context.getResources().getColor(R.color.mucmessage_mine_text));
