@@ -173,5 +173,6 @@
     <string name="muc_occupants_list_title">Occupants</string>
     <string name="bookmarks_show">Bookmarks</string>
     <string name="bookmarks">Bookmarks</string>
+    <string name="service_warning_notification_title">Warning</string>
 
 </resources>

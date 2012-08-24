@@ -672,6 +672,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
 					newFragment.show(getSupportFragmentManager(), "dialog");
+				} else if (bundle != null && bundle.getBoolean("warning", false)) {
+					bundle.putBoolean("warning", false);
+					if (bundle.getInt("messageId", -1) != -1) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getInt("messageId"));
+					} else if (bundle.getString("message") != null) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getString("message"));
+					}
+
 				}
 			}
 		});

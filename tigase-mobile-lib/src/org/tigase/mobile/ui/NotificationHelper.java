@@ -399,4 +399,30 @@ public abstract class NotificationHelper {
 
 	}
 
+	public void showWarning(String id, String message, Intent intent) {
+		String notiticationTitle = context.getResources().getString(R.string.service_warning_notification_title);
+		String expandedNotificationText = "Warning";
+
+		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
+		notification.flags = Notification.FLAG_AUTO_CANCEL;
+		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
+		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+
+		final Context context = this.context.getApplicationContext();
+
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
+		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		notificationManager.notify("error:" + id, ERROR_NOTIFICATION_ID, notification);
+
+	}
+
 }

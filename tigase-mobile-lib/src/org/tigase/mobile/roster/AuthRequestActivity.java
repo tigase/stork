@@ -16,7 +16,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -55,7 +54,7 @@ public class AuthRequestActivity extends FragmentActivity {
 							presenceModule.subscribed(jid);
 							presenceModule.subscribe(jid);
 						} catch (Exception e) {
-							showWarning(R.string.auth_request_cant_accept);
+							WarningDialog.showWarning(AuthRequestActivity.this, R.string.auth_request_cant_accept);
 						}
 					}
 				}).start();
@@ -75,7 +74,7 @@ public class AuthRequestActivity extends FragmentActivity {
 							presenceModule.unsubscribe(jid);
 							presenceModule.unsubscribed(jid);
 						} catch (Exception e) {
-							showWarning(R.string.auth_request_cant_deny);
+							WarningDialog.showWarning(AuthRequestActivity.this, R.string.auth_request_cant_deny);
 						}
 					}
 				}).start();
@@ -123,11 +122,6 @@ public class AuthRequestActivity extends FragmentActivity {
 			}
 		}).start();
 
-	}
-
-	private void showWarning(int message) {
-		DialogFragment newFragment = WarningDialog.newInstance(message);
-		newFragment.show(getSupportFragmentManager(), "dialog");
 	}
 
 }

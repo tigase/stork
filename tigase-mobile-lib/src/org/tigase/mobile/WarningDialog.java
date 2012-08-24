@@ -1,15 +1,21 @@
 package org.tigase.mobile;
 
+import org.tigase.mobile.ui.NotificationHelper;
+
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 
 public class WarningDialog extends DialogFragment {
 
-	public static WarningDialog newInstance(final int messageId) {
+	private static int counter = 0;
+
+	private static WarningDialog newInstance(final int messageId) {
 		WarningDialog frag = new WarningDialog();
 		Bundle args = new Bundle();
 		args.putInt("messageId", messageId);
@@ -17,12 +23,48 @@ public class WarningDialog extends DialogFragment {
 		return frag;
 	}
 
-	public static WarningDialog newInstance(final String message) {
+	private static WarningDialog newInstance(final String message) {
 		WarningDialog frag = new WarningDialog();
 		Bundle args = new Bundle();
 		args.putString("message", message);
 		frag.setArguments(args);
 		return frag;
+	}
+
+	private static void showNotification(FragmentActivity activity, String message, Integer messageId) {
+
+		NotificationHelper helper = NotificationHelper.createIntstance(activity);
+
+		Intent intent = new Intent();
+
+		intent.putExtra("warning", true);
+		if (message != null)
+			intent.putExtra("message", message);
+		if (messageId != null)
+			intent.putExtra("messageId", messageId);
+
+		intent.setClass(activity, TigaseMobileMessengerActivity.class);
+
+		helper.showWarning("warning:" + (++counter), message, intent);
+
+	}
+
+	public static void showWarning(FragmentActivity activity, int message) {
+		try {
+			DialogFragment newFragment = WarningDialog.newInstance(message);
+			newFragment.show(activity.getSupportFragmentManager(), "dialog");
+		} catch (IllegalStateException e) {
+			showNotification(activity, null, message);
+		}
+	}
+
+	public static void showWarning(FragmentActivity activity, String message) {
+		try {
+			DialogFragment newFragment = WarningDialog.newInstance(message);
+			newFragment.show(activity.getSupportFragmentManager(), "dialog");
+		} catch (IllegalStateException e) {
+			showNotification(activity, message, null);
+		}
 	}
 
 	@Override
