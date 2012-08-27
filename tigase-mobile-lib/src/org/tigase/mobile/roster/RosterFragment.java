@@ -32,7 +32,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -102,6 +101,15 @@ public class RosterFragment extends Fragment {
 	private static boolean isDisabled(SessionObject jaxmpp) {
 		Boolean x = jaxmpp.getProperty("CC:DISABLED");
 		return x == null ? false : x;
+	}
+
+	private static boolean isEmpty(Object x) {
+		if (x == null)
+			return true;
+		else if (x.toString().length() == 0)
+			return true;
+		else
+			return false;
 	}
 
 	private static boolean isSessionEstablished(SessionObject o) {
@@ -255,7 +263,6 @@ public class RosterFragment extends Fragment {
 
 	}
 
-	@SuppressLint("NewApi")
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
@@ -296,7 +303,7 @@ public class RosterFragment extends Fragment {
 							val = location.getAsString(GeolocationTableMetaData.FIELD_LOCALITY);
 							Log.v(TAG, "Locality = " + String.valueOf(val));
 							if (val != null) {
-								if (!str.isEmpty()) {
+								if (!isEmpty(str)) {
 									str += " ";
 								}
 								str += val;
@@ -304,12 +311,13 @@ public class RosterFragment extends Fragment {
 							val = location.getAsString(GeolocationTableMetaData.FIELD_COUNTRY);
 							Log.v(TAG, "Country = " + String.valueOf(val));
 							if (val != null) {
-								if (!str.isEmpty()) {
+								if (!isEmpty(str)) {
 									str += " ";
 								}
 								str += val;
 							}
-							if (!str.isEmpty()) {
+
+							if (!isEmpty(str)) {
 								str = str.replace(' ', '+');
 								uriStr = "geo:0,0?q=" + str;
 							}

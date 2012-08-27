@@ -404,11 +404,6 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	}
 
 	@Override
-	protected void onPageChange() {
-		layout.cancelEdit();
-	}
-
-	@Override
 	public void onResume() {
 		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {
 		// ((ChatAdapter) lv.getAdapter()).swapCursor(getCursor());

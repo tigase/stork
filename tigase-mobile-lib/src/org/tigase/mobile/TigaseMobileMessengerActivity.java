@@ -372,6 +372,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			if (getChatByPageIndex(currentPage) == null)
 				currentPage = -1;
 		}
+		
+		if (currentPage == -1) {
+			// this should not happened as there is not valid position
+			currentPage = helper.isXLarge() ? 1 : 2;
+		}
+		
 		if (helper.isXLarge()) {
 			setContentView(R.layout.all);
 		} else {
@@ -498,8 +504,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				} else if (!helper.isXLarge() && index == 1) {
 					return "roster";
 				} else {
-					int pos = index - 2;
-					if (pos < getChatList().size()) {
+					int pos = index - (helper.isXLarge() ? 1 : 2);
+					if (pos < getChatList().size() && pos > -1) {
 						return getChatList().get(pos).toString();
 					} else {
 						return null;
@@ -672,6 +678,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
 					newFragment.show(getSupportFragmentManager(), "dialog");
+				} else if (bundle != null && bundle.getBoolean("warning", false)) {
+					bundle.putBoolean("warning", false);
+					if (bundle.getInt("messageId", -1) != -1) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getInt("messageId"));
+					} else if (bundle.getString("message") != null) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getString("message"));
+					}
+
 				}
 			}
 		});

@@ -18,6 +18,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule.VCardAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -203,8 +204,7 @@ public class VCardViewActivity extends Activity {
 		}).start();
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			ActionBar actionBar = getActionBar();
-			actionBar.setDisplayHomeAsUpEnabled(true);
+			showActionBar();
 		}
 
 		dialog.show();
@@ -249,5 +249,11 @@ public class VCardViewActivity extends Activity {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	@TargetApi(11)
+	private void showActionBar() {
+		ActionBar actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(true);
 	}
 }

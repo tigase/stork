@@ -30,7 +30,6 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -111,30 +110,28 @@ public class AndroidFileTransferUtility {
 		return ((MessengerApplication) activity.getApplicationContext()).getMultiJaxmpp().get(account);
 	}
 
-	@SuppressLint("NewApi")
 	public static File getPathToSave(String filename, String mimetype, String store) {
 		File path = null;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-			String type = Environment.DIRECTORY_DOWNLOADS;
-			if (store != null) {
-				if ("Pictures".equals(store)) {
-					type = Environment.DIRECTORY_PICTURES;
-				} else if ("Music".equals(store)) {
-					type = Environment.DIRECTORY_MUSIC;
-				} else if ("Movies".equals(store)) {
-					type = Environment.DIRECTORY_MOVIES;
-				}
-			} else {
-				if (mimetype.startsWith("video/")) {
-					type = Environment.DIRECTORY_MOVIES;
-				} else if (mimetype.startsWith("audio/")) {
-					type = Environment.DIRECTORY_MUSIC;
-				} else if (mimetype.startsWith("image/")) {
-					type = Environment.DIRECTORY_PICTURES;
-				}
+		String type = Environment.DIRECTORY_DOWNLOADS;
+		if (store != null) {
+			if ("Pictures".equals(store)) {
+				type = Environment.DIRECTORY_PICTURES;
+			} else if ("Music".equals(store)) {
+				type = Environment.DIRECTORY_MUSIC;
+			} else if ("Movies".equals(store)) {
+				type = Environment.DIRECTORY_MOVIES;
 			}
-			path = Environment.getExternalStoragePublicDirectory(type);
+		} else {
+			if (mimetype.startsWith("video/")) {
+				type = Environment.DIRECTORY_MOVIES;
+			} else if (mimetype.startsWith("audio/")) {
+				type = Environment.DIRECTORY_MUSIC;
+			} else if (mimetype.startsWith("image/")) {
+				type = Environment.DIRECTORY_PICTURES;
+			}
 		}
+		path = Environment.getExternalStoragePublicDirectory(type);
+
 		if (path == null) {
 			path = new File(Environment.getExternalStorageDirectory().toString() + File.separator + "Download" + File.separator);
 		}

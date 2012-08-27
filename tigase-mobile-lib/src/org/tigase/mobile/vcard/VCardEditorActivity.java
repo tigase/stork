@@ -24,7 +24,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
@@ -243,7 +243,7 @@ public class VCardEditorActivity extends Activity {
 		return null;
 	}
 
-	@SuppressLint("NewApi")
+	@TargetApi(11)
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == PICK_IMAGE && data != null && data.getData() != null) {
@@ -273,7 +273,6 @@ public class VCardEditorActivity extends Activity {
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
-	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -297,9 +296,7 @@ public class VCardEditorActivity extends Activity {
 		}
 
 		if (account != null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
-					new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
-			this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+			startChooseAccountIceCream(account);
 		} else {
 			setAccountJid(jid);
 		}
@@ -453,5 +450,12 @@ public class VCardEditorActivity extends Activity {
 				toast.show();
 			}
 		});
+	}
+
+	@TargetApi(14)
+	private void startChooseAccountIceCream(final Account account) {
+		Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE },
+				false, null, null, null, null);
+		this.startActivityForResult(intentChooser, PICK_ACCOUNT);
 	}
 }

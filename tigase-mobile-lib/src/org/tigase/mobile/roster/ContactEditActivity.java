@@ -22,7 +22,6 @@ import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
@@ -127,16 +126,6 @@ public class ContactEditActivity extends FragmentActivity {
 
 	}
 
-	private void showWarning(int message) {
-		DialogFragment newFragment = WarningDialog.newInstance(message);
-		newFragment.show(getSupportFragmentManager(), "dialog");
-	}
-
-	private void showWarning(String message) {
-		DialogFragment newFragment = WarningDialog.newInstance(message);
-		newFragment.show(getSupportFragmentManager(), "dialog");
-	}
-
 	protected void updateItem() {
 		final BareJID jid = BareJID.bareJIDInstance(jabberIdEdit.getText().toString());
 		final String name = nameEdit.getText().toString();
@@ -147,17 +136,17 @@ public class ContactEditActivity extends FragmentActivity {
 		}
 
 		if (jid == null || jid.toString().length() == 0) {
-			showWarning(R.string.contact_edit_wrn_jid_cant_be_empty);
+			WarningDialog.showWarning(ContactEditActivity.this, R.string.contact_edit_wrn_jid_cant_be_empty);
 			return;
 		}
 
 		if (jid.getLocalpart() == null || jid.getDomain() == null) {
-			showWarning(R.string.contact_edit_wrn_wrong_jid);
+			WarningDialog.showWarning(ContactEditActivity.this, R.string.contact_edit_wrn_wrong_jid);
 			return;
 		}
 
 		if (name == null || name.length() == 0) {
-			showWarning(R.string.contact_edit_wrn_name_cant_be_empty);
+			WarningDialog.showWarning(ContactEditActivity.this, R.string.contact_edit_wrn_name_cant_be_empty);
 			return;
 		}
 
@@ -175,9 +164,9 @@ public class ContactEditActivity extends FragmentActivity {
 						public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
 							dialog.cancel();
 							if (error == null)
-								showWarning(R.string.contact_edit_wrn_unkown);
+								WarningDialog.showWarning(ContactEditActivity.this, R.string.contact_edit_wrn_unkown);
 							else
-								showWarning(error.name());
+								WarningDialog.showWarning(ContactEditActivity.this, error.name());
 						}
 
 						@Override
@@ -192,13 +181,13 @@ public class ContactEditActivity extends FragmentActivity {
 						@Override
 						public void onTimeout() throws JaxmppException {
 							dialog.cancel();
-							showWarning(R.string.contact_edit_wrn_timeout);
+							WarningDialog.showWarning(ContactEditActivity.this, R.string.contact_edit_wrn_timeout);
 						}
 					});
 				} catch (JaxmppException e) {
 					dialog.cancel();
 					Log.e(TAG, "Can't add buddy", e);
-					showWarning(e.getMessage());
+					WarningDialog.showWarning(ContactEditActivity.this, e.getMessage());
 				}
 			}
 		};

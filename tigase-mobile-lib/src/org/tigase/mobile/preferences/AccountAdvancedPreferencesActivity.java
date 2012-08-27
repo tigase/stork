@@ -14,7 +14,7 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -87,7 +87,6 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		}
 	}
 
-	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -111,9 +110,7 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 		}
 
 		if (jidStr == null && Build.VERSION_CODES.JELLY_BEAN <= Build.VERSION.SDK_INT) {
-			Intent intentChooser = AccountManager.newChooseAccountIntent(account, null,
-					new String[] { Constants.ACCOUNT_TYPE }, false, null, null, null, null);
-			this.startActivityForResult(intentChooser, PICK_ACCOUNT);
+			startChooseAccountIceCream(account);
 		} else {
 			setAccount(account);
 		}
@@ -219,6 +216,13 @@ public class AccountAdvancedPreferencesActivity extends Activity {
 			AlertDialog dlg = builder.create();
 			dlg.show();
 		}
+	}
+
+	@TargetApi(14)
+	private void startChooseAccountIceCream(final Account account) {
+		Intent intentChooser = AccountManager.newChooseAccountIntent(account, null, new String[] { Constants.ACCOUNT_TYPE },
+				false, null, null, null, null);
+		this.startActivityForResult(intentChooser, PICK_ACCOUNT);
 	}
 
 }

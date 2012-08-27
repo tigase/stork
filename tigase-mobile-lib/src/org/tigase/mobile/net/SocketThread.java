@@ -20,8 +20,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 
+@SuppressLint("NewApi")
 public class SocketThread extends Thread {
 
 	private class IOServiceComparator implements Comparator<IOService<?>> {

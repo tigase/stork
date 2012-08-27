@@ -88,7 +88,6 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -278,7 +277,6 @@ public class JaxmppService extends Service {
 	}
 
 	// added to fix Eclipse error
-	@SuppressLint("NewApi")
 	public static void updateJaxmppInstances(MultiJaxmpp multi, ContentResolver contentResolver, Resources resources,
 			Context context) {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
@@ -312,13 +310,13 @@ public class JaxmppService extends Service {
 				// sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY,
 				// true);
 
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-					// Android from API v8 contains optimized SSLSocketFactory
-					// which reduces network usage for handshake
-					SSLSessionCache sslSessionCache = new SSLSessionCache(context);
-					SSLSocketFactory sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
-					sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY, sslSocketFactory);
-				}
+				//if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+				// Android from API v8 contains optimized SSLSocketFactory
+				// which reduces network usage for handshake
+				SSLSessionCache sslSessionCache = new SSLSessionCache(context);
+				SSLSocketFactory sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
+				sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY, sslSocketFactory);
+				//}
 
 				sessionObject.setUserProperty(SessionObject.USER_BARE_JID, jid);
 				sessionObject.setUserProperty(SessionObject.PASSWORD, password);
@@ -1293,7 +1291,6 @@ public class JaxmppService extends Service {
 	}
 
 	// added to fix Eclipse error
-	@SuppressLint("NewApi")
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		if (DEBUG)
