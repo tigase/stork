@@ -198,7 +198,11 @@ public class AvatarHelper {
 			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
-			task.execute(jid);
+			try {
+				task.execute(jid);
+			} catch (java.util.concurrent.RejectedExecutionException e) {
+				// ignoring: probably avatar big as cow
+			}
 		}
 	}
 
