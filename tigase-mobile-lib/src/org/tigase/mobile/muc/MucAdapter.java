@@ -15,6 +15,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -43,7 +44,8 @@ public class MucAdapter extends SimpleCursorAdapter {
 		if (nick == null)
 			return R.color.mucmessage_his_nickname_0;
 
-		int color = Math.abs(nick.hashCode()) % 17;
+		final int i = nick.hashCode();
+		final int color = Math.abs(i ^ (i >>> 5)) % 17;
 
 		switch (color) {
 		case 0:
