@@ -15,7 +15,6 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -154,13 +153,15 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.bodySelf.setVisibility(View.VISIBLE);
 			String t = bd.substring(4);
 			final String txt = EscapeUtils.escape(t);
-			holder.bodySelf.setText(Html.fromHtml(txt.replace(room.getNickname(), "<b>" + room.getNickname() + "</b>")));
+			holder.bodySelf.setText(Html.fromHtml(txt.replace("\n", "<br/>").replace(room.getNickname(),
+					"<b>" + room.getNickname() + "</b>")));
 
 		} else {
 			holder.body.setVisibility(View.VISIBLE);
 			holder.bodySelf.setVisibility(View.GONE);
 			final String txt = EscapeUtils.escape(bd);
-			holder.body.setText(Html.fromHtml(txt.replace(room.getNickname(), "<b>" + room.getNickname() + "</b>")));
+			holder.body.setText(Html.fromHtml(txt.replace("\n", "<br/>").replace(room.getNickname(),
+					"<b>" + room.getNickname() + "</b>")));
 		}
 
 		// webview.setMinimumHeight(webview.getMeasuredHeight());

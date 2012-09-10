@@ -19,6 +19,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
+import android.text.Spanned;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.ImageView;
@@ -107,7 +108,9 @@ public class ChatAdapter extends SimpleCursorAdapter {
 
 		java.text.DateFormat df = DateFormat.getTimeFormat(context);
 		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
-		holder.webview.setText(Html.fromHtml(txt));
+
+		Spanned sp = Html.fromHtml(txt.replace("\n", "<br/>"));
+		holder.webview.setText(sp);
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
 		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
