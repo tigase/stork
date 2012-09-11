@@ -181,7 +181,7 @@ public class OccupantsListActivity extends Activity {
 		long roomId = getIntent().getLongExtra("roomId", -1);
 
 		room = ((MessengerApplication) getApplication()).getMultiJaxmpp().getRoomById(roomId).getRoom();
-		mucModule = ((MessengerApplication) getApplication()).getMultiJaxmpp().get(room.getSessionObject()).getModulesManager().getModule(
+		mucModule = ((MessengerApplication) getApplication()).getMultiJaxmpp().get(room.getSessionObject()).getModule(
 				MucModule.class);
 		mucModule.addListener(mucListener);
 

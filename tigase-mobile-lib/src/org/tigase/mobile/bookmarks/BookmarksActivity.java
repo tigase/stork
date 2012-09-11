@@ -294,7 +294,7 @@ public class BookmarksActivity extends FragmentActivity {
 						JaxmppCore jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(
 								bookmark.accountJid);
 						try {
-							Room room = jaxmpp.getModulesManager().getModule(MucModule.class).join(bookmark.jid.getLocalpart(),
+							Room room = jaxmpp.getModule(MucModule.class).join(bookmark.jid.getLocalpart(),
 									bookmark.jid.getDomain().toString(), bookmark.nick, bookmark.password);
 
 							Intent intent = new Intent();
@@ -374,7 +374,7 @@ public class BookmarksActivity extends FragmentActivity {
 				}
 
 				MultiJaxmpp multi = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
-				BookmarksModule module = multi.get(accountJID).getModulesManager().getModule(BookmarksModule.class);
+				BookmarksModule module = multi.get(accountJID).getModule(BookmarksModule.class);
 				try {
 					module.publishBookmarks(items, callback);
 				} catch (JaxmppException ex) {
@@ -400,7 +400,7 @@ public class BookmarksActivity extends FragmentActivity {
 			new Thread() {
 				@Override
 				public void run() {
-					BookmarksModule module = jaxmpp.getModulesManager().getModule(BookmarksModule.class);
+					BookmarksModule module = jaxmpp.getModule(BookmarksModule.class);
 					if (module == null) {
 						module = new BookmarksModule(jaxmpp.getSessionObject(), new PacketWriter() {
 

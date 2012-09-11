@@ -77,14 +77,14 @@ public class GeolocationFeature {
 						jaxmpp.getModulesManager().register(geolocationModule);
 						geolocationModule.init(jaxmpp);
 					} else {
-						GeolocationModule module = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+						GeolocationModule module = jaxmpp.getModule(GeolocationModule.class);
 						module.deinit(jaxmpp);
 						jaxmpp.getModulesManager().unregister(module);
 					}
 					jaxmpp.getSessionObject().setProperty(CapabilitiesModule.VERIFICATION_STRING_KEY, null);
 					if (jaxmpp.isConnected()) {
 						SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-						PresenceModule presenceModule = jaxmpp.getModulesManager().getModule(PresenceModule.class);
+						PresenceModule presenceModule = jaxmpp.getModule(PresenceModule.class);
 						try {
 							if (JaxmppService.focused) {
 								int pr = prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY, 5);

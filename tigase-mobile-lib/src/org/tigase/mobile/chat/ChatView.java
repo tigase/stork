@@ -257,7 +257,7 @@ public class ChatView extends RelativeLayout {
 				JID jid = chat.getJid();
 				final Presence p = chat.getSessionObject().getPresence().getPresence(jid);
 				final CapabilitiesModule capabilitiesModule = ((MessengerApplication) (getContext().getApplicationContext())).getMultiJaxmpp().get(
-						chat.getSessionObject()).getModulesManager().getModule(CapabilitiesModule.class);
+						chat.getSessionObject()).getModule(CapabilitiesModule.class);
 
 				final Integer pp = ClientIconsTool.getResourceImage(p, capabilitiesModule, nodeName);
 

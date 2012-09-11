@@ -63,7 +63,7 @@ public class FileTransferUtility {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				final DiscoItemsModule discoItemsModule = jaxmpp.getModulesManager().getModule(DiscoItemsModule.class);
+				final DiscoItemsModule discoItemsModule = jaxmpp.getModule(DiscoItemsModule.class);
 				try {
 					JID jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
 					discoItemsModule.getItems(JID.jidInstance(jid.getDomain()), new DiscoItemsAsyncCallback() {
@@ -101,7 +101,7 @@ public class FileTransferUtility {
 	private static void discoverProxy2(final Jaxmpp jaxmpp, final ArrayList<Item> items,
 			final ProxyDiscoveryAsyncCallback callback) {
 		final AtomicInteger counter = new AtomicInteger(0);
-		final DiscoInfoModule discoInfoModule = jaxmpp.getModulesManager().getModule(DiscoInfoModule.class);
+		final DiscoInfoModule discoInfoModule = jaxmpp.getModule(DiscoInfoModule.class);
 		final List<JID> proxyComponents = Collections.synchronizedList(new ArrayList<JID>());
 		for (final Item item : items) {
 			try {
@@ -160,7 +160,7 @@ public class FileTransferUtility {
 
 	public static JID getBestJidForFeatures(Jaxmpp jaxmpp, BareJID jid, String[] features) {
 		try {
-			CapabilitiesCache capsCache = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class).getCache();
+			CapabilitiesCache capsCache = jaxmpp.getModule(CapabilitiesModule.class).getCache();
 			Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
 
 			for (int i = 1; i < features.length; i++) {
@@ -194,7 +194,7 @@ public class FileTransferUtility {
 	// public static void onStreamAccepted(final Jaxmpp jaxmpp, final JID
 	// recipient, final Uri uri, final String sid) {
 	public static void onStreamAccepted(final FileTransfer ft) {
-		final FileTransferModule ftModule = ft.jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		final FileTransferModule ftModule = ft.jaxmpp.getModule(FileTransferModule.class);
 		FileTransferUtility.discoverProxy(ft.jaxmpp, new ProxyDiscoveryAsyncCallback() {
 			@Override
 			public void onError(String errorMessage) {
@@ -245,7 +245,7 @@ public class FileTransferUtility {
 	// recipient, final Uri uri, final String sid, final JID proxyJid, final
 	// List<Host> hosts) {
 	public static void onStreamhostsReceived(final FileTransfer ft, final List<Streamhost> hosts) {
-		final FileTransferModule ftModule = ft.jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		final FileTransferModule ftModule = ft.jaxmpp.getModule(FileTransferModule.class);
 
 		final StreamhostUsedCallback streamused = new StreamhostUsedCallback() {
 
@@ -311,7 +311,7 @@ public class FileTransferUtility {
 	}
 
 	public static boolean resourceContainsFeatures(Jaxmpp jaxmpp, JID jid, String[] features) throws XMLException {
-		CapabilitiesCache capsCache = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class).getCache();
+		CapabilitiesCache capsCache = jaxmpp.getModule(CapabilitiesModule.class).getCache();
 		Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
 
 		for (int i = 1; i < features.length; i++) {

@@ -219,7 +219,7 @@ public class AccountsStatusFragment extends Fragment {
 										});
 									}
 								};
-								jaxmpp.getModulesManager().getModule(PingModule.class).ping(
+								jaxmpp.getModule(PingModule.class).ping(
 										JID.jidInstance(jaxmpp.getSessionObject().getUserBareJid().getDomain()), pong);
 							} catch (Exception ex) {
 								Log.e(TAG, "error pinging server " + jaxmpp.getSessionObject().getUserBareJid().toString(), ex);

@@ -378,7 +378,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					chat.getSessionObject());
 			ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
-			final AbstractChatManager cm = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager();
+			final AbstractChatManager cm = jaxmpp.getModule(MessageModule.class).getChatManager();
 			try {
 				cm.close(chat);
 				viewPager.setCurrentItem(1);

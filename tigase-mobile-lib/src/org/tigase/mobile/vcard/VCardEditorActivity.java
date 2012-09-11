@@ -163,7 +163,7 @@ public class VCardEditorActivity extends Activity {
 	 */
 	private void downloadVCard() {
 		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(jid.getBareJid());
-		final VCardModule module = jaxmpp.getModulesManager().getModule(VCardModule.class);
+		final VCardModule module = jaxmpp.getModule(VCardModule.class);
 
 		if (jaxmpp.isConnected()) {
 			final TextView fullName = (TextView) findViewById(R.id.fullname);

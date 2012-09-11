@@ -286,7 +286,7 @@ public class RosterFragment extends Fragment {
 
 			JaxmppCore jaxmpp = this.getMulti().get(r.getSessionObject());
 			if (jaxmpp != null && sessionEstablished) {
-				GeolocationModule module = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+				GeolocationModule module = jaxmpp.getModule(GeolocationModule.class);
 				if (module != null) {
 					ContentValues location = module.getLocationForJid(r.getJid());
 					if (location != null) {
@@ -509,7 +509,7 @@ public class RosterFragment extends Fragment {
 		final Jaxmpp jaxmpp = getMulti().get(rosterItem.getSessionObject());
 		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(rosterItem.getJid());
 
-		final CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+		final CapabilitiesModule capabilitiesModule = jaxmpp.getModule(CapabilitiesModule.class);
 		final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
 
 		boolean added = false;
@@ -574,7 +574,7 @@ public class RosterFragment extends Fragment {
 			@Override
 			public void run() {
 				try {
-					jaxmpp.getModulesManager().getModule(PresenceModule.class).unsubscribed(jid);
+					jaxmpp.getModule(PresenceModule.class).unsubscribed(jid);
 				} catch (JaxmppException e) {
 					Log.w(TAG, "Can't remove auth", e);
 				}
@@ -597,7 +597,7 @@ public class RosterFragment extends Fragment {
 			@Override
 			public void run() {
 				try {
-					jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(jid);
+					jaxmpp.getModule(PresenceModule.class).subscribe(jid);
 				} catch (JaxmppException e) {
 					Log.w(TAG, "Can't rerequest subscription", e);
 				}
@@ -621,7 +621,7 @@ public class RosterFragment extends Fragment {
 			@Override
 			public void run() {
 				try {
-					jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribed(jid);
+					jaxmpp.getModule(PresenceModule.class).subscribed(jid);
 				} catch (JaxmppException e) {
 					Log.w(TAG, "Can't resend subscription", e);
 				}

@@ -116,11 +116,11 @@ public class MultiJaxmpp {
 			jaxmpp.addListener(listener);
 			jaxmpps.put(jaxmpp.getSessionObject().getUserBareJid(), jaxmpp);
 
-			for (Chat c : jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats()) {
+			for (Chat c : jaxmpp.getModule(MessageModule.class).getChatManager().getChats()) {
 				this.chats.add(new ChatWrapper(c));
 			}
 
-			for (Room r : jaxmpp.getModulesManager().getModule(MucModule.class).getRooms()) {
+			for (Room r : jaxmpp.getModule(MucModule.class).getRooms()) {
 				this.chats.add(new ChatWrapper(r));
 
 			}
@@ -177,7 +177,7 @@ public class MultiJaxmpp {
 
 	public <T extends JaxmppCore> void remove(final T jaxmpp) {
 		synchronized (jaxmpps) {
-			this.chats.removeAll(jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().getChats());
+			this.chats.removeAll(jaxmpp.getModule(MessageModule.class).getChatManager().getChats());
 			jaxmpp.removeListener(listener);
 			jaxmpps.remove(jaxmpp.getSessionObject().getUserBareJid());
 		}

@@ -135,9 +135,9 @@ public class JoinMucDialog extends DialogFragment {
 					@Override
 					public void run() {
 						try {
-							Room room = jaxmpp.getModulesManager().getModule(MucModule.class).join(
-									roomName.getEditableText().toString(), mucServer.getEditableText().toString(),
-									nickname.getEditableText().toString(), password.getEditableText().toString());
+							Room room = jaxmpp.getModule(MucModule.class).join(roomName.getEditableText().toString(),
+									mucServer.getEditableText().toString(), nickname.getEditableText().toString(),
+									password.getEditableText().toString());
 							if (task != null)
 								task.execute(room);
 						} catch (Exception e) {

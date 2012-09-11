@@ -37,9 +37,9 @@ public class AuthRequestActivity extends FragmentActivity {
 		final TextView jidTextView = (TextView) findViewById(R.id.vcard_jid);
 		jidTextView.setText(jid.toString());
 
-		final VCardModule module = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModulesManager().getModule(
+		final VCardModule module = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModule(
 				VCardModule.class);
-		final PresenceModule presenceModule = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModulesManager().getModule(
+		final PresenceModule presenceModule = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account).getModule(
 				PresenceModule.class);
 
 		final Button okButton = (Button) findViewById(R.id.req_yesButton);

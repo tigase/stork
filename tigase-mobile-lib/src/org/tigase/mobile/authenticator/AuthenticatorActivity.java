@@ -75,7 +75,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		@Override
 		protected String doInBackground(final String... params) {
 
-			final InBandRegistrationModule reg = contact.getModulesManager().getModule(InBandRegistrationModule.class);
+			final InBandRegistrationModule reg = contact.getModule(InBandRegistrationModule.class);
 			contact.getProperties().setUserProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
 			contact.getProperties().setUserProperty(SessionObject.SERVER_NAME, BareJID.bareJIDInstance(params[0]).getDomain());
 

@@ -168,7 +168,7 @@ public class SendFileActivity extends Activity {
 		final Jaxmpp jaxmpp = getJaxmpp(ri.getSessionObject().getUserBareJid());
 		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(ri.getJid());
 
-		final CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+		final CapabilitiesModule capabilitiesModule = jaxmpp.getModule(CapabilitiesModule.class);
 		final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
 
 		for (Entry<String, Presence> entry : all.entrySet()) {

@@ -79,7 +79,7 @@ public class RosterAdapterHelper {
 		if (holder.clientTypeIndicator != null) {
 			holder.clientTypeIndicator.setVisibility(View.INVISIBLE);
 
-			CapabilitiesModule capabilitiesModule = jaxmpp.getModulesManager().getModule(CapabilitiesModule.class);
+			CapabilitiesModule capabilitiesModule = jaxmpp.getModule(CapabilitiesModule.class);
 			try {
 				final String nodeName = jaxmpp.getSessionObject().getUserProperty(CapabilitiesModule.NODE_NAME_KEY);
 				for (Presence p : jaxmpp.getPresence().getPresences(jid).values()) {
@@ -99,7 +99,7 @@ public class RosterAdapterHelper {
 			}
 		}
 
-		boolean co = jaxmpp.getModulesManager().getModule(MessageModule.class).getChatManager().isChatOpenFor(jid);
+		boolean co = jaxmpp.getModule(MessageModule.class).getChatManager().isChatOpenFor(jid);
 		holder.openChatNotifier.setVisibility(co ? View.VISIBLE : View.INVISIBLE);
 
 		Integer p = cursor.getInt(cursor.getColumnIndex(RosterTableMetaData.FIELD_PRESENCE));
@@ -145,7 +145,7 @@ public class RosterAdapterHelper {
 			} else {
 				status = "";
 				// TODO: is it fast enough?
-				GeolocationModule geoModule = jaxmpp.getModulesManager().getModule(GeolocationModule.class);
+				GeolocationModule geoModule = jaxmpp.getModule(GeolocationModule.class);
 				if (geoModule != null) {
 					ContentValues geoValue = geoModule.getLocationForJid(jid);
 					if (geoValue != null) {

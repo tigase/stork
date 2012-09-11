@@ -315,7 +315,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					room.getSessionObject());
-			final MucModule cm = jaxmpp.getModulesManager().getModule(MucModule.class);
+			final MucModule cm = jaxmpp.getModule(MucModule.class);
 
 			viewPager.setCurrentItem(1);
 			AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {

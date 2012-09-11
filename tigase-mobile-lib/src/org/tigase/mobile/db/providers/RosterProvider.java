@@ -215,7 +215,7 @@ public class RosterProvider extends ContentProvider {
 				final Predicate parent = p;
 				Iterator<JaxmppCore> jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get().iterator();
 				if (jaxmpp.hasNext()) {
-					CapabilitiesCache capsCache = jaxmpp.next().getModulesManager().getModule(CapabilitiesModule.class).getCache();
+					CapabilitiesCache capsCache = jaxmpp.next().getModule(CapabilitiesModule.class).getCache();
 					final Set<String> nodes = capsCache.getNodesWithFeature(selectionArgs[1]);
 					for (int i = 2; i < selectionArgs.length; i++) {
 						nodes.retainAll(capsCache.getNodesWithFeature(selectionArgs[i]));

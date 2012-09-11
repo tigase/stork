@@ -372,12 +372,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			if (getChatByPageIndex(currentPage) == null)
 				currentPage = -1;
 		}
-		
+
 		if (currentPage == -1) {
 			// this should not happened as there is not valid position
 			currentPage = helper.isXLarge() ? 1 : 2;
 		}
-		
+
 		if (helper.isXLarge()) {
 			setContentView(R.layout.all);
 		} else {

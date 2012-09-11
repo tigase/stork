@@ -65,7 +65,7 @@ public class FileTransfer {
 	public FileTransfer(Jaxmpp jaxmpp, JID buddyJid, String buddyName, String filename, InputStream is, long size) {
 		this.jaxmpp = jaxmpp;
 		this.jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
-		this.ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		this.ftModule = jaxmpp.getModule(FileTransferModule.class);
 		this.buddyJid = buddyJid;
 		this.buddyName = buddyName;
 		this.filename = filename;
@@ -81,7 +81,7 @@ public class FileTransfer {
 	public FileTransfer(Jaxmpp jaxmpp, JID buddyJid, String buddyName, String filename, long size, File destination) {
 		this.jaxmpp = jaxmpp;
 		this.jid = jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID);
-		this.ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		this.ftModule = jaxmpp.getModule(FileTransferModule.class);
 		this.buddyJid = buddyJid;
 		this.buddyName = buddyName;
 		this.filename = filename;
@@ -94,7 +94,7 @@ public class FileTransfer {
 	}
 
 	public void connectedToProxy() {
-		final FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+		final FileTransferModule ftModule = jaxmpp.getModule(FileTransferModule.class);
 		try {
 			if (outgoing) {
 				outgoingConnectedToProxy(ftModule);

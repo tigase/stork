@@ -299,7 +299,7 @@ public class AndroidFileTransferUtility {
 
 					if (jid == null)
 						return;
-					final FileTransferModule ftModule = jaxmpp.getModulesManager().getModule(FileTransferModule.class);
+					final FileTransferModule ftModule = jaxmpp.getModule(FileTransferModule.class);
 					final ContentResolver cr = activity.getContentResolver();
 					final InputStream is = cr.openInputStream(uri);
 					final long size = is.available();

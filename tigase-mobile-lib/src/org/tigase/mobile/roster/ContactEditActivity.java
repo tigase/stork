@@ -172,7 +172,7 @@ public class ContactEditActivity extends FragmentActivity {
 						@Override
 						public void onSuccess(Stanza responseStanza) throws JaxmppException {
 							if (requestAuth.getVisibility() == View.VISIBLE && requestAuth.isChecked()) {
-								jaxmpp.getModulesManager().getModule(PresenceModule.class).subscribe(JID.jidInstance(jid));
+								jaxmpp.getModule(PresenceModule.class).subscribe(JID.jidInstance(jid));
 							}
 							dialog.cancel();
 							finish();

@@ -146,7 +146,7 @@ public class VCardViewActivity extends Activity {
 			((TextView) findViewById(R.id.vcard_subscription_status)).setText(rosterItem.getSubscription().name());
 		}
 
-		final VCardModule module = jaxmpp.getModulesManager().getModule(VCardModule.class);
+		final VCardModule module = jaxmpp.getModule(VCardModule.class);
 
 		(new Thread() {
 			@Override
