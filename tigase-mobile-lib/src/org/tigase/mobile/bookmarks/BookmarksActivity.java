@@ -19,6 +19,7 @@ import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.PacketWriter;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.observer.ObservableFactory;
 import tigase.jaxmpp.core.client.xml.DefaultElement;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -402,24 +403,26 @@ public class BookmarksActivity extends FragmentActivity {
 				public void run() {
 					BookmarksModule module = jaxmpp.getModule(BookmarksModule.class);
 					if (module == null) {
-						module = new BookmarksModule(jaxmpp.getSessionObject(), new PacketWriter() {
+						module = new BookmarksModule(ObservableFactory.instance(null), jaxmpp.getSessionObject(),
+								new PacketWriter() {
 
-							@Override
-							public void write(Element stanza) throws JaxmppException {
-								jaxmpp.send((Stanza) stanza);
-							}
+									@Override
+									public void write(Element stanza) throws JaxmppException {
+										jaxmpp.send((Stanza) stanza);
+									}
 
-							@Override
-							public void write(Element stanza, AsyncCallback asyncCallback) throws JaxmppException {
-								jaxmpp.send((Stanza) stanza, asyncCallback);
-							}
+									@Override
+									public void write(Element stanza, AsyncCallback asyncCallback) throws JaxmppException {
+										jaxmpp.send((Stanza) stanza, asyncCallback);
+									}
 
-							@Override
-							public void write(Element stanza, Long timeout, AsyncCallback asyncCallback) throws JaxmppException {
-								jaxmpp.send((Stanza) stanza, timeout, asyncCallback);
-							}
+									@Override
+									public void write(Element stanza, Long timeout, AsyncCallback asyncCallback)
+											throws JaxmppException {
+										jaxmpp.send((Stanza) stanza, timeout, asyncCallback);
+									}
 
-						});
+								});
 						jaxmpp.getModulesManager().register(module);
 					}
 
