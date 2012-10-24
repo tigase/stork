@@ -291,7 +291,7 @@ public class AccountsStatusFragment extends Fragment {
 				else if (st == State.connected && !established)
 					st = State.connecting;
 
-				boolean secured = jaxmpp.getConnector().isSecure();
+				boolean secured = jaxmpp.getConnector() != null && jaxmpp.getConnector().isSecure();
 				securityEmblem.setVisibility(st != State.disconnected && secured ? View.VISIBLE : View.GONE);
 
 				String errorMessage = jaxmpp.getSessionObject().getProperty("messenger#error");
