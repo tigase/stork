@@ -20,8 +20,7 @@
             android:id="@+id/account_status_progress"
             style="?android:attr/progressBarStyleSmall"
             android:layout_width="26sp"
-            android:layout_height="50sp"
-             />
+            android:layout_height="50sp" />
     </FrameLayout>
 
     <TextView
@@ -40,20 +39,29 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/frameLayout1"
         android:layout_toLeftOf="@+id/imageView1"
+        android:layout_toRightOf="@+id/frameLayout1"
         android:paddingLeft="10sp"
         android:textSize="18sp"
         android:textStyle="bold" >
     </TextView>
-    
+
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="50sp"
         android:layout_height="50sp"
         android:layout_alignParentRight="true"
         android:src="@drawable/user_avatar" >
-
     </ImageView>
-    
+
+    <ImageView
+        android:id="@+id/account_secured_emblem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/frameLayout1"
+        android:paddingBottom="10dp"
+        android:paddingLeft="14dp"
+        android:src="@drawable/emblem_connection_secured"
+        android:visibility="invisible" />
+
 </RelativeLayout>

@@ -280,6 +280,7 @@ public class AccountsStatusFragment extends Fragment {
 				final TextView accountName = (TextView) v.findViewById(R.id.account_name);
 				final TextView accountDescription = (TextView) v.findViewById(R.id.account_item_description);
 				final ImageView accountStatus = (ImageView) v.findViewById(R.id.account_status);
+				final ImageView securityEmblem = (ImageView) v.findViewById(R.id.account_secured_emblem);
 				final ProgressBar progressBar = (ProgressBar) v.findViewById(R.id.account_status_progress);
 				final ImageView accountAvatar = (ImageView) v.findViewById(R.id.imageView1);
 
@@ -289,6 +290,9 @@ public class AccountsStatusFragment extends Fragment {
 					st = State.disconnected;
 				else if (st == State.connected && !established)
 					st = State.connecting;
+
+				boolean secured = jaxmpp.getConnector().isSecure();
+				securityEmblem.setVisibility(st != State.disconnected && secured ? View.VISIBLE : View.GONE);
 
 				String errorMessage = jaxmpp.getSessionObject().getProperty("messenger#error");
 
