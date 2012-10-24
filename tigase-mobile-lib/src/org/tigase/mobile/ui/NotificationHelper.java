@@ -198,9 +198,9 @@ public abstract class NotificationHelper {
 		final Context context = this.context.getApplicationContext();
 
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);		
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		if (cause instanceof DataCertificateException) {
 			expandedNotificationText = context.getResources().getString(R.string.trustcert_accountnotification,
 					account.getUserBareJid().getDomain());
