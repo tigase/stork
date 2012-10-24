@@ -36,12 +36,15 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class MessengerApplication extends Application {
 
+	public static MessengerApplication app;
+
 	private static MultiJaxmpp multiJaxmpp;
 
 	private GoogleAnalyticsTracker tracker;
 
 	public MessengerApplication() {
 		super();
+		app = this;
 
 		Log.i("tigase", "Creating new instance of JaXMPP");
 

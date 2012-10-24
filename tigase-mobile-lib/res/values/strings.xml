@@ -174,5 +174,11 @@
     <string name="bookmarks_show">Bookmarks</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="service_warning_notification_title">Warning</string>
-
+    <string name="trustcert_dialog_title">Certificate untrusted</string>
+    <string name="trustcert_question">Is this certificate trusted:\n%s</string>
+    <string name="trustcert_fingerprint">"Fingerprint (SHA-1): %s"</string>
+    <string name="trustcert_certchain">Certificate [%s]:</string>
+    <string name="trustcert_subject">Subject: %s</string>
+    <string name="trustcert_issuer">Issuer: %s</string>
+    
 </resources>

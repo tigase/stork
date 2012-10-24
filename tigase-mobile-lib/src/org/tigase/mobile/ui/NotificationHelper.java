@@ -10,6 +10,7 @@ import org.tigase.mobile.filetransfer.FileTransfer;
 import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import org.tigase.mobile.filetransfer.IncomingFileActivity;
 import org.tigase.mobile.roster.AuthRequestActivity;
+import org.tigase.mobile.security.SecureTrustManagerFactory.DataCertificateException;
 import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -197,9 +198,15 @@ public abstract class NotificationHelper {
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		intent.putExtra("error", true);
-		intent.putExtra("account", account.getUserBareJid().toString());
+		if (cause instanceof DataCertificateException) {
+			intent.putExtra("certUntrusted", true);
+			intent.putExtra("cause", (cause));
+		} else {
+			intent.putExtra("error", true);
+		}
 		intent.putExtra("message", message);
+		intent.putExtra("account", account.getUserBareJid().toString());
+
 		// intent.putExtra("details", message);
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);

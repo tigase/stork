@@ -18,6 +18,7 @@ import org.tigase.mobile.preferences.MessengerPreferenceActivity;
 import org.tigase.mobile.roster.AccountSelectorDialogFragment;
 import org.tigase.mobile.roster.ContactEditActivity;
 import org.tigase.mobile.roster.RosterFragment;
+import org.tigase.mobile.security.SecureTrustManagerFactory.DataCertificateException;
 import org.tigase.mobile.service.JaxmppService;
 
 import tigase.jaxmpp.core.client.BareJID;
@@ -667,9 +668,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewPager.post(new Runnable() {
 			@Override
 			public void run() {
-				if (bundle != null && bundle.getBoolean("mucError", false)) {
+				if (bundle != null && bundle.getBoolean("certUntrusted", false)) {
+					bundle.putBoolean("certUntrusted", false);
+					DataCertificateException cause = (DataCertificateException) bundle.getSerializable("cause");
+					String account = bundle.getString("account");
+					TrustCertDialog newFragment = TrustCertDialog.newInstance(account, cause);
+					newFragment.show(getSupportFragmentManager(), "dialog");
+				} else if (bundle != null && bundle.getBoolean("mucError", false)) {
 					bundle.putBoolean("mucError", false);
-
 					showMucError(bundle);
 				} else if (bundle != null && bundle.getBoolean("error", false)) {
 					bundle.putBoolean("error", false);

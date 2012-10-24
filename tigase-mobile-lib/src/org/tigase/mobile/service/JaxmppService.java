@@ -41,6 +41,7 @@ import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
 import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 import org.tigase.mobile.filetransfer.StreamhostsEvent;
 import org.tigase.mobile.net.SocketThread;
+import org.tigase.mobile.security.SecureTrustManagerFactory;
 import org.tigase.mobile.sync.SyncAdapter;
 import org.tigase.mobile.ui.NotificationHelper;
 
@@ -107,7 +108,6 @@ import android.net.NetworkInfo;
 import android.net.SSLCertificateSocketFactory;
 import android.net.SSLSessionCache;
 import android.net.Uri;
-import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -295,6 +295,7 @@ public class JaxmppService extends Service {
 
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new DefaultSessionObject();
+				sessionObject.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers());
 				sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 				sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, resources.getString(R.string.app_name));
 				sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
@@ -635,14 +636,14 @@ public class JaxmppService extends Service {
 
 			@Override
 			public void handleEvent(ConnectorEvent be) throws JaxmppException {
-				if (DEBUG) {
-					if (be.getType() == Connector.Error) {
+				if (be.getType() == Connector.Error) {
+					if (DEBUG)
 						Log.d(TAG, "Connection error (" + be.getSessionObject().getUserBareJid() + ") " + be.getCaught() + "  "
 								+ be.getStreamError());
-						onConnectorError(be);
-					} else if (be.getType() == Connector.StreamTerminated) {
+					onConnectorError(be);
+				} else if (be.getType() == Connector.StreamTerminated) {
+					if (DEBUG)
 						Log.d(TAG, "Stream terminated (" + be.getSessionObject().getUserBareJid() + ") " + be.getStreamError());
-					}
 				}
 			}
 		};
@@ -1004,7 +1005,10 @@ public class JaxmppService extends Service {
 			disable(be.getSessionObject(), true);
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
-			if (throwable instanceof UnknownHostException) {
+			if (throwable instanceof SecureTrustManagerFactory.DataCertificateException) {
+				notificationUpdateFail(be.getSessionObject(), "Server certificate not trusted", null, throwable);
+				disable(be.getSessionObject(), true);
+			} else if (throwable instanceof UnknownHostException) {
 				Log.w(TAG, "Skipped UnknownHostException exception", throwable);
 				// notificationUpdateFail(be.getSessionObject(),
 				// "Connection error: unknown host " + throwable.getMessage(),

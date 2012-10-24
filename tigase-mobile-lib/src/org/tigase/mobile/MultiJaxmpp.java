@@ -15,12 +15,16 @@ import tigase.jaxmpp.core.client.observer.EventType;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.observer.Observable;
 import tigase.jaxmpp.core.client.observer.ObservableFactory;
+import tigase.jaxmpp.core.client.observer.ObservableFactory.FactorySpi;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.utils.DateTimeFormat;
+import tigase.jaxmpp.j2se.DateTimeFormatProviderImpl;
+import tigase.jaxmpp.j2se.observer.ThreadSafeObservable;
 
 public class MultiJaxmpp {
 
@@ -80,6 +84,22 @@ public class MultiJaxmpp {
 			} else
 				return super.toString();
 		}
+	}
+
+	static {
+		ObservableFactory.setFactorySpi(new FactorySpi() {
+
+			@Override
+			public Observable create() {
+				return create(null);
+			}
+
+			@Override
+			public Observable create(Observable parent) {
+				return new ThreadSafeObservable(parent);
+			}
+		});
+		DateTimeFormat.setProvider(new DateTimeFormatProviderImpl());
 	}
 
 	private final List<ChatWrapper> chats = Collections.synchronizedList(new ArrayList<ChatWrapper>());
