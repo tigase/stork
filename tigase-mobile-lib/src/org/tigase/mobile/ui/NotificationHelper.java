@@ -1,5 +1,7 @@
 package org.tigase.mobile.ui;
 
+import java.util.Arrays;
+
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
@@ -31,6 +33,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 
 public abstract class NotificationHelper {
 
@@ -199,8 +202,10 @@ public abstract class NotificationHelper {
 		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		if (cause instanceof DataCertificateException) {
+			expandedNotificationText = context.getResources().getString(R.string.trustcert_accountnotification,
+					account.getUserBareJid().getDomain());
 			intent.putExtra("certUntrusted", true);
-			intent.putExtra("cause", (cause));
+			intent.putExtra("cause", cause);
 		} else {
 			intent.putExtra("error", true);
 		}

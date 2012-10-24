@@ -180,5 +180,6 @@
     <string name="trustcert_certchain">Certificate [%s]:</string>
     <string name="trustcert_subject">Subject: %s</string>
     <string name="trustcert_issuer">Issuer: %s</string>
+    <string name="trustcert_accountnotification">Wrong certificate for %s</string>
     
 </resources>
