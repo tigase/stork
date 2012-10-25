@@ -214,7 +214,7 @@ public abstract class NotificationHelper {
 
 		// intent.putExtra("details", message);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		account.setProperty("messenger#error", message);
