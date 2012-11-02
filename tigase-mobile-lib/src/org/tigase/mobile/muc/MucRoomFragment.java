@@ -8,7 +8,6 @@ import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.chat.ChatHistoryFragment;
-import org.tigase.mobile.chat.ChatView;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
@@ -75,13 +74,19 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 	private EditText ed;
 
-	private ChatView layout;
-
 	private ListView lv;
 
 	private MucAdapter mucAdapter;
 
 	private Listener<MucEvent> mucListener;
+
+	private OnClickListener nickameClickListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			addNicknameToEdit((((TextView) v).getText()).toString());
+		}
+	};
 
 	private SharedPreferences prefs;
 
@@ -103,6 +108,15 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 				onMucEvent(be);
 			}
 		};
+	}
+
+	void addNicknameToEdit(String n) {
+		String ttt = ed.getText().toString();
+		if (ttt == null || ttt.length() == 0) {
+			ed.append(n + ": ");
+		} else {
+			ed.append(" " + n);
+		}
 	}
 
 	void cancelEdit() {
@@ -150,7 +164,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			}
 		}
 
-		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room);
+		this.mucAdapter = new MucAdapter(getActivity(), R.layout.muc_chat_item, room, nickameClickListener);
 		getLoaderManager().initLoader(fragmentUID, null, this);
 		mucAdapter.registerDataSetObserver(new DataSetObserver() {
 
@@ -184,12 +198,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		if (requestCode == TigaseMobileMessengerActivity.SHOW_OCCUPANTS && resultCode == Activity.RESULT_OK) {
 			String n = data.getStringExtra("nickname");
 			if (n != null) {
-				String ttt = ed.getText().toString();
-				if (ttt == null || ttt.length() == 0) {
-					ed.append(n + ": ");
-				} else {
-					ed.append(" " + n);
-				}
+				addNicknameToEdit(n);
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);

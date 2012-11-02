@@ -16,6 +16,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -86,11 +87,14 @@ public class MucAdapter extends SimpleCursorAdapter {
 		}
 	}
 
+	private OnClickListener nickameClickListener;
+
 	private final Room room;
 
-	public MucAdapter(Context context, int layout, Room room) {
+	public MucAdapter(Context context, int layout, Room room, OnClickListener nickameClickListener) {
 		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
+		this.nickameClickListener = nickameClickListener;
 		this.room = room;
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		String tmp = null;// prefs.getString(Preferences.NICKNAME_KEY, null);
@@ -108,6 +112,8 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.timestamp = (TextView) view.findViewById(R.id.chat_item_timestamp);
 			holder.avatar = (ImageView) view.findViewById(R.id.user_avatar);
 		}
+
+		holder.nickname.setOnClickListener(nickameClickListener);
 
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_STATE));
 
