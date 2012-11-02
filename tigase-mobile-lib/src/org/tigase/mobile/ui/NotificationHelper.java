@@ -1,7 +1,5 @@
 package org.tigase.mobile.ui;
 
-import java.util.Arrays;
-
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.R;
@@ -33,7 +31,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
 
 public abstract class NotificationHelper {
 
@@ -131,7 +128,7 @@ public abstract class NotificationHelper {
 		} else {
 			intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		}
-		return PendingIntent.getActivity(context, 0, intent, 0);
+		return PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 	}
 
 	protected PendingIntent createFileTransferRequestPendingIntent(FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
@@ -148,7 +145,8 @@ public abstract class NotificationHelper {
 		}
 		intent.putExtra("mimetype", ev.getMimetype());
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+		return PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_CANCEL_CURRENT
+				| PendingIntent.FLAG_ONE_SHOT);
 	}
 
 	private final MultiJaxmpp getMulti() {
@@ -164,7 +162,7 @@ public abstract class NotificationHelper {
 		Context context = this.context.getApplicationContext();
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
@@ -198,16 +196,16 @@ public abstract class NotificationHelper {
 		final Context context = this.context.getApplicationContext();
 
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);		
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		if (cause instanceof DataCertificateException) {
 			expandedNotificationText = context.getResources().getString(R.string.trustcert_accountnotification,
 					account.getUserBareJid().getDomain());
-			intent.putExtra("certUntrusted", true);
+			intent.setAction(TigaseMobileMessengerActivity.CERT_UNTRUSTED_ACTION);
 			intent.putExtra("cause", cause);
 		} else {
-			intent.putExtra("error", true);
+			intent.setAction(TigaseMobileMessengerActivity.ERROR_ACTION);
 		}
 		intent.putExtra("message", message);
 		intent.putExtra("account", account.getUserBareJid().toString());
@@ -298,13 +296,13 @@ public abstract class NotificationHelper {
 		String notificationText = context.getResources().getString(R.string.service_new_message);
 
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		intent.setAction("messageFrom-" + event.getMessage().getFrom());
+		intent.setAction(TigaseMobileMessengerActivity.NEW_CHAT_MESSAGE_ACTION);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("jid", "" + event.getMessage().getFrom());
 		if (event.getChat() != null)
 			intent.putExtra("chatId", event.getChat().getId());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 
 		Notification notification = prepareChatNotification(ico, notificationTitle, notificationText, pendingIntent, event);
 
@@ -324,13 +322,13 @@ public abstract class NotificationHelper {
 				event.getMessage().getFrom().getResource());
 
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		intent.setAction("messageFrom-" + event.getMessage().getFrom());
+		intent.setAction(TigaseMobileMessengerActivity.MUC_MESSAGE_ACTION);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		intent.putExtra("roomJid", "" + event.getRoom().getRoomJid().toString());
 		if (event.getRoom() != null)
 			intent.putExtra("roomId", event.getRoom().getId());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 
 		Notification notification = prepareChatNotification(ico, notificationTitle, notificationText, pendingIntent, event);
 
@@ -368,7 +366,7 @@ public abstract class NotificationHelper {
 		intent.putExtra("jid", "" + be.getJid());
 		intent.putExtra("account", "" + be.getSessionObject().getUserBareJid());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("authRequest:" + be.getJid(), AUTH_REQUEST_NOTIFICATION_ID, notification);
@@ -404,7 +402,7 @@ public abstract class NotificationHelper {
 
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("error:" + room, ERROR_NOTIFICATION_ID, notification);
@@ -430,7 +428,7 @@ public abstract class NotificationHelper {
 
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, 0);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("error:" + id, ERROR_NOTIFICATION_ID, notification);

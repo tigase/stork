@@ -1188,7 +1188,7 @@ public class JaxmppService extends Service {
 			// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-			intent.putExtra("mucError", true);
+			intent.setAction(TigaseMobileMessengerActivity.MUC_ERROR_ACTION);
 			intent.putExtra("account", be.getSessionObject().getUserBareJid().toString());
 			intent.putExtra("roomId", be.getRoom().getId());
 			intent.putExtra("roomJid", be.getRoom().getRoomJid().toString());
@@ -1219,7 +1219,7 @@ public class JaxmppService extends Service {
 		// intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-		intent.putExtra("mucError", true);
+		intent.setAction(TigaseMobileMessengerActivity.MUC_ERROR_ACTION);
 		intent.putExtra("account", be.getSessionObject().getUserBareJid().toString());
 		intent.putExtra("roomId", be.getRoom().getId());
 		intent.putExtra("roomJid", be.getRoom().getRoomJid().toString());

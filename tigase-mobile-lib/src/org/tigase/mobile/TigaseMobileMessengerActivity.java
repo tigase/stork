@@ -107,31 +107,41 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static int ABOUT_DIALOG = 1;
 
+	public static final String CERT_UNTRUSTED_ACTION = "org.tigase.mobile.CERT_UNTRUSTED_ACTION";
+
 	public static final String CLIENT_FOCUS_MSG = "org.tigase.mobile.CLIENT_FOCUS_MSG";
 
 	public final static int CONTACT_REMOVE_DIALOG = 2;
 
 	private static final boolean DEBUG = true;
 
+	public static final String ERROR_ACTION = "org.tigase.mobile.ERROR_ACTION";
+
+	public static final String MUC_ERROR_ACTION = "org.tigase.mobile.MUC_ERROR_ACTION";
+
+	public static final String MUC_MESSAGE_ACTION = "org.tigase.mobile.MUC_MESSAGE_ACTION";
+
+	// private ListView rosterList;
+
+	public static final String NEW_CHAT_MESSAGE_ACTION = "org.tigase.mobile.NEW_CHAT_MESSAGE_ACTION";
+
 	public static final int REQUEST_CHAT = 3;
 
 	public static final String ROSTER_CLICK_MSG = "org.tigase.mobile.ROSTER_CLICK_MSG";
-
-	// private ListView rosterList;
 
 	public static final int SELECT_FOR_SHARE = 2;
 
 	public static final int SHOW_OCCUPANTS = 3;
 
-	private final static String STATE_CURRENT_PAGE_KEY = "currentPage";
+	public final static String STATE_CURRENT_PAGE = "TigaseMobileMessengerActivity.STATE_CURRENT_PAGE";
 
 	private static final String TAG = "tigase";
+
+	public static final String WARNING_ACTION = "org.tigase.mobile.WARNING_ACTION";
 
 	private MyFragmentPageAdapter adapter;
 
 	private final Listener<BaseEvent> chatListener;
-
-	private int currentPage = -1;
 
 	public final TigaseMobileMessengerActivityHelper helper;
 
@@ -146,6 +156,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	public ViewPager viewPager;
 
 	private ViewPager viewRoster;;
+
+	private int XcurrentPage = -1;
 
 	public TigaseMobileMessengerActivity() {
 		helper = TigaseMobileMessengerActivityHelper.createInstance(this);
@@ -256,8 +268,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	public int getCurrentPage() {
-		return currentPage;
-	}
+		return XcurrentPage;
+	};
 
 	private void notifyPageChange(int msg) {
 		Intent intent = new Intent();
@@ -297,7 +309,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onActivityResult()");
 		if (requestCode == REQUEST_CHAT && resultCode == Activity.RESULT_OK) {
-			this.currentPage = findChatPage(data.getExtras());
+			// this.currentPage = findChatPage(data.getExtras());
 			// Moved to ChatHistoryFragment
 			// } else if (requestCode == SELECT_FOR_SHARE && resultCode ==
 			// Activity.RESULT_OK) {
@@ -329,7 +341,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (currentPage == 0 || !helper.isXLarge() && currentPage > 1) {
+		if (getCurrentPage() == 0 || !helper.isXLarge() && getCurrentPage() > 1) {
 			viewPager.setCurrentItem(1);
 		} else
 			super.onBackPressed();
@@ -368,15 +380,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			// finish();
 		}
 
-		if (savedInstanceState != null && currentPage == -1) {
-			currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE_KEY, -1);
-			if (getChatByPageIndex(currentPage) == null)
-				currentPage = -1;
+		if (savedInstanceState != null && getCurrentPage() == -1) {
+			// currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE_KEY,
+			// -1);
+			if (getChatByPageIndex(getCurrentPage()) == null)
+				setCurrentPage(-1);
 		}
 
-		if (currentPage == -1) {
+		if (getCurrentPage() == -1) {
 			// this should not happened as there is not valid position
-			currentPage = helper.isXLarge() ? 1 : 2;
+			setCurrentPage(helper.isXLarge() ? 0 : 1);
 		}
 
 		if (helper.isXLarge()) {
@@ -404,7 +417,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				if (DEBUG)
 					Log.i(TigaseMobileMessengerActivity.TAG, "PageSelected: " + position);
 
-				currentPage = position;
+				setCurrentPage(position);
 				notifyPageChange(position);
 			}
 		});
@@ -656,11 +669,11 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	@Override
-	protected void onNewIntent(Intent intent) {
+	protected void onNewIntent(final Intent intent) {
 		super.onNewIntent(intent);
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent()");
-		this.currentPage = findChatPage(intent.getExtras());
+		// this.currentPage = findChatPage(intent.getExtras());
 
 		helper.updateActionBar();
 
@@ -668,24 +681,24 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewPager.post(new Runnable() {
 			@Override
 			public void run() {
-				if (bundle != null && bundle.getBoolean("certUntrusted", false)) {
-					bundle.putBoolean("certUntrusted", false);
+				if (intent.getAction() != null && MUC_MESSAGE_ACTION.equals(intent.getAction())) {
+					setCurrentPage(findChatPage(intent.getExtras()));
+				} else if (intent.getAction() != null && NEW_CHAT_MESSAGE_ACTION.equals(intent.getAction())) {
+					setCurrentPage(findChatPage(intent.getExtras()));
+				} else if (intent.getAction() != null && CERT_UNTRUSTED_ACTION.equals(intent.getAction())) {
 					DataCertificateException cause = (DataCertificateException) bundle.getSerializable("cause");
 					String account = bundle.getString("account");
 					TrustCertDialog newFragment = TrustCertDialog.newInstance(account, cause);
 					newFragment.show(getSupportFragmentManager(), "dialog");
-				} else if (bundle != null && bundle.getBoolean("mucError", false)) {
-					bundle.putBoolean("mucError", false);
+				} else if (intent.getAction() != null && MUC_ERROR_ACTION.equals(intent.getAction())) {
 					showMucError(bundle);
-				} else if (bundle != null && bundle.getBoolean("error", false)) {
-					bundle.putBoolean("error", false);
+				} else if (intent.getAction() != null && ERROR_ACTION.equals(intent.getAction())) {
 					String account = bundle.getString("account");
 					String message = bundle.getString("message");
 
 					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
 					newFragment.show(getSupportFragmentManager(), "dialog");
-				} else if (bundle != null && bundle.getBoolean("warning", false)) {
-					bundle.putBoolean("warning", false);
+				} else if (intent.getAction() != null && WARNING_ACTION.equals(intent.getAction())) {
 					if (bundle.getInt("messageId", -1) != -1) {
 						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getInt("messageId"));
 					} else if (bundle.getString("message") != null) {
@@ -800,9 +813,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		if (currentPage == 0 || currentPage == 1 || helper.isXLarge()) {
+		if (getCurrentPage() == 0 || getCurrentPage() == 1 || helper.isXLarge()) {
 			MenuInflater inflater = getMenuInflater();
-			Log.v(TAG, "current page " + currentPage);
+			Log.v(TAG, "current page " + getCurrentPage());
 			Log.v(TAG, "xlarge = " + helper.isXLarge());
 			final boolean serviceActive = JaxmppService.isServiceActive();
 
@@ -831,15 +844,16 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	}
 
 	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		setCurrentPage(savedInstanceState.getInt(STATE_CURRENT_PAGE, -1));
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
 		if (DEBUG)
 			Log.d(TAG, "onResume()");
-
-		int tmp = findChatPage(getIntent().getExtras());
-		if (tmp != -1) {
-			this.currentPage = tmp;
-		}
 
 		registerReceiver(rosterClickReceiver, new IntentFilter(ROSTER_CLICK_MSG));
 
@@ -849,17 +863,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		multi.addListener(this.chatListener);
 
-		if (currentPage < 0) {
-			currentPage = helper.isXLarge() ? 0 : 1;
-		}
 		viewPager.post(new Runnable() {
 
 			@Override
 			public void run() {
 				if (DEBUG)
-					Log.d(TAG, "Focus on page " + currentPage);
-				viewPager.setCurrentItem(currentPage);
-				notifyPageChange(currentPage);
+					Log.d(TAG, "Focus on page " + getCurrentPage());
+				viewPager.setCurrentItem(getCurrentPage());
+				notifyPageChange(getCurrentPage());
 			}
 		});
 
@@ -867,7 +878,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putInt(STATE_CURRENT_PAGE_KEY, currentPage);
+		outState.putInt(STATE_CURRENT_PAGE, getCurrentPage());
 		super.onSaveInstanceState(outState);
 	}
 
@@ -907,6 +918,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		};
 		viewPager.postDelayed(r, 750);
+	}
+
+	private void setCurrentPage(int page) {
+		this.XcurrentPage = page;
 	}
 
 	private void showMucError(final Bundle bundle) {

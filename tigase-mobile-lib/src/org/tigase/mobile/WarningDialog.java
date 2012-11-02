@@ -36,8 +36,7 @@ public class WarningDialog extends DialogFragment {
 		NotificationHelper helper = NotificationHelper.createIntstance(activity);
 
 		Intent intent = new Intent();
-
-		intent.putExtra("warning", true);
+		intent.setAction(TigaseMobileMessengerActivity.WARNING_ACTION);
 		if (message != null)
 			intent.putExtra("message", message);
 		if (messageId != null)
