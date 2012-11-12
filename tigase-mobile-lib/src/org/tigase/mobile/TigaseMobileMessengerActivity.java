@@ -339,7 +339,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	@Override
 	public void onBackPressed() {
 		if (getCurrentPage() == 0 || !helper.isXLarge() && getCurrentPage() > 1) {
-			viewPager.setCurrentItem(1);
+			setVisiblePage(1);
 		} else
 			super.onBackPressed();
 	}
@@ -725,7 +725,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 						@Override
 						public void run() {
-							viewPager.setCurrentItem(idx + (helper.isXLarge() ? 1 : 2));
+							setVisiblePage(idx + (helper.isXLarge() ? 1 : 2));
 						}
 					});
 					return null;
@@ -735,7 +735,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			newFragment.show(getSupportFragmentManager(), "dialog");
 			return true;
 		} else if (item.getItemId() == android.R.id.home) {
-			viewPager.setCurrentItem(1);
+			setVisiblePage(1);
 			return true;
 		} else if (item.getItemId() == R.id.showHideOffline) {
 			boolean x = mPreferences.getBoolean(Preferences.SHOW_OFFLINE, Boolean.TRUE);
@@ -866,7 +866,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			public void run() {
 				if (DEBUG)
 					Log.d(TAG, "Focus on page " + getCurrentPage());
-				viewPager.setCurrentItem(getCurrentPage());
+				setVisiblePage(getCurrentPage());
 				notifyPageChange(getCurrentPage());
 			}
 		});
@@ -903,9 +903,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 								rosterItem.getSessionObject());
 						jaxmpp.createChat(JID.jidInstance(rosterItem.getJid(), resource));
 						int i = getChatList().size() + (helper.isXLarge() ? 1 : 2);
-						viewPager.setCurrentItem(i);
+						setVisiblePage(i);
 					} else {
-						viewPager.setCurrentItem(idx + (helper.isXLarge() ? 1 : 2));
+						setVisiblePage(idx + (helper.isXLarge() ? 1 : 2));
 					}
 
 				} catch (JaxmppException e) {
@@ -919,6 +919,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private void setCurrentPage(int page) {
 		this.XcurrentPage = page;
+	}
+
+	private void setVisiblePage(int i) {
+		if (DEBUG)
+			Log.d(TAG, "Set visible page to " + i);
+		viewPager.setCurrentItem(i);
 	}
 
 	private void showMucError(final Bundle bundle) {
