@@ -669,7 +669,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	protected void onNewIntent(final Intent intent) {
 		super.onNewIntent(intent);
 		if (DEBUG)
-			Log.d(TAG, "onNewIntent()");
+			Log.d(TAG, "onNewIntent() action=" + intent.getAction());
 		// this.currentPage = findChatPage(intent.getExtras());
 
 		helper.updateActionBar();
@@ -678,6 +678,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		viewPager.post(new Runnable() {
 			@Override
 			public void run() {
+				if (DEBUG)
+					Log.d(TAG, "processing posted new intent. action=" + intent.getAction());
+
 				if (intent.getAction() != null && MUC_MESSAGE_ACTION.equals(intent.getAction())) {
 					setCurrentPage(findChatPage(intent.getExtras()));
 				} else if (intent.getAction() != null && NEW_CHAT_MESSAGE_ACTION.equals(intent.getAction())) {
@@ -923,7 +926,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private void setVisiblePage(int i) {
 		if (DEBUG)
-			Log.d(TAG, "Set visible page to " + i);
+			Log.d(TAG, "Set visible page to " + i, new Exception("DEBUG setVisiblePage()"));
 		viewPager.setCurrentItem(i);
 	}
 

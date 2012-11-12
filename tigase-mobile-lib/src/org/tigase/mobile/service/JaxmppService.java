@@ -468,11 +468,11 @@ public class JaxmppService extends Service {
 	public JaxmppService() {
 		super();
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
-		// create a ConsoleHandler
-		Handler handler = new ConsoleHandler();
-		handler.setLevel(Level.ALL);
-		logger.addHandler(handler);
-		logger.setLevel(Level.ALL);
+		// // create a ConsoleHandler
+		// Handler handler = new ConsoleHandler();
+		// handler.setLevel(Level.ALL);
+		// logger.addHandler(handler);
+		logger.setLevel(Level.INFO);
 
 		if (DEBUG)
 			Log.i(TAG, "creating");
