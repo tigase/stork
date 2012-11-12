@@ -69,7 +69,7 @@ public class RosterFragment extends Fragment {
 
 	private static final boolean DEBUG = false;
 
-	private static final String TAG = "tigase";
+	private static final String TAG = "RosterFragment";
 
 	static final int TOKEN_CHILD = 1;
 

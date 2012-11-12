@@ -12,6 +12,8 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
+import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
+import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.muc.JoinMucDialog;
 import org.tigase.mobile.muc.MucRoomFragment;
 import org.tigase.mobile.preferences.MessengerPreferenceActivity;
@@ -135,7 +137,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public final static String STATE_CURRENT_PAGE = "TigaseMobileMessengerActivity.STATE_CURRENT_PAGE";
 
-	private static final String TAG = "tigase";
+	private static final String TAG = "TigaseMobileMessengerActivity";
 
 	public static final String WARNING_ACTION = "org.tigase.mobile.WARNING_ACTION";
 
@@ -309,31 +311,26 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onActivityResult()");
 		if (requestCode == REQUEST_CHAT && resultCode == Activity.RESULT_OK) {
-			// this.currentPage = findChatPage(data.getExtras());
+			setCurrentPage(findChatPage(data.getExtras()));
 			// Moved to ChatHistoryFragment
-			// } else if (requestCode == SELECT_FOR_SHARE && resultCode ==
-			// Activity.RESULT_OK) {
-			// Uri selected = data.getData();
-			// String mimetype = data.getType();
-			// final int p = this.currentPage;
-			// ChatWrapper chatW = getChatByPageIndex(p);
-			// Chat chat = chatW.getChat();
-			// if (chat == null)
-			// return;
-			// RosterItem ri =
-			// chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
-			// JID jid = chat.getJid();
-			// if (jid.getResource() == null) {
-			// final Jaxmpp jaxmpp = ((MessengerApplication)
-			// TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
-			// ri.getSessionObject());
-			// jid = FileTransferUtility.getBestJidForFeatures(jaxmpp,
-			// jid.getBareJid(), FileTransferUtility.FEATURES);
-			// }
-			// if (jid != null) {
-			// AndroidFileTransferUtility.startFileTransfer(this, ri,
-			// chat.getJid(), selected, mimetype);
-			// }
+		} else if (requestCode == SELECT_FOR_SHARE && resultCode == Activity.RESULT_OK) {
+			Uri selected = data.getData();
+			String mimetype = data.getType();
+			final int p = getCurrentPage();
+			ChatWrapper chatW = getChatByPageIndex(p);
+			Chat chat = chatW.getChat();
+			if (chat == null)
+				return;
+			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
+			JID jid = chat.getJid();
+			if (jid.getResource() == null) {
+				final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+						ri.getSessionObject());
+				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
+			}
+			if (jid != null) {
+				AndroidFileTransferUtility.startFileTransfer(this, ri, chat.getJid(), selected, mimetype);
+			}
 		} else {
 			super.onActivityResult(requestCode, resultCode, data);
 		}
