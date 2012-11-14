@@ -542,6 +542,8 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		}
 
+		processingNotificationIntent(getIntent());
+
 	}
 
 	@Override
@@ -670,44 +672,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		super.onNewIntent(intent);
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent() action=" + intent.getAction());
-		// this.currentPage = findChatPage(intent.getExtras());
-
-		helper.updateActionBar();
-
-		final Bundle bundle = intent.getExtras();
-		viewPager.post(new Runnable() {
-			@Override
-			public void run() {
-				if (DEBUG)
-					Log.d(TAG, "processing posted new intent. action=" + intent.getAction());
-
-				if (intent.getAction() != null && MUC_MESSAGE_ACTION.equals(intent.getAction())) {
-					setCurrentPage(findChatPage(intent.getExtras()));
-				} else if (intent.getAction() != null && NEW_CHAT_MESSAGE_ACTION.equals(intent.getAction())) {
-					setCurrentPage(findChatPage(intent.getExtras()));
-				} else if (intent.getAction() != null && CERT_UNTRUSTED_ACTION.equals(intent.getAction())) {
-					DataCertificateException cause = (DataCertificateException) bundle.getSerializable("cause");
-					String account = bundle.getString("account");
-					TrustCertDialog newFragment = TrustCertDialog.newInstance(account, cause);
-					newFragment.show(getSupportFragmentManager(), "dialog");
-				} else if (intent.getAction() != null && MUC_ERROR_ACTION.equals(intent.getAction())) {
-					showMucError(bundle);
-				} else if (intent.getAction() != null && ERROR_ACTION.equals(intent.getAction())) {
-					String account = bundle.getString("account");
-					String message = bundle.getString("message");
-
-					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
-					newFragment.show(getSupportFragmentManager(), "dialog");
-				} else if (intent.getAction() != null && WARNING_ACTION.equals(intent.getAction())) {
-					if (bundle.getInt("messageId", -1) != -1) {
-						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getInt("messageId"));
-					} else if (bundle.getString("message") != null) {
-						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getString("message"));
-					}
-
-				}
-			}
-		});
+		processingNotificationIntent(intent);
 	}
 
 	@Override
@@ -918,6 +883,53 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			}
 		};
 		viewPager.postDelayed(r, 750);
+	}
+
+	private void processingNotificationIntent(final Intent intent) {
+		if (intent == null)
+			return;
+
+		if (DEBUG)
+			Log.d(TAG, "processingNotificationIntent() action=" + intent.getAction());
+		// this.currentPage = findChatPage(intent.getExtras());
+
+		helper.updateActionBar();
+
+		final Bundle bundle = intent.getExtras();
+		viewPager.post(new Runnable() {
+			@Override
+			public void run() {
+				if (DEBUG)
+					Log.d(TAG, "processing posted new intent. action=" + intent.getAction());
+
+				if (intent.getAction() != null && MUC_MESSAGE_ACTION.equals(intent.getAction())) {
+					setCurrentPage(findChatPage(intent.getExtras()));
+				} else if (intent.getAction() != null && NEW_CHAT_MESSAGE_ACTION.equals(intent.getAction())) {
+					setCurrentPage(findChatPage(intent.getExtras()));
+				} else if (intent.getAction() != null && CERT_UNTRUSTED_ACTION.equals(intent.getAction())) {
+					DataCertificateException cause = (DataCertificateException) bundle.getSerializable("cause");
+					String account = bundle.getString("account");
+					TrustCertDialog newFragment = TrustCertDialog.newInstance(account, cause);
+					newFragment.show(getSupportFragmentManager(), "dialog");
+				} else if (intent.getAction() != null && MUC_ERROR_ACTION.equals(intent.getAction())) {
+					showMucError(bundle);
+				} else if (intent.getAction() != null && ERROR_ACTION.equals(intent.getAction())) {
+					String account = bundle.getString("account");
+					String message = bundle.getString("message");
+
+					ErrorDialog newFragment = ErrorDialog.newInstance("Error", account, message);
+					newFragment.show(getSupportFragmentManager(), "dialog");
+				} else if (intent.getAction() != null && WARNING_ACTION.equals(intent.getAction())) {
+					if (bundle.getInt("messageId", -1) != -1) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getInt("messageId"));
+					} else if (bundle.getString("message") != null) {
+						WarningDialog.showWarning(TigaseMobileMessengerActivity.this, bundle.getString("message"));
+					}
+
+				}
+			}
+		});
+
 	}
 
 	private void setCurrentPage(int page) {
