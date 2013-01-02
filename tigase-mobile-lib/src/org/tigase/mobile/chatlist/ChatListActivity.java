@@ -112,7 +112,7 @@ public class ChatListActivity extends Activity {
 				if (ri == null)
 					x = chat.getJid().toString();
 				else
-					x = rdt.getDisplayName(ri);
+					x = RosterDisplayTools.getDisplayName(ri);
 
 				final CPresence cp = rdt.getShowOf(chat.getSessionObject(), chat.getJid());
 

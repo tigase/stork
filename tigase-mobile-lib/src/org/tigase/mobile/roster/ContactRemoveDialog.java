@@ -45,7 +45,7 @@ public class ContactRemoveDialog extends DialogFragment {
 		final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(account);
 		final RosterItem rosterItem = jaxmpp.getRoster().get(jid.getBareJid());
 
-		String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(rosterItem);
+		String name = RosterDisplayTools.getDisplayName(rosterItem);
 
 		((MessengerApplication) getActivity().getApplication()).getTracker().trackPageView("/contactRemoveDialog");
 

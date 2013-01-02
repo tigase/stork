@@ -78,7 +78,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			setAvatarForJid(holder.avatar, jid, cursor);
 			JaxmppCore jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(account);
 			RosterItem ri = jaxmpp.getRoster().get(jid);
-			holder.nickname.setText(ri == null ? jid.toString() : rdt.getDisplayName(ri));
+			holder.nickname.setText(ri == null ? jid.toString() : RosterDisplayTools.getDisplayName(ri));
 
 			holder.nickname.setTextColor(context.getResources().getColor(R.color.message_his_text));
 			holder.webview.setTextColor(context.getResources().getColor(R.color.message_his_text));

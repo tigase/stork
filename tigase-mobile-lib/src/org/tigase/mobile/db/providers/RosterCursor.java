@@ -224,8 +224,8 @@ public class RosterCursor extends AbstractCursor {
 						if (sc != 0)
 							return sc;
 
-						String n1 = rdt.getDisplayName(object1);
-						String n2 = rdt.getDisplayName(object2);
+						String n1 = RosterDisplayTools.getDisplayName(object1);
+						String n2 = RosterDisplayTools.getDisplayName(object2);
 
 						return n1.compareTo(n2);
 					} catch (Exception e) {
@@ -239,8 +239,8 @@ public class RosterCursor extends AbstractCursor {
 				@Override
 				public int compare(RosterItem object1, RosterItem object2) {
 					try {
-						String n1 = rdt.getDisplayName(object1);
-						String n2 = rdt.getDisplayName(object2);
+						String n1 = RosterDisplayTools.getDisplayName(object1);
+						String n2 = RosterDisplayTools.getDisplayName(object2);
 
 						return n1.compareTo(n2);
 					} catch (Exception e) {

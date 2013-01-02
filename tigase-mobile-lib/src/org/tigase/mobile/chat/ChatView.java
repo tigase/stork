@@ -193,8 +193,7 @@ public class ChatView extends RelativeLayout {
 
 			RosterItem ri = jaxmpp.getRoster().get(chat.getJid().getBareJid());
 			t.setText("Chat with "
-					+ (ri == null ? chat.getJid().getBareJid().toString()
-							: (new RosterDisplayTools(getContext())).getDisplayName(ri)));
+					+ (ri == null ? chat.getJid().getBareJid().toString() : RosterDisplayTools.getDisplayName(ri)));
 		}
 	}
 
