@@ -110,8 +110,6 @@ public class SecureTrustManagerFactory {
 
 	private File keyStoreFile;
 
-	private boolean keystoreLoaded = false;
-
 	private SecureTrustManagerFactory() throws KeyStoreException, NoSuchAlgorithmException {
 		String ksType = KeyStore.getDefaultType();
 		String mfAlg = TrustManagerFactory.getDefaultAlgorithm();
@@ -173,7 +171,7 @@ public class SecureTrustManagerFactory {
 			InputStream in = new FileInputStream(file);
 			loadKeystore(in, password);
 		} catch (Exception e1) {
-			Log.w(TAG, "Can't load keystore", e1);
+			Log.w(TAG, "Can't load keystore from file " + file);
 		}
 
 	}
@@ -182,12 +180,11 @@ public class SecureTrustManagerFactory {
 		try {
 			try {
 				keyStore.load(in, password);
-				keystoreLoaded = true;
 			} finally {
 				in.close();
 			}
 		} catch (Exception e1) {
-			Log.w(TAG, "Can't load keystore", e1);
+			Log.w(TAG, "Can't load keystore from stream");
 		}
 
 	}
@@ -196,7 +193,7 @@ public class SecureTrustManagerFactory {
 		try {
 			loadKeystore(new File(file), null);
 		} catch (NullPointerException e) {
-			Log.w(TAG, "Can't load keystore", e);
+			Log.w(TAG, "Can't load keystore from file " + file);
 		}
 	}
 
@@ -209,7 +206,7 @@ public class SecureTrustManagerFactory {
 				out.close();
 			}
 		} catch (Exception e1) {
-			Log.w(TAG, "Can't store keystore", e1);
+			Log.w(TAG, "Can't store keystore to file " + file);
 		}
 
 	}

@@ -938,7 +938,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private void setVisiblePage(int i) {
 		if (DEBUG)
-			Log.d(TAG, "Set visible page to " + i, new Exception("DEBUG setVisiblePage()"));
+			Log.d(TAG, "Set visible page to " + i);
 		viewPager.setCurrentItem(i);
 	}
 
