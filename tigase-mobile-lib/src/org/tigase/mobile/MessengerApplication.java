@@ -118,7 +118,7 @@ public class MessengerApplication extends Application {
 			public void handleEvent(ConnectorEvent be) throws JaxmppException {
 
 				if (getState(be.getSessionObject()) == State.disconnected) {
-					multiJaxmpp.get(be.getSessionObject()).getPresence().clear(true);
+					multiJaxmpp.get(be.getSessionObject()).getPresence().clear();
 					for (RosterItem ri : multiJaxmpp.get(be.getSessionObject()).getRoster().getAll()) {
 						PresenceEvent pe = new PresenceEvent(PresenceModule.ContactUnavailable, be.getSessionObject());
 						pe.setJid(JID.jidInstance(ri.getJid()));
