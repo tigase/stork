@@ -327,6 +327,7 @@ public class RosterFragment extends Fragment {
 							uriStr = "geo:" + String.valueOf(lat) + "," + String.valueOf(lon) + "?z=14";
 						}
 						if (uriStr != null) {
+							uriStr += "(" + RosterDisplayTools.getDisplayName(r) + ")";
 							Log.v(TAG, "created geolocation uri = " + uriStr);
 							Uri uri = Uri.parse(uriStr);
 							MenuItem item = menu.add(R.string.geolocation_show);

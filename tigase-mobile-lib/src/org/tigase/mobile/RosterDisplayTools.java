@@ -18,6 +18,16 @@ import android.util.Log;
 
 public class RosterDisplayTools {
 
+	public static String getDisplayName(final RosterItem item) {
+		if (item == null)
+			return null;
+		else if (item.getName() != null && item.getName().length() != 0) {
+			return item.getName();
+		} else {
+			return item.getJid().toString();
+		}
+	}
+
 	public static CPresence getShowOf(final Presence p) throws XMLException {
 		CPresence r = CPresence.offline;
 		if (p != null) {
@@ -44,16 +54,6 @@ public class RosterDisplayTools {
 	public RosterDisplayTools(final Context context) {
 		super();
 		this.multi = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
-	}
-
-	public String getDisplayName(final RosterItem item) {
-		if (item == null)
-			return null;
-		else if (item.getName() != null && item.getName().length() != 0) {
-			return item.getName();
-		} else {
-			return item.getJid().toString();
-		}
 	}
 
 	public String getDisplayName(SessionObject sessionObject, final BareJID jid) {
