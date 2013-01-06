@@ -6,11 +6,15 @@ import java.util.Map;
 import org.tigase.mobile.Constants;
 import org.tigase.mobile.Features;
 import org.tigase.mobile.R;
+import org.tigase.mobile.TrustCertDialog;
 import org.tigase.mobile.db.AccountsTableMetaData;
 import org.tigase.mobile.preferences.AccountAdvancedPreferencesActivity;
+import org.tigase.mobile.security.SecureTrustManagerFactory;
+import org.tigase.mobile.security.SecureTrustManagerFactory.DataCertificateException;
 
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -61,7 +65,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public class UserCreateAccountTask extends AsyncTask<String, Void, String> {
 
+		private DataCertificateException certException;
+
 		private final Jaxmpp contact = new Jaxmpp();
+
 		private Map<String, String> data = new HashMap<String, String>();
 
 		private String errorMessage;
@@ -78,6 +85,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			final InBandRegistrationModule reg = contact.getModule(InBandRegistrationModule.class);
 			contact.getProperties().setUserProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
 			contact.getProperties().setUserProperty(SessionObject.SERVER_NAME, BareJID.bareJIDInstance(params[0]).getDomain());
+			contact.getProperties().setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers());
 
 			reg.addListener(new Listener<RegistrationEvent>() {
 
@@ -147,12 +155,27 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			try {
 				contact.login(true);
 
+				if (contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY) != null) {
+					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY);
+					if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+						certException = (DataCertificateException) e.getCause();
+						data.put("account", contact.getSessionObject().getUserBareJid().toString());
+					}
+					return null;
+				}
+
 				// here we process features available for account
 				processJaxmppForFeatures(contact, data);
 
 				return token;
 			} catch (JaxmppException e) {
-				Log.e(TAG, "Problem on password check", e);
+				if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+					certException = (DataCertificateException) e.getCause();
+					data.put("account", contact.getSessionObject().getUserBareJid().toString());
+				}
+				return null;
+			} catch (Exception e) {
+				Log.e(TAG, "Problem on password check2", e);
 				return null;
 			} finally {
 				try {
@@ -174,7 +197,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			if (errorMessage != null)
 				onCreationError(errorMessage);
 			else
-				onAuthenticationResult(authToken, data);
+				onAuthenticationResult(authToken, data, certException);
 		}
 
 		private void wakeup() {
@@ -186,6 +209,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	public class UserLoginTask extends AsyncTask<String, Void, String> {
 
+		private DataCertificateException certException;
+
+		final Jaxmpp contact = new Jaxmpp();
+
 		private Map<String, String> data = new HashMap<String, String>();
 
 		/**
@@ -194,18 +221,34 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		 */
 		@Override
 		protected String doInBackground(String... params) {
-			final Jaxmpp contact = new Jaxmpp();
 			contact.getProperties().setUserProperty(SessionObject.USER_BARE_JID, BareJID.bareJIDInstance(params[0]));
 			contact.getProperties().setUserProperty(SessionObject.PASSWORD, params[1]);
+			contact.getProperties().setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers());
+
 			try {
 				contact.login(true);
+
+				if (contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY) != null) {
+					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY);
+					if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+						certException = (DataCertificateException) e.getCause();
+						data.put("account", contact.getSessionObject().getUserBareJid().toString());
+					}
+					return null;
+				}
 
 				// here we process features available for account
 				processJaxmppForFeatures(contact, data);
 
 				return params[1];
 			} catch (JaxmppException e) {
-				Log.e(TAG, "Problem on password check", e);
+				if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+					certException = (DataCertificateException) e.getCause();
+					data.put("account", contact.getSessionObject().getUserBareJid().toString());
+				}
+				return null;
+			} catch (Exception e) {
+				Log.e(TAG, "Problem on password check2", e);
 				return null;
 			} finally {
 				try {
@@ -223,11 +266,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		@Override
 		protected void onPostExecute(final String authToken) {
-			onAuthenticationResult(authToken, data);
+			onAuthenticationResult(authToken, data, certException);
 		}
 	}
 
 	public static final String ACCOUNT_MODIFIED_MSG = "org.tigase.mobile.ACCOUNT_MODIFIED_MSG";
+
+	private static final int CERTIFICATE_TRUST_DIALOG = 4;
 
 	private static final int CREATION_ERROR_DIALOG = 3;
 
@@ -473,7 +518,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		hideProgress();
 	}
 
-	protected void onAuthenticationResult(String authToken, Map<String, String> data) {
+	protected void onAuthenticationResult(String authToken, Map<String, String> data, DataCertificateException certException) {
 		boolean success = ((authToken != null) && (authToken.length() > 0));
 		Log.i(TAG, "onAuthenticationResult(" + success + ")");
 
@@ -483,7 +528,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		// Hide the progress dialog
 		hideProgress();
 
-		if (success) {
+		if (certException != null) {
+			Bundle args = new Bundle();
+
+			args.putString("account", data.get("account"));
+			args.putSerializable("cause", certException);
+
+			showDialog(CERTIFICATE_TRUST_DIALOG, args);
+		} else if (success) {
 			if (!mConfirmCredentials) {
 				finishLogin(authToken, data);
 			} else {
@@ -553,6 +605,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle args) {
 		switch (id) {
+		case CERTIFICATE_TRUST_DIALOG: {
+			final String account = args.getString("account");
+			final DataCertificateException cause = (DataCertificateException) args.getSerializable("cause");
+
+			return TrustCertDialog.createDIalogInstance(this, account, cause, getResources(), null);
+		}
 		case CREATION_ERROR_DIALOG: {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			String msg = args.getString("msg");

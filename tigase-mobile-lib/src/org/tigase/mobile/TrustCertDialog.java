@@ -17,7 +17,9 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
@@ -28,14 +30,60 @@ public class TrustCertDialog extends DialogFragment {
 
 	protected static final String TAG = "TrustCertDialog";
 
-	public static char[] encodeHex(byte[] data) {
-		int l = data.length;
-		char[] out = new char[l << 1];
-		for (int i = 0, j = 0; i < l; i++) {
-			out[j++] = DIGITS[(0xF0 & data[i]) >>> 4];
-			out[j++] = DIGITS[0x0F & data[i]];
+	public static Dialog createDIalogInstance(final Context context, final String account,
+			final DataCertificateException cause, final Resources res, final Runnable actionAfterOK) {
+		final X509Certificate[] chain = cause.getChain();
+
+		final StringBuilder chainInfo = new StringBuilder();
+		MessageDigest sha1 = null;
+
+		try {
+			sha1 = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
 		}
-		return out;
+
+		for (int i = 0; i < chain.length; i++) {
+			chainInfo.append(res.getString(R.string.trustcert_certchain, i)).append("\n");
+			chainInfo.append(
+					res.getString(R.string.trustcert_subject,
+							chain[i].getSubjectX500Principal().getName(X500Principal.CANONICAL).toString())).append("\n");
+			chainInfo.append(
+					res.getString(R.string.trustcert_issuer,
+							chain[i].getIssuerX500Principal().getName(X500Principal.CANONICAL).toString())).append("\n");
+
+			if (sha1 != null) {
+				sha1.reset();
+				try {
+					char[] sha1sum = encodeHex(sha1.digest(chain[i].getEncoded()));
+					chainInfo.append(res.getString(R.string.trustcert_fingerprint, new String(sha1sum))).append("\n");
+				} catch (CertificateEncodingException e) {
+				}
+			}
+		}
+
+		Builder builder = new AlertDialog.Builder(context);
+		builder.setIcon(android.R.drawable.ic_dialog_alert);
+		builder.setTitle(R.string.trustcert_dialog_title);
+
+		builder.setMessage(res.getString(R.string.trustcert_question, chainInfo));
+
+		builder.setCancelable(true);
+		builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int whichButton) {
+				SecureTrustManagerFactory.add(chain);
+				if (actionAfterOK != null)
+					actionAfterOK.run();
+			}
+		});
+		builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int whichButton) {
+				dialog.dismiss();
+			}
+		});
+
+		return builder.create();
 	}
 
 	/*
@@ -63,6 +111,16 @@ public class TrustCertDialog extends DialogFragment {
 	 * onClick(DialogInterface dialog, int which) { finish(); } }) .show();
 	 */
 
+	public static char[] encodeHex(byte[] data) {
+		int l = data.length;
+		char[] out = new char[l << 1];
+		for (int i = 0, j = 0; i < l; i++) {
+			out[j++] = DIGITS[(0xF0 & data[i]) >>> 4];
+			out[j++] = DIGITS[0x0F & data[i]];
+		}
+		return out;
+	}
+
 	public static TrustCertDialog newInstance(String account, DataCertificateException cause) {
 		TrustCertDialog frag = new TrustCertDialog();
 		Bundle args = new Bundle();
@@ -76,57 +134,14 @@ public class TrustCertDialog extends DialogFragment {
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		final String account = getArguments().getString("account");
 		final DataCertificateException cause = (DataCertificateException) getArguments().getSerializable("cause");
-		final X509Certificate[] chain = cause.getChain();
 
-		final StringBuilder chainInfo = new StringBuilder();
-		MessageDigest sha1 = null;
+		return createDIalogInstance(getActivity(), account, cause, getResources(), new Runnable() {
 
-		try {
-			sha1 = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-		}
-
-		for (int i = 0; i < chain.length; i++) {
-			chainInfo.append(getResources().getString(R.string.trustcert_certchain, i)).append("\n");
-			chainInfo.append(
-					getResources().getString(R.string.trustcert_subject,
-							chain[i].getSubjectX500Principal().getName(X500Principal.CANONICAL).toString())).append("\n");
-			chainInfo.append(
-					getResources().getString(R.string.trustcert_issuer,
-							chain[i].getIssuerX500Principal().getName(X500Principal.CANONICAL).toString())).append("\n");
-
-			if (sha1 != null) {
-				sha1.reset();
-				try {
-					char[] sha1sum = encodeHex(sha1.digest(chain[i].getEncoded()));
-					chainInfo.append(getResources().getString(R.string.trustcert_fingerprint, new String(sha1sum))).append("\n");
-				} catch (CertificateEncodingException e) {
-				}
-			}
-		}
-
-		Builder builder = new AlertDialog.Builder(getActivity());
-		builder.setIcon(android.R.drawable.ic_dialog_alert);
-		builder.setTitle(R.string.trustcert_dialog_title);
-
-		builder.setMessage(getResources().getString(R.string.trustcert_question, chainInfo));
-
-		builder.setCancelable(true);
-		builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				SecureTrustManagerFactory.add(chain);
+			public void run() {
 				reconnectAccount(account);
 			}
 		});
-		builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				dialog.dismiss();
-			}
-		});
-
-		return builder.create();
 	}
 
 	private void reconnectAccount(final String account) {
