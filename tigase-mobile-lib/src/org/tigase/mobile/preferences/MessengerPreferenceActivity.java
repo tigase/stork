@@ -8,16 +8,20 @@ import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.util.Log;
 
-public class MessengerPreferenceActivity extends PreferenceActivity {
+public class MessengerPreferenceActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
 	private static final boolean DEBUG = false;
 
@@ -26,6 +30,23 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 	private static final int PICK_ACCOUNT = 1;
 
 	private static final String TAG = "tigase";
+
+	private void initSummary(Preference p) {
+		if (p instanceof PreferenceScreen) {
+			PreferenceScreen pCat = (PreferenceScreen) p;
+			for (int i = 0; i < pCat.getPreferenceCount(); i++) {
+				initSummary(pCat.getPreference(i));
+			}
+		} else if (p instanceof PreferenceCategory) {
+			PreferenceCategory pCat = (PreferenceCategory) p;
+			for (int i = 0; i < pCat.getPreferenceCount(); i++) {
+				initSummary(pCat.getPreference(i));
+			}
+		} else {
+			updateSummary(p.getKey());
+		}
+
+	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -70,11 +91,7 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 
 			});
 		}
-
-		// EditTextPreference awayPriority = (EditTextPreference)
-		// findPreference("away_priority");
-		// awayPriority.getEditText().setKeyListener(DigitsKeyListener.getInstance(false,
-		// true));
+		initSummary(getPreferenceScreen());
 	}
 
 	@Override
@@ -96,6 +113,43 @@ public class MessengerPreferenceActivity extends PreferenceActivity {
 		super.onNewIntent(intent);
 		if (intent.getBooleanExtra("missingLogin", false)) {
 			showDialog(MISSING_SETTING);
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		updateSummary(key);
+	}
+
+	private void updateSummary(String key) {
+		Preference p = findPreference(key);
+		if (p instanceof EditTextPreference) {
+			final EditTextPreference pref = (EditTextPreference) p;
+			if ("reconnect_time".equals(key)) {
+				pref.setSummary(getResources().getString(R.string.pref_reconnect_time_summary, pref.getText()));
+				this.onContentChanged();
+			} else if ("default_priority".equals(key)) {
+				pref.setSummary(getResources().getString(R.string.pref_default_priority_summary, pref.getText()));
+				this.onContentChanged();
+			} else if ("away_priority".equals(key)) {
+				pref.setSummary(getResources().getString(R.string.pref_auto_away_priority_summary, pref.getText()));
+				this.onContentChanged();
+			} else if ("keepalive_time".equals(key)) {
+				pref.setSummary(getResources().getString(R.string.pref_keepalive_time_summary, pref.getText()));
+				this.onContentChanged();
+			}
 		}
 	}
 }
