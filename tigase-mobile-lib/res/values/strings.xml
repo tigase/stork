@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">v1.3.3-39-gaf2caea</string>
+    <string name="app_version">v1.3.3-41-g8f4328a</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="TrackingID">UA-30622348-1</string>
     <string name="pingServer">Ping</string>
@@ -52,7 +52,10 @@
     <string name="pref_reconnect_time_dialog">Enter reconnect delay</string>
     <string name="pref_login_ui_section_title">User Interface</string>
     <string name="pref_login_ui_notification_title">Application icon</string>
-
+    <string name="pref_login_notifications_section_title">Notifications</string>
+    <string name="pref_notification_sound_muc_title">MUC mention sound</string>
+    <string name="pref_notification_sound_title">Chat message sound</string>
+    
     <!-- Accounts Create/Edit -->
     <string name="account_add_welcome">Join Tigase</string>
     <string name="account_add_login">I have an account</string>

@@ -1,5 +1,6 @@
 package org.tigase.mobile.ui;
 
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.filetransfer.FileTransfer;
@@ -12,12 +13,14 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.Notification.Builder;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 @TargetApi(11)
@@ -49,7 +52,7 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			MessageEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
 		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
-		builder.setDefaults(Notification.DEFAULT_SOUND);
+		updateSound(builder, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
 		Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 		if (avatar != AvatarHelper.mPlaceHolderBitmap) {
@@ -77,7 +80,7 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			MucEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
 		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
-		builder.setDefaults(Notification.DEFAULT_SOUND);
+		updateSound(builder, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 
 		return builder;
@@ -122,7 +125,8 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
 
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
-		builder.setDefaults(Notification.DEFAULT_SOUND).setOngoing(true);
+		updateSound(builder, Preferences.NOTIFICATION_SOUND_FILE_KEY);
+		builder.setOngoing(true);
 		builder.setSmallIcon(ico).setContentTitle(title);
 		builder.setAutoCancel(true).setLights(Color.GREEN, 500, 500);
 
@@ -130,6 +134,15 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 		builder.setContentIntent(pendingIntent).setContentText(text);
 
 		return builder;
+	}
+
+	protected void updateSound(Builder builder, String soundeKey) {
+		final String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundeKey, null);
+		if (notificationSound == null) {
+			builder.setDefaults(Notification.DEFAULT_SOUND);
+		} else {
+			builder.setSound(Uri.parse(notificationSound));
+		}
 	}
 
 }

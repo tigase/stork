@@ -1,5 +1,6 @@
 package org.tigase.mobile.ui;
 
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransfer;
 import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
@@ -26,7 +27,7 @@ public class NotificationHelperBase extends NotificationHelper {
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -45,7 +46,8 @@ public class NotificationHelperBase extends NotificationHelper {
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -111,7 +113,9 @@ public class NotificationHelperBase extends NotificationHelper {
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_FILE_KEY);
+
 		notification.ledARGB = Color.GREEN;
 		notification.ledOffMS = 500;
 		notification.ledOnMS = 500;

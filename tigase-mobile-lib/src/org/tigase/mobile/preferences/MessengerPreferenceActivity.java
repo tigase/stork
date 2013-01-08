@@ -63,6 +63,8 @@ public class MessengerPreferenceActivity extends PreferenceActivity implements O
 			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			startActivity(intent);
 		}
+		super.onActivityResult(requestCode, resultCode, data);
+
 	}
 
 	@Override
@@ -152,4 +154,5 @@ public class MessengerPreferenceActivity extends PreferenceActivity implements O
 			}
 		}
 	}
+
 }

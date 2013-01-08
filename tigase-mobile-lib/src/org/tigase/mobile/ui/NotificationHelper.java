@@ -2,6 +2,7 @@ package org.tigase.mobile.ui;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
+import org.tigase.mobile.Preferences;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
@@ -31,6 +32,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.preference.PreferenceManager;
 
 public abstract class NotificationHelper {
 
@@ -186,7 +188,8 @@ public abstract class NotificationHelper {
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_ERROR_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -350,7 +353,8 @@ public abstract class NotificationHelper {
 		Notification notification = new Notification(R.drawable.ic_stat_warning, notiticationTitle, System.currentTimeMillis());
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_SUBSCRIBE_REQ_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -391,7 +395,8 @@ public abstract class NotificationHelper {
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_MUC_ERROR_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -417,7 +422,8 @@ public abstract class NotificationHelper {
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
-		notification.defaults |= Notification.DEFAULT_SOUND;
+
+		updateSound(notification, Preferences.NOTIFICATION_SOUND_WARNING_KEY);
 
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		notification.ledARGB = Color.GREEN;
@@ -432,6 +438,15 @@ public abstract class NotificationHelper {
 		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
 
 		notificationManager.notify("error:" + id, ERROR_NOTIFICATION_ID, notification);
+	}
+
+	protected void updateSound(Notification notification, String soundKey) {
+		final String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey, null);
+		if (notificationSound == null) {
+			notification.defaults |= Notification.DEFAULT_SOUND;
+		} else {
+			notification.sound = Uri.parse(notificationSound);
+		}
 
 	}
 

@@ -43,12 +43,35 @@
             android:entryValues="@array/roster_sorting_options_values"
             android:key="roster_sorting"
             android:title="Roster sorting" />
-        
+
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="enter_to_send"
             android:summary="@string/pref_entertosend_summary"
             android:title="@string/pref_entertosend_title" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:key="gui_notifications"
+        android:title="@string/pref_login_notifications_section_title" >
+        
+        <RingtonePreference
+            android:key="notification_sound_chat"
+            android:ringtoneType="notification"
+            android:showDefault="true"
+            android:showSilent="true"
+            android:title="@string/pref_notification_sound_title" >
+        </RingtonePreference>
+        
+        <RingtonePreference
+            android:key="notification_sound_muc"
+            android:ringtoneType="notification"
+            android:showDefault="true"
+            android:showSilent="true"
+            android:title="@string/pref_notification_sound_muc_title" >
+        </RingtonePreference>
+        
+        
     </PreferenceCategory>
 
     <PreferenceScreen
