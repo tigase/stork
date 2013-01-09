@@ -12,7 +12,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.graphics.Color;
 
 public class NotificationHelperBase extends NotificationHelper {
 
@@ -28,11 +27,8 @@ public class NotificationHelperBase extends NotificationHelper {
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
@@ -48,11 +44,8 @@ public class NotificationHelperBase extends NotificationHelper {
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
@@ -115,10 +108,8 @@ public class NotificationHelperBase extends NotificationHelper {
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_FILE_KEY);
-
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
 		notification.setLatestEventInfo(context, title, text, pendingIntent);

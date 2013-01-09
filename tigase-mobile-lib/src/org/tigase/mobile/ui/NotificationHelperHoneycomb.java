@@ -51,8 +51,10 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
 			MessageEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
-		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
+		builder.setContentTitle(title).setContentText(text);
 		updateSound(builder, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
+		updateLight(builder, null);
+		updateVibrate(builder, null);
 		Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 		if (avatar != AvatarHelper.mPlaceHolderBitmap) {
@@ -79,8 +81,10 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	protected Notification.Builder prepareChatNotificationInt(int ico, String title, String text, PendingIntent pendingIntent,
 			MucEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
-		builder.setContentTitle(title).setContentText(text).setLights(Color.GREEN, 500, 500);
+		builder.setContentTitle(title).setContentText(text);
 		updateSound(builder, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
+		updateLight(builder, null);
+		updateVibrate(builder, null);
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 
 		return builder;
@@ -126,9 +130,11 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
 		updateSound(builder, Preferences.NOTIFICATION_SOUND_FILE_KEY);
+		updateLight(builder, null);
+		updateVibrate(builder, null);
 		builder.setOngoing(true);
 		builder.setSmallIcon(ico).setContentTitle(title);
-		builder.setAutoCancel(true).setLights(Color.GREEN, 500, 500);
+		builder.setAutoCancel(true);
 
 		PendingIntent pendingIntent = this.createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
 		builder.setContentIntent(pendingIntent).setContentText(text);
@@ -136,13 +142,22 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 		return builder;
 	}
 
-	protected void updateSound(Builder builder, String soundeKey) {
-		final String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundeKey, null);
-		if (notificationSound == null) {
-			builder.setDefaults(Notification.DEFAULT_SOUND);
-		} else {
-			builder.setSound(Uri.parse(notificationSound));
-		}
+	protected void updateLight(Builder builder, String lightKey) {
+		builder.setLights(Color.GREEN, 500, 500);
 	}
 
+	protected void updateSound(Builder builder, String soundKey) {
+		String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey,
+				DEFAULT_NOTIFICATION_URI);
+		if (DEFAULT_NOTIFICATION_URI.equals(notificationSound)) {
+			notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(
+					Preferences.NOTIFICATION_SOUND_KEY, DEFAULT_NOTIFICATION_URI);
+		}
+
+		builder.setSound(Uri.parse(notificationSound));
+	}
+
+	protected void updateVibrate(Builder builder, String vibrateKey) {
+		builder.setDefaults(Notification.DEFAULT_VIBRATE);
+	}
 }

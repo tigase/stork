@@ -22,6 +22,8 @@ public final class Preferences {
 
 	public static final String NOTIFICATION_SOUND_FILE_KEY = "notification_sound_file";
 
+	public static final String NOTIFICATION_SOUND_KEY = "notification_sound";
+
 	public static final String NOTIFICATION_SOUND_MUC_ERROR_KEY = "notification_sound_mucerror";
 
 	public static final String NOTIFICATION_SOUND_MUC_MENTIONED_KEY = "notification_sound_muc";

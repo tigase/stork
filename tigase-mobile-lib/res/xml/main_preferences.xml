@@ -54,24 +54,43 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:key="gui_notifications"
         android:title="@string/pref_login_notifications_section_title" >
-        
         <RingtonePreference
-            android:key="notification_sound_chat"
+            android:defaultValue="content://settings/system/notification_sound"
+            android:key="notification_sound"
             android:ringtoneType="notification"
             android:showDefault="true"
             android:showSilent="true"
             android:title="@string/pref_notification_sound_title" >
         </RingtonePreference>
-        
-        <RingtonePreference
-            android:key="notification_sound_muc"
-            android:ringtoneType="notification"
-            android:showDefault="true"
-            android:showSilent="true"
-            android:title="@string/pref_notification_sound_muc_title" >
-        </RingtonePreference>
-        
-        
+
+        <ListPreference
+            android:defaultValue="default"
+            android:entries="@array/pref_notification_vibrate_values_entries"
+            android:entryValues="@array/pref_notification_vibrate_values"
+            android:key="notification_vibrate"
+            android:title="@string/pref_notification_vibrate_title" />
+
+        <PreferenceScreen
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:key="notification_advanced"
+            android:title="@string/pref_notification_advanced_section_title" >
+            <RingtonePreference
+                android:defaultValue="content://settings/system/notification_sound"
+                android:key="notification_sound_chat"
+                android:ringtoneType="notification"
+                android:showDefault="true"
+                android:showSilent="true"
+                android:title="@string/pref_notification_sound_chat_title" >
+            </RingtonePreference>
+            <RingtonePreference
+                android:defaultValue="content://settings/system/notification_sound"
+                android:key="notification_sound_muc"
+                android:ringtoneType="notification"
+                android:showDefault="true"
+                android:showSilent="true"
+                android:title="@string/pref_notification_sound_muc_title" >
+            </RingtonePreference>
+        </PreferenceScreen>
     </PreferenceCategory>
 
     <PreferenceScreen

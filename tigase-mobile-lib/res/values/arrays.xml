@@ -52,11 +52,22 @@
         <item>9 min</item>
         <item>12 min</item>
         <item>15 min</item>
-	</string-array>        
-	<string-array name="geolocation_precision">
-	    <item>Country</item>
-	    <item>City</item>
-	    <item>Street</item>
-	    <item>Latitude/Longitude</item>
-	</string-array>
+    </string-array>
+    <string-array name="geolocation_precision">
+        <item>Country</item>
+        <item>City</item>
+        <item>Street</item>
+        <item>Latitude/Longitude</item>
+    </string-array>
+    <string-array name="pref_notification_vibrate_values_entries">
+        <item>Default</item>
+        <item>Yes</item>
+        <item>No</item>
+    </string-array>
+    <string-array name="pref_notification_vibrate_values">
+        <item>default</item>
+        <item>yes</item>
+        <item>no</item>
+    </string-array>
+
 </resources>

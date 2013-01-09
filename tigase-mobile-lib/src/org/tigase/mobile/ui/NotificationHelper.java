@@ -40,6 +40,8 @@ public abstract class NotificationHelper {
 
 	public static final int CHAT_NOTIFICATION_ID = 132008;
 
+	public static final String DEFAULT_NOTIFICATION_URI = "content://settings/system/notification_sound";
+
 	public static final int ERROR_NOTIFICATION_ID = 5398717;
 
 	public static final int FILE_TRANSFER_NOTIFICATION_ID = 132009;
@@ -190,11 +192,8 @@ public abstract class NotificationHelper {
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_ERROR_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		final Context context = this.context.getApplicationContext();
 
@@ -355,11 +354,8 @@ public abstract class NotificationHelper {
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_SUBSCRIBE_REQ_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		final Context context = this.context.getApplicationContext();
 
@@ -397,11 +393,8 @@ public abstract class NotificationHelper {
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_MUC_ERROR_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		final Context context = this.context.getApplicationContext();
 
@@ -424,11 +417,8 @@ public abstract class NotificationHelper {
 		// notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 
 		updateSound(notification, Preferences.NOTIFICATION_SOUND_WARNING_KEY);
-
-		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-		notification.ledARGB = Color.GREEN;
-		notification.ledOffMS = 500;
-		notification.ledOnMS = 500;
+		updateLight(notification, null);
+		updateVibrate(notification, null);
 
 		final Context context = this.context.getApplicationContext();
 
@@ -440,14 +430,29 @@ public abstract class NotificationHelper {
 		notificationManager.notify("error:" + id, ERROR_NOTIFICATION_ID, notification);
 	}
 
+	protected void updateLight(Notification notification, String lightKey) {
+		// notification.defaults |= Notification.DEFAULT_LIGHTS;
+
+		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+		notification.ledARGB = Color.GREEN;
+		notification.ledOffMS = 500;
+		notification.ledOnMS = 500;
+	}
+
 	protected void updateSound(Notification notification, String soundKey) {
-		final String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey, null);
-		if (notificationSound == null) {
-			notification.defaults |= Notification.DEFAULT_SOUND;
-		} else {
-			notification.sound = Uri.parse(notificationSound);
+		String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey,
+				DEFAULT_NOTIFICATION_URI);
+
+		if (DEFAULT_NOTIFICATION_URI.equals(notificationSound)) {
+			notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(
+					Preferences.NOTIFICATION_SOUND_KEY, DEFAULT_NOTIFICATION_URI);
 		}
 
+		notification.sound = Uri.parse(notificationSound);
+	}
+
+	protected void updateVibrate(Notification notification, String vibrateKey) {
+		notification.defaults |= Notification.DEFAULT_VIBRATE;
 	}
 
 }
