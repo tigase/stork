@@ -468,7 +468,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	}
 
 	private void hideProgress() {
-		mProgressDialog.dismiss();
+		if (mProgressDialog != null)
+			mProgressDialog.dismiss();
 	}
 
 	@Override
