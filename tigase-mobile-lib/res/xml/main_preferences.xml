@@ -76,7 +76,7 @@
             android:title="@string/pref_notification_advanced_section_title" >
             <RingtonePreference
                 android:defaultValue="content://settings/system/notification_sound"
-                android:key="notification_sound_chat"
+                android:key="notification_chat_sound"
                 android:ringtoneType="notification"
                 android:showDefault="true"
                 android:showSilent="true"
@@ -84,7 +84,7 @@
             </RingtonePreference>
             <RingtonePreference
                 android:defaultValue="content://settings/system/notification_sound"
-                android:key="notification_sound_muc"
+                android:key="notification_muc_sound"
                 android:ringtoneType="notification"
                 android:showDefault="true"
                 android:showSilent="true"

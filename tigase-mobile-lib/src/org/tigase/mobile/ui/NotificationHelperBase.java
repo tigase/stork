@@ -26,9 +26,9 @@ public class NotificationHelperBase extends NotificationHelper {
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		updateSound(notification, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
-		updateLight(notification, null);
-		updateVibrate(notification, null);
+		updateSound(notification, Preferences.NOTIFICATION_CHAT_KEY);
+		updateLight(notification, Preferences.NOTIFICATION_CHAT_KEY);
+		updateVibrate(notification, Preferences.NOTIFICATION_CHAT_KEY);
 
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
@@ -43,9 +43,9 @@ public class NotificationHelperBase extends NotificationHelper {
 		notification.flags = Notification.FLAG_AUTO_CANCEL;
 		// notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
-		updateSound(notification, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
-		updateLight(notification, null);
-		updateVibrate(notification, null);
+		updateSound(notification, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
+		updateLight(notification, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
+		updateVibrate(notification, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
 
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
@@ -107,9 +107,9 @@ public class NotificationHelperBase extends NotificationHelper {
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 
-		updateSound(notification, Preferences.NOTIFICATION_SOUND_FILE_KEY);
-		updateLight(notification, null);
-		updateVibrate(notification, null);
+		updateSound(notification, Preferences.NOTIFICATION_FILE_KEY);
+		updateLight(notification, Preferences.NOTIFICATION_FILE_KEY);
+		updateVibrate(notification, Preferences.NOTIFICATION_FILE_KEY);
 
 		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
 		notification.setLatestEventInfo(context, title, text, pendingIntent);

@@ -52,9 +52,9 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			MessageEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
 		builder.setContentTitle(title).setContentText(text);
-		updateSound(builder, Preferences.NOTIFICATION_SOUND_CHAT_KEY);
-		updateLight(builder, null);
-		updateVibrate(builder, null);
+		updateSound(builder, Preferences.NOTIFICATION_CHAT_KEY);
+		updateLight(builder, Preferences.NOTIFICATION_CHAT_KEY);
+		updateVibrate(builder, Preferences.NOTIFICATION_CHAT_KEY);
 		Bitmap avatar = AvatarHelper.getAvatar(event.getChat().getJid().getBareJid());
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 		if (avatar != AvatarHelper.mPlaceHolderBitmap) {
@@ -82,9 +82,9 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			MucEvent event) throws XMLException {
 		Notification.Builder builder = new Notification.Builder(context);
 		builder.setContentTitle(title).setContentText(text);
-		updateSound(builder, Preferences.NOTIFICATION_SOUND_MUC_MENTIONED_KEY);
-		updateLight(builder, null);
-		updateVibrate(builder, null);
+		updateSound(builder, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
+		updateLight(builder, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
+		updateVibrate(builder, Preferences.NOTIFICATION_MUC_MENTIONED_KEY);
 		builder.setSmallIcon(ico).setContentIntent(pendingIntent).setAutoCancel(true);
 
 		return builder;
@@ -129,9 +129,9 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
 
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
-		updateSound(builder, Preferences.NOTIFICATION_SOUND_FILE_KEY);
-		updateLight(builder, null);
-		updateVibrate(builder, null);
+		updateSound(builder, Preferences.NOTIFICATION_FILE_KEY);
+		updateLight(builder, Preferences.NOTIFICATION_FILE_KEY);
+		updateVibrate(builder, Preferences.NOTIFICATION_FILE_KEY);
 		builder.setOngoing(true);
 		builder.setSmallIcon(ico).setContentTitle(title);
 		builder.setAutoCancel(true);
@@ -143,11 +143,11 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	}
 
 	protected void updateLight(Builder builder, String lightKey) {
-		builder.setLights(Color.GREEN, 500, 500);
+		builder.setLights(Color.BLUE, 500, 500);
 	}
 
 	protected void updateSound(Builder builder, String soundKey) {
-		String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey,
+		String notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(soundKey + "_sound",
 				DEFAULT_NOTIFICATION_URI);
 		if (DEFAULT_NOTIFICATION_URI.equals(notificationSound)) {
 			notificationSound = PreferenceManager.getDefaultSharedPreferences(context).getString(
@@ -158,6 +158,20 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	}
 
 	protected void updateVibrate(Builder builder, String vibrateKey) {
-		builder.setDefaults(Notification.DEFAULT_VIBRATE);
+		String vibrate = PreferenceManager.getDefaultSharedPreferences(context).getString(vibrateKey + "_vibrate", "default");
+
+		if ("default".equals(vibrate)) {
+			vibrate = PreferenceManager.getDefaultSharedPreferences(context).getString(Preferences.NOTIFICATION_VIBRATE_KEY,
+					"default");
+		}
+
+		if ("default".equals(vibrate)) {
+			builder.setDefaults(Notification.DEFAULT_VIBRATE);
+		} else if ("yes".equals(vibrate)) {
+			builder.setVibrate(new long[] { 0l, 300l, 200l, 300l, 200l });
+		} else {
+			builder.setVibrate(new long[] {});
+		}
+
 	}
 }

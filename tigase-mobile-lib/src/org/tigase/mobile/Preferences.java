@@ -16,23 +16,27 @@ public final class Preferences {
 
 	public static final String LAST_STARTED_VERSION = "last_started_version";
 
-	public static final String NOTIFICATION_SOUND_CHAT_KEY = "notification_sound_chat";
+	public static final String NOTIFICATION_CHAT_KEY = "notification_chat";
 
-	public static final String NOTIFICATION_SOUND_ERROR_KEY = "notification_sound_error";
+	public static final String NOTIFICATION_ERROR_KEY = "notification_error";
 
-	public static final String NOTIFICATION_SOUND_FILE_KEY = "notification_sound_file";
+	public static final String NOTIFICATION_FILE_KEY = "notification_file";
+
+	public static final String NOTIFICATION_LIGHT_KEY = "notification_light";
+
+	public static final String NOTIFICATION_MUC_ERROR_KEY = "notification_mucerror";
+
+	public static final String NOTIFICATION_MUC_MENTIONED_KEY = "notification_muc";
 
 	public static final String NOTIFICATION_SOUND_KEY = "notification_sound";
 
-	public static final String NOTIFICATION_SOUND_MUC_ERROR_KEY = "notification_sound_mucerror";
-
-	public static final String NOTIFICATION_SOUND_MUC_MENTIONED_KEY = "notification_sound_muc";
-
-	public static final String NOTIFICATION_SOUND_SUBSCRIBE_REQ_KEY = "notification_sound_subcribe";
-
-	public static final String NOTIFICATION_SOUND_WARNING_KEY = "notification_sound_warning";
+	public static final String NOTIFICATION_SUBSCRIBE_REQ_KEY = "notification_subcribe";
 
 	public static final String NOTIFICATION_TYPE_KEY = "notification_type";
+
+	public static final String NOTIFICATION_VIBRATE_KEY = "notification_vibrate";
+
+	public static final String NOTIFICATION_WARNING_KEY = "notification_warning";
 
 	public static final String RECONNECT_TIME_KEY = "reconnect_time";
 
