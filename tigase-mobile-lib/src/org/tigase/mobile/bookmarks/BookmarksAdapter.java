@@ -55,7 +55,7 @@ public class BookmarksAdapter extends BaseExpandableListAdapter {
 		BareJID group = groups.get(groupPosition);
 		List<Bookmark> list = store.get(group);
 		;
-		if (list == null)
+		if (list == null || list.size() <= childPosition)
 			return null;
 		return list.get(childPosition);
 	}
@@ -107,9 +107,15 @@ public class BookmarksAdapter extends BaseExpandableListAdapter {
 		TextView descriptionView = (TextView) v.findViewById(R.id.bookmark_description);
 
 		Bookmark bookmark = (Bookmark) getChild(groupPosition, childPosition);
-		titleView.setText(bookmark.name);
-		descriptionView.setText("Join " + (bookmark.nick != null ? "as " + bookmark.nick : "") + " to "
+		if (bookmark != null) {
+			titleView.setText(bookmark.name);
+			descriptionView.setText("Join " + (bookmark.nick != null ? "as " + bookmark.nick : "") + " to "
 				+ bookmark.jid.toString());
+		}
+		else {
+			titleView.setText(null);
+			descriptionView.setText(null);
+		}
 
 		return v;
 	}

@@ -486,6 +486,9 @@ public class BookmarksActivity extends FragmentActivity {
 		BareJID account = BareJID.bareJIDInstance(data.getString("account"));
 
 		List<Bookmark> bookmarks = adapter.getChildrenForGroup(account);
+		if (bookmarks == null) {
+			bookmarks = new ArrayList<Bookmark>(1);
+		}
 		Bookmark bookmark = null;
 		for (Bookmark item : bookmarks) {
 			if (id != null && id.equals(item.id)) {
