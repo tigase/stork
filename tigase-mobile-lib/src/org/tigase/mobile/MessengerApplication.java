@@ -25,7 +25,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.j2se.connectors.socket.SocketConnector.DnsResolver;
 import android.app.Application;
 import android.content.ContentUris;
 import android.content.Context;
@@ -76,13 +75,6 @@ public class MessengerApplication extends Application {
 			@Override
 			public RosterCacheProvider create() {
 				return new DBRosterCacheProvider(context);
-			}
-		});
-		UniversalFactory.setSpi(DnsResolver.class.getName(), new FactorySpi<DnsResolver>() {
-
-			@Override
-			public DnsResolver create() {
-				return new DNSResolver();
 			}
 		});
 
