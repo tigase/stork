@@ -4,9 +4,9 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-android"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/tigase-xmltools"/>
+	<classpathentry exported="true" kind="lib" path="libs/jaxmpp-android-2.1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jaxmpp-core-2.1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jaxmpp-j2se-2.1.0-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/tigase-xmltools-3.4.3-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
