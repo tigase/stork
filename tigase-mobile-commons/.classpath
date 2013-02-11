@@ -8,5 +8,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/jaxmpp-core-2.1.0-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jaxmpp-j2se-2.1.0-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/tigase-xmltools-3.4.3-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/dnsjava-2.1.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
