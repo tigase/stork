@@ -144,7 +144,7 @@ public class GeolocationFeature {
 		if (enabled == null || !enabled.booleanValue())
 			return;
 
-		int precision = jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_PRECISION);
+		int precision = (Integer) jaxmpp.getSessionObject().getProperty(GEOLOCATION_PUBLISH_PRECISION);
 
 		final IQ iq = IQ.create();
 		iq.setType(StanzaType.set);

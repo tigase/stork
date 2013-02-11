@@ -182,7 +182,7 @@ public abstract class XmppService extends Service {
 		if (bundle != null) {
 			bundle.setClassLoader(getClassLoader());
 			String[] features = bundle.getStringArray(FEATURES_KEY);
-			Criteria criteria = bundle.getParcelable(CRITERIA_KEY);
+			Criteria criteria = (Criteria) bundle.getParcelable(CRITERIA_KEY);
 			ExtXmppModule module = new ExtXmppModule(messenger, features, criteria);
 			clients.put(messenger, module);
 			registerModule(module);
@@ -202,7 +202,7 @@ public abstract class XmppService extends Service {
 
 			String accountStr = bundle.getString(ACCOUNT_JID_KEY);
 			BareJID account = BareJID.bareJIDInstance(accountStr);
-			Element element = bundle.getParcelable(STANZA_KEY);
+			Element element = (Element) bundle.getParcelable(STANZA_KEY);
 			Boolean requestCallback = bundle.getBoolean(REQUEST_CALLBACK_KEY);
 			if (requestCallback == true) {
 				module = clients.get(msg.replyTo);
