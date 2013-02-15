@@ -80,17 +80,19 @@
                 <phase>package</phase>
                 <goals>
                   <goal>sign</goal>
+                  <goal>verify</goal>
                 </goals>
                 <inherited>true</inherited>
                 <configuration>
                   <archiveDirectory></archiveDirectory>
                   <includes>
-                    <include>target/*.apk</include>
+                    <include>${project.build.directory}/${project.artifactId}.apk</include>
                   </includes>
                   <keystore>${keystore}</keystore>
                   <storepass>${password}</storepass>
                   <keypass>${password}</keypass>
                   <alias>${alias}</alias>
+                  <verbose>true</verbose>
                   <arguments>
                     <argument>-sigalg</argument>
                     <argument>MD5withRSA</argument>
@@ -104,11 +106,67 @@
           <plugin>
             <groupId>com.jayway.maven.plugins.android.generation2</groupId>
             <artifactId>android-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>manifestUpdate</id>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>manifest-update</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>alignApk</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>zipalign</goal>
+                </goals>
+              </execution>
+            </executions>
             <inherited>true</inherited>
             <configuration>
               <sign>
                 <debug>false</debug>
               </sign>
+              <zipalign>
+                <skip>false</skip>
+                <verbose>true</verbose>
+                <inputApk>${project.build.directory}/${project.artifactId}.apk</inputApk>
+                <outputApk>${project.build.directory}/${project.artifactId}-signed-aligned.apk</outputApk>
+              </zipalign>
+              <manifest>
+                <debuggable>false</debuggable>
+                <versionCodeAutoIncrement>true</versionCodeAutoIncrement>
+              </manifest>
+              <proguard>
+                <skip>false</skip>
+              </proguard>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-signed-aligned</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/${project.artifactId}-signed-aligned.apk</file>
+                  <type>apk</type>
+                  <classifier>signed-aligned</classifier>
+                </artifact>
+                <artifact>
+                  <file>${project.build.directory}/proguard/mapping.txt</file>
+                  <type>map</type>
+                  <classifier>release</classifier>
+                </artifact>
+              </artifacts>
             </configuration>
           </plugin>
         </plugins>
