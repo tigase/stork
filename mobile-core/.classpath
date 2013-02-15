@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="src" output="bin/classes" path="src/main/java">
 		<attributes>
@@ -13,10 +13,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/mobile-commons"/>
+	<classpathentry exported="true" kind="lib" path="/Users/bmalkow/.m2/repository/com/google/android/support-v4/r7/support-v4-r7.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/bmalkow/.m2/repository/com/google/android/apps/analytics/libGoogleAnalytics/1.4.2/libGoogleAnalytics-1.4.2.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
