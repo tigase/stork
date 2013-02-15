@@ -11,3 +11,11 @@ mobile-core/target
 mobile-phone-free/target
 mobile-phone-pro/target
 keystore.properties
+mobile-phone-pro/bin
+mobile-phone-pro/gen
+mobile-commons/bin
+mobile-commons/gen
+mobile-core/bin
+mobile-core/gen
+mobile-phone-free/gen
+mobile-phone-free/bin

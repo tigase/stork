@@ -14,6 +14,7 @@
   </modules>
   <properties>
     <platform.version>4.1.1.4</platform.version>
+    <platform.number>16</platform.number>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
