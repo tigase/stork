@@ -20,7 +20,7 @@
     </dependency>
     <dependency>
       <groupId>com.google.admob</groupId>
-      <artifactId>admob-andrdoid-sdk</artifactId>
+      <artifactId>admob-android-sdk</artifactId>
       <version>4.3.1</version>
     </dependency>
   </dependencies>
