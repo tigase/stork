@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="src" output="bin/classes" path="src/main/java">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="bin/classes" path="src/test/java">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/bmalkow/.m2/repository/com/google/admob/admob-andrdoid-sdk/4.3.1/admob-andrdoid-sdk-4.3.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
+	<classpathentry kind="output" path="bin/classes"/>
+</classpath>
