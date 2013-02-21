@@ -8,11 +8,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" output="bin/classes" path="src/test/java">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-android"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>

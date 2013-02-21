@@ -8,12 +8,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" output="bin/classes" path="src/test/java">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/Users/bmalkow/.m2/repository/com/google/admob/admob-andrdoid-sdk/4.3.1/admob-andrdoid-sdk-4.3.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/admob/admob-android-sdk/4.3.1/admob-android-sdk-4.3.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
