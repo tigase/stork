@@ -32,20 +32,20 @@
       <scope>compile</scope>
     </dependency>
   </dependencies>
-	<repositories>
-		<repository>
-			<snapshots />
-			<id>tigase</id>
-			<name>Tigase repository</name>
-			<url>http://maven.tigase.org</url>
-		</repository>
-		<repository>
-			<id>tigase-snapshot</id>
-			<name>Tigase repository</name>
-			<url>http://build.xmpp-test.net/maven/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>  
+  <repositories>
+    <repository>
+      <snapshots></snapshots>
+      <id>tigase</id>
+      <name>Tigase repository</name>
+      <url>http://maven.tigase.org</url>
+    </repository>
+    <repository>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>tigase-snapshot</id>
+      <name>Tigase repository</name>
+      <url>http://build.xmpp-test.net/maven/</url>
+    </repository>
+  </repositories>
 </project>
