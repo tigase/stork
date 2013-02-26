@@ -103,6 +103,8 @@ public abstract class NotificationHelper {
 
 	protected final Context context;
 
+	private Notification foregroundNotification;
+
 	protected final NotificationManager notificationManager;
 
 	protected NotificationHelper(Context context) {
@@ -151,6 +153,27 @@ public abstract class NotificationHelper {
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		return PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_CANCEL_CURRENT
 				| PendingIntent.FLAG_ONE_SHOT);
+	}
+
+	public Notification getForegroundNotification(int ico, String notiticationTitle, String expandedNotificationText) {
+		if (foregroundNotification == null) {
+			long whenNotify = System.currentTimeMillis();
+			foregroundNotification = new Notification(ico, notiticationTitle, whenNotify);
+		}
+
+		foregroundNotification.icon = ico;
+		foregroundNotification.tickerText = notiticationTitle;
+
+		// notification.flags = Notification.FLAG_AUTO_CANCEL;
+		foregroundNotification.flags |= Notification.FLAG_ONGOING_EVENT;
+		Context context = this.context.getApplicationContext();
+		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
+		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
+
+		foregroundNotification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
+
+		return foregroundNotification;
 	}
 
 	private final MultiJaxmpp getMulti() {

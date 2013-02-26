@@ -3,7 +3,6 @@ package org.tigase.mobile.service;
 import java.io.File;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +42,7 @@ import org.tigase.mobile.security.SecureTrustManagerFactory;
 import org.tigase.mobile.sync.SyncAdapter;
 import org.tigase.mobile.ui.NotificationHelper;
 
+import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.Connector;
@@ -83,11 +83,12 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.J2SESessionObject;
-import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -203,6 +204,8 @@ public class JaxmppService extends Service {
 
 	public static final String MUC_ERROR_MSG = "org.tigase.mobile.MUC_ERROR_MSG";
 
+	private static final int NOTIFICATION_ID = 269756109;
+
 	private static boolean serviceActive = false;
 
 	private static final String TAG = "JaxmppService";
@@ -304,7 +307,7 @@ public class JaxmppService extends Service {
 
 				sessionObject.setUserProperty("ID", (long) account.hashCode());
 				sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
-				sessionObject.setUserProperty(Jaxmpp.CONNECTOR_TYPE, "socket");
+				sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
 				sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
 				// sessionObject.setUserProperty(Connector.DISABLE_SOCKET_TIMEOUT_KEY,
 				// true);
@@ -433,9 +436,9 @@ public class JaxmppService extends Service {
 
 	private ConnReceiver myConnReceiver;
 
-	private ScreenStateReceiver myScreenStateReceiver;
-
 	// private NotificationManager notificationManager;
+
+	private ScreenStateReceiver myScreenStateReceiver;
 
 	private NotificationHelper notificationHelper;
 
@@ -914,10 +917,6 @@ public class JaxmppService extends Service {
 			ico = R.drawable.ic_stat_disconnected;
 			notiticationTitle = getResources().getString(R.string.service_disconnected_notification_title);
 			expandedNotificationText = getResources().getString(R.string.service_no_network_notification_text);
-			if (this.notificationVariant == NotificationVariant.only_connected) {
-				notificationHelper.cancelNotification();
-				return;
-			}
 		} else {
 			int onlineCount = 0;
 			int offlineCount = 0;
@@ -941,32 +940,24 @@ public class JaxmppService extends Service {
 				notiticationTitle = getResources().getString(R.string.service_connecting_notification_title);
 				expandedNotificationText = getResources().getString(R.string.service_connecting_notification_text,
 						connectingCount);
-				if (this.notificationVariant != NotificationVariant.always) {
-					notificationHelper.cancelNotification();
-					return;
-				}
 			} else if (onlineCount == 0) {
 				ico = R.drawable.ic_stat_disconnected;
 				notiticationTitle = getResources().getString(R.string.service_disconnected_notification_title);
 				expandedNotificationText = getResources().getString(R.string.service_no_active_accounts_notification_text);
-				if (this.notificationVariant == NotificationVariant.only_connected) {
-					notificationHelper.cancelNotification();
-					return;
-				}
 			} else {
 				ico = R.drawable.ic_stat_connected;
 				notiticationTitle = getResources().getString(R.string.service_connected_notification_title);
 				expandedNotificationText = getResources().getString(R.string.service_online_notification_text);
-				if (this.notificationVariant == NotificationVariant.only_disconnected) {
-					notificationHelper.cancelNotification();
-					return;
-				}
-
 			}
 
 		}
 
-		notificationHelper.notificationUpdate(ico, notiticationTitle, expandedNotificationText);
+		final Notification notification = notificationHelper.getForegroundNotification(ico, notiticationTitle,
+				expandedNotificationText);
+
+		startForeground(NOTIFICATION_ID, notification);
+		// notificationHelper.notificationUpdate(ico, notiticationTitle,
+		// expandedNotificationText);
 	}
 
 	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
@@ -975,18 +966,6 @@ public class JaxmppService extends Service {
 				"Account", // Action
 				"Error", // Label
 				0);
-	}
-
-	private void notificationUpdateReconnect(Date d) {
-		if (this.notificationVariant == NotificationVariant.only_connected) {
-			notificationHelper.cancelNotification();
-			return;
-		}
-
-		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
-
-		String expandedNotificationText = "Next try on " + s.format(d);
-		notificationHelper.notificationUpdate(R.drawable.ic_stat_disconnected, "Disconnected", expandedNotificationText);
 	}
 
 	@Override
@@ -1031,6 +1010,7 @@ public class JaxmppService extends Service {
 		}
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	public void onCreate() {
 		if (DEBUG)
@@ -1120,6 +1100,7 @@ public class JaxmppService extends Service {
 
 	@Override
 	public void onDestroy() {
+		stopForeground(true);
 		serviceActive = false;
 		timer.cancel();
 
