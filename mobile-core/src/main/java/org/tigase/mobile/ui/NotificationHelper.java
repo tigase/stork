@@ -165,7 +165,8 @@ public abstract class NotificationHelper {
 		foregroundNotification.tickerText = notiticationTitle;
 
 		// notification.flags = Notification.FLAG_AUTO_CANCEL;
-		foregroundNotification.flags |= Notification.FLAG_ONGOING_EVENT;
+		foregroundNotification.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
+		foregroundNotification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		Context context = this.context.getApplicationContext();
 		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
 		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
@@ -178,22 +179,6 @@ public abstract class NotificationHelper {
 
 	private final MultiJaxmpp getMulti() {
 		return ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp();
-	}
-
-	public void notificationUpdate(final int ico, final String notiticationTitle, final String expandedNotificationText) {
-		long whenNotify = System.currentTimeMillis();
-		Notification notification = new Notification(ico, notiticationTitle, whenNotify);
-
-		// notification.flags = Notification.FLAG_AUTO_CANCEL;
-		notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		Context context = this.context.getApplicationContext();
-		String expandedNotificationTitle = context.getResources().getString(R.string.app_name);
-		Intent intent = new Intent(context, TigaseMobileMessengerActivity.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
-
-		notification.setLatestEventInfo(context, expandedNotificationTitle, expandedNotificationText, pendingIntent);
-
-		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
 	public void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
