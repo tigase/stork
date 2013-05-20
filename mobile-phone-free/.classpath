@@ -9,6 +9,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/jaxmpp-core"/>
-	<classpathentry kind="var" path="M2_REPO/com/google/admob/admob-android-sdk/4.3.1/admob-android-sdk-4.3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/bmalkow/Downloads/GoogleAdMobAdsSdkAndroid-6.3.1/GoogleAdMobAdsSdk-6.3.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
