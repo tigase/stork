@@ -947,7 +947,7 @@ public class JaxmppService extends Service {
 		final Notification notification = notificationHelper.getForegroundNotification(ico, notiticationTitle,
 				expandedNotificationText);
 
-		notificationManager.notify(NotificationHelper.NOTIFICATION_ID, notification);
+		startForeground(NotificationHelper.NOTIFICATION_ID, notification);
 	}
 
 	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
