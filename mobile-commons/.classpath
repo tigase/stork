@@ -12,5 +12,6 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/tigase-xmltools"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
