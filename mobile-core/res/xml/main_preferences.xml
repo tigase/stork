@@ -26,12 +26,6 @@
         android:key="gui_details"
         android:title="@string/pref_login_ui_section_title" >
         <ListPreference
-            android:defaultValue="always"
-            android:entries="@array/app_icon_options"
-            android:entryValues="@array/app_icon_options_values"
-            android:key="notification_type"
-            android:title="@string/pref_login_ui_notification_title" />
-        <ListPreference
             android:defaultValue="flat"
             android:entries="@array/roster_layout_options"
             android:entryValues="@array/roster_layout_options_values"

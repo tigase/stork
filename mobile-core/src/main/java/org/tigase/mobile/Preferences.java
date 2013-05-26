@@ -32,8 +32,6 @@ public final class Preferences {
 
 	public static final String NOTIFICATION_SUBSCRIBE_REQ_KEY = "notification_subcribe";
 
-	public static final String NOTIFICATION_TYPE_KEY = "notification_type";
-
 	public static final String NOTIFICATION_VIBRATE_KEY = "notification_vibrate";
 
 	public static final String NOTIFICATION_WARNING_KEY = "notification_warning";

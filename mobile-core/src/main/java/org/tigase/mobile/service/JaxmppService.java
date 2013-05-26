@@ -89,6 +89,7 @@ import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -167,13 +168,6 @@ public class JaxmppService extends Service {
 
 	}
 
-	private static enum NotificationVariant {
-		always,
-		none,
-		only_connected,
-		only_disconnected
-	}
-
 	private class ScreenStateReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -203,8 +197,6 @@ public class JaxmppService extends Service {
 	private final static Set<SessionObject> locked = new HashSet<SessionObject>();
 
 	public static final String MUC_ERROR_MSG = "org.tigase.mobile.MUC_ERROR_MSG";
-
-	private static final int NOTIFICATION_ID = 269756109;
 
 	private static boolean serviceActive = false;
 
@@ -442,7 +434,7 @@ public class JaxmppService extends Service {
 
 	private NotificationHelper notificationHelper;
 
-	private NotificationVariant notificationVariant = NotificationVariant.always;
+	private NotificationManager notificationManager;
 
 	private OnSharedPreferenceChangeListener prefChangeListener;
 
@@ -936,7 +928,7 @@ public class JaxmppService extends Service {
 			}
 
 			if (connectingCount > 0) {
-				ico = R.drawable.ic_stat_connected;
+				ico = R.drawable.ic_stat_connecting;
 				notiticationTitle = getResources().getString(R.string.service_connecting_notification_title);
 				expandedNotificationText = getResources().getString(R.string.service_connecting_notification_text,
 						connectingCount);
@@ -955,9 +947,7 @@ public class JaxmppService extends Service {
 		final Notification notification = notificationHelper.getForegroundNotification(ico, notiticationTitle,
 				expandedNotificationText);
 
-		startForeground(NOTIFICATION_ID, notification);
-		// notificationHelper.notificationUpdate(ico, notiticationTitle,
-		// expandedNotificationText);
+		startForeground(NotificationHelper.NOTIFICATION_ID, notification);
 	}
 
 	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
@@ -1020,15 +1010,12 @@ public class JaxmppService extends Service {
 		clearLocalJaxmppProperties();
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
+		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
 
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-				if (Preferences.NOTIFICATION_TYPE_KEY.equals(key)) {
-					notificationVariant = NotificationVariant.valueOf(sharedPreferences.getString(key, "always"));
-					notificationUpdate();
-				}
 				Log.v(TAG, "key = " + key);
 				if (Preferences.KEEPALIVE_TIME_KEY.equals(key)) {
 					Log.v(TAG, "keepalive timout changed");
@@ -1041,7 +1028,6 @@ public class JaxmppService extends Service {
 		};
 
 		keepaliveInterval = 1000 * 60 * this.prefs.getInt(Preferences.KEEPALIVE_TIME_KEY, 3);
-		notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -1094,6 +1080,10 @@ public class JaxmppService extends Service {
 		// this.notificationManager = (NotificationManager)
 		// getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationHelper = NotificationHelper.createIntstance(this);
+
+		final Notification notification = notificationHelper.getForegroundNotification(R.drawable.icon, "Tigase Messenger",
+				"Start");
+		startForeground(NotificationHelper.NOTIFICATION_ID, notification);
 
 		notificationUpdate();
 	}
@@ -1297,8 +1287,6 @@ public class JaxmppService extends Service {
 			}
 
 			serviceActive = true;
-
-			notificationVariant = NotificationVariant.valueOf(prefs.getString(Preferences.NOTIFICATION_TYPE_KEY, "always"));
 
 			notificationUpdate();
 
