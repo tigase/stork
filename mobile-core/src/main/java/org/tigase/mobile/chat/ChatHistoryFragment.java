@@ -38,6 +38,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -242,6 +244,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	public void onCreate(Bundle savedInstanceState) {
 		this.setHasOptionsMenu(true);
 		super.onCreate(savedInstanceState);
+		this.setHasOptionsMenu(true);
 		this.setRetainInstance(true);
 
 		this.chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item);
@@ -280,7 +283,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
-
+		
 		inflater.inflate(R.menu.chat_main_menu, menu);
 
 		// Share button support
@@ -304,6 +307,8 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			Log.v(TAG, "no chat for fragment");
 		}
 		share.setVisible(visible);
+		
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 
 	@Override
@@ -377,10 +382,13 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			layout.cancelEdit();
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					chat.getSessionObject());
-			ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
-			final AbstractChatManager cm = jaxmpp.getModule(MessageModule.class).getChatManager();
+			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
+			final AbstractChatManager cm = jaxmpp.getModule(MessageModule.class).getChatManager();			
 			try {
+				viewPager.setCurrentItem(1);
 				cm.close(chat);
+				// this will be done by TigaseMessengerActiviy after receiving ChatOpened event
+				//viewPager.getAdapter().notifyDataSetChanged();
 				viewPager.setCurrentItem(1);
 				if (DEBUG)
 					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
@@ -403,6 +411,18 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		return true;
 	}
 
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+				&& Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			MenuInflater inflater = new MenuInflater(this.getActivity().getApplicationContext());
+			onCreateOptionsMenu(menu, inflater);
+		}
+		
+		super.onPrepareOptionsMenu(menu);
+	}
+	
+	
 	@Override
 	public void onResume() {
 		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {

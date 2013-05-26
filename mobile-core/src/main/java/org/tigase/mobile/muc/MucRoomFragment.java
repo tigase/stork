@@ -26,6 +26,7 @@ import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -222,7 +223,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		return new CursorLoader(getActivity().getApplicationContext(), Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
 				+ room.getRoomJid()), null, null, null, null);
 	}
-
+	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
@@ -325,7 +326,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					room.getSessionObject());
 			final MucModule cm = jaxmpp.getModule(MucModule.class);
-
+			
 			viewPager.setCurrentItem(1);
 			AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
 
@@ -341,6 +342,8 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 				@Override
 				protected void onPostExecute(Void param) {
+					// this will be done by TigaseMessengerActivity after receiving RoomClosed event
+//					viewPager.getAdapter().notifyDataSetChanged();
 					viewPager.setCurrentItem(1);
 				}
 			};
@@ -350,6 +353,17 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		return true;
 	}
 
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+				&& Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			MenuInflater inflater = new MenuInflater(this.getActivity().getApplicationContext());
+			onCreateOptionsMenu(menu, inflater);
+		}
+		
+		super.onPrepareOptionsMenu(menu);
+	}
+	
 	@Override
 	public void onResume() {
 		super.onResume();

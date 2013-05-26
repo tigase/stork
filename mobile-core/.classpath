@@ -8,8 +8,13 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/mobile-commons"/>
-	<classpathentry exported="true" kind="lib" path="/Users/bmalkow/.m2/repository/com/google/android/support-v4/r7/support-v4-r7.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/bmalkow/.m2/repository/com/google/android/apps/analytics/libGoogleAnalytics/1.4.2/libGoogleAnalytics-1.4.2.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/mobile-commons"/>
+	<classpathentry exported="true" kind="lib" path="M2_REPO/com/google/android/support-v4/r13/support-v4-r13.jar"/>
+	<classpathentry exported="true" kind="lib" path="M2_REPO/com/google/android/apps/analytics/libGoogleAnalytics/1.4.2/libGoogleAnalytics-1.4.2.jar"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-android"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-core"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jaxmpp-j2se"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/tigase-xmltools"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

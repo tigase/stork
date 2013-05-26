@@ -42,13 +42,25 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 				int currentPage = activity.getCurrentPage();
 
 				ActionBar actionBar = activity.getActionBar();
-				actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 && !isXLarge());
+				if (currentPage != 1 && !isXLarge()) {
+					activity.drawerLayout.setDrawerListener(null);
+					activity.drawerToggle.setDrawerIndicatorEnabled(false);
+				}
+				else {
+					activity.drawerLayout.setDrawerListener(activity.drawerToggle);
+					activity.drawerToggle.setDrawerIndicatorEnabled(true);
+				}
+				
+				actionBar.setDisplayHomeAsUpEnabled(true);
+				//actionBar.setHomeButtonEnabled(true);
+//				actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 && !isXLarge());
 
 				// Setting subtitle to show who we chat with
 				ChatWrapper c = activity.getChatByPageIndex(currentPage);
 				if (c != null) {
 					// actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE,
 					// ActionBar.DISPLAY_SHOW_TITLE);
+					actionBar.setSubtitle(null);
 					actionBar.setDisplayShowCustomEnabled(true);
 					actionBar.setCustomView(R.layout.actionbar_status);
 					View view = actionBar.getCustomView();

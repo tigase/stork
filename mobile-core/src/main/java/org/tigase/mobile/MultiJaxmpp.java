@@ -5,6 +5,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import android.os.AsyncTask;
+import android.os.Looper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -28,6 +33,8 @@ import tigase.jaxmpp.j2se.observer.ThreadSafeObservable;
 
 public class MultiJaxmpp {
 
+	private static final Logger log = Logger.getLogger("MultiJaxmpp");
+	
 	public static class ChatWrapper {
 
 		private final Object data;
@@ -114,19 +121,67 @@ public class MultiJaxmpp {
 		this.listener = new Listener<BaseEvent>() {
 
 			@Override
-			public void handleEvent(BaseEvent be) throws JaxmppException {
-				synchronized (chats) {
-					if (be.getType() == MessageModule.ChatCreated) {
-						chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
-					} else if (be.getType() == MessageModule.ChatClosed) {
-						chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
-					} else if (be.getType() == MucModule.RoomClosed) {
-						chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
-					} else if (be.getType() == MucModule.JoinRequested) {
-						chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
+			public void handleEvent(final BaseEvent be) throws JaxmppException {
+				if (be.getType() == MessageModule.ChatCreated || be.getType() == MessageModule.ChatClosed
+					|| be.getType() == MucModule.RoomClosed || be.getType() == MucModule.JoinRequested) {
+					
+					// if we got any event of type which modifies number of chats we need to do 
+					// this modification on UI thread as in other case we will get Adapter exception
+					if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+						// if we are not on UI thread create AsyncTask which will allow us to do
+						// modifications on UI thread (i.e. closing muc chat)
+						AsyncTask<Void, Void, Void> async = new AsyncTask<Void, Void, Void>() {
+
+							@Override
+							protected Void doInBackground(Void... params) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							@Override
+							protected void onPostExecute(Void result) {
+								synchronized (chats) {
+									if (be.getType() == MessageModule.ChatCreated) {
+										chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
+									} else if (be.getType() == MessageModule.ChatClosed) {
+										chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
+									} else if (be.getType() == MucModule.RoomClosed) {
+										chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
+									} else if (be.getType() == MucModule.JoinRequested) {
+										chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
+									}
+								}
+								try {
+									observable.fireEvent(be);
+								} catch (JaxmppException ex) {
+									log.log(Level.WARNING, "exception firing event on ui thread", ex);
+								}
+							}
+
+						};
+						async.execute();
+					} else {						
+						// but if we are already executed on UI thread we should not create AsyncTask
+						// as other methods after calling this method may be waiting for our result on
+						// the same thread (i.e. opening chat)
+						synchronized (chats) {
+							if (be.getType() == MessageModule.ChatCreated) {
+								chats.add(new ChatWrapper(((MessageEvent) be).getChat()));
+							} else if (be.getType() == MessageModule.ChatClosed) {
+								chats.remove(new ChatWrapper(((MessageEvent) be).getChat()));
+							} else if (be.getType() == MucModule.RoomClosed) {
+								chats.remove(new ChatWrapper(((MucEvent) be).getRoom()));
+							} else if (be.getType() == MucModule.JoinRequested) {
+								chats.add(new ChatWrapper(((MucEvent) be).getRoom()));
+							}
+						}
+
+						observable.fireEvent(be);
 					}
 				}
-				observable.fireEvent(be);
+				else {
+					observable.fireEvent(be);					
+				}
 			}
 		};
 	}

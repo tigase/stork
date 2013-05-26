@@ -96,13 +96,14 @@ public class JoinMucDialog extends DialogFragment {
 			@Override
 			public void onClick(View v) {
 				dialog.dismiss();
-
+				
 			}
 		});
 		joinButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
+				
 				if (editMode) {
 
 					BareJID account = BareJID.bareJIDInstance(accountSelector.getSelectedItem().toString());

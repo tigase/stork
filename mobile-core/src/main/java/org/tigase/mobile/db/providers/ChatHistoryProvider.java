@@ -162,7 +162,7 @@ public class ChatHistoryProvider extends ContentProvider {
 			break;
 		}
 		default:
-			throw new IllegalArgumentException("Unknown URI ");
+			throw new IllegalArgumentException("Unknown URI '" + (uri != null ? uri.toString() : "null") + "'");
 		}
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, ChatTableMetaData.TABLE_NAME + "."

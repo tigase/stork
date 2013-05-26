@@ -18,9 +18,22 @@
         android:title="@string/contact_add">
     </item>
     <item
+        android:id="@+id/bookmarksShow"
+        android:title="@string/bookmarks_show">
+    </item>
+    <item
+        android:id="@+id/joinMucRoom"
+        android:title="@string/join_muc_room">
+    </item>
+    <item
         android:id="@+id/showHideOffline"
         android:checkable="true"
         android:title="Show offline">
+    </item>
+    <item
+        android:id="@+id/propertiesButton"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/propertiesButton">
     </item>
     <item
         android:id="@+id/showChatsButton"
@@ -28,5 +41,10 @@
         android:showAsAction="ifRoom"
         android:title="@string/showChatsButton">
     </item>
-    
+    <item
+        android:id="@+id/aboutButton"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="@string/aboutButton">
+    </item>
+
 </menu>
