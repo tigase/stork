@@ -29,6 +29,8 @@ public class AvatarHelper {
 
 	private static Context context;
 	public static Bitmap mPlaceHolderBitmap;
+	private static float density = 1;
+	private static int defaultAvatarSize = 50;
 	private static final String TAG = "AvatarHelper";
 
 	private static int calculateSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -99,6 +101,10 @@ public class AvatarHelper {
 	public static void initilize(Context context_) {
 		if (avatarCache == null) {
 			context = context_;
+			
+			density = context.getResources().getDisplayMetrics().density;
+			defaultAvatarSize = Math.round(density * 50);
+			
 			// Get memory class of this device, exceeding this amount will throw
 			// an
 			// OutOfMemory exception.
@@ -134,6 +140,16 @@ public class AvatarHelper {
 	}
 
 	protected static Bitmap loadAvatar(BareJID jid) {
+		Bitmap bmp = loadAvatar(jid, defaultAvatarSize);
+		if (bmp == null) {
+			avatarCache.put(jid, mPlaceHolderBitmap);
+		} else {
+			avatarCache.put(jid, bmp);
+		}
+		return bmp;
+	}
+	
+	protected static Bitmap loadAvatar(BareJID jid, int size) {
 		Bitmap bmp = null;
 		Cursor cursor = context.getContentResolver().query(
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
@@ -144,10 +160,13 @@ public class AvatarHelper {
 				if (avatar != null) {
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inJustDecodeBounds = true;
-					BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
+					Bitmap bmp1 = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
+					if (bmp1 != null) {
+						bmp1.recycle();
+					}
 					// options.inSampleSize = calculateSize(options, 96, 96);
 					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-					options.inSampleSize = calculateSize(options, 120, 120);
+					options.inSampleSize = calculateSize(options, size, size);
 					options.inJustDecodeBounds = false;
 					bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
 				}
@@ -161,13 +180,16 @@ public class AvatarHelper {
 					if (input != null) {
 						BitmapFactory.Options options = new BitmapFactory.Options();
 						options.inJustDecodeBounds = true;
-						BitmapFactory.decodeStream(input, null, options);
+						Bitmap bmp1 = BitmapFactory.decodeStream(input, null, options);
+						if (bmp1 != null) {
+							bmp1.recycle();
+						}
 						// options.inSampleSize = calculateSize(options, 96,
 						// 96);
 						input.close();
 						input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(), photoUri);
 						options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-						options.inSampleSize = calculateSize(options, 120, 120);
+						options.inSampleSize = calculateSize(options, size, size);
 						options.inJustDecodeBounds = false;
 						bmp = BitmapFactory.decodeStream(input, null, options);
 						input.close();
@@ -178,11 +200,6 @@ public class AvatarHelper {
 			Log.v(TAG, "exception retrieving avatar for " + jid.toString(), ex);
 		} finally {
 			cursor.close();
-		}
-		if (bmp == null) {
-			avatarCache.put(jid, mPlaceHolderBitmap);
-		} else {
-			avatarCache.put(jid, bmp);
 		}
 		return bmp;
 	}
@@ -195,7 +212,20 @@ public class AvatarHelper {
 		}
 
 		if (cancelPotentialWork(jid, imageView)) {
-			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+			final BitmapWorkerTask task = new BitmapWorkerTask(imageView, null);
+			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
+			imageView.setImageDrawable(asyncDrawable);
+			try {
+				task.execute(jid);
+			} catch (java.util.concurrent.RejectedExecutionException e) {
+				// ignoring: probably avatar big as cow
+			}
+		}
+	}
+
+	public static void setAvatarToImageView(BareJID jid, ImageView imageView, int size) {
+		if (cancelPotentialWork(jid, imageView)) {
+			final BitmapWorkerTask task = new BitmapWorkerTask(imageView, (int) Math.ulp(size * density));
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			try {

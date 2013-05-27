@@ -9,18 +9,20 @@ import android.widget.ImageView;
 
 public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
 	protected BareJID data = null;
+	private final Integer size;
 	private final WeakReference<ImageView> imageViewReference;
 
-	public BitmapWorkerTask(ImageView imageView) {
+	public BitmapWorkerTask(ImageView imageView, Integer size) {
 		// Use a WeakReference to ensure the ImageView can be garbage collected
 		imageViewReference = new WeakReference<ImageView>(imageView);
+		this.size = size;
 	}
 
 	// Decode image in background.
 	@Override
 	protected Bitmap doInBackground(BareJID... params) {
 		data = params[0];
-		return AvatarHelper.loadAvatar(data);
+		return size == null ? AvatarHelper.loadAvatar(data) : AvatarHelper.loadAvatar(data, size);
 	}
 
 	// Once complete, see if ImageView is still around and set bitmap.
