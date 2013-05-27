@@ -15,6 +15,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.format.DateFormat;
+import android.text.format.DateUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
@@ -152,7 +153,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
 		}
 
-		java.text.DateFormat df = DateFormat.getTimeFormat(context);
+		//java.text.DateFormat df = DateFormat.getTimeFormat(context);
 
 		if (bd != null && bd.startsWith("/me ")) {
 			holder.body.setVisibility(View.GONE);
@@ -172,8 +173,14 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
-		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
-		holder.timestamp.setText(df.format(t));
+//		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
+//		holder.timestamp.setText(df.format(t));
+		long ts = cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP));
+		CharSequence tsStr = 
+//				DateUtils.isToday(ts) 
+//				? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) :
+				DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
+		holder.timestamp.setText(tsStr);
 
 	}
 }

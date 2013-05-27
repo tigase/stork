@@ -23,10 +23,12 @@
 
     <TextView
         android:id="@+id/chat_item_timestamp"
+        android:textSize="12sp"
+        android:text="yesterday, 10:30pm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentTop="true"        
         android:layout_alignRight="@+id/chat_item_body" >
     </TextView>
 

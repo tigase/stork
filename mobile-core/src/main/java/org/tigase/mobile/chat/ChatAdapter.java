@@ -21,6 +21,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.format.DateFormat;
+import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -106,21 +107,26 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			holder.nickname.setText("?");
 		}
 
-		java.text.DateFormat df = DateFormat.getTimeFormat(context);
+		//java.text.DateFormat df = DateFormat.getTimeFormat(context);
 		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
 
 		Spanned sp = Html.fromHtml(txt.replace("\n", "<br/>"));
 		holder.webview.setText(sp);
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
-
-		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
-		holder.timestamp.setText(df.format(t));
-
+		
+		//Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
+		//holder.timestamp.setText(df.format(t));
+		long ts = cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP));
+		CharSequence tsStr =
+//				DateUtils.isToday(ts) 
+//				? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) :
+				DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
+		holder.timestamp.setText(tsStr);
 	}
 
 	private void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
-		// old implementation
 		// Bitmap bmp = AvatarHelper.getAvatar(jid, cursor,
+		// old implementation
 		// VCardsCacheTableMetaData.FIELD_DATA);
 		// if (bmp != null) {
 		// avatar.setImageBitmap(bmp);
