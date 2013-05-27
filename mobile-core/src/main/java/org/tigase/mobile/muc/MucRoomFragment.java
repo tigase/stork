@@ -405,50 +405,50 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	}
 
 	private void updatePresenceImage() {
-		Runnable r = new Runnable() {
+		if (view != null) {
+			Runnable r = new Runnable() {
 
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
 
-				Log.i(TAG, "STATE: " + room.getState());
+					Log.i(TAG, "STATE: " + room.getState());
 
-				if (ed != null) {
-					if (room.getState() == State.joined && !ed.isEnabled()) {
-						ed.setEnabled(true);
-						sendButton.setEnabled(true);
-					} else if (room.getState() != State.joined && ed.isEnabled()) {
-						ed.setEnabled(false);
-						sendButton.setEnabled(false);
+					if (ed != null) {
+						if (room.getState() == State.joined && !ed.isEnabled()) {
+							ed.setEnabled(true);
+							sendButton.setEnabled(true);
+						} else if (room.getState() != State.joined && ed.isEnabled()) {
+							ed.setEnabled(false);
+							sendButton.setEnabled(false);
+						}
+					}
+					
+					if (stateImage != null) {
+						stateImage.post(new Runnable() {
+
+							@Override
+							public void run() {
+								if (room.getState() == State.not_joined) {
+									progressBar.setVisibility(View.GONE);
+									stateImage.setImageResource(R.drawable.user_offline);
+								} else if (room.getState() == State.requested) {
+									progressBar.setVisibility(View.VISIBLE);
+									stateImage.setVisibility(View.GONE);
+								} else if (room.getState() == State.joined) {
+									progressBar.setVisibility(View.GONE);
+									stateImage.setImageResource(R.drawable.user_available);
+								}
+							}
+						});
+					}
+
+					TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
+					if (activity != null && activity.helper != null && room != null) {
+						activity.helper.updateActionBar(room.hashCode());
 					}
 				}
-				System.out.println();
-				if (stateImage != null) {
-					stateImage.post(new Runnable() {
-
-						@Override
-						public void run() {
-							if (room.getState() == State.not_joined) {
-								progressBar.setVisibility(View.GONE);
-								stateImage.setImageResource(R.drawable.user_offline);
-							} else if (room.getState() == State.requested) {
-								progressBar.setVisibility(View.VISIBLE);
-								stateImage.setVisibility(View.GONE);
-							} else if (room.getState() == State.joined) {
-								progressBar.setVisibility(View.GONE);
-								stateImage.setImageResource(R.drawable.user_available);
-							}
-						}
-					});
-				}
-
-				TigaseMobileMessengerActivity activity = ((TigaseMobileMessengerActivity) getActivity());
-				if (activity != null && activity.helper != null && room != null) {
-					activity.helper.updateActionBar(room.hashCode());
-				}
-			}
-		};
-		if (view != null) {
+			};
 			view.post(r);
 		}
 	}

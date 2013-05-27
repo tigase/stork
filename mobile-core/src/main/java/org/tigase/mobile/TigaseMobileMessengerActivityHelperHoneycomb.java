@@ -62,8 +62,11 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 					// ActionBar.DISPLAY_SHOW_TITLE);
 					actionBar.setSubtitle(null);
 					actionBar.setDisplayShowCustomEnabled(true);
-					actionBar.setCustomView(R.layout.actionbar_status);
 					View view = actionBar.getCustomView();
+					if (view == null) {
+						actionBar.setCustomView(R.layout.actionbar_status);
+						view = actionBar.getCustomView();
+					}
 					String subtitle = null;
 					int icon = 0;
 					if (c.getChat() != null) {
@@ -103,12 +106,17 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 					}
 					// actionBar.setSubtitle(subtitle);
 					if (view != null) {
-						TextView title = (TextView) view.findViewById(R.id.title);
-						TextView description = (TextView) view.findViewById(R.id.description);
-						title.setText(actionBar.getTitle());
-						description.setText(subtitle);
-						ImageView status = (ImageView) view.findViewById(R.id.status);
-						status.setImageResource(icon);
+						Holder holder = (Holder) view.getTag();
+						if (holder == null) {
+							holder = new Holder();
+							holder.title = (TextView) view.findViewById(R.id.title);
+							holder.description = (TextView) view.findViewById(R.id.description);
+							holder.status = (ImageView) view.findViewById(R.id.status);
+							view.setTag(holder);
+						}
+						holder.title.setText(actionBar.getTitle());
+						holder.description.setText(subtitle);
+						holder.status.setImageResource(icon);
 					}
 				} else {
 					actionBar.setDisplayShowCustomEnabled(false);
@@ -135,4 +143,9 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 		}
 	}
 
+	private class Holder {
+		TextView title;
+		TextView description;
+		ImageView status;
+	}
 }

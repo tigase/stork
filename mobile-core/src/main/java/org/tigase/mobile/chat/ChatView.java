@@ -43,8 +43,12 @@ public class ChatView extends RelativeLayout {
 
 	private Chat chat;
 
+	private ImageView clientTypeIndicator;
+	
 	private EditText ed;
 
+	private ImageView itemPresence;
+	
 	private final SharedPreferences prefs;
 
 	public ChatView(Context context) {
@@ -124,6 +128,9 @@ public class ChatView extends RelativeLayout {
 				lv.setSelection(Integer.MAX_VALUE);
 			}
 		});
+		
+		itemPresence = (ImageView) findViewById(R.id.user_presence);
+		clientTypeIndicator = (ImageView) findViewById(R.id.client_type_indicator);		
 	}
 
 	protected void sendMessage() {
@@ -198,8 +205,6 @@ public class ChatView extends RelativeLayout {
 	}
 
 	public void setImagePresence(final CPresence cp) {
-		final ImageView itemPresence = (ImageView) findViewById(R.id.user_presence);
-
 		if (itemPresence == null)
 			return;
 
@@ -245,7 +250,6 @@ public class ChatView extends RelativeLayout {
 	}
 
 	public void updateClientIndicator() {
-		final ImageView clientTypeIndicator = (ImageView) findViewById(R.id.client_type_indicator);
 		if (clientTypeIndicator == null)
 			return;
 
