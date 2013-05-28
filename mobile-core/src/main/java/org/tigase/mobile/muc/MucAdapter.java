@@ -88,7 +88,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 		}
 	}
 
-	private OnClickListener nickameClickListener;
+	private final OnClickListener nickameClickListener;
 
 	private final Room room;
 

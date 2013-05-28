@@ -124,7 +124,7 @@ public class ChatAdapter extends SimpleCursorAdapter {
 		holder.timestamp.setText(tsStr);
 	}
 
-	private void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
+	private static void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
 		// Bitmap bmp = AvatarHelper.getAvatar(jid, cursor,
 		// old implementation
 		// VCardsCacheTableMetaData.FIELD_DATA);

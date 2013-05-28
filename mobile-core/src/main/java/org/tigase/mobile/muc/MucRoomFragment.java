@@ -79,9 +79,9 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 	private MucAdapter mucAdapter;
 
-	private Listener<MucEvent> mucListener;
+	private final Listener<MucEvent> mucListener;
 
-	private OnClickListener nickameClickListener = new OnClickListener() {
+	private final OnClickListener nickameClickListener = new OnClickListener() {
 
 		@Override
 		public void onClick(View v) {

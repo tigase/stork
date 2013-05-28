@@ -166,9 +166,9 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private SharedPreferences mPreferences;
 
-	private BroadcastReceiver mucErrorReceiver;
+	private final BroadcastReceiver mucErrorReceiver;
 
-	private OnSharedPreferenceChangeListener prefChangeListener;
+	private final OnSharedPreferenceChangeListener prefChangeListener;
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
 
@@ -209,7 +209,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		};
 	}
 
-	protected RosterFragment createRosterFragment(String string) {
+	protected static RosterFragment createRosterFragment(String string) {
 		return RosterFragment.newInstance(string);
 	}
 

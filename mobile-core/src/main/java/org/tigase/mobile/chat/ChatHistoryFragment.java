@@ -116,7 +116,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 	private ChatAdapter chatAdapter;
 
-	private Listener<MessageEvent> chatUpdateListener;
+	private final Listener<MessageEvent> chatUpdateListener;
 
 	private ChatView layout;
 
@@ -548,7 +548,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		if (chat != null) {
 			CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getSessionObject(),
 					chat.getJid().getBareJid());
-			System.out.println("Updating presence to " + cp);
+			
 			// ((MessengerApplication)getActivity().getApplication()).getMultiJaxmpp().get(chat.getSessionObject());
 			layout.setImagePresence(cp);
 
