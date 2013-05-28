@@ -2,9 +2,6 @@
 <classpath>
 	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="var" path="M2_REPO/tigase/jaxmpp-core/2.1.0-SNAPSHOT/jaxmpp-core-2.1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="var" path="M2_REPO/tigase/tigase-xmltools/3.4.2/tigase-xmltools-3.4.2.jar" sourcepath="M2_REPO/tigase/tigase-xmltools/3.4.2/tigase-xmltools-3.4.2-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/tigase/jaxmpp-j2se/2.1.0-SNAPSHOT/jaxmpp-j2se-2.1.0-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="var" path="M2_REPO/dnsjava/dnsjava/2.1.1/dnsjava-2.1.1.jar" sourcepath="M2_REPO/dnsjava/dnsjava/2.1.1/dnsjava-2.1.1-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/3.8.2/junit-3.8.2.jar" sourcepath="M2_REPO/junit/junit/3.8.2/junit-3.8.2-sources.jar">
 		<attributes>
