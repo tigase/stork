@@ -294,11 +294,13 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 					chat.getSessionObject());
 			try {
 				JID jid = chat.getJid();
+				
 				if (jid.getResource() == null) {
 					jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
 				}
+
 				if (jid != null) {
-					visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, chat.getJid(), FileTransferUtility.FEATURES);
+					visible = FileTransferUtility.resourceContainsFeatures(jaxmpp, jid, FileTransferUtility.FEATURES);
 				}
 			} catch (XMLException e) {
 			}
