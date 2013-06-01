@@ -99,7 +99,7 @@ public class RosterDisplayTools {
 	}
 
 	public String getStatusMessageOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
-		try {
+		try {			
 			if (item == null)
 				return null;
 			final PresenceStore presence = multi.get(item.getSessionObject()).getPresence();

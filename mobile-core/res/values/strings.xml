@@ -169,6 +169,7 @@
     <string name="service_file_transfer_receiving_file">Receiving file %1$s from %2$s</string>
     <string name="service_file_transfer_negotiating">negotiating...</string>
     <string name="service_file_transfer_connecting">connecting...</string>
+    <string name="service_file_transfer_error">connection failed</string>
     <string name="service_file_transfer_progress">progress %1$s</string>
     <string name="service_file_transfer_finished">transfer finished</string>
     <string name="service_unkown_host_error">Connection error: Unkown host %s</string>

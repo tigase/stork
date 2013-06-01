@@ -151,6 +151,9 @@ public class AvatarHelper {
 	
 	protected static Bitmap loadAvatar(BareJID jid, int size) {
 		Bitmap bmp = null;
+		
+		Log.v(TAG, "loading avatar with size " + size);
+		
 		Cursor cursor = context.getContentResolver().query(
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
 		try {
@@ -219,19 +222,21 @@ public class AvatarHelper {
 				task.execute(jid);
 			} catch (java.util.concurrent.RejectedExecutionException e) {
 				// ignoring: probably avatar big as cow
+				Log.e(TAG, "loading avatar failed for " + jid.toString(), e);
 			}
 		}
 	}
 
 	public static void setAvatarToImageView(BareJID jid, ImageView imageView, int size) {
 		if (cancelPotentialWork(jid, imageView)) {
-			final BitmapWorkerTask task = new BitmapWorkerTask(imageView, (int) Math.ulp(size * density));
+			final BitmapWorkerTask task = new BitmapWorkerTask(imageView, (int) Math.ceil(size * density));
 			final AsyncDrawable asyncDrawable = new AsyncDrawable(context.getResources(), mPlaceHolderBitmap, task);
 			imageView.setImageDrawable(asyncDrawable);
 			try {
 				task.execute(jid);
 			} catch (java.util.concurrent.RejectedExecutionException e) {
 				// ignoring: probably avatar big as cow
+				Log.e(TAG, "loading avatar failed for " + jid.toString(), e);
 			}
 		}
 	}

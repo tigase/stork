@@ -31,12 +31,12 @@ import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.CapabilitiesDBCache;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
-import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
-import org.tigase.mobile.filetransfer.FileTransfer;
-import org.tigase.mobile.filetransfer.FileTransferModule;
-import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
-import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
-import org.tigase.mobile.filetransfer.StreamhostsEvent;
+//import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
+//import org.tigase.mobile.filetransfer.FileTransfer;
+//import org.tigase.mobile.filetransfer.FileTransferModule;
+//import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
+//import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
+//import org.tigase.mobile.filetransfer.StreamhostsEvent;
 import org.tigase.mobile.net.SocketThread;
 import org.tigase.mobile.security.SecureTrustManagerFactory;
 import org.tigase.mobile.sync.SyncAdapter;
@@ -327,13 +327,13 @@ public class JaxmppService extends Service {
 
 				sessionObject.setUserProperty(JaxmppCore.AUTOADD_STANZA_ID_KEY, Boolean.TRUE);
 
-				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject) {
+				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject); /* {
 					@Override
 					public void modulesInit() {
 						super.modulesInit();
 						getModulesManager().register(new FileTransferModule(observable, sessionObject, writer));
 					}
-				};
+				};*/				
 				jaxmpp.setExecutor(executor);
 				CapabilitiesModule capabilitiesModule = jaxmpp.getModule(CapabilitiesModule.class);
 				if (capabilitiesModule != null) {
@@ -366,6 +366,7 @@ public class JaxmppService extends Service {
 
 			Jaxmpp jaxmpp = multi.get(jid);
 			if (jaxmpp != null) {
+				FileTransferFeature.enableFileTransfer(jaxmpp, context);
 				MobileModeFeature.updateSettings(account, jaxmpp, context);
 				GeolocationFeature.updateGeolocationSettings(account, jaxmpp, context);
 			}
@@ -406,11 +407,11 @@ public class JaxmppService extends Service {
 
 	private long currentRoomIdFocus = -1;
 
-	private final Listener<FileTransferProgressEvent> fileTransferProgressListener;
+/*	private final Listener<FileTransferProgressEvent> fileTransferProgressListener;
 
 	private final Listener<FileTransferRequestEvent> fileTransferRequestListener;
 
-	private final Listener<StreamhostsEvent> fileTransferStreamhostsListener;
+	private final Listener<StreamhostsEvent> fileTransferStreamhostsListener;*/
 
 	private ClientFocusReceiver focusChangeReceiver;
 
@@ -432,7 +433,7 @@ public class JaxmppService extends Service {
 
 	private ScreenStateReceiver myScreenStateReceiver;
 
-	private NotificationHelper notificationHelper;
+	protected NotificationHelper notificationHelper;
 
 	private NotificationManager notificationManager;
 
@@ -457,6 +458,8 @@ public class JaxmppService extends Service {
 	protected final Timer timer = new Timer();
 
 	private int usedNetworkType = -1;
+
+	private FileTransferFeature fileTransferFeature;
 
 	public JaxmppService() {
 		super();
@@ -672,7 +675,7 @@ public class JaxmppService extends Service {
 			}
 		};
 
-		this.fileTransferProgressListener = new Listener<FileTransferProgressEvent>() {
+/*		this.fileTransferProgressListener = new Listener<FileTransferProgressEvent>() {
 
 			@Override
 			public void handleEvent(FileTransferProgressEvent be) throws JaxmppException {
@@ -683,9 +686,9 @@ public class JaxmppService extends Service {
 				}
 			}
 
-		};
+		};*/
 
-		this.fileTransferRequestListener = new Listener<FileTransferRequestEvent>() {
+/*		this.fileTransferRequestListener = new Listener<FileTransferRequestEvent>() {
 
 			@Override
 			public void handleEvent(FileTransferRequestEvent be) throws JaxmppException {
@@ -699,9 +702,9 @@ public class JaxmppService extends Service {
 				notificationHelper.notifyFileTransferRequest(be);
 			}
 
-		};
+		}; */
 
-		this.fileTransferStreamhostsListener = new Listener<StreamhostsEvent>() {
+/*		this.fileTransferStreamhostsListener = new Listener<StreamhostsEvent>() {
 
 			@Override
 			public void handleEvent(StreamhostsEvent be) throws JaxmppException {
@@ -709,10 +712,11 @@ public class JaxmppService extends Service {
 				AndroidFileTransferUtility.fileTransferHostsEventReceived(jaxmpp, be);
 			}
 
-		};
+		};*/
 
 		this.mobileModeFeature = new MobileModeFeature(this);
 		this.geolocationFeature = new GeolocationFeature(this);
+		this.fileTransferFeature = new FileTransferFeature(this);
 
 	}
 
@@ -1064,9 +1068,9 @@ public class JaxmppService extends Service {
 		getMulti().addListener(MucModule.PresenceError, this.mucListener);
 		getMulti().addListener(MucModule.OccupantLeaved, this.mucListener);
 
-		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
+/*		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
-		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
+		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);*/
 
 		getMulti().addListener(PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 
@@ -1134,9 +1138,9 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(MucModule.PresenceError, this.mucListener);
 		getMulti().removeListener(MucModule.OccupantLeaved, this.mucListener);
 
-		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
+/*		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
 		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
-		getMulti().removeListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);
+		getMulti().removeListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);*/
 
 		getMulti().removeListener(Connector.Error, this.connectorListener);
 		getMulti().removeListener(Connector.StreamTerminated, this.connectorListener);
@@ -1272,7 +1276,7 @@ public class JaxmppService extends Service {
 			if (intent.getAction().equals(ACTION_KEEPALIVE)) {
 				keepAlive();
 			} else if (intent.getAction().equals(ACTION_FILETRANSFER)) {
-				processFileTransferAction(intent);
+				fileTransferFeature.processFileTransferAction(intent);
 			}
 
 		} else {
@@ -1302,57 +1306,6 @@ public class JaxmppService extends Service {
 		notificationHelper.notifySubscribeRequest(be);
 	}
 
-	protected void processFileTransferAction(Intent intent) {
-		final JID account = JID.jidInstance(intent.getStringExtra("account"));
-		final JID sender = JID.jidInstance(intent.getStringExtra("sender"));
-		final String id = intent.getStringExtra("id");
-		final String sid = intent.getStringExtra("sid");
-		final String filename = intent.getStringExtra("filename");
-		final String tag = intent.getStringExtra("tag");
-
-		final Jaxmpp jaxmpp = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account.getBareJid());
-		if ("reject".equals(intent.getStringExtra("filetransferAction"))) {
-			Log.v(TAG, "incoming file rejected");
-			notificationHelper.cancelFileTransferRequestNotification(tag);
-			new Thread() {
-				@Override
-				public void run() {
-					FileTransferModule ftModule = jaxmpp.getModule(FileTransferModule.class);
-					try {
-						ftModule.rejectStreamInitiation(sender, id);
-					} catch (JaxmppException e) {
-						Log.e(TAG, "Could not send stream initiation reject", e);
-					}
-				}
-			}.start();
-		} else if ("accept".equals(intent.getStringExtra("filetransferAction"))) {
-			String mimetype = intent.getStringExtra("mimetype");
-			if (mimetype == null) {
-				mimetype = AndroidFileTransferUtility.guessMimeType(filename);
-			}
-			String store = intent.getStringExtra("store");
-			final File destination = AndroidFileTransferUtility.getPathToSave(filename, mimetype, store);
-			final long filesize = intent.getLongExtra("filesize", 0);
-			RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
-			final FileTransfer ft = new FileTransfer(jaxmpp, sender, ri != null ? ri.getName() : null, filename, filesize,
-					destination);
-			ft.mimetype = mimetype;
-			new Thread() {
-				@Override
-				public void run() {
-					FileTransferModule ftModule = jaxmpp.getModule(FileTransferModule.class);
-					try {
-						ft.setSid(sid);
-						AndroidFileTransferUtility.registerFileTransferForStreamhost(sid, ft);
-						ftModule.acceptStreamInitiation(sender, id, Features.BYTESTREAMS);
-					} catch (JaxmppException e) {
-						Log.e(TAG, "Could not send stream initiation accept", e);
-					}
-				}
-			}.start();
-
-		}
-	}
 
 	protected void reconnectIfAvailable(final SessionObject sessionObject) {
 		if (!isReconnect()) {

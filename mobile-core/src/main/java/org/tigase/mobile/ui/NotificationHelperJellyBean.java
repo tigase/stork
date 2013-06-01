@@ -2,12 +2,12 @@ package org.tigase.mobile.ui;
 
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.ChatTableMetaData;
-import org.tigase.mobile.filetransfer.FileTransfer;
-import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
+import org.tigase.mobile.service.FileTransferFeature;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -51,16 +51,16 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 	}
 
 	@Override
-	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
-		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
+	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft, FileTransferFeature.State state) {
+		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft, state);
 		return builder.build();
 	}
 
 	@Override
 	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+			FileTransfer ft, JaxmppCore jaxmpp, String tag) {
 
-		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ft, jaxmpp, tag);
 		Notification notification = builder.build();
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		return notification;
@@ -68,10 +68,10 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 
 	@Override
 	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
-		Notification.Builder builder = super.prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+			FileTransfer ft, JaxmppCore jaxmpp, String tag) {
+		Notification.Builder builder = super.prepareFileTransferRequestNotificationInt(ico, title, text, ft, jaxmpp, tag);
 
-		Intent intentReject = NotificationHelper.createFileTransferRejectIntent(context, ev,
+		Intent intentReject = NotificationHelper.createFileTransferRejectIntent(context, ft,
 				jaxmpp.getSessionObject().getUserBareJid(), tag);
 		builder.addAction(
 				android.R.drawable.ic_menu_close_clear_cancel,
@@ -79,7 +79,7 @@ public class NotificationHelperJellyBean extends NotificationHelperICS {
 				PendingIntent.getService(context, 1, intentReject, PendingIntent.FLAG_CANCEL_CURRENT
 						| PendingIntent.FLAG_ONE_SHOT));
 
-		Intent intentAccept = NotificationHelper.createFileTransferAcceptIntent(context, ev,
+		Intent intentAccept = NotificationHelper.createFileTransferAcceptIntent(context, ft,
 				jaxmpp.getSessionObject().getUserBareJid(), tag);
 		builder.addAction(
 				android.R.drawable.ic_menu_save,

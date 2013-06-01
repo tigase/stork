@@ -1,13 +1,13 @@
 package org.tigase.mobile.ui;
 
 import org.tigase.mobile.Preferences;
-import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
-import org.tigase.mobile.filetransfer.FileTransfer;
-import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
+import org.tigase.mobile.filetransfer.FileTransferUtility;
+import org.tigase.mobile.service.FileTransferFeature;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -53,11 +53,11 @@ public class NotificationHelperBase extends NotificationHelper {
 	}
 
 	@Override
-	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
+	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft, FileTransferFeature.State state) {
 		long whenNotify = System.currentTimeMillis();
 		int flags = 0;
 
-		switch (ft.getState()) {
+		switch (state) {
 		case error:
 			flags |= Notification.FLAG_AUTO_CANCEL;
 			ico = android.R.drawable.stat_notify_error;
@@ -79,10 +79,11 @@ public class NotificationHelperBase extends NotificationHelper {
 			break;
 
 		case finished:
-			ico = (ft.outgoing) ? android.R.drawable.stat_sys_upload_done : android.R.drawable.stat_sys_download_done;
+			boolean outgoing = !ft.isIncoming();
+			ico = (outgoing) ? android.R.drawable.stat_sys_upload_done : android.R.drawable.stat_sys_download_done;
 			flags |= Notification.FLAG_AUTO_CANCEL;
-			if (!ft.outgoing) {
-				AndroidFileTransferUtility.refreshMediaScanner(context.getApplicationContext(), ft.destination);
+			if (!outgoing) {				
+				FileTransferUtility.refreshMediaScanner(context.getApplicationContext(), ((tigase.jaxmpp.j2se.filetransfer.FileTransfer)ft).getFile());
 			}
 			break;
 		default:
@@ -92,7 +93,7 @@ public class NotificationHelperBase extends NotificationHelper {
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags = flags;
 
-		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
+		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft, state);
 
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
@@ -101,7 +102,7 @@ public class NotificationHelperBase extends NotificationHelper {
 
 	@Override
 	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+			FileTransfer ft, JaxmppCore jaxmpp, String tag) {
 		long whenNotify = System.currentTimeMillis();
 		Notification notification = new Notification(ico, title, whenNotify);
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
@@ -111,7 +112,7 @@ public class NotificationHelperBase extends NotificationHelper {
 		updateLight(notification, Preferences.NOTIFICATION_FILE_KEY);
 		updateVibrate(notification, Preferences.NOTIFICATION_FILE_KEY);
 
-		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
+		PendingIntent pendingIntent = createFileTransferRequestPendingIntent(ft, jaxmpp, tag);
 		notification.setLatestEventInfo(context, title, text, pendingIntent);
 
 		return notification;

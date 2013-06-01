@@ -13,7 +13,6 @@ import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.RosterTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 import org.tigase.mobile.db.providers.RosterProvider;
-import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.muc.JoinMucDialog;
 import org.tigase.mobile.muc.MucRoomFragment;
@@ -340,13 +339,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				return;
 			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
 			JID jid = chat.getJid();
+			final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
+					ri.getSessionObject());
 			if (jid.getResource() == null) {
-				final Jaxmpp jaxmpp = ((MessengerApplication) TigaseMobileMessengerActivity.this.getApplicationContext()).getMultiJaxmpp().get(
-						ri.getSessionObject());
 				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
 			}
 			if (jid != null) {
-				AndroidFileTransferUtility.startFileTransfer(this, ri, chat.getJid(), selected, mimetype);
+				FileTransferUtility.startFileTransfer(this, jaxmpp, chat.getJid(), selected, mimetype);
 			}
 		} else {
 			super.onActivityResult(requestCode, resultCode, data);

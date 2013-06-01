@@ -13,7 +13,6 @@ import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
-import org.tigase.mobile.filetransfer.AndroidFileTransferUtility;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
 import org.tigase.mobile.roster.CPresence;
 
@@ -211,13 +210,13 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			String mimetype = data.getType();
 			RosterItem ri = chat.getSessionObject().getRoster().get(chat.getJid().getBareJid());
 			JID jid = chat.getJid();
+			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
+					ri.getSessionObject());
 			if (jid.getResource() == null) {
-				final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
-						ri.getSessionObject());
 				jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
 			}
 			if (jid != null) {
-				AndroidFileTransferUtility.startFileTransfer(getActivity(), ri, chat.getJid(), selected, mimetype);
+				FileTransferUtility.startFileTransfer(getActivity(), jaxmpp, chat.getJid(), selected, mimetype);
 			}
 		}
 	}

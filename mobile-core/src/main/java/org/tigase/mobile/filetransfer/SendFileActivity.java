@@ -1,5 +1,6 @@
 package org.tigase.mobile.filetransfer;
 
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -23,6 +24,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -122,8 +124,9 @@ public class SendFileActivity extends Activity {
 					if (jid == null) {
 						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(), FileTransferUtility.FEATURES);
 					}
-					AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, item, jid, uri, mimetype);
-					finish();
+					
+					FileTransferUtility.startFileTransfer(SendFileActivity.this, jaxmpp, jid, uri, mimetype);
+					finish();		
 					return true;
 				}
 			});
@@ -151,8 +154,9 @@ public class SendFileActivity extends Activity {
 							public void onIconContextItemSelected(MenuItem item, Object info) {
 								String resource = item.getTitle().toString();
 								JID jid = JID.jidInstance(r.getJid(), resource);
-								AndroidFileTransferUtility.startFileTransfer(SendFileActivity.this, r, jid, uri, mimetype);
-								finish();
+								Jaxmpp jaxmpp = getJaxmpp(r.getSessionObject().getUserBareJid());
+								FileTransferUtility.startFileTransfer(SendFileActivity.this, jaxmpp, jid, uri, mimetype);
+								finish();		
 							}
 
 						});
@@ -163,7 +167,7 @@ public class SendFileActivity extends Activity {
 
 		}
 	}
-
+	
 	private void prepareResources(ContextMenu menu, RosterItem ri) throws XMLException {
 		final Jaxmpp jaxmpp = getJaxmpp(ri.getSessionObject().getUserBareJid());
 		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(ri.getJid());

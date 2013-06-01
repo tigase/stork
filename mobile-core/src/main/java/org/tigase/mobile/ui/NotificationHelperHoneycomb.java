@@ -3,13 +3,13 @@ package org.tigase.mobile.ui;
 import org.tigase.mobile.Preferences;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
-import org.tigase.mobile.filetransfer.FileTransfer;
-import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
+import org.tigase.mobile.service.FileTransferFeature;
 import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import android.annotation.TargetApi;
 import android.app.Notification;
@@ -95,38 +95,38 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 	}
 
 	@Override
-	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft) {
-		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft);
+	protected Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft, FileTransferFeature.State state) {
+		Notification.Builder builder = this.prepareFileTransferProgressNotificationInt(ico, title, text, ft, state);
 		return builder.getNotification();
 	}
 
 	protected Notification.Builder prepareFileTransferProgressNotificationInt(int ico, String title, String text,
-			FileTransfer ft) {
+			FileTransfer ft, FileTransferFeature.State state) {
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
 		builder.setSmallIcon(ico);
-		FileTransfer.State state = ft.getState();
+
 		builder.setDefaults(0).setContentTitle(title).setContentText(text);
 
-		boolean finished = state == FileTransfer.State.error || state == FileTransfer.State.finished;
+		boolean finished = state == FileTransferFeature.State.error || state == FileTransferFeature.State.finished;
 		builder.setAutoCancel(finished).setOngoing(!finished);
 
-		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft);
+		PendingIntent pendingIntent = createFileTransferProgressPendingIntent(ft, state);
 		builder.setContentIntent(pendingIntent);
 		return builder;
 	}
 
 	@Override
 	protected Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+			FileTransfer ft, JaxmppCore jaxmpp, String tag) {
 
-		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ev, jaxmpp, tag);
+		Notification.Builder builder = prepareFileTransferRequestNotificationInt(ico, title, text, ft, jaxmpp, tag);
 		Notification notification = builder.getNotification();
 		notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 		return notification;
 	}
 
 	protected Notification.Builder prepareFileTransferRequestNotificationInt(int ico, String title, String text,
-			FileTransferRequestEvent ev, JaxmppCore jaxmpp, String tag) {
+			FileTransfer ft, JaxmppCore jaxmpp, String tag) {
 
 		Notification.Builder builder = new Notification.Builder(context.getApplicationContext());
 		updateSound(builder, Preferences.NOTIFICATION_FILE_KEY);
@@ -136,7 +136,7 @@ public class NotificationHelperHoneycomb extends NotificationHelper {
 		builder.setSmallIcon(ico).setContentTitle(title);
 		builder.setAutoCancel(true);
 
-		PendingIntent pendingIntent = this.createFileTransferRequestPendingIntent(ev, jaxmpp, tag);
+		PendingIntent pendingIntent = this.createFileTransferRequestPendingIntent(ft, jaxmpp, tag);
 		builder.setContentIntent(pendingIntent).setContentText(text);
 
 		return builder;

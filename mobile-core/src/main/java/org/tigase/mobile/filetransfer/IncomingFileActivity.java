@@ -2,12 +2,16 @@ package org.tigase.mobile.filetransfer;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
+import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.VCardsCacheTableMetaData;
 import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.service.JaxmppService;
+import org.tigase.mobile.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
@@ -29,33 +33,21 @@ public class IncomingFileActivity extends Activity {
 
 	private static final String TAG = "IncomingFileActivity";
 
-	private JID account;
-	private String filename;
-	private Long filesize;
-	private String id;
-	private String mimetype;
-	private JID sender;
-	private String senderName;
-	private String sid;
+	private FileTransfer ft;
 	private String store = "Download";
 	private String tag;
 
 	public void accept(View view) {
 		Log.v(TAG, "incoming file accepted");
 
+		FileTransferUtility.registerFileTransfer(ft);
+		
 		Intent intent = new Intent(getApplicationContext(), JaxmppService.class);
 		intent.putExtra("tag", tag);
-		intent.putExtra("account", account.toString());
-		intent.putExtra("sender", sender.toString());
-		intent.putExtra("id", id);
-		intent.putExtra("sid", sid);
-		intent.putExtra("filename", filename);
-		if (filesize != null) {
-			intent.putExtra("filesize", filesize);
-		}
+		intent.putExtra("peer", ft.getPeer().toString());
+		intent.putExtra("sid", ft.getSid());
 		intent.setAction(JaxmppService.ACTION_FILETRANSFER);
 		intent.putExtra("filetransferAction", "accept");
-		intent.putExtra("mimetype", mimetype);
 		intent.putExtra("store", store);
 
 		startService(intent);
@@ -63,8 +55,8 @@ public class IncomingFileActivity extends Activity {
 		finish();
 	}
 
-	private Jaxmpp getJaxmpp(BareJID account) {
-		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(account);
+	private Jaxmpp getJaxmpp(SessionObject sessionObject) {
+		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().get(sessionObject);
 	}
 
 	// @Override
@@ -105,12 +97,13 @@ public class IncomingFileActivity extends Activity {
 
 		Intent intent = getIntent();
 		tag = intent.getStringExtra("tag");
-		account = JID.jidInstance(intent.getStringExtra("account"));
-		sender = JID.jidInstance(intent.getStringExtra("sender"));
-		id = intent.getStringExtra("id");
-		sid = intent.getStringExtra("sid");
-		filename = intent.getStringExtra("filename");
-		filesize = intent.getLongExtra("filesize", 0);
+
+		JID peerJid = JID.jidInstance(intent.getStringExtra("peer"));
+		String sid = intent.getStringExtra("sid");
+		ft = FileTransferUtility.unregisterFileTransfer(peerJid, sid);
+		FileTransferUtility.registerFileTransfer(ft);
+		
+		Long filesize = ft.getFileSize();
 		String filesizeStr = null;
 		if (filesize == 0) {
 			filesize = null;
@@ -123,41 +116,30 @@ public class IncomingFileActivity extends Activity {
 				filesizeStr = String.valueOf(filesize) + "B";
 			}
 		}
-		mimetype = intent.getStringExtra("mimetype");
+		
+		String mimetype = ft.getFileMimeType();
+		String filename = ft.getFilename();
 		if (mimetype == null) {
-			mimetype = AndroidFileTransferUtility.guessMimeType(filename);
+			mimetype = FileTransferUtility.guessMimeType(filename);
+			ft.setFileMimeType(mimetype);
 		}
 		Log.v(TAG, "got mimetype = " + mimetype);
 
-		Jaxmpp jaxmpp = getJaxmpp(account.getBareJid());
+		RosterDisplayTools rdt = new RosterDisplayTools(this);
+		String senderName = rdt.getDisplayName(ft.getSessionObject(), peerJid.getBareJid());
+/*		Jaxmpp jaxmpp = getJaxmpp(ft.getSessionObject());
 		RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
 
-		senderName = ri != null && ri.getName() != null ? ri.getName() : sender.toString();
+		senderName = ri != null && ri.getName() != null ? ri.getName() : sender.toString();*/
 
 		((TextView) findViewById(R.id.incoming_file_from_name)).setText(senderName);
-		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(ri == null || ri.getName() == null ? ""
-				: sender.toString());
+		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(senderName.equals(peerJid.getBareJid().toString()) ? ""
+				: peerJid.getBareJid().toString());
 		((TextView) findViewById(R.id.incoming_file_filename)).setText(filename);
 		((TextView) findViewById(R.id.incoming_file_filesize)).setText(filesize == null ? "unknown" : filesizeStr);
 
 		ImageView itemAvatar = ((ImageView) findViewById(R.id.incoming_file_from_avatar));
-		byte[] avatar = null;
-		final Cursor cursor = getContentResolver().query(
-				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(sender.getBareJid().toString())), null, null, null, null);
-		try {
-			cursor.moveToNext();
-			avatar = cursor.getBlob(cursor.getColumnIndex(VCardsCacheTableMetaData.FIELD_DATA));
-		} catch (Exception ex) {
-			avatar = null;
-		} finally {
-			cursor.close();
-		}
-		if (avatar != null) {
-			Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length);
-			itemAvatar.setImageBitmap(bmp);
-		} else {
-			itemAvatar.setImageResource(R.drawable.user_avatar);
-		}
+		AvatarHelper.setAvatarToImageView(peerJid.getBareJid(), itemAvatar, 200);
 
 		ArrayAdapter storeAdapter = ArrayAdapter.createFromResource(this, R.array.incoming_file_stores,
 				android.R.layout.simple_spinner_item);
@@ -190,16 +172,12 @@ public class IncomingFileActivity extends Activity {
 	}
 
 	public void reject(View view) {
+		FileTransferUtility.registerFileTransfer(ft);
+
 		Intent intent = new Intent(getApplicationContext(), JaxmppService.class);
 		intent.putExtra("tag", tag);
-		intent.putExtra("account", account.toString());
-		intent.putExtra("sender", sender.toString());
-		intent.putExtra("id", id);
-		intent.putExtra("sid", sid);
-		intent.putExtra("filename", filename);
-		if (filesize != null) {
-			intent.putExtra("filesize", filesize);
-		}
+		intent.putExtra("peer", ft.getPeer().toString());
+		intent.putExtra("sid", ft.getSid());
 		intent.setAction(JaxmppService.ACTION_FILETRANSFER);
 		intent.putExtra("filetransferAction", "reject");
 

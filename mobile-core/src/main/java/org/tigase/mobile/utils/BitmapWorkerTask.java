@@ -5,9 +5,11 @@ import java.lang.ref.WeakReference;
 import tigase.jaxmpp.core.client.BareJID;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.ImageView;
 
 public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
+	
 	protected BareJID data = null;
 	private final Integer size;
 	private final WeakReference<ImageView> imageViewReference;
