@@ -47,11 +47,8 @@ public class ChatAdapter extends SimpleCursorAdapter {
 	private final static int[] names = new int[] { R.id.chat_item_body };
 	private String nickname;
 
-	private final RosterDisplayTools rdt;
-
 	public ChatAdapter(Context context, int layout) {
-		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-		this.rdt = new RosterDisplayTools(context);
+		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);		
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		String tmp = null;// prefs.getString(Preferences.NICKNAME_KEY, null);

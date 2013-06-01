@@ -40,14 +40,11 @@ public class ChatListActivity extends Activity {
 
 		private final MultiJaxmpp multi;
 
-		private RosterDisplayTools rdt;
-
 		public ImageAdapter(Context c) {
 			this.multi = ((MessengerApplication) c.getApplicationContext()).getMultiJaxmpp();
 			this.chats.addAll(multi.getChats());
 			mContext = c;
 			mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			this.rdt = new RosterDisplayTools(c);
 		}
 
 		@Override
@@ -114,7 +111,7 @@ public class ChatListActivity extends Activity {
 				else
 					x = RosterDisplayTools.getDisplayName(ri);
 
-				final CPresence cp = rdt.getShowOf(chat.getSessionObject(), chat.getJid());
+				final CPresence cp = RosterDisplayTools.getShowOf(chat.getSessionObject(), chat.getJid());
 
 				if (cp == null)
 					itemPresence.setImageResource(R.drawable.user_offline);

@@ -582,8 +582,7 @@ public class RosterFragment extends Fragment {
 			}
 		};
 		(new Thread(r)).start();
-		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-				rosterItem.getSessionObject(), jid.getBareJid());
+		final String name = RosterDisplayTools.getDisplayName(rosterItem.getSessionObject(), jid.getBareJid());
 		String txt = String.format(getActivity().getString(R.string.auth_removed), name, jid.getBareJid().toString());
 		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 	}
@@ -605,8 +604,7 @@ public class RosterFragment extends Fragment {
 			}
 		};
 		(new Thread(r)).start();
-		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-				rosterItem.getSessionObject(), jid.getBareJid());
+		final String name = RosterDisplayTools.getDisplayName(rosterItem.getSessionObject(), jid.getBareJid());
 		String txt = String.format(getActivity().getString(R.string.auth_rerequested), name, jid.getBareJid().toString());
 		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 
@@ -629,8 +627,7 @@ public class RosterFragment extends Fragment {
 			}
 		};
 		(new Thread(r)).start();
-		final String name = (new RosterDisplayTools(getActivity().getApplicationContext())).getDisplayName(
-				rosterItem.getSessionObject(), jid.getBareJid());
+		final String name = RosterDisplayTools.getDisplayName(rosterItem.getSessionObject(), jid.getBareJid());
 		String txt = String.format(getActivity().getString(R.string.auth_resent), name, jid.getBareJid().toString());
 		Toast.makeText(getActivity().getApplicationContext(), txt, Toast.LENGTH_LONG).show();
 

@@ -94,11 +94,8 @@ public abstract class NotificationHelper {
 
 	protected final NotificationManager notificationManager;
 	
-	protected final RosterDisplayTools rdt;
-
 	protected NotificationHelper(Context context) {
 		this.context = context;
-		this.rdt = new RosterDisplayTools(context);
 		this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 	}
 
@@ -222,7 +219,7 @@ public abstract class NotificationHelper {
 		int ico = outgoing ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
 		String notificationTitle;
 
-		String buddyName = rdt.getDisplayName(ft.getSessionObject(), ft.getPeer().getBareJid());
+		String buddyName = RosterDisplayTools.getDisplayName(ft.getSessionObject(), ft.getPeer().getBareJid());
 		
 		if (outgoing)
 			notificationTitle = context.getResources().getString(R.string.service_file_transfer_sending_file, ft.getFilename(), buddyName);
@@ -272,7 +269,7 @@ public abstract class NotificationHelper {
 				+ jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID).toString() + " file = "
 				+ ft.getFilename();
 
-		String buddyName = rdt.getDisplayName(ft.getSessionObject(), buddy.getBareJid());
+		String buddyName = RosterDisplayTools.getDisplayName(ft.getSessionObject(), buddy.getBareJid());
 		
 		int ico = android.R.drawable.stat_sys_download;
 		String title = context.getResources().getString(R.string.service_incoming_file_notification_title, ft.getFilename(),
@@ -288,7 +285,7 @@ public abstract class NotificationHelper {
 	public void notifyNewChatMessage(MessageEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
-		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
+		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(),
 				event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().toString();
@@ -313,7 +310,7 @@ public abstract class NotificationHelper {
 	public void notifyNewMucMessage(MucEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
-		String n = (new RosterDisplayTools(context.getApplicationContext())).getDisplayName(event.getSessionObject(),
+		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(),
 				event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().getBareJid().toString();

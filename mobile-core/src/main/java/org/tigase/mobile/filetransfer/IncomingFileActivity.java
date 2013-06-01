@@ -125,12 +125,7 @@ public class IncomingFileActivity extends Activity {
 		}
 		Log.v(TAG, "got mimetype = " + mimetype);
 
-		RosterDisplayTools rdt = new RosterDisplayTools(this);
-		String senderName = rdt.getDisplayName(ft.getSessionObject(), peerJid.getBareJid());
-/*		Jaxmpp jaxmpp = getJaxmpp(ft.getSessionObject());
-		RosterItem ri = jaxmpp.getRoster().get(sender.getBareJid());
-
-		senderName = ri != null && ri.getName() != null ? ri.getName() : sender.toString();*/
+		String senderName = RosterDisplayTools.getDisplayName(ft.getSessionObject(), peerJid.getBareJid());
 
 		((TextView) findViewById(R.id.incoming_file_from_name)).setText(senderName);
 		((TextView) findViewById(R.id.incoming_file_from_jid)).setText(senderName.equals(peerJid.getBareJid().toString()) ? ""

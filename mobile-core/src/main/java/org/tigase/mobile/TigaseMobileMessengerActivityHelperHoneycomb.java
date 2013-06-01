@@ -75,7 +75,7 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 						subtitle = "Chat with " + (ri != null ? ri.getName() : jid.toString());
 
 						icon = R.drawable.user_offline;
-						CPresence p = new RosterDisplayTools(activity).getShowOf(c.getChat().getSessionObject(),
+						CPresence p = RosterDisplayTools.getShowOf(c.getChat().getSessionObject(),
 								c.getChat().getJid().getBareJid());
 						c.getChat().getSessionObject().getPresence().getPresence(c.getChat().getJid());
 						switch (p) {

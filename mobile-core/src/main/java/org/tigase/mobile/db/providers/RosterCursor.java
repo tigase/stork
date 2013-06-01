@@ -49,10 +49,7 @@ public class RosterCursor extends AbstractCursor {
 
 	private final Predicate predicate;
 
-	private final RosterDisplayTools rdt;
-
 	public RosterCursor(Context ctx, SQLiteDatabase sqLiteDatabase, RosterStore.Predicate predicate) {
-		this.rdt = new RosterDisplayTools(ctx);
 		this.context = ctx;
 		this.predicate = predicate;
 		this.db = sqLiteDatabase;
@@ -91,7 +88,7 @@ public class RosterCursor extends AbstractCursor {
 		}
 		case 6: {
 			RosterItem item = items.get(mPos);
-			return rdt.getShowOf(item.getSessionObject(), item.getJid()).getId();
+			return RosterDisplayTools.getShowOf(item.getSessionObject(), item.getJid()).getId();
 		}
 		case 7: {
 			RosterItem item = items.get(mPos);
@@ -100,7 +97,7 @@ public class RosterCursor extends AbstractCursor {
 		}
 		case 8: {
 			RosterItem item = items.get(mPos);
-			return rdt.getStatusMessageOf(item);
+			return RosterDisplayTools.getStatusMessageOf(item);
 		}
 		case 9: {
 			// RosterItem item = items.get(mPos);
@@ -217,8 +214,8 @@ public class RosterCursor extends AbstractCursor {
 				@Override
 				public int compare(RosterItem object1, RosterItem object2) {
 					try {
-						CPresence s1 = rdt.getShowOf(object1);
-						CPresence s2 = rdt.getShowOf(object2);
+						CPresence s1 = RosterDisplayTools.getShowOf(object1);
+						CPresence s2 = RosterDisplayTools.getShowOf(object2);
 
 						int sc = s2.getId().compareTo(s1.getId());
 						if (sc != 0)

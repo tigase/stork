@@ -545,7 +545,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 	protected void updatePresence() {
 		if (chat != null) {
-			CPresence cp = (new RosterDisplayTools(getActivity())).getShowOf(chat.getSessionObject(),
+			CPresence cp = RosterDisplayTools.getShowOf(chat.getSessionObject(),
 					chat.getJid().getBareJid());
 			
 			// ((MessengerApplication)getActivity().getApplication()).getMultiJaxmpp().get(chat.getSessionObject());
