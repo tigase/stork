@@ -37,7 +37,6 @@ import org.tigase.mobile.db.providers.RosterProvider;
 //import org.tigase.mobile.filetransfer.FileTransferProgressEvent;
 //import org.tigase.mobile.filetransfer.FileTransferRequestEvent;
 //import org.tigase.mobile.filetransfer.StreamhostsEvent;
-import org.tigase.mobile.net.SocketThread;
 import org.tigase.mobile.security.SecureTrustManagerFactory;
 import org.tigase.mobile.sync.SyncAdapter;
 import org.tigase.mobile.ui.NotificationHelper;
@@ -1147,8 +1146,6 @@ public class JaxmppService extends Service {
 
 		notificationHelper.cancelNotification();
 
-		SocketThread.stopThreads();
-
 		super.onDestroy();
 	}
 
@@ -1280,8 +1277,6 @@ public class JaxmppService extends Service {
 			}
 
 		} else {
-
-			SocketThread.startTreads();
 
 			if (intent != null) {
 				// Log.i(TAG, intent.getExtras().toString());
