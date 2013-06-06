@@ -28,6 +28,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -186,40 +187,47 @@ public class AccountsStatusFragment extends Fragment {
 									@Override
 									public void onError(Stanza responseStanza, final ErrorCondition error)
 											throws JaxmppException {
-										getActivity().runOnUiThread(new Runnable() {
+										FragmentActivity activity = getActivity();
+										if (activity != null)
+											activity.runOnUiThread(new Runnable() {
 
-											@Override
-											public void run() {
-												Toast toast = Toast.makeText(getActivity(), "Ping error: " + error,
-														Toast.LENGTH_LONG);
-												toast.show();
-											}
-										});
+												@Override
+												public void run() {
+													Toast toast = Toast.makeText(getActivity(), "Ping error: " + error,
+															Toast.LENGTH_LONG);
+													toast.show();
+												}
+											});
 									}
 
 									@Override
 									protected void onPong(final long time) {
-										getActivity().runOnUiThread(new Runnable() {
+										FragmentActivity activity = getActivity();
+										if (activity != null)
+											activity.runOnUiThread(new Runnable() {
 
-											@Override
-											public void run() {
-												Toast toast = Toast.makeText(getActivity(), "Pong: " + time + "ms",
-														Toast.LENGTH_LONG);
-												toast.show();
-											}
-										});
+												@Override
+												public void run() {
+													Toast toast = Toast.makeText(getActivity(), "Pong: " + time + "ms",
+															Toast.LENGTH_LONG);
+													toast.show();
+												}
+											});
 									}
 
 									@Override
 									public void onTimeout() throws JaxmppException {
-										getActivity().runOnUiThread(new Runnable() {
+										FragmentActivity activity = getActivity();
+										if (activity != null)
+											activity.runOnUiThread(new Runnable() {
 
-											@Override
-											public void run() {
-												Toast toast = Toast.makeText(getActivity(), "Ping timeout", Toast.LENGTH_LONG);
-												toast.show();
-											}
-										});
+												@Override
+												public void run() {
+													Toast toast = Toast.makeText(getActivity(), "Ping timeout",
+															Toast.LENGTH_LONG);
+													toast.show();
+												}
+											});
 									}
 								};
 								jaxmpp.getModule(PingModule.class).ping(
@@ -341,10 +349,10 @@ public class AccountsStatusFragment extends Fragment {
 			MenuInflater inflater = new MenuInflater(this.getActivity().getApplicationContext());
 			onCreateOptionsMenu(menu, inflater);
 		}
-		
+
 		super.onPrepareOptionsMenu(menu);
 	}
-	
+
 	@Override
 	public void onStart() {
 		super.onStart();
