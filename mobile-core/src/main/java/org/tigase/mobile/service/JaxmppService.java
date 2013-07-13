@@ -1,6 +1,5 @@
 package org.tigase.mobile.service;
 
-import java.io.File;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.tigase.mobile.Constants;
-import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.MultiJaxmpp;
 import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
@@ -42,6 +40,7 @@ import org.tigase.mobile.sync.SyncAdapter;
 import org.tigase.mobile.ui.NotificationHelper;
 
 import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.Connector;
@@ -63,9 +62,15 @@ import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule.MessageCarbonEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule.MessageReceivedCarbonEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule.MessageSentCarbonEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
+import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.DiscoInfoEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
@@ -287,6 +292,7 @@ public class JaxmppService extends Service {
 
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new J2SESessionObject();
+				sessionObject.setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
 				sessionObject.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers());
 				sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 				sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, resources.getString(R.string.app_name));
@@ -326,13 +332,24 @@ public class JaxmppService extends Service {
 
 				sessionObject.setUserProperty(JaxmppCore.AUTOADD_STANZA_ID_KEY, Boolean.TRUE);
 
-				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject); /* {
-					@Override
-					public void modulesInit() {
-						super.modulesInit();
-						getModulesManager().register(new FileTransferModule(observable, sessionObject, writer));
-					}
-				};*/				
+				final Jaxmpp jaxmpp = new Jaxmpp(sessionObject); /*
+																 * {
+																 * 
+																 * @Override
+																 * public void
+																 * modulesInit()
+																 * {
+																 * super.modulesInit
+																 * ();
+																 * getModulesManager
+																 * (
+																 * ).register(new
+																 * FileTransferModule
+																 * (observable,
+																 * sessionObject
+																 * , writer)); }
+																 * };
+																 */
 				jaxmpp.setExecutor(executor);
 				CapabilitiesModule capabilitiesModule = jaxmpp.getModule(CapabilitiesModule.class);
 				if (capabilitiesModule != null) {
@@ -406,13 +423,21 @@ public class JaxmppService extends Service {
 
 	private long currentRoomIdFocus = -1;
 
-/*	private final Listener<FileTransferProgressEvent> fileTransferProgressListener;
+	/*
+	 * private final Listener<FileTransferProgressEvent>
+	 * fileTransferProgressListener;
+	 * 
+	 * private final Listener<FileTransferRequestEvent>
+	 * fileTransferRequestListener;
+	 * 
+	 * private final Listener<StreamhostsEvent> fileTransferStreamhostsListener;
+	 */
 
-	private final Listener<FileTransferRequestEvent> fileTransferRequestListener;
-
-	private final Listener<StreamhostsEvent> fileTransferStreamhostsListener;*/
+	private FileTransferFeature fileTransferFeature;
 
 	private ClientFocusReceiver focusChangeReceiver;
+
+	private final Listener<MessageCarbonEvent> forwardedMessageListener;
 
 	private final GeolocationFeature geolocationFeature;
 
@@ -424,11 +449,11 @@ public class JaxmppService extends Service {
 
 	private final MobileModeFeature mobileModeFeature;
 
+	// private NotificationManager notificationManager;
+
 	private Listener<MucEvent> mucListener;
 
 	private ConnReceiver myConnReceiver;
-
-	// private NotificationManager notificationManager;
 
 	private ScreenStateReceiver myScreenStateReceiver;
 
@@ -450,6 +475,8 @@ public class JaxmppService extends Service {
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
+	private final Listener<DiscoInfoEvent> serverFeaturesListener;
+
 	private final Listener<Connector.ConnectorEvent> stateChangeListener;
 
 	private Listener<PresenceEvent> subscribeRequestListener;
@@ -457,8 +484,6 @@ public class JaxmppService extends Service {
 	protected final Timer timer = new Timer();
 
 	private int usedNetworkType = -1;
-
-	private FileTransferFeature fileTransferFeature;
 
 	public JaxmppService() {
 		super();
@@ -471,6 +496,18 @@ public class JaxmppService extends Service {
 
 		if (DEBUG)
 			Log.i(TAG, "creating");
+
+		this.serverFeaturesListener = new Listener<DiscoInfoModule.DiscoInfoEvent>() {
+
+			@Override
+			public void handleEvent(DiscoInfoEvent be) throws JaxmppException {
+				final Set<String> sfeatures = be.getSessionObject().getProperty(DiscoInfoModule.SERVER_FEATURES_KEY);
+				if (sfeatures != null && sfeatures.contains(MessageCarbonsModule.XMLNS_MC)) {
+					enableMessageCarbons(be.getSessionObject());
+				}
+
+			}
+		};
 
 		this.presenceSendListener = new Listener<PresenceModule.PresenceEvent>() {
 
@@ -488,50 +525,22 @@ public class JaxmppService extends Service {
 			}
 		};
 
+		this.forwardedMessageListener = new Listener<MessageCarbonsModule.MessageCarbonEvent>() {
+
+			@Override
+			public void handleEvent(final MessageCarbonEvent be) throws JaxmppException {
+				if (be instanceof MessageReceivedCarbonEvent) {
+					storeIncomingMessage(be, false);
+				} else if (be instanceof MessageSentCarbonEvent) {
+					storeOutgoingMessage(be);
+				}
+			}
+		};
 		this.messageListener = new Listener<MessageModule.MessageEvent>() {
 
 			@Override
 			public void handleEvent(MessageEvent be) throws JaxmppException {
-				if (be.getChat() != null
-						&& (be.getMessage().getBody() != null || be.getMessage().getType() == StanzaType.error)) {
-
-					Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getChat().getJid().getBareJid().toString());
-
-					ContentValues values = new ContentValues();
-					values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
-					values.put(ChatTableMetaData.FIELD_AUTHOR_JID, be.getChat().getJid().getBareJid().toString());
-					values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
-					Message msg = be.getMessage();
-					if (msg.getType() == StanzaType.error) {
-						ErrorElement error = ErrorElement.extract(msg);
-						String body = "Error: ";
-						if (error != null) {
-							if (error.getText() != null) {
-								body += error.getText();
-							} else {
-								ErrorCondition errorCondition = error.getCondition();
-								if (errorCondition != null) {
-									body += errorCondition.getElementName();
-								}
-							}
-						}
-						if (msg.getBody() != null) {
-							body += " ------ ";
-							body += msg.getBody();
-						}
-						values.put(ChatTableMetaData.FIELD_BODY, body);
-					} else {
-						values.put(ChatTableMetaData.FIELD_BODY, msg.getBody());
-					}
-					values.put(ChatTableMetaData.FIELD_STATE,
-							currentChatIdFocus != be.getChat().getId() ? ChatTableMetaData.STATE_INCOMING_UNREAD
-									: ChatTableMetaData.STATE_INCOMING);
-					values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
-
-					getContentResolver().insert(uri, values);
-
-					showChatNotification(be);
-				}
+				storeIncomingMessage(be, true);
 			}
 		};
 		this.mucListener = new Listener<MucModule.MucEvent>() {
@@ -674,44 +683,49 @@ public class JaxmppService extends Service {
 			}
 		};
 
-/*		this.fileTransferProgressListener = new Listener<FileTransferProgressEvent>() {
+		/*
+		 * this.fileTransferProgressListener = new
+		 * Listener<FileTransferProgressEvent>() {
+		 * 
+		 * @Override public void handleEvent(FileTransferProgressEvent be)
+		 * throws JaxmppException {
+		 * 
+		 * FileTransfer ft = be.getFileTransfer(); if (ft != null) {
+		 * notificationHelper.notifyFileTransferProgress(ft); } }
+		 * 
+		 * };
+		 */
 
-			@Override
-			public void handleEvent(FileTransferProgressEvent be) throws JaxmppException {
+		/*
+		 * this.fileTransferRequestListener = new
+		 * Listener<FileTransferRequestEvent>() {
+		 * 
+		 * @Override public void handleEvent(FileTransferRequestEvent be) throws
+		 * JaxmppException { // if there is no stream-method supported by us we
+		 * return error if (be.getStreamMethods() == null ||
+		 * !be.getStreamMethods().contains(Features.BYTESTREAMS)) {
+		 * FileTransferModule ftModule =
+		 * getMulti().get(be.getSessionObject()).getModule
+		 * (FileTransferModule.class); ftModule.sendNoValidStreams(be); return;
+		 * }
+		 * 
+		 * notificationHelper.notifyFileTransferRequest(be); }
+		 * 
+		 * };
+		 */
 
-				FileTransfer ft = be.getFileTransfer();
-				if (ft != null) {
-					notificationHelper.notifyFileTransferProgress(ft);
-				}
-			}
-
-		};*/
-
-/*		this.fileTransferRequestListener = new Listener<FileTransferRequestEvent>() {
-
-			@Override
-			public void handleEvent(FileTransferRequestEvent be) throws JaxmppException {
-				// if there is no stream-method supported by us we return error
-				if (be.getStreamMethods() == null || !be.getStreamMethods().contains(Features.BYTESTREAMS)) {
-					FileTransferModule ftModule = getMulti().get(be.getSessionObject()).getModule(FileTransferModule.class);
-					ftModule.sendNoValidStreams(be);
-					return;
-				}
-
-				notificationHelper.notifyFileTransferRequest(be);
-			}
-
-		}; */
-
-/*		this.fileTransferStreamhostsListener = new Listener<StreamhostsEvent>() {
-
-			@Override
-			public void handleEvent(StreamhostsEvent be) throws JaxmppException {
-				Jaxmpp jaxmpp = getMulti().get(be.getSessionObject());
-				AndroidFileTransferUtility.fileTransferHostsEventReceived(jaxmpp, be);
-			}
-
-		};*/
+		/*
+		 * this.fileTransferStreamhostsListener = new
+		 * Listener<StreamhostsEvent>() {
+		 * 
+		 * @Override public void handleEvent(StreamhostsEvent be) throws
+		 * JaxmppException { Jaxmpp jaxmpp =
+		 * getMulti().get(be.getSessionObject());
+		 * AndroidFileTransferUtility.fileTransferHostsEventReceived(jaxmpp,
+		 * be); }
+		 * 
+		 * };
+		 */
 
 		this.mobileModeFeature = new MobileModeFeature(this);
 		this.geolocationFeature = new GeolocationFeature(this);
@@ -836,6 +850,25 @@ public class JaxmppService extends Service {
 		synchronized (connectionErrorsCounter) {
 			connectionErrorsCounter.clear();
 		}
+	}
+
+	protected void enableMessageCarbons(SessionObject sessionObject) throws JaxmppException {
+		JaxmppCore jaxmpp = getMulti().get(sessionObject);
+		MessageCarbonsModule mc = jaxmpp.getModule(MessageCarbonsModule.class);
+		mc.enable(new AsyncCallback() {
+
+			@Override
+			public void onError(Stanza responseStanza, ErrorCondition error) throws JaxmppException {
+			}
+
+			@Override
+			public void onSuccess(Stanza responseStanza) throws JaxmppException {
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+			}
+		});
 	}
 
 	private int getActiveNetworkConnectionType() {
@@ -1048,6 +1081,8 @@ public class JaxmppService extends Service {
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(this.myScreenStateReceiver, filter);
 
+		getMulti().addListener(DiscoInfoModule.ServerFeaturesReceived, this.serverFeaturesListener);
+
 		getMulti().addListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
 		getMulti().addListener(RosterModule.ItemAdded, this.rosterListener);
@@ -1062,14 +1097,21 @@ public class JaxmppService extends Service {
 		getMulti().addListener(AuthModule.AuthFailed, this.invalidAuthListener);
 		getMulti().addListener(Connector.StateChanged, this.stateChangeListener);
 
+		getMulti().addListener(MessageCarbonsModule.Carbon, this.forwardedMessageListener);
+
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().addListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().addListener(MucModule.PresenceError, this.mucListener);
 		getMulti().addListener(MucModule.OccupantLeaved, this.mucListener);
 
-/*		getMulti().addListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
-		getMulti().addListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
-		getMulti().addListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);*/
+		/*
+		 * getMulti().addListener(FileTransferModule.ProgressEventType,
+		 * this.fileTransferProgressListener);
+		 * getMulti().addListener(FileTransferModule.RequestEventType,
+		 * this.fileTransferRequestListener);
+		 * getMulti().addListener(FileTransferModule.StreamhostsEventType,
+		 * this.fileTransferStreamhostsListener);
+		 */
 
 		getMulti().addListener(PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 
@@ -1119,6 +1161,8 @@ public class JaxmppService extends Service {
 
 		getMulti().removeListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
 
+		getMulti().removeListener(DiscoInfoModule.ServerFeaturesReceived, this.serverFeaturesListener);
+
 		getMulti().removeListener(PresenceModule.BeforeInitialPresence, this.presenceSendListener);
 		getMulti().removeListener(RosterModule.ItemAdded, this.rosterListener);
 		getMulti().removeListener(RosterModule.ItemRemoved, this.rosterListener);
@@ -1132,14 +1176,21 @@ public class JaxmppService extends Service {
 		getMulti().removeListener(AuthModule.AuthFailed, this.invalidAuthListener);
 		getMulti().removeListener(Connector.StateChanged, this.stateChangeListener);
 
+		getMulti().removeListener(MessageCarbonsModule.Carbon, this.forwardedMessageListener);
+
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().removeListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().removeListener(MucModule.PresenceError, this.mucListener);
 		getMulti().removeListener(MucModule.OccupantLeaved, this.mucListener);
 
-/*		getMulti().removeListener(FileTransferModule.ProgressEventType, this.fileTransferProgressListener);
-		getMulti().removeListener(FileTransferModule.RequestEventType, this.fileTransferRequestListener);
-		getMulti().removeListener(FileTransferModule.StreamhostsEventType, this.fileTransferStreamhostsListener);*/
+		/*
+		 * getMulti().removeListener(FileTransferModule.ProgressEventType,
+		 * this.fileTransferProgressListener);
+		 * getMulti().removeListener(FileTransferModule.RequestEventType,
+		 * this.fileTransferRequestListener);
+		 * getMulti().removeListener(FileTransferModule.StreamhostsEventType,
+		 * this.fileTransferStreamhostsListener);
+		 */
 
 		getMulti().removeListener(Connector.Error, this.connectorListener);
 		getMulti().removeListener(Connector.StreamTerminated, this.connectorListener);
@@ -1300,7 +1351,6 @@ public class JaxmppService extends Service {
 	protected void onSubscribeRequest(PresenceEvent be) {
 		notificationHelper.notifySubscribeRequest(be);
 	}
-
 
 	protected void reconnectIfAvailable(final SessionObject sessionObject) {
 		if (!isReconnect()) {
@@ -1534,6 +1584,73 @@ public class JaxmppService extends Service {
 		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
 		alarmMgr.cancel(pi);
+	}
+
+	protected void storeIncomingMessage(MessageEvent be, boolean showNotification) throws XMLException {
+		if (be.getChat() != null && (be.getMessage().getBody() != null || be.getMessage().getType() == StanzaType.error)) {
+
+			Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + be.getChat().getJid().getBareJid().toString());
+
+			ContentValues values = new ContentValues();
+			values.put(ChatTableMetaData.FIELD_THREAD_ID, be.getChat().getThreadId());
+			values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_AUTHOR_JID, be.getChat().getJid().getBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+			Message msg = be.getMessage();
+			if (msg.getType() == StanzaType.error) {
+				ErrorElement error = ErrorElement.extract(msg);
+				String body = "Error: ";
+				if (error != null) {
+					if (error.getText() != null) {
+						body += error.getText();
+					} else {
+						ErrorCondition errorCondition = error.getCondition();
+						if (errorCondition != null) {
+							body += errorCondition.getElementName();
+						}
+					}
+				}
+				if (msg.getBody() != null) {
+					body += " ------ ";
+					body += msg.getBody();
+				}
+				values.put(ChatTableMetaData.FIELD_BODY, body);
+			} else {
+				values.put(ChatTableMetaData.FIELD_BODY, msg.getBody());
+			}
+			values.put(ChatTableMetaData.FIELD_STATE,
+					currentChatIdFocus != be.getChat().getId() ? ChatTableMetaData.STATE_INCOMING_UNREAD
+							: ChatTableMetaData.STATE_INCOMING);
+			values.put(ChatTableMetaData.FIELD_ACCOUNT, be.getSessionObject().getUserBareJid().toString());
+
+			getContentResolver().insert(uri, values);
+
+			if (showNotification)
+				showChatNotification(be);
+		}
+
+	}
+
+	protected void storeOutgoingMessage(MessageEvent be) throws XMLException {
+
+		if (be.getChat() != null && (be.getMessage().getBody() != null || be.getMessage().getType() == StanzaType.error)) {
+			final Chat chat = be.getChat();
+			final String t = be.getMessage().getBody();
+
+			Uri uri = Uri.parse(ChatHistoryProvider.CHAT_URI + "/" + chat.getJid().getBareJid().toString());
+
+			ContentValues values = new ContentValues();
+			values.put(ChatTableMetaData.FIELD_AUTHOR_JID, chat.getSessionObject().getUserBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+			values.put(ChatTableMetaData.FIELD_BODY, t);
+			values.put(ChatTableMetaData.FIELD_THREAD_ID, chat.getThreadId());
+			values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
+			values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_OUT_SENT);
+
+			getContentResolver().insert(uri, values);
+
+		}
 	}
 
 	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {

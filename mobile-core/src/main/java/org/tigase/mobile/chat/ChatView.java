@@ -167,6 +167,7 @@ public class ChatView extends RelativeLayout {
 				values.put(ChatTableMetaData.FIELD_JID, chat.getJid().getBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
 				values.put(ChatTableMetaData.FIELD_BODY, t);
+				values.put(ChatTableMetaData.FIELD_THREAD_ID, chat.getThreadId());
 				values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_STATE, state);
 
