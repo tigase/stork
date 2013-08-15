@@ -48,6 +48,7 @@ import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.connector.StreamError;
@@ -292,7 +293,8 @@ public class JaxmppService extends Service {
 
 			if (!accountsJids.contains(jid)) {
 				SessionObject sessionObject = new J2SESessionObject();
-				sessionObject.setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY, Boolean.TRUE);
+				// sessionObject.setUserProperty(SocketConnector.COMPRESSION_DISABLED_KEY,
+				// Boolean.TRUE);
 				sessionObject.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers());
 				sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, resources.getString(R.string.app_version));
 				sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, resources.getString(R.string.app_name));
@@ -471,7 +473,7 @@ public class JaxmppService extends Service {
 
 	private boolean reconnect = true;
 
-	private final Listener<ResourceBindEvent> resourceBindListener;
+	private final Listener<JaxmppEvent> jaxmppConnected;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
@@ -652,10 +654,10 @@ public class JaxmppService extends Service {
 			}
 		};
 
-		this.resourceBindListener = new Listener<ResourceBinderModule.ResourceBindEvent>() {
+		this.jaxmppConnected = new Listener<JaxmppEvent>() {
 
 			@Override
-			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
+			public void handleEvent(JaxmppEvent be) throws JaxmppException {
 				sendUnsentMessages();
 				JaxmppCore jaxmpp = getMulti().get(be.getSessionObject());
 
@@ -1083,7 +1085,7 @@ public class JaxmppService extends Service {
 
 		getMulti().addListener(DiscoInfoModule.ServerFeaturesReceived, this.serverFeaturesListener);
 
-		getMulti().addListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
+		getMulti().addListener(JaxmppCore.Connected, this.jaxmppConnected);
 
 		getMulti().addListener(RosterModule.ItemAdded, this.rosterListener);
 		getMulti().addListener(RosterModule.ItemRemoved, this.rosterListener);
@@ -1159,7 +1161,7 @@ public class JaxmppService extends Service {
 		stopKeepAlive();
 		setUsedNetworkType(-1);
 
-		getMulti().removeListener(ResourceBinderModule.ResourceBindSuccess, this.resourceBindListener);
+		getMulti().removeListener(JaxmppCore.Connected, this.jaxmppConnected);
 
 		getMulti().removeListener(DiscoInfoModule.ServerFeaturesReceived, this.serverFeaturesListener);
 

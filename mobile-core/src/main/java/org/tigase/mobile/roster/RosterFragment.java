@@ -22,6 +22,7 @@ import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -137,7 +138,7 @@ public class RosterFragment extends Fragment {
 
 	private Object adapter;
 
-	private Listener<ResourceBindEvent> bindListener;
+	private Listener<JaxmppEvent> connectedListener;
 
 	private Cursor c;
 
@@ -167,10 +168,10 @@ public class RosterFragment extends Fragment {
 				updateConnectionStatus();
 			}
 		};
-		this.bindListener = new Listener<ResourceBindEvent>() {
+		this.connectedListener = new Listener<JaxmppEvent>() {
 
 			@Override
-			public void handleEvent(ResourceBindEvent be) throws JaxmppException {
+			public void handleEvent(JaxmppEvent be) throws JaxmppException {
 				updateConnectionStatus();
 			}
 		};
@@ -476,7 +477,7 @@ public class RosterFragment extends Fragment {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
 		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
-		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
+		jaxmpp.addListener(JaxmppCore.Connected, this.connectedListener);
 		updateConnectionStatus();
 
 		if (DEBUG)
@@ -492,7 +493,7 @@ public class RosterFragment extends Fragment {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
 		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
-		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
+		jaxmpp.removeListener(JaxmppCore.Connected, this.connectedListener);
 		super.onStop();
 
 		expandedIds = getExpandedIds();

@@ -9,6 +9,7 @@ import org.tigase.mobile.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
+import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
@@ -76,10 +77,10 @@ public class AccountsStatusFragment extends Fragment {
 
 	private ArrayAdapter<Jaxmpp> adapter;
 
-	private final Listener<ResourceBindEvent> bindListener = new Listener<ResourceBinderModule.ResourceBindEvent>() {
+	private final Listener<JaxmppEvent> connectedListener = new Listener<JaxmppEvent>() {
 
 		@Override
-		public void handleEvent(ResourceBindEvent be) throws JaxmppException {
+		public void handleEvent(JaxmppEvent be) throws JaxmppException {
 			view.post(new Runnable() {
 
 				@Override
@@ -359,7 +360,7 @@ public class AccountsStatusFragment extends Fragment {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 
 		jaxmpp.addListener(Connector.StateChanged, this.connectorListener);
-		jaxmpp.addListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
+		jaxmpp.addListener(JaxmppCore.Connected, this.connectedListener);
 
 		getActivity().getApplicationContext().registerReceiver(this.accountModifiedReceiver,
 				new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION));
@@ -373,7 +374,7 @@ public class AccountsStatusFragment extends Fragment {
 
 		getActivity().getApplicationContext().unregisterReceiver(this.accountModifiedReceiver);
 		jaxmpp.removeListener(Connector.StateChanged, this.connectorListener);
-		jaxmpp.removeListener(ResourceBinderModule.ResourceBindSuccess, this.bindListener);
+		jaxmpp.removeListener(JaxmppCore.Connected, this.connectedListener);
 
 		super.onStop();
 	}
