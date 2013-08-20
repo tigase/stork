@@ -18,6 +18,12 @@ import android.widget.TextView;
 @TargetApi(11)
 public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMessengerActivityHelper {
 
+	private class Holder {
+		TextView description;
+		ImageView status;
+		TextView title;
+	}
+
 	protected TigaseMobileMessengerActivityHelperHoneycomb(TigaseMobileMessengerActivity activity) {
 		super(activity);
 	}
@@ -45,15 +51,15 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 				if (currentPage != 1 && !isXLarge()) {
 					activity.drawerLayout.setDrawerListener(null);
 					activity.drawerToggle.setDrawerIndicatorEnabled(false);
-				}
-				else {
+				} else {
 					activity.drawerLayout.setDrawerListener(activity.drawerToggle);
 					activity.drawerToggle.setDrawerIndicatorEnabled(true);
 				}
-				
+
 				actionBar.setDisplayHomeAsUpEnabled(true);
-				//actionBar.setHomeButtonEnabled(true);
-//				actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 && !isXLarge());
+				// actionBar.setHomeButtonEnabled(true);
+				// actionBar.setDisplayHomeAsUpEnabled(currentPage != 1 &&
+				// !isXLarge());
 
 				// Setting subtitle to show who we chat with
 				ChatWrapper c = activity.getChatByPageIndex(currentPage);
@@ -100,6 +106,7 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 					} else if (c.getRoom() != null) {
 						subtitle = "Room " + c.getRoom().getRoomJid().toString();
 						icon = R.drawable.user_offline;
+
 						if (c.getRoom().getState() == State.joined) {
 							icon = R.drawable.user_available;
 						}
@@ -141,11 +148,5 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 				return;
 			}
 		}
-	}
-
-	private class Holder {
-		TextView title;
-		TextView description;
-		ImageView status;
 	}
 }

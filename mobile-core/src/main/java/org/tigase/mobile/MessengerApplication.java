@@ -1,5 +1,8 @@
 package org.tigase.mobile;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.db.providers.DBMUCManager;
 import org.tigase.mobile.db.providers.DBRosterCacheProvider;
@@ -25,6 +28,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterCacheProvider;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import android.app.Application;
 import android.content.ContentUris;
 import android.content.Context;
@@ -38,6 +42,8 @@ public class MessengerApplication extends Application {
 	public static MessengerApplication app;
 
 	private static MultiJaxmpp multiJaxmpp;
+
+	private final Timer timer = new Timer(true);
 
 	private GoogleAnalyticsTracker tracker;
 
@@ -86,6 +92,31 @@ public class MessengerApplication extends Application {
 		// logger.setLevel(Level.ALL);
 	}
 
+	public synchronized void clearPresences(final SessionObject sessionObject, boolean delayed) {
+		TimerTask tt = new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					if (getState(sessionObject) == State.disconnected) {
+						multiJaxmpp.get(sessionObject).getPresence().clear();
+						for (RosterItem ri : multiJaxmpp.get(sessionObject).getRoster().getAll()) {
+							PresenceEvent pe = new PresenceEvent(PresenceModule.ContactUnavailable, sessionObject);
+							pe.setJid(JID.jidInstance(ri.getJid()));
+							SyncAdapter.syncContactStatus(getApplicationContext(), pe);
+						}
+					}
+				} catch (JaxmppException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		if (delayed) {
+			timer.schedule(tt, 1000 * StreamManagementModule.getResumptionTime(sessionObject, 1));
+		} else
+			tt.run();
+	}
+
 	private void createMultiJaxmpp() {
 		multiJaxmpp = new MultiJaxmpp();
 
@@ -107,15 +138,10 @@ public class MessengerApplication extends Application {
 		multiJaxmpp.addListener(Connector.StateChanged, new Listener<Connector.ConnectorEvent>() {
 
 			@Override
-			public void handleEvent(ConnectorEvent be) throws JaxmppException {
+			public void handleEvent(final ConnectorEvent be) throws JaxmppException {
 
 				if (getState(be.getSessionObject()) == State.disconnected) {
-					multiJaxmpp.get(be.getSessionObject()).getPresence().clear();
-					for (RosterItem ri : multiJaxmpp.get(be.getSessionObject()).getRoster().getAll()) {
-						PresenceEvent pe = new PresenceEvent(PresenceModule.ContactUnavailable, be.getSessionObject());
-						pe.setJid(JID.jidInstance(ri.getJid()));
-						SyncAdapter.syncContactStatus(getApplicationContext(), pe);
-					}
+					clearPresences(be.getSessionObject(), true);
 				}
 			}
 		});

@@ -9,16 +9,15 @@ import org.tigase.mobile.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
 import tigase.jaxmpp.core.client.Connector.State;
-import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule.PingAsyncCallback;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.AccountManager;
@@ -157,6 +156,8 @@ public class AccountsStatusFragment extends Fragment {
 							try {
 								JaxmppService.disable(jaxmpp.getSessionObject(), true);
 								jaxmpp.disconnect();
+								((MessengerApplication) getActivity().getApplication()).clearPresences(
+										jaxmpp.getSessionObject(), false);
 							} catch (JaxmppException ex) {
 								Log.e(TAG, "error manually disconnecting account "
 										+ jaxmpp.getSessionObject().getUserBareJid().toString(), ex);

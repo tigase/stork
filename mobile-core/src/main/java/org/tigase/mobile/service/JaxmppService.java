@@ -57,7 +57,6 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
@@ -392,6 +391,7 @@ public class JaxmppService extends Service {
 			accountsJids.remove(jid);
 		}
 
+		final MessengerApplication app = (MessengerApplication) context.getApplicationContext();
 		for (BareJID jid : accountsJids) {
 			final JaxmppCore jaxmpp = multi.get(jid);
 			if (jaxmpp != null) {
@@ -402,6 +402,7 @@ public class JaxmppService extends Service {
 					public void run() {
 						try {
 							jaxmpp.disconnect();
+							app.clearPresences(jaxmpp.getSessionObject(), false);
 						} catch (Exception e) {
 							Log.e(TAG, "Can't disconnect", e);
 						}
@@ -445,13 +446,15 @@ public class JaxmppService extends Service {
 
 	private Listener<AuthEvent> invalidAuthListener;
 
+	private final Listener<JaxmppEvent> jaxmppConnected;
+
 	private long keepaliveInterval = 3 * 60 * 1000;
 
 	private final Listener<MessageModule.MessageEvent> messageListener;
 
-	private final MobileModeFeature mobileModeFeature;
-
 	// private NotificationManager notificationManager;
+
+	private final MobileModeFeature mobileModeFeature;
 
 	private Listener<MucEvent> mucListener;
 
@@ -472,8 +475,6 @@ public class JaxmppService extends Service {
 	private final Listener<PresenceEvent> presenceSendListener;
 
 	private boolean reconnect = true;
-
-	private final Listener<JaxmppEvent> jaxmppConnected;
 
 	private final Listener<RosterModule.RosterEvent> rosterListener;
 
@@ -836,6 +837,7 @@ public class JaxmppService extends Service {
 
 	private void disconnectAllJaxmpp() {
 		setUsedNetworkType(-1);
+		final MessengerApplication app = (MessengerApplication) getApplicationContext();
 		for (final JaxmppCore j : getMulti().get()) {
 			(new Thread() {
 				@Override
@@ -843,6 +845,7 @@ public class JaxmppService extends Service {
 					try {
 						GeolocationFeature.updateLocation(j, null, null);
 						((Jaxmpp) j).disconnect(false);
+						app.clearPresences(j.getSessionObject(), false);
 					} catch (Exception e) {
 						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserBareJid(), e);
 					}
@@ -1346,7 +1349,6 @@ public class JaxmppService extends Service {
 
 			geolocationFeature.unregisterLocationListener();
 		}
-
 		return START_STICKY;
 	}
 
@@ -1380,7 +1382,8 @@ public class JaxmppService extends Service {
 	private void rejoinToRooms(final SessionObject sessionObject) {
 		try {
 			for (ChatWrapper x : getMulti().getChats()) {
-				if (x.isRoom() && x.getRoom().getSessionObject() == sessionObject) {
+				if (x.isRoom() && x.getRoom().getSessionObject() == sessionObject
+						&& x.getRoom().getState() != tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State.joined) {
 					x.getRoom().rejoin();
 				}
 			}

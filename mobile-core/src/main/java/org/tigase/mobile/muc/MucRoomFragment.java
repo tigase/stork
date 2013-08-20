@@ -11,6 +11,9 @@ import org.tigase.mobile.chat.ChatHistoryFragment;
 import org.tigase.mobile.chatlist.ChatListActivity;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
 
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.ConnectorEvent;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
@@ -73,7 +76,11 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		return f;
 	}
 
+	private Listener<ConnectorEvent> connectionListener;
+
 	private EditText ed;
+
+	private JaxmppCore jaxmpp;
 
 	private ListView lv;
 
@@ -107,6 +114,13 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			@Override
 			public void handleEvent(MucEvent be) throws JaxmppException {
 				onMucEvent(be);
+			}
+		};
+		this.connectionListener = new Listener<ConnectorEvent>() {
+
+			@Override
+			public void handleEvent(ConnectorEvent be) throws JaxmppException {
+				updatePresenceImage();
 			}
 		};
 	}
@@ -162,6 +176,8 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 				}
 
 				this.room = ch.getRoom();
+				this.jaxmpp = multi.get(ch.getRoom().getSessionObject());
+
 			}
 		}
 
@@ -187,7 +203,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 		TextView title = (TextView) view.findViewById(R.id.textView1);
 		if (title != null) {
-			title.setText(room.getRoomJid().toString());
+			title.setText("--" + room.getRoomJid().toString());
 		}
 		ed.setEnabled(room.getState() == State.joined);
 		sendButton.setEnabled(room.getState() == State.joined);
@@ -215,7 +231,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 		jaxmpp.addListener(MucModule.StateChange, this.mucListener);
-
+		jaxmpp.addListener(Connector.StateChanged, this.connectionListener);
 	}
 
 	@Override
@@ -223,7 +239,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 		return new CursorLoader(getActivity().getApplicationContext(), Uri.parse(ChatHistoryProvider.CHAT_URI + "/"
 				+ room.getRoomJid()), null, null, null, null);
 	}
-	
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
@@ -289,6 +305,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 	public void onDestroy() {
 		final MultiJaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp();
 		jaxmpp.removeListener(MucModule.StateChange, this.mucListener);
+		jaxmpp.removeListener(Connector.StateChanged, this.connectionListener);
 
 		super.onDestroy();
 	}
@@ -326,7 +343,7 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					room.getSessionObject());
 			final MucModule cm = jaxmpp.getModule(MucModule.class);
-			
+
 			viewPager.setCurrentItem(1);
 			AsyncTask<Void, Void, Void> t = new AsyncTask<Void, Void, Void>() {
 
@@ -342,8 +359,9 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 				@Override
 				protected void onPostExecute(Void param) {
-					// this will be done by TigaseMessengerActivity after receiving RoomClosed event
-//					viewPager.getAdapter().notifyDataSetChanged();
+					// this will be done by TigaseMessengerActivity after
+					// receiving RoomClosed event
+					// viewPager.getAdapter().notifyDataSetChanged();
 					viewPager.setCurrentItem(1);
 				}
 			};
@@ -360,10 +378,10 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			MenuInflater inflater = new MenuInflater(this.getActivity().getApplicationContext());
 			onCreateOptionsMenu(menu, inflater);
 		}
-		
+
 		super.onPrepareOptionsMenu(menu);
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -406,36 +424,58 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 
 	private void updatePresenceImage() {
 		if (view != null) {
+			final boolean connected = jaxmpp.isConnected();
 			Runnable r = new Runnable() {
 
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
 
-					Log.i(TAG, "STATE: " + room.getState());
+					Log.i(TAG, "MUC STATE: " + room.getState() + ", Connected: " + connected);
 
 					if (ed != null) {
-						if (room.getState() == State.joined && !ed.isEnabled()) {
+						if (!connected) {
+							Log.i(TAG, "MUC Field Button  false false 0");
+
+							ed.setEnabled(false);
+							sendButton.setEnabled(false);
+						} else if (room.getState() == State.joined && !ed.isEnabled()) {
+							Log.i(TAG, "MUC Field Button  true true ");
+
 							ed.setEnabled(true);
 							sendButton.setEnabled(true);
 						} else if (room.getState() != State.joined && ed.isEnabled()) {
+							Log.i(TAG, "MUC Field Button  false false 1");
+
 							ed.setEnabled(false);
 							sendButton.setEnabled(false);
 						}
 					}
-					
+
+					Log.i(TAG, "MUC state image " + (stateImage != null));
 					if (stateImage != null) {
 						stateImage.post(new Runnable() {
 
 							@Override
 							public void run() {
-								if (room.getState() == State.not_joined) {
+								if (!connected) {
+									Log.i(TAG, "MUC state image off");
+
+									progressBar.setVisibility(View.GONE);
+									stateImage.setImageResource(R.drawable.user_offline);
+								} else if (room.getState() == State.not_joined) {
+									Log.i(TAG, "MUC state image off");
+
 									progressBar.setVisibility(View.GONE);
 									stateImage.setImageResource(R.drawable.user_offline);
 								} else if (room.getState() == State.requested) {
+									Log.i(TAG, "MUC state image wait");
+
 									progressBar.setVisibility(View.VISIBLE);
 									stateImage.setVisibility(View.GONE);
 								} else if (room.getState() == State.joined) {
+									Log.i(TAG, "MUC state image oavailable");
+
 									progressBar.setVisibility(View.GONE);
 									stateImage.setImageResource(R.drawable.user_available);
 								}
