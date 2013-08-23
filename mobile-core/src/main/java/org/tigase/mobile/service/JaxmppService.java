@@ -835,7 +835,7 @@ public class JaxmppService extends Service {
 		connectJaxmpp(jaxmpp, delay == null ? null : new Date(delay + System.currentTimeMillis()));
 	}
 
-	private void disconnectAllJaxmpp() {
+	private void disconnectAllJaxmpp(final boolean cleaning) {
 		setUsedNetworkType(-1);
 		final MessengerApplication app = (MessengerApplication) getApplicationContext();
 		for (final JaxmppCore j : getMulti().get()) {
@@ -845,7 +845,7 @@ public class JaxmppService extends Service {
 					try {
 						GeolocationFeature.updateLocation(j, null, null);
 						((Jaxmpp) j).disconnect(false);
-						app.clearPresences(j.getSessionObject(), false);
+						app.clearPresences(j.getSessionObject(), !cleaning);
 					} catch (Exception e) {
 						Log.e(TAG, "cant; disconnect account " + j.getSessionObject().getUserBareJid(), e);
 					}
@@ -1160,7 +1160,7 @@ public class JaxmppService extends Service {
 
 		Log.i(TAG, "Stopping service");
 		setRecconnect(false);
-		disconnectAllJaxmpp();
+		disconnectAllJaxmpp(true);
 		stopKeepAlive();
 		setUsedNetworkType(-1);
 
@@ -1289,7 +1289,7 @@ public class JaxmppService extends Service {
 			if (DEBUG)
 				Log.d(TAG, "No internet connection");
 			setRecconnect(false);
-			disconnectAllJaxmpp();
+			disconnectAllJaxmpp(false);
 		}
 	}
 
