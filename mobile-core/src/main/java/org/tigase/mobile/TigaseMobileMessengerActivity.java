@@ -1,5 +1,6 @@
 package org.tigase.mobile;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +40,8 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
@@ -49,6 +52,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
@@ -82,6 +86,68 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class TigaseMobileMessengerActivity extends FragmentActivity {
+
+	private class DrawerMenuAdapter extends ArrayAdapter<DrawerMenuItem> {
+
+		private final Context context;
+		private final List<DrawerMenuItem> items;
+
+		public DrawerMenuAdapter(Context context, int textViewResourceId, List<DrawerMenuItem> items) {
+			super(context, textViewResourceId, items);
+			this.context = context;
+			this.items = items;
+		}
+
+		@Override
+		public boolean areAllItemsEnabled() {
+			return false;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View rowView = inflater.inflate(R.layout.main_left_drawer_item, parent, false);
+			TextView textView = (TextView) rowView.findViewById(R.id.main_left_drawer_item_text);
+			ImageView imageView = (ImageView) rowView.findViewById(R.id.main_left_drawer_item_icon);
+
+			DrawerMenuItem item = items.get(position);
+
+			textView.setText(item.text);
+			imageView.setImageResource(item.icon);
+
+			return rowView;
+		}
+
+		@Override
+		public boolean isEnabled(int pos) {
+			DrawerMenuItem item = getItem(pos);
+			boolean connected = false;
+			final MultiJaxmpp multi = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
+			for (JaxmppCore jaxmpp : multi.get()) {
+				connected |= jaxmpp.isConnected();
+			}
+			return super.isEnabled(pos) && (!item.connectionRequired || connected);
+		}
+
+	}
+
+	private class DrawerMenuItem {
+		final boolean connectionRequired;
+		final int icon;
+		final int id;
+		final int text;
+
+		public DrawerMenuItem(int id, int text, int icon) {
+			this(id, text, icon, false);
+		}
+
+		public DrawerMenuItem(int id, int text, int icon, boolean connectionRequired) {
+			this.id = id;
+			this.text = text;
+			this.icon = icon;
+			this.connectionRequired = connectionRequired;
+		}
+	}
 
 	private class RosterClickReceiver extends BroadcastReceiver {
 
@@ -131,11 +197,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public static final String MUC_ERROR_ACTION = "org.tigase.mobile.MUC_ERROR_ACTION";
 
-	public static final String MUC_MESSAGE_ACTION = "org.tigase.mobile.MUC_MESSAGE_ACTION";
-
 	// private ListView rosterList;
 
+	public static final String MUC_MESSAGE_ACTION = "org.tigase.mobile.MUC_MESSAGE_ACTION";
+
 	public static final String NEW_CHAT_MESSAGE_ACTION = "org.tigase.mobile.NEW_CHAT_MESSAGE_ACTION";
+
+	public final static int NEWS_DIALOG = 3;
 
 	public static final int REQUEST_CHAT = 3;
 
@@ -150,6 +218,10 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	private static final String TAG = "TigaseMobileMessengerActivity";
 
 	public static final String WARNING_ACTION = "org.tigase.mobile.WARNING_ACTION";
+
+	protected static RosterFragment createRosterFragment(String string) {
+		return RosterFragment.newInstance(string);
+	}
 
 	private MyFragmentPageAdapter adapter;
 
@@ -167,13 +239,13 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	private final BroadcastReceiver mucErrorReceiver;
 
-	private final OnSharedPreferenceChangeListener prefChangeListener;
+	private final OnSharedPreferenceChangeListener prefChangeListener;;
 
 	private final RosterClickReceiver rosterClickReceiver = new RosterClickReceiver();
 
 	public ViewPager viewPager;
 
-	private ViewPager viewRoster;;
+	private ViewPager viewRoster;
 
 	private int XcurrentPage = -1;
 
@@ -206,10 +278,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 				}
 			}
 		};
-	}
-
-	protected static RosterFragment createRosterFragment(String string) {
-		return RosterFragment.newInstance(string);
 	}
 
 	protected Integer findChat(final long chatId) {
@@ -279,7 +347,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (x >= chats.size())
 			return null;
 		return chats.get(x);
-	}
+	};
 
 	protected List<ChatWrapper> getChatList() {
 		return ((MessengerApplication) getApplicationContext()).getMultiJaxmpp().getChats();
@@ -287,7 +355,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 	public int getCurrentPage() {
 		return XcurrentPage;
-	};
+	}
 
 	private void notifyPageChange(int msg) {
 		Intent intent = new Intent();
@@ -351,6 +419,12 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			setVisiblePage(1);
 		} else
 			super.onBackPressed();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		drawerToggle.onConfigurationChanged(newConfig);
 	}
 
 	/** Called when the activity is first created. */
@@ -582,17 +656,33 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 
 		processingNotificationIntent(getIntent());
 
+		try {
+			int codeC = getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
+			int codeP = mPreferences.getInt("news_dialog_displayed_for", -1);
+			if (codeC != codeP) {
+				mPreferences.edit().putInt("news_dialog_displayed_for", codeC).commit();
+				showNewsInfo();
+			}
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-		drawerToggle.onConfigurationChanged(newConfig);
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
+	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
+		case NEWS_DIALOG: {
+
+			String str = bundle.getString("news_html");
+
+			Builder bldr = new AlertDialog.Builder(this);
+			bldr.setTitle("News");
+			bldr.setCancelable(true);
+			bldr.setMessage(Html.fromHtml(str));
+			return bldr.create();
+		}
+
 		case CONTACT_REMOVE_DIALOG:
 			return null;
 		case ABOUT_DIALOG: {
@@ -629,14 +719,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		}
 	}
 
-	@Override
-	protected void onDestroy() {
-		unregisterReceiver(mucErrorReceiver);
-
-		this.mPreferences.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
-		super.onDestroy();
-	}
-
 	// @Override
 	// protected void onActivityResult(int requestCode, int resultCode, Intent
 	// data) {
@@ -670,6 +752,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 	//
 	// }
 	// }
+
+	@Override
+	protected void onDestroy() {
+		unregisterReceiver(mucErrorReceiver);
+
+		this.mPreferences.unregisterOnSharedPreferenceChangeListener(prefChangeListener);
+		super.onDestroy();
+	}
 
 	@Override
 	public void onDetachedFromWindow() {
@@ -719,14 +809,6 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (DEBUG)
 			Log.d(TAG, "onNewIntent() action=" + intent.getAction());
 		processingNotificationIntent(intent);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if ((getCurrentPage() == 1 || helper.isXLarge()) && drawerToggle.onOptionsItemSelected(item)) {
-			return true;
-		}
-		return onOptionsItemSelected(item.getItemId());
 	}
 
 	private boolean onOptionsItemSelected(int id) {
@@ -817,6 +899,14 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if ((getCurrentPage() == 1 || helper.isXLarge()) && drawerToggle.onOptionsItemSelected(item)) {
+			return true;
+		}
+		return onOptionsItemSelected(item.getItemId());
 	}
 
 	@Override
@@ -1024,65 +1114,25 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		newFragment.show(getSupportFragmentManager(), "dialog");
 	}
 
-	private class DrawerMenuItem {
-		final int id;
-		final int text;
-		final int icon;
-		final boolean connectionRequired;
+	protected void showNewsInfo() {
+		Bundle b = new Bundle();
 
-		public DrawerMenuItem(int id, int text, int icon) {
-			this(id, text, icon, false);
-		}
-
-		public DrawerMenuItem(int id, int text, int icon, boolean connectionRequired) {
-			this.id = id;
-			this.text = text;
-			this.icon = icon;
-			this.connectionRequired = connectionRequired;
-		}
-	}
-
-	private class DrawerMenuAdapter extends ArrayAdapter<DrawerMenuItem> {
-
-		private final Context context;
-		private final List<DrawerMenuItem> items;
-
-		public DrawerMenuAdapter(Context context, int textViewResourceId, List<DrawerMenuItem> items) {
-			super(context, textViewResourceId, items);
-			this.context = context;
-			this.items = items;
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			View rowView = inflater.inflate(R.layout.main_left_drawer_item, parent, false);
-			TextView textView = (TextView) rowView.findViewById(R.id.main_left_drawer_item_text);
-			ImageView imageView = (ImageView) rowView.findViewById(R.id.main_left_drawer_item_icon);
-
-			DrawerMenuItem item = items.get(position);
-
-			textView.setText(item.text);
-			imageView.setImageResource(item.icon);
-
-			return rowView;
-		}
-
-		@Override
-		public boolean areAllItemsEnabled() {
-			return false;
-		}
-
-		@Override
-		public boolean isEnabled(int pos) {
-			DrawerMenuItem item = getItem(pos);
-			boolean connected = false;
-			final MultiJaxmpp multi = ((MessengerApplication) getApplicationContext()).getMultiJaxmpp();
-			for (JaxmppCore jaxmpp : multi.get()) {
-				connected |= jaxmpp.isConnected();
+		StringBuilder sb = new StringBuilder();
+		try {
+			InputStream in = getResources().openRawResource(R.raw.news_html);
+			int c;
+			while ((c = in.read()) != -1) {
+				sb.append((char) c);
 			}
-			return super.isEnabled(pos) && (!item.connectionRequired || connected);
+
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
+		if (sb.toString().length() != 0) {
+			b.putString("news_html", sb.toString());
+			showDialog(NEWS_DIALOG, b);
+		}
 	}
 }
