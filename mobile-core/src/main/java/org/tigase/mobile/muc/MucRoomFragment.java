@@ -415,10 +415,6 @@ public class MucRoomFragment extends FragmentWithUID implements LoaderCallbacks<
 			}
 		};
 		task.execute(t);
-		((MessengerApplication) getActivity().getApplicationContext()).getTracker().trackEvent("MucView", // Category
-				"Message", // Action
-				"Send", // Label
-				0);
 		updatePresenceImage();
 	}
 

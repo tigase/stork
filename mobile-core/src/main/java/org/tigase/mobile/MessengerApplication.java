@@ -35,8 +35,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
 public class MessengerApplication extends Application {
 
 	public static MessengerApplication app;
@@ -44,8 +42,6 @@ public class MessengerApplication extends Application {
 	private static MultiJaxmpp multiJaxmpp;
 
 	private final Timer timer = new Timer(true);
-
-	private GoogleAnalyticsTracker tracker;
 
 	public MessengerApplication() {
 		super();
@@ -161,29 +157,12 @@ public class MessengerApplication extends Application {
 		return state == null ? State.disconnected : state;
 	}
 
-	public GoogleAnalyticsTracker getTracker() {
-		return this.tracker;
-	}
-
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
 		AvatarHelper.initilize(getApplicationContext());
 
-		tracker = GoogleAnalyticsTracker.getInstance();
-		tracker.startNewSession(getResources().getString(R.string.TrackingID), 300, this);
-
-		tracker.setCustomVar(1, "app-name", getResources().getString(R.string.app_name));
-		tracker.setCustomVar(2, "app-version", getResources().getString(R.string.app_version));
-	}
-
-	@Override
-	public void onTerminate() {
-		if (tracker != null)
-			tracker.stopSession();
-
-		super.onTerminate();
 	}
 
 }

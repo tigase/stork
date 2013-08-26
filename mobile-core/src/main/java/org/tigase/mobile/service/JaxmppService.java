@@ -807,10 +807,6 @@ public class JaxmppService extends Service {
 								}
 							}
 						}).start();
-					((MessengerApplication) getApplication()).getTracker().trackEvent("Service", // Category
-							"Account", // Action
-							"Login", // Label
-							0);
 				}
 			}
 		};
@@ -993,10 +989,6 @@ public class JaxmppService extends Service {
 
 	private void notificationUpdateFail(SessionObject account, String message, String notificationMessage, Throwable cause) {
 		notificationHelper.notificationUpdateFail(account, message, notificationMessage, cause);
-		((MessengerApplication) getApplication()).getTracker().trackEvent("Service", // Category
-				"Account", // Action
-				"Error", // Label
-				0);
 	}
 
 	@Override

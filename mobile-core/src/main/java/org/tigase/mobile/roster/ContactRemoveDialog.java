@@ -47,8 +47,6 @@ public class ContactRemoveDialog extends DialogFragment {
 
 		String name = RosterDisplayTools.getDisplayName(rosterItem);
 
-		((MessengerApplication) getActivity().getApplication()).getTracker().trackPageView("/contactRemoveDialog");
-
 		return new AlertDialog.Builder(getActivity()).setIcon(android.R.drawable.ic_dialog_alert).setTitle("Delete").setMessage(
 				"Do you want to remove " + name + " (" + rosterItem.getJid() + ")").setPositiveButton(android.R.string.yes,
 				new DialogInterface.OnClickListener() {

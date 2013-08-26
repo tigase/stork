@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="app_name">Tigase Messenger FREE</string>
-    <string name="adUnitId">a14f7a9fd28f3ed</string>
-    <string name="adTestDevices">TEST_EMULATOR,TEST_DEVICE_ID_GOES_HERE</string>
-
-</resources>

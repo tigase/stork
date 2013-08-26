@@ -48,7 +48,6 @@ public class ContactEditActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contact_edit);
-		((MessengerApplication) getApplication()).getTracker().trackPageView("/contactEditPage");
 
 		final long id = getIntent().getLongExtra("itemId", -1);
 		final BareJID account;

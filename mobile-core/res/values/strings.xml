@@ -3,7 +3,6 @@
 
     <string name="app_version">1.5-SNAPSHOT</string>
     <string name="app_name">Tigase Messenger</string>
-    <string name="TrackingID">UA-30622348-1</string>
     <string name="pingServer">Ping</string>
     <string name="auth_rerequested">Rerequested authorization from %1$s (%2$s)</string>
     <string name="auth_removed">Removed authorization from %1$s (%2$s)</string>

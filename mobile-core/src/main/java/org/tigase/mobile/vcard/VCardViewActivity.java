@@ -104,8 +104,6 @@ public class VCardViewActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.vcard);
 
-		((MessengerApplication) getApplication()).getTracker().trackPageView("/vcardViewPage");
-
 		final ProgressDialog dialog = ProgressDialog.show(VCardViewActivity.this, "", "Loading. Please wait...", true);
 		dialog.setCancelable(true);
 		dialog.setOnCancelListener(new OnCancelListener() {

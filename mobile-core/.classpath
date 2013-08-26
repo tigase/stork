@@ -9,7 +9,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry exported="true" kind="var" path="M2_REPO/com/google/android/support-v4/r13/support-v4-r13.jar"/>
-	<classpathentry exported="true" kind="var" path="M2_REPO/com/google/android/apps/analytics/libGoogleAnalytics/1.4.2/libGoogleAnalytics-1.4.2.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

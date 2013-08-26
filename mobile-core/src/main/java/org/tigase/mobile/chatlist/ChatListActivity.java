@@ -158,8 +158,6 @@ public class ChatListActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		((MessengerApplication) getApplication()).getTracker().trackPageView("/chatList");
-
 		setContentView(R.layout.chats_list);
 
 		GridView g = (GridView) findViewById(R.id.chatsGrid);
