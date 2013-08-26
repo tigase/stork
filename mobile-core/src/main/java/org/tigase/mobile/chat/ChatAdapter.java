@@ -1,6 +1,21 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.chat;
-
-import java.sql.Date;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
@@ -20,7 +35,6 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
 import android.text.Spanned;
-import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -45,10 +59,28 @@ public class ChatAdapter extends SimpleCursorAdapter {
 																		 */};
 
 	private final static int[] names = new int[] { R.id.chat_item_body };
+
+	private static void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
+		// Bitmap bmp = AvatarHelper.getAvatar(jid, cursor,
+		// old implementation
+		// VCardsCacheTableMetaData.FIELD_DATA);
+		// if (bmp != null) {
+		// avatar.setImageBitmap(bmp);
+		// } else {
+		// avatar.setImageResource(R.drawable.user_avatar);
+		// }
+
+		// roster uses this below
+		// AvatarHelper.setAvatarToImageView(jid, avatar);
+		// but it is not good as in chat async avatar loading while here
+		// synchronized loading is better as we can use results from cache
+		avatar.setImageBitmap(AvatarHelper.getAvatar(jid));
+	}
+
 	private String nickname;
 
 	public ChatAdapter(Context context, int layout) {
-		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);		
+		super(context, layout, null, cols, names, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		String tmp = null;// prefs.getString(Preferences.NICKNAME_KEY, null);
@@ -104,37 +136,22 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			holder.nickname.setText("?");
 		}
 
-		//java.text.DateFormat df = DateFormat.getTimeFormat(context);
+		// java.text.DateFormat df = DateFormat.getTimeFormat(context);
 		final String txt = EscapeUtils.escape(cursor.getString(cursor.getColumnIndex(ChatTableMetaData.FIELD_BODY)));
 
 		Spanned sp = Html.fromHtml(txt.replace("\n", "<br/>"));
 		holder.webview.setText(sp);
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
-		
-		//Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
-		//holder.timestamp.setText(df.format(t));
+
+		// Date t = new
+		// Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
+		// holder.timestamp.setText(df.format(t));
 		long ts = cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP));
 		CharSequence tsStr =
-//				DateUtils.isToday(ts) 
-//				? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) :
-				DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
+		// DateUtils.isToday(ts)
+		// ? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(),
+		// DateUtils.MINUTE_IN_MILLIS) :
+		DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
 		holder.timestamp.setText(tsStr);
-	}
-
-	private static void setAvatarForJid(ImageView avatar, BareJID jid, Cursor cursor) {
-		// Bitmap bmp = AvatarHelper.getAvatar(jid, cursor,
-		// old implementation
-		// VCardsCacheTableMetaData.FIELD_DATA);
-		// if (bmp != null) {
-		// avatar.setImageBitmap(bmp);
-		// } else {
-		// avatar.setImageResource(R.drawable.user_avatar);
-		// }
-
-		// roster uses this below
-		// AvatarHelper.setAvatarToImageView(jid, avatar);
-		// but it is not good as in chat async avatar loading while here
-		// synchronized loading is better as we can use results from cache
-		avatar.setImageBitmap(AvatarHelper.getAvatar(jid));
 	}
 }

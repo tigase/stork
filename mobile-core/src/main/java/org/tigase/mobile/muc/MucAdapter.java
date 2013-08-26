@@ -1,6 +1,21 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.muc;
-
-import java.sql.Date;
 
 import org.tigase.mobile.R;
 import org.tigase.mobile.db.ChatTableMetaData;
@@ -14,7 +29,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Html;
-import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -153,7 +167,7 @@ public class MucAdapter extends SimpleCursorAdapter {
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.mucmessage_his_text));
 		}
 
-		//java.text.DateFormat df = DateFormat.getTimeFormat(context);
+		// java.text.DateFormat df = DateFormat.getTimeFormat(context);
 
 		if (bd != null && bd.startsWith("/me ")) {
 			holder.body.setVisibility(View.GONE);
@@ -173,13 +187,15 @@ public class MucAdapter extends SimpleCursorAdapter {
 
 		// webview.setMinimumHeight(webview.getMeasuredHeight());
 
-//		Date t = new Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
-//		holder.timestamp.setText(df.format(t));
+		// Date t = new
+		// Date(cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP)));
+		// holder.timestamp.setText(df.format(t));
 		long ts = cursor.getLong(cursor.getColumnIndex(ChatTableMetaData.FIELD_TIMESTAMP));
-		CharSequence tsStr = 
-//				DateUtils.isToday(ts) 
-//				? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) :
-				DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
+		CharSequence tsStr =
+		// DateUtils.isToday(ts)
+		// ? DateUtils.getRelativeTimeSpanString(ts, System.currentTimeMillis(),
+		// DateUtils.MINUTE_IN_MILLIS) :
+		DateUtils.getRelativeDateTimeString(mContext, ts, DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, 0);
 		holder.timestamp.setText(tsStr);
 
 	}

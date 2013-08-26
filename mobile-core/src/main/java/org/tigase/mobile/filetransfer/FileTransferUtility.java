@@ -1,39 +1,39 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.filetransfer;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.tigase.mobile.Features;
 import org.tigase.mobile.MessengerApplication;
 
-import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.DiscoInfoAsyncCallback;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoInfoModule.Identity;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule.DiscoItemsAsyncCallback;
-import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoItemsModule.Item;
 import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
-import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -47,9 +47,27 @@ import android.util.Log;
 
 public class FileTransferUtility {
 
+	private static final class MediaScannerConnectionRefreshClient implements
+			MediaScannerConnection.MediaScannerConnectionClient {
+		protected MediaScannerConnection mediaScanner;
+		protected String path;
+
+		@Override
+		public void onMediaScannerConnected() {
+			mediaScanner.scanFile(path, null);
+		}
+
+		@Override
+		public void onScanCompleted(String path, Uri uri) {
+			mediaScanner.disconnect();
+		}
+	}
+
 	public static final String[] FEATURES = { Features.BYTESTREAMS, Features.FILE_TRANSFER };
 
 	private static final String TAG = "FileTransferUtility";
+
+	private static Map<String, FileTransfer> waitingFileTransfers = new HashMap<String, FileTransfer>();
 
 	public static JID getBestJidForFeatures(Jaxmpp jaxmpp, BareJID jid, String[] features) {
 		try {
@@ -84,61 +102,9 @@ public class FileTransferUtility {
 		}
 	}
 
-	public static boolean resourceContainsFeatures(Jaxmpp jaxmpp, JID jid, String[] features) throws XMLException {
-		CapabilitiesCache capsCache = jaxmpp.getModule(CapabilitiesModule.class).getCache();
-		Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
-
-		for (int i = 1; i < features.length; i++) {
-			nodes.retainAll(capsCache.getNodesWithFeature(features[i]));
-		}
-
-		Presence p = jaxmpp.getPresence().getPresence(jid);
-		if (p == null)
-			return false;
-
-		Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
-		if (c == null)
-			return false;
-
-		final String node = c.getAttribute("node");
-		final String ver = c.getAttribute("ver");
-
-		return nodes.contains(node + "#" + ver);
-	}
-
-	private static final class MediaScannerConnectionRefreshClient implements
-			MediaScannerConnection.MediaScannerConnectionClient {
-		protected MediaScannerConnection mediaScanner;
-		protected String path;
-
-		@Override
-		public void onMediaScannerConnected() {
-			mediaScanner.scanFile(path, null);
-		}
-
-		@Override
-		public void onScanCompleted(String path, Uri uri) {
-			mediaScanner.disconnect();
-		}
-	}
-
-	private static Map<String, FileTransfer> waitingFileTransfers = new HashMap<String, FileTransfer>();
-
-	public static void registerFileTransfer(FileTransfer ft) {
-		synchronized (waitingFileTransfers) {
-			waitingFileTransfers.put(ft.getPeer().toString() + ":" + ft.getSid(), ft);
-		}
-	}
-
 	public static FileTransfer getFileTransfer(JID peerJid, String sid) {
 		synchronized (waitingFileTransfers) {
-			return (FileTransfer) waitingFileTransfers.remove(peerJid.toString() + ":" + sid);
-		}
-	}
-
-	public static FileTransfer unregisterFileTransfer(JID peerJid, String sid) {
-		synchronized (waitingFileTransfers) {
-			return (FileTransfer) waitingFileTransfers.remove(peerJid.toString() + ":" + sid);
+			return waitingFileTransfers.remove(peerJid.toString() + ":" + sid);
 		}
 	}
 
@@ -208,6 +174,12 @@ public class FileTransferUtility {
 		client.mediaScanner.connect();
 	}
 
+	public static void registerFileTransfer(FileTransfer ft) {
+		synchronized (waitingFileTransfers) {
+			waitingFileTransfers.put(ft.getPeer().toString() + ":" + ft.getSid(), ft);
+		}
+	}
+
 	public static String resolveFilename(Activity activity, Uri uri, String mimetype) {
 		if (uri == null)
 			return "";
@@ -234,22 +206,51 @@ public class FileTransferUtility {
 		return filename;
 	}
 
-	public static void startFileTransfer(final Activity activity, final Jaxmpp jaxmpp, final JID peerJid, final Uri uri, final String mimetype) {
+	public static boolean resourceContainsFeatures(Jaxmpp jaxmpp, JID jid, String[] features) throws XMLException {
+		CapabilitiesCache capsCache = jaxmpp.getModule(CapabilitiesModule.class).getCache();
+		Set<String> nodes = capsCache.getNodesWithFeature(features[0]);
+
+		for (int i = 1; i < features.length; i++) {
+			nodes.retainAll(capsCache.getNodesWithFeature(features[i]));
+		}
+
+		Presence p = jaxmpp.getPresence().getPresence(jid);
+		if (p == null)
+			return false;
+
+		Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		if (c == null)
+			return false;
+
+		final String node = c.getAttribute("node");
+		final String ver = c.getAttribute("ver");
+
+		return nodes.contains(node + "#" + ver);
+	}
+
+	public static void startFileTransfer(final Activity activity, final Jaxmpp jaxmpp, final JID peerJid, final Uri uri,
+			final String mimetype) {
 		new Thread() {
+			@Override
 			public void run() {
 				try {
 					final ContentResolver cr = activity.getContentResolver();
 					final InputStream is = cr.openInputStream(uri);
 					final long size = is.available();
-				
+
 					String filename = FileTransferUtility.resolveFilename(activity, uri, mimetype);
 					jaxmpp.getFileTransferManager().sendFile(peerJid, filename, size, is, null);
-				}
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					Log.e(TAG, "problem with starting filetransfer", ex);
 				}
 			}
 		}.start();
 	}
-	
+
+	public static FileTransfer unregisterFileTransfer(JID peerJid, String sid) {
+		synchronized (waitingFileTransfers) {
+			return waitingFileTransfers.remove(peerJid.toString() + ":" + sid);
+		}
+	}
+
 }

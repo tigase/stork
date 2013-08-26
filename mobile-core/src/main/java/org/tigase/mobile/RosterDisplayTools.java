@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile;
 
 import org.tigase.mobile.roster.CPresence;
@@ -13,7 +30,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
-import android.content.Context;
 import android.util.Log;
 
 public class RosterDisplayTools {
@@ -26,6 +42,12 @@ public class RosterDisplayTools {
 		} else {
 			return item.getJid().toString();
 		}
+	}
+
+	public static String getDisplayName(SessionObject sessionObject, final BareJID jid) {
+		RosterStore roster = sessionObject.getRoster();
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
+		return getDisplayName(item);
 	}
 
 	public static CPresence getShowOf(final Presence p) throws XMLException {
@@ -47,12 +69,6 @@ public class RosterDisplayTools {
 				r = CPresence.xa;
 		}
 		return r;
-	}
-
-	public static String getDisplayName(SessionObject sessionObject, final BareJID jid) {
-		RosterStore roster = sessionObject.getRoster();
-		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = roster.get(jid);
-		return getDisplayName(item);
 	}
 
 	public static CPresence getShowOf(SessionObject sessionObject, final BareJID jid) {
@@ -92,7 +108,7 @@ public class RosterDisplayTools {
 	}
 
 	public static String getStatusMessageOf(final tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item) {
-		try {			
+		try {
 			if (item == null)
 				return null;
 			final PresenceStore presence = item.getSessionObject().getPresence();

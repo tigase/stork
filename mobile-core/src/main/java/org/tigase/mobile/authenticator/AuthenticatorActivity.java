@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.authenticator;
 
 import java.util.HashMap;
@@ -12,6 +29,7 @@ import org.tigase.mobile.preferences.AccountAdvancedPreferencesActivity;
 import org.tigase.mobile.security.SecureTrustManagerFactory;
 import org.tigase.mobile.security.SecureTrustManagerFactory.DataCertificateException;
 
+import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
@@ -24,7 +42,6 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule.RegistrationEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
-import tigase.jaxmpp.android.Jaxmpp;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
@@ -155,8 +172,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			try {
 				contact.login(true);
 
-				if (contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY) != null) {
-					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY);
+				if (contact.getSessionObject().getProperty(tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY) != null) {
+					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(
+							tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY);
 					if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
 						certException = (DataCertificateException) e.getCause();
 						data.put("account", contact.getSessionObject().getUserBareJid().toString());
@@ -228,8 +246,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			try {
 				contact.login(true);
 
-				if (contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY) != null) {
-					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(Jaxmpp.EXCEPTION_KEY);
+				if (contact.getSessionObject().getProperty(tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY) != null) {
+					final JaxmppException e = (JaxmppException) contact.getSessionObject().getProperty(
+							tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY);
 					if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
 						certException = (DataCertificateException) e.getCause();
 						data.put("account", contact.getSessionObject().getUserBareJid().toString());

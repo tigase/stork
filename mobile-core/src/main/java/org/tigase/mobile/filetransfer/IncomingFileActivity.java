@@ -1,25 +1,34 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.filetransfer;
 
 import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
-import org.tigase.mobile.db.VCardsCacheTableMetaData;
-import org.tigase.mobile.db.providers.RosterProvider;
 import org.tigase.mobile.service.JaxmppService;
 import org.tigase.mobile.utils.AvatarHelper;
 
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -41,7 +50,7 @@ public class IncomingFileActivity extends Activity {
 		Log.v(TAG, "incoming file accepted");
 
 		FileTransferUtility.registerFileTransfer(ft);
-		
+
 		Intent intent = new Intent(getApplicationContext(), JaxmppService.class);
 		intent.putExtra("tag", tag);
 		intent.putExtra("peer", ft.getPeer().toString());
@@ -102,7 +111,7 @@ public class IncomingFileActivity extends Activity {
 		String sid = intent.getStringExtra("sid");
 		ft = FileTransferUtility.unregisterFileTransfer(peerJid, sid);
 		FileTransferUtility.registerFileTransfer(ft);
-		
+
 		Long filesize = ft.getFileSize();
 		String filesizeStr = null;
 		if (filesize == 0) {
@@ -116,7 +125,7 @@ public class IncomingFileActivity extends Activity {
 				filesizeStr = String.valueOf(filesize) + "B";
 			}
 		}
-		
+
 		String mimetype = ft.getFileMimeType();
 		String filename = ft.getFilename();
 		if (mimetype == null) {

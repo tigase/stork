@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.chat;
 
 import java.util.Date;
@@ -37,7 +54,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -282,7 +298,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.clear();
-		
+
 		inflater.inflate(R.menu.chat_main_menu, menu);
 
 		// Share button support
@@ -294,7 +310,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 					chat.getSessionObject());
 			try {
 				JID jid = chat.getJid();
-				
+
 				if (jid.getResource() == null) {
 					jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, jid.getBareJid(), FileTransferUtility.FEATURES);
 				}
@@ -308,7 +324,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			Log.v(TAG, "no chat for fragment");
 		}
 		share.setVisible(visible);
-		
+
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 
@@ -384,12 +400,13 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			final Jaxmpp jaxmpp = ((MessengerApplication) getActivity().getApplicationContext()).getMultiJaxmpp().get(
 					chat.getSessionObject());
 			final ViewPager viewPager = ((TigaseMobileMessengerActivity) this.getActivity()).viewPager;
-			final AbstractChatManager cm = jaxmpp.getModule(MessageModule.class).getChatManager();			
+			final AbstractChatManager cm = jaxmpp.getModule(MessageModule.class).getChatManager();
 			try {
 				viewPager.setCurrentItem(1);
 				cm.close(chat);
-				// this will be done by TigaseMessengerActiviy after receiving ChatOpened event
-				//viewPager.getAdapter().notifyDataSetChanged();
+				// this will be done by TigaseMessengerActiviy after receiving
+				// ChatOpened event
+				// viewPager.getAdapter().notifyDataSetChanged();
 				viewPager.setCurrentItem(1);
 				if (DEBUG)
 					Log.i(TAG, "Chat with " + chat.getJid() + " (" + chat.getId() + ") closed");
@@ -419,11 +436,10 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			MenuInflater inflater = new MenuInflater(this.getActivity().getApplicationContext());
 			onCreateOptionsMenu(menu, inflater);
 		}
-		
+
 		super.onPrepareOptionsMenu(menu);
 	}
-	
-	
+
 	@Override
 	public void onResume() {
 		// if (((ChatAdapter) lv.getAdapter()).getCursor().isClosed()) {
@@ -547,9 +563,8 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 	protected void updatePresence() {
 		if (chat != null) {
-			CPresence cp = RosterDisplayTools.getShowOf(chat.getSessionObject(),
-					chat.getJid().getBareJid());
-			
+			CPresence cp = RosterDisplayTools.getShowOf(chat.getSessionObject(), chat.getJid().getBareJid());
+
 			// ((MessengerApplication)getActivity().getApplication()).getMultiJaxmpp().get(chat.getSessionObject());
 			layout.setImagePresence(cp);
 

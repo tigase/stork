@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile;
 
 import java.util.ArrayList;
@@ -7,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import android.os.AsyncTask;
-import android.os.Looper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -30,11 +44,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.utils.DateTimeFormat;
 import tigase.jaxmpp.j2se.DateTimeFormatProviderImpl;
 import tigase.jaxmpp.j2se.observer.ThreadSafeObservable;
+import android.os.AsyncTask;
+import android.os.Looper;
 
 public class MultiJaxmpp {
 
-	private static final Logger log = Logger.getLogger("MultiJaxmpp");
-	
 	public static class ChatWrapper {
 
 		private final Object data;
@@ -93,6 +107,8 @@ public class MultiJaxmpp {
 		}
 	}
 
+	private static final Logger log = Logger.getLogger("MultiJaxmpp");
+
 	static {
 		ObservableFactory.setFactorySpi(new FactorySpi() {
 
@@ -123,12 +139,15 @@ public class MultiJaxmpp {
 			@Override
 			public void handleEvent(final BaseEvent be) throws JaxmppException {
 				if (be.getType() == MessageModule.ChatCreated || be.getType() == MessageModule.ChatClosed
-					|| be.getType() == MucModule.RoomClosed || be.getType() == MucModule.JoinRequested) {
-					
-					// if we got any event of type which modifies number of chats we need to do 
-					// this modification on UI thread as in other case we will get Adapter exception
+						|| be.getType() == MucModule.RoomClosed || be.getType() == MucModule.JoinRequested) {
+
+					// if we got any event of type which modifies number of
+					// chats we need to do
+					// this modification on UI thread as in other case we will
+					// get Adapter exception
 					if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
-						// if we are not on UI thread create AsyncTask which will allow us to do
+						// if we are not on UI thread create AsyncTask which
+						// will allow us to do
 						// modifications on UI thread (i.e. closing muc chat)
 						AsyncTask<Void, Void, Void> async = new AsyncTask<Void, Void, Void>() {
 
@@ -160,9 +179,11 @@ public class MultiJaxmpp {
 
 						};
 						async.execute();
-					} else {						
-						// but if we are already executed on UI thread we should not create AsyncTask
-						// as other methods after calling this method may be waiting for our result on
+					} else {
+						// but if we are already executed on UI thread we should
+						// not create AsyncTask
+						// as other methods after calling this method may be
+						// waiting for our result on
 						// the same thread (i.e. opening chat)
 						synchronized (chats) {
 							if (be.getType() == MessageModule.ChatCreated) {
@@ -178,9 +199,8 @@ public class MultiJaxmpp {
 
 						observable.fireEvent(be);
 					}
-				}
-				else {
-					observable.fireEvent(be);					
+				} else {
+					observable.fireEvent(be);
 				}
 			}
 		};

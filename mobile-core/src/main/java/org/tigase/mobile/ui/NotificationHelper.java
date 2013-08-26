@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.ui;
 
 import org.tigase.mobile.MessengerApplication;
@@ -7,7 +24,6 @@ import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.TigaseMobileMessengerActivity;
 import org.tigase.mobile.filetransfer.FileTransferUtility;
-import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import org.tigase.mobile.filetransfer.IncomingFileActivity;
 import org.tigase.mobile.roster.AuthRequestActivity;
 import org.tigase.mobile.security.SecureTrustManagerFactory.DataCertificateException;
@@ -21,9 +37,9 @@ import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.filetransfer.FileTransfer;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -51,8 +67,7 @@ public abstract class NotificationHelper {
 
 	protected static final String TAG = "NotificationHelper";
 
-	public static Intent createFileTransferAcceptIntent(Context context, FileTransfer ft, BareJID account,
-			String tag) {
+	public static Intent createFileTransferAcceptIntent(Context context, FileTransfer ft, BareJID account, String tag) {
 		// intent to accept
 		Intent intentAccept = new Intent(context, JaxmppService.class);
 		intentAccept.putExtra("tag", tag);
@@ -64,8 +79,7 @@ public abstract class NotificationHelper {
 		return intentAccept;
 	}
 
-	public static Intent createFileTransferRejectIntent(Context context, FileTransfer ft, BareJID account,
-			String tag) {
+	public static Intent createFileTransferRejectIntent(Context context, FileTransfer ft, BareJID account, String tag) {
 		Intent intentReject = new Intent(context, JaxmppService.class);
 		intentReject.putExtra("tag", tag);
 		intentReject.putExtra("peer", ft.getPeer().toString());
@@ -93,7 +107,7 @@ public abstract class NotificationHelper {
 	private Notification foregroundNotification;
 
 	protected final NotificationManager notificationManager;
-	
+
 	protected NotificationHelper(Context context) {
 		this.context = context;
 		this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -117,7 +131,8 @@ public abstract class NotificationHelper {
 		if (ft.isIncoming() && state == FileTransferFeature.State.finished && ft.getFileMimeType() != null) {
 			intent = new Intent();
 			intent.setAction(Intent.ACTION_VIEW);
-			intent.setDataAndType(Uri.fromFile(((tigase.jaxmpp.j2se.filetransfer.FileTransfer)ft).getFile()), ft.getFileMimeType());
+			intent.setDataAndType(Uri.fromFile(((tigase.jaxmpp.j2se.filetransfer.FileTransfer) ft).getFile()),
+					ft.getFileMimeType());
 		} else {
 			intent = new Intent(context, TigaseMobileMessengerActivity.class);
 		}
@@ -215,16 +230,18 @@ public abstract class NotificationHelper {
 		String tag = ft.toString();
 
 		boolean outgoing = !ft.isIncoming();
-		
+
 		int ico = outgoing ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
 		String notificationTitle;
 
 		String buddyName = RosterDisplayTools.getDisplayName(ft.getSessionObject(), ft.getPeer().getBareJid());
-		
+
 		if (outgoing)
-			notificationTitle = context.getResources().getString(R.string.service_file_transfer_sending_file, ft.getFilename(), buddyName);
+			notificationTitle = context.getResources().getString(R.string.service_file_transfer_sending_file, ft.getFilename(),
+					buddyName);
 		else
-			notificationTitle = context.getResources().getString(R.string.service_file_transfer_receiving_file, ft.getFilename(), buddyName);
+			notificationTitle = context.getResources().getString(R.string.service_file_transfer_receiving_file,
+					ft.getFilename(), buddyName);
 
 		String notificationText = "";
 
@@ -243,14 +260,15 @@ public abstract class NotificationHelper {
 			break;
 
 		case active:
-			int progress = (int)(ft.getProgress() == null ? 0 : ft.getProgress().doubleValue());
+			int progress = (int) (ft.getProgress() == null ? 0 : ft.getProgress().doubleValue());
 			notificationText = context.getResources().getString(R.string.service_file_transfer_progress, progress);
 			break;
 
 		case finished:
 			notificationText = context.getResources().getString(R.string.service_file_transfer_finished);
 			if (!outgoing) {
-				FileTransferUtility.refreshMediaScanner(context.getApplicationContext(), ((tigase.jaxmpp.j2se.filetransfer.FileTransfer)ft).getFile());
+				FileTransferUtility.refreshMediaScanner(context.getApplicationContext(),
+						((tigase.jaxmpp.j2se.filetransfer.FileTransfer) ft).getFile());
 			}
 			break;
 		default:
@@ -263,21 +281,21 @@ public abstract class NotificationHelper {
 
 	public void notifyFileTransferRequest(FileTransfer ft) {
 		Jaxmpp jaxmpp = getMulti().get(ft.getSessionObject());
-		
+
 		JID buddy = ft.getPeer();
 		String tag = buddy.toString() + " -> "
 				+ jaxmpp.getSessionObject().getProperty(ResourceBinderModule.BINDED_RESOURCE_JID).toString() + " file = "
 				+ ft.getFilename();
 
 		String buddyName = RosterDisplayTools.getDisplayName(ft.getSessionObject(), buddy.getBareJid());
-		
+
 		int ico = android.R.drawable.stat_sys_download;
 		String title = context.getResources().getString(R.string.service_incoming_file_notification_title, ft.getFilename(),
 				buddyName);
 		String text = context.getResources().getString(R.string.service_incoming_file_notification_text, ft.getFilename());
 
 		FileTransferUtility.registerFileTransfer(ft);
-		
+
 		Notification notification = prepareFileTransferRequestNotification(ico, title, text, ft, jaxmpp, tag);
 		notificationManager.notify(tag, FILE_TRANSFER_NOTIFICATION_ID, notification);
 	}
@@ -285,8 +303,7 @@ public abstract class NotificationHelper {
 	public void notifyNewChatMessage(MessageEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
-		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(),
-				event.getMessage().getFrom().getBareJid());
+		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(), event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().toString();
 
@@ -310,8 +327,7 @@ public abstract class NotificationHelper {
 	public void notifyNewMucMessage(MucEvent event) throws XMLException {
 		int ico = R.drawable.ic_stat_message;
 
-		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(),
-				event.getMessage().getFrom().getBareJid());
+		String n = RosterDisplayTools.getDisplayName(event.getSessionObject(), event.getMessage().getFrom().getBareJid());
 		if (n == null)
 			n = event.getMessage().getFrom().getBareJid().toString();
 
@@ -374,10 +390,11 @@ public abstract class NotificationHelper {
 	protected abstract Notification prepareChatNotification(int ico, String title, String text, PendingIntent pendingIntent,
 			MucEvent event) throws XMLException;
 
-	protected abstract Notification prepareFileTransferProgressNotification(int ico, String title, String text, FileTransfer ft, FileTransferFeature.State state);
+	protected abstract Notification prepareFileTransferProgressNotification(int ico, String title, String text,
+			FileTransfer ft, FileTransferFeature.State state);
 
-	protected abstract Notification prepareFileTransferRequestNotification(int ico, String title, String text,
-			FileTransfer ft, JaxmppCore jaxmpp, String tag);
+	protected abstract Notification prepareFileTransferRequestNotification(int ico, String title, String text, FileTransfer ft,
+			JaxmppCore jaxmpp, String tag);
 
 	public void showMucError(String room, Intent intent) {
 		String notiticationTitle = context.getResources().getString(R.string.service_error_notification_title);

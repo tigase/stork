@@ -1,3 +1,20 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.utils;
 
 import java.io.InputStream;
@@ -28,9 +45,9 @@ public class AvatarHelper {
 	private static LruCache<BareJID, Bitmap> avatarCache;
 
 	private static Context context;
-	public static Bitmap mPlaceHolderBitmap;
-	private static float density = 1;
 	private static int defaultAvatarSize = 50;
+	private static float density = 1;
+	public static Bitmap mPlaceHolderBitmap;
 	private static final String TAG = "AvatarHelper";
 
 	private static int calculateSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -101,10 +118,10 @@ public class AvatarHelper {
 	public static void initilize(Context context_) {
 		if (avatarCache == null) {
 			context = context_;
-			
+
 			density = context.getResources().getDisplayMetrics().density;
 			defaultAvatarSize = Math.round(density * 50);
-			
+
 			// Get memory class of this device, exceeding this amount will throw
 			// an
 			// OutOfMemory exception.
@@ -148,12 +165,12 @@ public class AvatarHelper {
 		}
 		return bmp;
 	}
-	
+
 	protected static Bitmap loadAvatar(BareJID jid, int size) {
 		Bitmap bmp = null;
-		
+
 		Log.v(TAG, "loading avatar with size " + size);
-		
+
 		Cursor cursor = context.getContentResolver().query(
 				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
 		try {

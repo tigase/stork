@@ -1,6 +1,22 @@
+/*
+ * Tigase Mobile Messenger for Android
+ * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
 package org.tigase.mobile.filetransfer;
 
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -24,7 +40,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -124,9 +139,9 @@ public class SendFileActivity extends Activity {
 					if (jid == null) {
 						jid = FileTransferUtility.getBestJidForFeatures(jaxmpp, item.getJid(), FileTransferUtility.FEATURES);
 					}
-					
+
 					FileTransferUtility.startFileTransfer(SendFileActivity.this, jaxmpp, jid, uri, mimetype);
-					finish();		
+					finish();
 					return true;
 				}
 			});
@@ -156,7 +171,7 @@ public class SendFileActivity extends Activity {
 								JID jid = JID.jidInstance(r.getJid(), resource);
 								Jaxmpp jaxmpp = getJaxmpp(r.getSessionObject().getUserBareJid());
 								FileTransferUtility.startFileTransfer(SendFileActivity.this, jaxmpp, jid, uri, mimetype);
-								finish();		
+								finish();
 							}
 
 						});
@@ -167,7 +182,7 @@ public class SendFileActivity extends Activity {
 
 		}
 	}
-	
+
 	private void prepareResources(ContextMenu menu, RosterItem ri) throws XMLException {
 		final Jaxmpp jaxmpp = getJaxmpp(ri.getSessionObject().getUserBareJid());
 		Map<String, Presence> all = jaxmpp.getSessionObject().getPresence().getPresences(ri.getJid());
