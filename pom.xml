@@ -10,7 +10,6 @@
     <module>mobile-commons</module>
     <module>mobile-core</module>
     <module>mobile-phone-pro</module>
-    <module>mobile-phone-free</module>
   </modules>
   <properties>
     <platform.version>4.1.1.4</platform.version>
