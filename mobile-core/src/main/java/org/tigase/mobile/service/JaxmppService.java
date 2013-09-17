@@ -67,6 +67,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.SessionObject.Scope;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.connector.StreamError;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -664,6 +665,7 @@ public class JaxmppService extends Service {
 					if (DEBUG)
 						Log.d(TAG, "Connection error (" + be.getSessionObject().getUserBareJid() + ") " + be.getCaught() + "  "
 								+ be.getStreamError());
+
 					onConnectorError(be);
 				} else if (be.getType() == Connector.StreamTerminated) {
 					if (DEBUG)
@@ -773,6 +775,10 @@ public class JaxmppService extends Service {
 		for (JaxmppCore jaxmpp : getMulti().get()) {
 			lock(jaxmpp.getSessionObject(), false);
 			disable(jaxmpp.getSessionObject(), false);
+			try {
+				jaxmpp.getSessionObject().clear(Scope.stream, Scope.session);
+			} catch (JaxmppException e) {
+			}
 		}
 	}
 
@@ -1014,6 +1020,8 @@ public class JaxmppService extends Service {
 	}
 
 	protected void onConnectorError(final ConnectorEvent be) {
+		be.getSessionObject().setProperty("messenger#error", be.getStreamError() != null ? be.getStreamError().name() : null);
+
 		if (be.getStreamError() == StreamError.host_unknown) {
 			notificationUpdateFail(
 					be.getSessionObject(),
@@ -1022,6 +1030,8 @@ public class JaxmppService extends Service {
 			disable(be.getSessionObject(), true);
 		} else if (be.getCaught() != null) {
 			Throwable throwable = extractCauseException(be.getCaught());
+			be.getSessionObject().setProperty("messenger#error", throwable.getMessage());
+
 			if (throwable instanceof SecureTrustManagerFactory.DataCertificateException) {
 				notificationUpdateFail(be.getSessionObject(), "Server certificate not trusted", null, throwable);
 				disable(be.getSessionObject(), true);
