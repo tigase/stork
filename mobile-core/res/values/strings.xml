@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">1.6-RC1</string>
+    <string name="app_version">1.6-RC2</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="pingServer">Ping</string>
     <string name="auth_rerequested">Rerequested authorization from %1$s (%2$s)</string>
