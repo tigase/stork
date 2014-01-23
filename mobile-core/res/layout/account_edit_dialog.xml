@@ -12,7 +12,6 @@
         android:layout_alignParentTop="true" >
 
         <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical"
@@ -29,7 +28,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/account_dialog_username_hint"
-                android:inputType="textNoSuggestions" >
+                android:inputType="textEmailAddress" >
 
                 <requestFocus />
             </EditText>
@@ -46,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="@string/account_dialog_hostname_hint"
-                android:inputType="textNoSuggestions" />
+                android:inputType="textUri" />
 
             <EditText
                 android:id="@+id/newAccountPassowrd"
@@ -60,6 +59,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/account_dialog_resource_hint"
+                android:inputType="textNoSuggestions"
                 android:text="@string/account_dialog_resource_default" />
 
             <View
@@ -74,13 +74,15 @@
                 android:id="@+id/newAccountHostname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/account_dialog_alternative_hostname_hint" />
+                android:hint="@string/account_dialog_alternative_hostname_hint"
+                android:inputType="textUri" />
 
             <EditText
                 android:id="@+id/newAccountNickname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/account_dialog_nickname_hint" />
+                android:hint="@string/account_dialog_nickname_hint"
+                android:inputType="textPersonName" />
         </LinearLayout>
     </ScrollView>
 

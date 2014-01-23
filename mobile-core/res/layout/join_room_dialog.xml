@@ -14,7 +14,6 @@
         android:layout_alignParentTop="true" >
 
         <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical"
@@ -37,14 +36,14 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="Bookmark name"
-                android:inputType="textNoSuggestions" />
+                android:inputType="textUri" />
 
             <EditText
                 android:id="@+id/muc_roomName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="Room name"
-                android:inputType="textNoSuggestions"
+                android:inputType="textUri"
                 tools:ignore="HardcodedText" >
 
                 <requestFocus />
@@ -55,16 +54,16 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:hint="MUC Server"
-                android:inputType="textNoSuggestions"
+                android:inputType="textUri"
                 tools:ignore="HardcodedText" >
-
             </EditText>
 
             <EditText
                 android:id="@+id/muc_nickname"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nickname" >
+                android:hint="Nickname"
+                android:inputType="textPersonName" >
             </EditText>
 
             <View

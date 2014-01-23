@@ -83,7 +83,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dip"
             android:layout_weight="1"
-            android:imeOptions="actionDone|flagNoEnterAction"
+            android:imeActionLabel="@string/chatSendButton"
+            android:imeOptions="actionSend"
             android:inputType="textMultiLine" >
 
             <requestFocus />
