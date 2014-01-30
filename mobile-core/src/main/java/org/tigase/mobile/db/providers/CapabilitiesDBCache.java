@@ -45,16 +45,18 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 	@Override
 	public Set<String> getFeatures(String node) {
 		final Set<String> result = new HashSet<String>();
-		SQLiteDatabase db = this.helper.getReadableDatabase();
-		Cursor c = db.rawQuery("SELECT * FROM " + CapsFeaturesTableMetaData.TABLE_NAME + " WHERE "
-				+ CapsFeaturesTableMetaData.FIELD_NODE + "=?", new String[] { node });
-		try {
-			while (c.moveToNext()) {
-				String f = c.getString(c.getColumnIndex(CapsFeaturesTableMetaData.FIELD_FEATURE));
-				result.add(f);
+		if (node != null) {
+			SQLiteDatabase db = this.helper.getReadableDatabase();
+			Cursor c = db.rawQuery("SELECT * FROM " + CapsFeaturesTableMetaData.TABLE_NAME + " WHERE "
+					+ CapsFeaturesTableMetaData.FIELD_NODE + "=?", new String[] { node });
+			try {
+				while (c.moveToNext()) {
+					String f = c.getString(c.getColumnIndex(CapsFeaturesTableMetaData.FIELD_FEATURE));
+					result.add(f);
+				}
+			} finally {
+				c.close();
 			}
-		} finally {
-			c.close();
 		}
 
 		return result;
@@ -62,6 +64,9 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 
 	@Override
 	public Identity getIdentity(String node) {
+		if (node == null)
+			return null;
+		
 		SQLiteDatabase db = this.helper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT * FROM " + CapsIdentitiesTableMetaData.TABLE_NAME + " WHERE "
 				+ CapsIdentitiesTableMetaData.FIELD_NODE + "=?", new String[] { node });
@@ -87,17 +92,19 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 	@Override
 	public Set<String> getNodesWithFeature(String feature) {
 		final Set<String> result = new HashSet<String>();
-		SQLiteDatabase db = this.helper.getReadableDatabase();
-		Cursor c = db.rawQuery("SELECT distinct(" + CapsFeaturesTableMetaData.FIELD_NODE + ") FROM "
-				+ CapsFeaturesTableMetaData.TABLE_NAME + " WHERE " + CapsFeaturesTableMetaData.FIELD_FEATURE + "=?",
-				new String[] { feature });
-		try {
-			while (c.moveToNext()) {
-				String f = c.getString(0);
-				result.add(f);
+		if (feature != null) {
+			SQLiteDatabase db = this.helper.getReadableDatabase();
+			Cursor c = db.rawQuery("SELECT distinct(" + CapsFeaturesTableMetaData.FIELD_NODE + ") FROM "
+					+ CapsFeaturesTableMetaData.TABLE_NAME + " WHERE " + CapsFeaturesTableMetaData.FIELD_FEATURE + "=?",
+					new String[] { feature });
+			try {
+				while (c.moveToNext()) {
+					String f = c.getString(0);
+					result.add(f);
+				}
+			} finally {
+				c.close();
 			}
-		} finally {
-			c.close();
 		}
 
 		return result;
@@ -105,6 +112,12 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 
 	@Override
 	public boolean isCached(String node) {
+		if (node == null) {
+			// if node is null then no point in retrieving features as node does not exist
+			// so we can say values are cached
+			return true;
+		}
+		
 		SQLiteDatabase db = this.helper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + CapsIdentitiesTableMetaData.TABLE_NAME + " WHERE "
 				+ CapsIdentitiesTableMetaData.FIELD_NODE + "=?", new String[] { node });
@@ -146,3 +159,4 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 	}
 
 }
+
