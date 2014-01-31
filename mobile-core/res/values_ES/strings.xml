@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_version">1.6-RC2</string>
+    <string name="app_name">Tigase Messenger</string>
+    <string name="pingServer">Ping</string>
+    <string name="auth_rerequested">Autorización requerida por %1$s (%2$s)</string>
+    <string name="auth_removed">Autirización denegada por %1$s (%2$s)</string>
+    <string name="auth_resent">Envía autorización a %1$s (%2$s)</string>
+    <string name="contact_edit">Editar</string>
+    <string name="contact_remove">Eliminar</string>
+    <string name="contact_start_chat">Chat con</string>
+    <string name="contact_add">Añadir</string>
+    <string name="contact_editor">Editar contacto</string>
+    <string name="contact_details">Detalles del contacto</string>
+    <string name="pref_entertosend_summary">Si está marcada, entonces Enter enviará su mensaje</string>
+    <string name="pref_entertosend_title">Enter para enviar</string>
+    <string name="pref_autostart_title">Auto-encendido</string>
+    <string name="pref_autostart_summary">Conectarse después que encienda el teléfono</string>
+    <string name="showChatsButton">Muestra los chats</string>
+    <string name="chat_list_title">Chats activos</string>
+    <string name="loginButton">Conectar</string>
+    <string name="logoutButton">Desconectar</string>
+    <string name="propertiesButton">Configuración</string>
+    <string name="preferencesTitle">Configuración</string>
+    <string name="closeChatButton">Cerrar el chat</string>
+    <string name="shareButton">Compartir</string>
+    <string name="shareImageButton">Foto</string>
+    <string name="shareVideoButton">Vídeo</string>
+    <string name="chatSendButton">Enviar</string>
+    <string name="aboutButton">Acerca de</string>
+    <string name="termsOfService">Términos</string>
+    <string name="termsOfServiceURL">http://www.sure.im/terms.txt</string>
+    <string name="privacyPolicy">Privacidad</string>
+    <string name="privacyPolicyURL">http://www.sure.im/privacy.txt</string>
+    <string name="pref_login_section_title">Datos de inicio de sesión</string>
+    <string name="pref_login_section_summary">Datos necesarios para iniciar sesión en el servidor XMPP</string>
+    <string name="pref_advanced_section_title">Configuración avanzada</string>
+    <string name="pref_advanced_section_summary">Configuración avanzada</string>
+    <string name="pref_default_priority_summary">La prioridad en línea es %1$s</string>
+    <string name="pref_default_priority_title">Prioridad en línea</string>
+    <string name="pref_default_priority_dialog">Introduzca la prioridad en línea</string>
+    <string name="pref_auto_away_priority_summary">La prioridad de auto-ausente es %1$s</string>
+    <string name="pref_auto_away_priority_title">Prioridad de auto-ausente</string>
+    <string name="pref_auto_away_priority_dialog">Teclea la prioridad auto-ausente</string>
+    <string name="pref_keepalive_time_summary">El tiempo de mantenerse activo es %1$s minutes</string>
+    <string name="pref_keepalive_time_title">Tiempo manteniéndose activvo</string>
+    <string name="pref_keepalive_time_dialog">Introduce el tiempo para mantenerse activo</string>
+    <string name="pref_reconnect_time_summary">El cliente esperará %1$s sec between reconnects</string>
+    <string name="pref_reconnect_time_title">Retraso en la conexión</string>
+    <string name="pref_reconnect_time_dialog">Introduce el tiempo de retraso en conectar</string>
+    <string name="pref_login_ui_section_title">Interfaz de usuario</string>
+    <string name="pref_login_notifications_section_title">Notificaciones</string>
+    
+    <string name="pref_notification_sound_title">Sonido</string>
+    <string name="pref_notification_vibrate_title">Vibración</string>
+    
+    
+    <string name="pref_notification_sound_muc_title">Sonido para mención en la sala</string>
+    <string name="pref_notification_sound_chat_title">Sonido para mensaje en el chat</string>
+    <string name="pref_notification_advanced_section_title">Avanzado</string>
+
+    
+    <!-- Accounts Create/Edit -->
+    <string name="account_add_welcome">Únete a Tigase</string>
+    <string name="account_add_login">Ya tengo una cuenta</string>
+    <string name="account_add_description">Hola Mundo</string>
+    <string name="account_add_create">Crear una nueva cuenta</string>
+    <string name="account_dialog_enter_details">Introduce los detalles de cuenta XMPP</string>
+    <string name="account_dialog_username_hint">Nombre de usuario</string>
+    <string name="account_dialog_hostname_hint">Nombre del servidor</string>
+    <string name="account_dialog_password_hint">Contraseña</string>
+    <string name="account_dialog_password_confirm_hint">Confirma la contraseña</string>
+    <string name="account_dialog_resource_hint">Descripción del cliente</string>
+    <string name="account_dialog_resource_default">Tigase Messenger</string>
+    <string name="account_dialog_alternative_hostname_hint">Dirección opcional del servidor</string>
+    <string name="account_dialog_nickname_hint">Nombre de usuario opcional</string>
+    <string name="account_dialog_email_hint">Dirección de correo opcional</string>
+
+    <!-- Label for this package -->
+    <string name="label">Tigase XMPP</string>
+    <string name="ui_authenticator_activity_title">Inicio de sesión</string>
+    <!-- Message shown in progress dialog while app connects to the server -->
+    <string name="ui_activity_authenticating">Autenticando\u2026</string>
+    <!-- Message shown in dialog if the username or password is invalid. -->
+    <string name="login_activity_loginfail_text_both">El nombre de usuario o contraseña no es válido. Es necesario una cuenta XMPP. Por favor intentelo nuevamente. </string>
+    <!-- Message shown in dialog if the password is invalid -->
+    <string name="login_activity_loginfail_text_pwonly">Escribiste la contraseña incorrecta o su cuenta ha cambiado.       
+         Por favor vuelva a introducir su contraseña.</string>
+    <!-- Message shown in dialog to prompt the user for their password -->
+    <string name="login_activity_loginfail_text_pwmissing">Escribe la contraseña para esta cuenta.</string>
+    <!--
+        Message shown if the provided account doesn't support the current
+        activity.
+    -->
+    <string name="login_activity_newaccount_text">Inicia la sesión con su cuenta XMPP. </string>
+    <string name="vcard_editor_activity_title">Información personal</string>
+    <string name="accountVCard">Información personal</string>
+    <string name="vcard_fullname">Nombre completo</string>
+    <string name="vcard_nickname">Apodo</string>
+    <string name="vcard_email">Correo</string>
+    <string name="vcard_birthday">Cumpleaños</string>
+    <string name="vcard_homepage">Página web</string>
+    <string name="vcard_phone">Teléfono</string>
+    <string name="vcard_subscription">Subscripción</string>
+    <string name="vcard_jabberid">Actualiza</string>
+    <string name="vcard_editor_refresh">Actualiza</string>
+    <string name="vcard_editor_publish">Publica</string>
+    <string name="vcard_published_toast">Información publicada</string>
+    <string name="vcard_timeout_toast">Agotado el tiempo de operación</string>
+    <string name="vcard_error_toast">Fallo en la operación</string>
+    <string name="vcard_retrieving">Cargando, espera…</string>
+    <string name="vcard_publishing">Publicando, espera…</string>
+    <string name="incoming_file">Descargando archivo</string>
+    <string name="incoming_file_from">Descargando archivo de</string>
+    <string name="incoming_file_filename">Nombre</string>
+    <string name="incoming_file_mimetype">Clase</string>
+    <string name="incoming_file_filesize">Tamaño</string>
+    <string name="incoming_file_description">Descripción</string>
+    <string name="incoming_file_store">Guardar archivo</string>
+    <string name="avatar">Avatar</string>
+    <string name="accept">Aceptar</string>
+    <string name="reject">Rechazar</string>
+    <string name="account_advanced_preferences">Más ajustes…</string>
+    <string name="mobile_optimizations_not_supported">Tu servidor no está soportado, prueba Tigase - sure.im, jabber.me, tigase.im</string>
+    <string name="mobile_optimizations">Optimización para movil</string>
+    <string name="presence_queue_max_timeout">Máximo tiempo de espera de la cola de presencia</string>
+    <string name="auth_request_info">Este usuario desea suscribirse a su presencia.</string>
+    <string name="geolocation_listen">Recibe geolocalización</string>
+    <string name="geolocation_publish">Publica geolocalización</string>
+    <string name="geolocation_precision">Precisión de la geolocalización</string>
+    <string name="geolocation_show">Geolocalización</string>
+    <string name="ok">De acuerdo</string>
+    <string name="yes">Si</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancela</string>
+    <string name="warning_dialog_title">Atención</string>
+    <string name="auth_request_cant_deny">No se puede negar la suscripción</string>
+    <string name="auth_request_cant_accept">No puede aceptar la suscripción</string>
+    <string name="contact_edit_wrn_jid_cant_be_empty">JID no puede estar vacío</string>
+    <string name="contact_edit_wrn_wrong_jid">Incorrecta identificación de jabber</string>
+    <string name="contact_edit_wrn_name_cant_be_empty">El nombre no puede estar vacío</string>
+    <string name="contact_edit_wrn_unkown">Desconocido</string>
+    <string name="contact_edit_wrn_timeout">Tiempo de espera</string>
+    <string name="contact_edit_info_updating">Actualizando. Por favor, espera...</string>
+    <string name="contact_edit_jabberid">Identificación de Jabber</string>
+    <string name="contact_edit_name">Nombre</string>
+    <string name="contact_edit_group">Grupo</string>
+    <string name="contact_edit_request_authorization">Solicitud de autorización</string>
+    <string name="chat_item_info_timestampt">Marca de tiempo</string>
+    <string name="chat_item_info_state">Estado</string>
+    <string name="chat_item_info_chat_with">Chat con</string>
+    <string name="service_invalid_jid_or_password_info">Identificación o contraseña no válida (%s)</string>
+    <string name="service_invalid_jid_or_password">Identificación o contraseña no válida</string>
+    <string name="service_invalid_password">Contraseña no válida para %s</string>
+    <string name="service_incoming_file_notification_title">Recibiendo archivo %1$s de %2$s</string>
+    <string name="service_incoming_file_notification_text"></string>
+    <string name="service_error_notification_title">Error</string>
+    <string name="service_disconnected_notification_title">Desconectado</string>
+    <string name="service_no_network_notification_text">Desconectado</string>
+    <string name="service_connecting_notification_title">Conectando</string>
+    <string name="service_connecting_notification_text">Conectando %d cuentas...</string>
+    <string name="service_connected_notification_title">Conectado</string>
+    <string name="service_online_notification_text">En línea</string>
+    <string name="service_no_active_accounts_notification_text">No hay cuentas activas!</string>
+    <string name="service_file_transfer_sending_file">Enviando archivo %1$s a %2$s</string>
+    <string name="service_file_transfer_receiving_file">Recibiendo archivo %1$s de %2$s</string>
+    <string name="service_file_transfer_negotiating">Negociando...</string>
+    <string name="service_file_transfer_connecting">Conectando...</string>
+    <string name="service_file_transfer_error">Fallo en la conexión</string>
+    <string name="service_file_transfer_progress">Progreso %1$s</string>
+    <string name="service_file_transfer_finished">Transferencia finalizada</string>
+    <string name="service_unkown_host_error">Error de conexión: Anfitrión desconocido %s</string>
+    <string name="service_authentication_request_notification_title">Solicitud de autenticación: %s</string>
+    <string name="service_authentication_request_notification_text">Solicitud de autenticación</string>
+    <string name="service_too_many_errors_disabled">Demasiados errores de conexión. Cuenta deshabilitada.</string>
+    <string name="service_message_from_notification_title">Mensaje para %s</string>
+    <string name="service_new_message">Nuevo mensaje</string>
+    <string name="service_mentioned_you_in_message">%s te ha mencionado</string>
+    <string name="join_muc_room">Únete a la conferencia</string>
+    <string name="muc_occupants_list_title">Ocupantes</string>
+    <string name="bookmarks_show">Marcadores</string>
+    <string name="bookmarks">Marcadores</string>
+    <string name="service_warning_notification_title">Atención</string>
+    <string name="trustcert_dialog_title">Certificado no confiable</string>
+    <string name="trustcert_question">Se confía en el certificado:\n%s</string>
+    <string name="trustcert_fingerprint">"Huella digital (SHA-1): %s"</string>
+    <string name="trustcert_certchain">Certificado [%s]:</string>
+    <string name="trustcert_subject">Asunto: %s</string>
+    <string name="trustcert_issuer">Emisor: %s</string>
+    <string name="trustcert_accountnotification">Certificado incorrecto para %s</string>
+
+</resources>

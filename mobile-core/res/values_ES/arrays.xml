@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="roster_layout_options">
+        <item>Plano</item>
+        <item>Con grupos</item>
+        <item>Cuadrícula</item>
+    </string-array>
+    <string-array name="roster_layout_options_values">
+        <item>Plano</item>
+        <item>Grupos</item>
+        <item>Cuadrícula</item>
+    </string-array>
+    <string-array name="roster_sorting_options">
+        <item>Nombre</item>
+        <item>Estado</item>
+    </string-array>
+    <string-array name="roster_sorting_options_values">
+        <item>Nombre</item>
+        <item>Estado</item>
+    </string-array>
+    <string-array name="free_account_hostnames">
+        <item>sure.im</item>
+        <item>jabber.me</item>
+        <item>tigase.im</item>
+        <item>otro...</item>
+    </string-array>
+    <string-array name="free_account_create_hostnames">
+        <item>sure.im</item>
+    </string-array>
+    <string-array name="incoming_file_stores">
+        <item>Descarga</item>
+        <item>Películas</item>
+        <item>Música</item>
+        <item>Fotos</item>
+    </string-array>
+    <string-array name="presence_queue_timeout">
+        <item>3 min</item>
+        <item>6 min</item>
+        <item>9 min</item>
+        <item>12 min</item>
+        <item>15 min</item>
+    </string-array>
+    <string-array name="geolocation_precision">
+        <item>Pais</item>
+        <item>Ciudad</item>
+        <item>Calle</item>
+        <item>Latitud/Longitud</item>
+    </string-array>
+    <string-array name="pref_notification_vibrate_values_entries">
+        <item>Por defecto</item>
+        <item>Si</item>
+        <item>No</item>
+    </string-array>
+    <string-array name="pref_notification_vibrate_values">
+        <item>Por defecto</item>
+        <item>Si</item>
+        <item>No</item>
+    </string-array>
+
+</resources>
