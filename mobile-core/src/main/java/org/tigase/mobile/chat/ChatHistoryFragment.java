@@ -41,6 +41,7 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
@@ -516,6 +517,14 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		throw new RuntimeException("Chat (id:" + chatId + ", account:" + account + ")  not found! Available ids=" + ids);
 	}
 
+	@Override
+	public void setUserVisibleHint(boolean isVisibleToUser) {
+	    super.setUserVisibleHint(isVisibleToUser);
+	    if (!isVisibleToUser && layout != null)
+	    	layout.composing = false;
+		setLocalChatState(isVisibleToUser ? ChatState.active : ChatState.inactive);	    
+	}
+	
 	private void showMessageDetails(final long id) {
 		Cursor cc = null;
 		final java.text.DateFormat df = DateFormat.getDateFormat(getActivity());
@@ -576,4 +585,21 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 		}
 	}
 
+	private void setLocalChatState(final ChatState state) {
+		new Thread() {
+			public void run() {
+				if (chat != null) {
+					try {
+						chat.setLocalState(state);
+					} catch (XMLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JaxmppException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}.start();
+	}
 }

@@ -19,3 +19,5 @@ mobile-core/bin
 mobile-core/gen
 mobile-phone-free/gen
 mobile-phone-free/bin
+*.class
+*.dex

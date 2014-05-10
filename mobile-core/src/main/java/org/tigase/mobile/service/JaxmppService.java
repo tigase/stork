@@ -433,7 +433,7 @@ public class JaxmppService extends Service {
 	private AccountModifyReceiver accountModifyReceiver;
 
 	private TimerTask autoPresenceTask;
-
+	
 	private final HashMap<BareJID, Integer> connectionErrorsCounter = new HashMap<BareJID, Integer>();
 
 	private Listener<ConnectorEvent> connectorListener;

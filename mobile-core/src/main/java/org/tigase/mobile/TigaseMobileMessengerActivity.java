@@ -48,8 +48,10 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.BaseEvent;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.AbstractMessageEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
@@ -794,11 +796,25 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 		if (be.getType() == MessageModule.ChatCreated) {
 			viewPager.getAdapter().notifyDataSetChanged();
 		} else if (be.getType() == MessageModule.ChatClosed) {
+			final Chat chat = ((MessageEvent) be).getChat();
 			viewPager.getAdapter().notifyDataSetChanged();
+			new Thread() {
+				public void run() {
+					try {
+						chat.setLocalState(ChatState.gone);
+					}
+					catch (JaxmppException ex) {
+						// we ignore this exception as sending gone state may be omitted
+					}						
+				}
+			}.start();
 		} else if (be.getType() == MucModule.RoomClosed) {
 			viewPager.getAdapter().notifyDataSetChanged();
 		} else if (be.getType() == MucModule.JoinRequested) {
 			viewPager.getAdapter().notifyDataSetChanged();
+		} else if (be.getType() == MessageModule.ChatStateChanged) {
+			helper.updateActionBar(((MessageEvent) be).getChat().hashCode());
+			return;
 		}
 		try {
 			// NPE - why be.getMessage() is null here?

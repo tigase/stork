@@ -30,8 +30,11 @@ import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.content.ContentValues;
@@ -68,6 +71,8 @@ public class ChatView extends RelativeLayout {
 
 	private final SharedPreferences prefs;
 
+	protected boolean composing = false;
+	
 	public ChatView(Context context) {
 		super(context);
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -112,6 +117,9 @@ public class ChatView extends RelativeLayout {
 					sendMessage();
 					return true;
 				}
+				else {
+					updateComposing(true);
+				}
 				return false;
 			}
 		});
@@ -119,8 +127,10 @@ public class ChatView extends RelativeLayout {
 
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
-				if (!hasFocus)
-					cancelEdit();
+				if (!hasFocus) {
+					updateComposing(false);					
+					cancelEdit();					
+				}
 			}
 		});
 
@@ -151,6 +161,8 @@ public class ChatView extends RelativeLayout {
 	}
 
 	protected void sendMessage() {
+		composing = false;
+		
 		if (ed == null)
 			return;
 
@@ -295,4 +307,22 @@ public class ChatView extends RelativeLayout {
 		}
 	}
 
+	private void updateComposing(boolean value) {
+		if (composing != value) {
+			composing = value;
+			new Thread() {
+				public void run() {
+					try {
+						chat.setLocalState(composing ? ChatState.composing : ChatState.active);
+					} catch (XMLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JaxmppException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}					
+				}
+			}.start();
+		}
+	}
 }

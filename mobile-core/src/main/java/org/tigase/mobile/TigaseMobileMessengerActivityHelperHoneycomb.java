@@ -23,6 +23,7 @@ import org.tigase.mobile.MultiJaxmpp.ChatWrapper;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import android.annotation.TargetApi;
@@ -96,6 +97,10 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 						BareJID jid = c.getChat().getJid().getBareJid();
 						RosterItem ri = c.getChat().getSessionObject().getRoster().get(jid);
 						subtitle = "Chat with " + (ri != null ? ri.getName() : jid.toString());
+						ChatState state = c.getChat().getState();
+						if (state != null && state != ChatState.active) {
+							subtitle = "(" + state.name() + ") " + subtitle;
+						}
 
 						icon = R.drawable.user_offline;
 						CPresence p = RosterDisplayTools.getShowOf(c.getChat().getSessionObject(),
