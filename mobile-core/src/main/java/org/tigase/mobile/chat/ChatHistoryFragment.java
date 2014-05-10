@@ -590,7 +590,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 			public void run() {
 				if (chat != null) {
 					try {
-						chat.setLocalState(state);
+						chat.setLocalChatState(state);
 					} catch (XMLException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

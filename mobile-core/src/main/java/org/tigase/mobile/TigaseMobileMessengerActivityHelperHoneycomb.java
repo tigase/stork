@@ -97,7 +97,7 @@ public class TigaseMobileMessengerActivityHelperHoneycomb extends TigaseMobileMe
 						BareJID jid = c.getChat().getJid().getBareJid();
 						RosterItem ri = c.getChat().getSessionObject().getRoster().get(jid);
 						subtitle = "Chat with " + (ri != null ? ri.getName() : jid.toString());
-						ChatState state = c.getChat().getState();
+						ChatState state = c.getChat().getChatState();
 						if (state != null && state != ChatState.active) {
 							subtitle = "(" + state.name() + ") " + subtitle;
 						}

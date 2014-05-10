@@ -801,7 +801,7 @@ public class TigaseMobileMessengerActivity extends FragmentActivity {
 			new Thread() {
 				public void run() {
 					try {
-						chat.setLocalState(ChatState.gone);
+						chat.setLocalChatState(ChatState.gone);
 					}
 					catch (JaxmppException ex) {
 						// we ignore this exception as sending gone state may be omitted

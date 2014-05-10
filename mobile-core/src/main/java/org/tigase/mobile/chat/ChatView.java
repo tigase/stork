@@ -313,7 +313,7 @@ public class ChatView extends RelativeLayout {
 			new Thread() {
 				public void run() {
 					try {
-						chat.setLocalState(composing ? ChatState.composing : ChatState.active);
+						chat.setLocalChatState(composing ? ChatState.composing : ChatState.active);
 					} catch (XMLException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
