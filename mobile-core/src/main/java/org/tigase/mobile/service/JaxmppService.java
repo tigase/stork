@@ -404,6 +404,25 @@ public class JaxmppService extends Service {
 				FileTransferFeature.enableFileTransfer(jaxmpp, context);
 				MobileModeFeature.updateSettings(account, jaxmpp, context);
 				GeolocationFeature.updateGeolocationSettings(account, jaxmpp, context);
+				
+				// updating settings for Chat State Notification
+				final boolean value = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Preferences.ENABLE_CHAT_STATE_SUPPORT_KEY, true);
+				Log.v(TAG, "updating chat state support to =  " + value);
+				final MessageModule messageModule = jaxmpp.getModule(MessageModule.class);
+				final JaxmppCore tjaxmpp = jaxmpp;
+				new Thread() {
+					public void run() {
+						try {
+							if (messageModule.setChatStateDisabled(!value) && tjaxmpp.isConnected()) {
+								Log.v(TAG, "state changed and jaxmpp connected");
+								final PresenceModule presenceModule = tjaxmpp.getModule(PresenceModule.class);
+								presenceModule.setPresence(userStatusShow, userStatusMessage, null);
+							}
+						} catch (JaxmppException e) {
+							Log.e(TAG, e.getMessage());
+						}
+					}
+				}.start();
 			}
 
 			accountsJids.remove(jid);
@@ -1068,10 +1087,9 @@ public class JaxmppService extends Service {
 		setUsedNetworkType(-1);
 		setRecconnect(true);
 		clearLocalJaxmppProperties();
-		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+		// we need to create listener before binding it to PreferenceManager
 		this.prefChangeListener = new OnSharedPreferenceChangeListener() {
 
 			@Override
@@ -1084,9 +1102,16 @@ public class JaxmppService extends Service {
 					keepAlive();
 					startKeepAlive();
 				}
+				Log.v(TAG, "preference changed " + key);
+				if (Preferences.ENABLE_CHAT_STATE_SUPPORT_KEY.equals(key)) {
+					Log.v(TAG, "changed chat state support - calling update of jaxmpp states");
+					updateJaxmppInstances(getMulti(), getContentResolver(), getResources(), getApplicationContext());
+				}
 			}
 		};
-
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
+		
 		keepaliveInterval = 1000 * 60 * this.prefs.getInt(Preferences.KEEPALIVE_TIME_KEY, 3);
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);

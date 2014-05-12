@@ -190,5 +190,6 @@
     <string name="trustcert_subject">Subject: %s</string>
     <string name="trustcert_issuer">Issuer: %s</string>
     <string name="trustcert_accountnotification">Wrong certificate for %s</string>
-
+	<string name="pref_chat_state_enabled_summary">Receive and send notification about chat state</string>
+	<string name="pref_chat_state_enabled_title">Chat state notification</string>
 </resources>

@@ -26,6 +26,8 @@ public final class Preferences {
 	public static final String DEFAULT_PRIORITY_KEY = "default_priority";
 
 	public static final String ENTER_TO_SEND_KEY = "enter_to_send";
+	
+	public static final String ENABLE_CHAT_STATE_SUPPORT_KEY = "chat_state_enabled";
 
 	public static final String KEEPALIVE_TIME_KEY = "keepalive_time";
 

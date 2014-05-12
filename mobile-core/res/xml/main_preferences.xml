@@ -116,6 +116,11 @@
             android:key="keepalive_time"
             android:summary="@string/pref_keepalive_time_summary"
             android:title="@string/pref_keepalive_time_title" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="chat_state_enabled"
+            android:summary="@string/pref_chat_state_enabled_summary"
+            android:title="@string/pref_chat_state_enabled_title" />        
     </PreferenceScreen>
 
 </PreferenceScreen>
