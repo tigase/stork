@@ -43,6 +43,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -113,6 +115,7 @@ public class ChatView extends RelativeLayout {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				boolean ets = prefs.getBoolean(Preferences.ENTER_TO_SEND_KEY, true);
+				// this is not always called - sometimes we need to use TextWatcher
 				if (ets && keyCode == KeyEvent.KEYCODE_ENTER) {
 					sendMessage();
 					return true;
@@ -122,6 +125,28 @@ public class ChatView extends RelativeLayout {
 				}
 				return false;
 			}
+		});
+		this.ed.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				updateComposing(s.length() > 0);
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// TODO Auto-generated method stub
+				
+			}
+			
 		});
 		this.ed.setOnFocusChangeListener(new OnFocusChangeListener() {
 
@@ -308,6 +333,7 @@ public class ChatView extends RelativeLayout {
 	}
 
 	private void updateComposing(boolean value) {
+		Log.v(TAG, "updating composing from " + composing + " to " + value);
 		if (composing != value) {
 			composing = value;
 			new Thread() {

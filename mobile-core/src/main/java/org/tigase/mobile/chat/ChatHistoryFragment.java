@@ -451,6 +451,7 @@ public class ChatHistoryFragment extends FragmentWithUID implements LoaderCallba
 
 		updatePresence();
 		layout.updateClientIndicator();
+		setLocalChatState(ChatState.active);	 
 	}
 
 	@Override
