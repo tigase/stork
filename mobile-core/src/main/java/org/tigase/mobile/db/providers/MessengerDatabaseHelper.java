@@ -36,7 +36,7 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 
 	public static final String DATABASE_NAME = "mobile_messenger.db";
 
-	public static final Integer DATABASE_VERSION = 3;
+	public static final Integer DATABASE_VERSION = 4;
 
 	private static final String TAG = "tigase";
 
@@ -57,6 +57,8 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += ChatTableMetaData.FIELD_AUTHOR_NICKNAME + " TEXT, ";
 		sql += ChatTableMetaData.FIELD_TIMESTAMP + " DATETIME, ";
 		sql += ChatTableMetaData.FIELD_BODY + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_MESSAGE_ID + " TEXT, ";
+		sql += ChatTableMetaData.FIELD_RECEIPT_STATUS + " INTEGER DEFAULT 0, ";
 		sql += ChatTableMetaData.FIELD_STATE + " INTEGER";
 		sql += ");";
 		db.execSQL(sql);
@@ -65,6 +67,13 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 		sql += ChatTableMetaData.INDEX_JID;
 		sql += " ON " + ChatTableMetaData.TABLE_NAME + " (";
 		sql += ChatTableMetaData.FIELD_JID;
+		sql += ")";
+		db.execSQL(sql);
+
+		sql = "CREATE INDEX IF NOT EXISTS ";
+		sql += ChatTableMetaData.FIELD_MESSAGE_ID;
+		sql += " ON " + ChatTableMetaData.TABLE_NAME + " (";
+		sql += ChatTableMetaData.FIELD_MESSAGE_ID;
 		sql += ")";
 		db.execSQL(sql);
 
@@ -200,6 +209,23 @@ public class MessengerDatabaseHelper extends SQLiteOpenHelper {
 			sql += GeolocationTableMetaData.INDEX_JID;
 			sql += " ON " + GeolocationTableMetaData.TABLE_NAME + " (";
 			sql += GeolocationTableMetaData.FIELD_JID;
+			sql += ")";
+			db.execSQL(sql);
+		}
+
+		if (oldVersion < 4) {
+			String sql = "ALTER TABLE " + ChatTableMetaData.TABLE_NAME + " ADD COLUMN " + ChatTableMetaData.FIELD_MESSAGE_ID
+					+ " TEXT ";
+			db.execSQL(sql);
+
+			sql = "ALTER TABLE " + ChatTableMetaData.TABLE_NAME + " ADD COLUMN " + ChatTableMetaData.FIELD_RECEIPT_STATUS
+					+ " INTEGER DEFAULT 0 ";
+			db.execSQL(sql);
+
+			sql = "CREATE INDEX IF NOT EXISTS ";
+			sql += ChatTableMetaData.FIELD_MESSAGE_ID;
+			sql += " ON " + ChatTableMetaData.TABLE_NAME + " (";
+			sql += ChatTableMetaData.FIELD_MESSAGE_ID;
 			sql += ")";
 			db.execSQL(sql);
 		}

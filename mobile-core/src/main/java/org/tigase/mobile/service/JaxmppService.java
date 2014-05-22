@@ -404,13 +404,15 @@ public class JaxmppService extends Service {
 				FileTransferFeature.enableFileTransfer(jaxmpp, context);
 				MobileModeFeature.updateSettings(account, jaxmpp, context);
 				GeolocationFeature.updateGeolocationSettings(account, jaxmpp, context);
-				
+
 				// updating settings for Chat State Notification
-				final boolean value = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Preferences.ENABLE_CHAT_STATE_SUPPORT_KEY, true);
+				final boolean value = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+						Preferences.ENABLE_CHAT_STATE_SUPPORT_KEY, true);
 				Log.v(TAG, "updating chat state support to =  " + value);
 				final MessageModule messageModule = jaxmpp.getModule(MessageModule.class);
 				final JaxmppCore tjaxmpp = jaxmpp;
 				new Thread() {
+					@Override
 					public void run() {
 						try {
 							if (messageModule.setChatStateDisabled(!value) && tjaxmpp.isConnected()) {
@@ -452,7 +454,7 @@ public class JaxmppService extends Service {
 	private AccountModifyReceiver accountModifyReceiver;
 
 	private TimerTask autoPresenceTask;
-	
+
 	private final HashMap<BareJID, Integer> connectionErrorsCounter = new HashMap<BareJID, Integer>();
 
 	private Listener<ConnectorEvent> connectorListener;
@@ -510,6 +512,8 @@ public class JaxmppService extends Service {
 	private final Listener<PresenceModule.PresenceEvent> presenceListener;
 
 	private final Listener<PresenceEvent> presenceSendListener;
+
+	private final Listener<MessageEvent> receiptsListener;
 
 	private boolean reconnect = true;
 
@@ -576,11 +580,19 @@ public class JaxmppService extends Service {
 				}
 			}
 		};
+
 		this.messageListener = new Listener<MessageModule.MessageEvent>() {
 
 			@Override
 			public void handleEvent(MessageEvent be) throws JaxmppException {
 				storeIncomingMessage(be, true);
+			}
+		};
+		this.receiptsListener = new Listener<MessageModule.MessageEvent>() {
+
+			@Override
+			public void handleEvent(MessageEvent be) throws JaxmppException {
+				storeReceivedReceipt(be);
 			}
 		};
 		this.mucListener = new Listener<MucModule.MucEvent>() {
@@ -1111,7 +1123,7 @@ public class JaxmppService extends Service {
 		};
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		this.prefs.registerOnSharedPreferenceChangeListener(prefChangeListener);
-		
+
 		keepaliveInterval = 1000 * 60 * this.prefs.getInt(Preferences.KEEPALIVE_TIME_KEY, 3);
 
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -1148,6 +1160,7 @@ public class JaxmppService extends Service {
 
 		getMulti().addListener(MessageCarbonsModule.Carbon, this.forwardedMessageListener);
 
+		getMulti().addListener(MessageModule.ReceiptReceivedMessage, this.receiptsListener);
 		getMulti().addListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().addListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().addListener(MucModule.PresenceError, this.mucListener);
@@ -1227,6 +1240,7 @@ public class JaxmppService extends Service {
 
 		getMulti().removeListener(MessageCarbonsModule.Carbon, this.forwardedMessageListener);
 
+		getMulti().removeListener(MessageModule.ReceiptReceivedMessage, this.receiptsListener);
 		getMulti().removeListener(MessageModule.MessageReceived, this.messageListener);
 		getMulti().removeListener(MucModule.MucMessageReceived, this.mucListener);
 		getMulti().removeListener(MucModule.PresenceError, this.mucListener);
@@ -1645,6 +1659,7 @@ public class JaxmppService extends Service {
 			values.put(ChatTableMetaData.FIELD_JID, be.getChat().getJid().getBareJid().toString());
 			values.put(ChatTableMetaData.FIELD_AUTHOR_JID, be.getChat().getJid().getBareJid().toString());
 			values.put(ChatTableMetaData.FIELD_TIMESTAMP, new Date().getTime());
+			values.put(ChatTableMetaData.FIELD_MESSAGE_ID, be.getMessage().getId());
 			Message msg = be.getMessage();
 			if (msg.getType() == StanzaType.error) {
 				ErrorElement error = ErrorElement.extract(msg);
@@ -1696,10 +1711,22 @@ public class JaxmppService extends Service {
 			values.put(ChatTableMetaData.FIELD_THREAD_ID, chat.getThreadId());
 			values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
 			values.put(ChatTableMetaData.FIELD_STATE, ChatTableMetaData.STATE_OUT_SENT);
+			values.put(ChatTableMetaData.FIELD_MESSAGE_ID, be.getMessage().getId());
 
 			getContentResolver().insert(uri, values);
-
 		}
+	}
+
+	protected void storeReceivedReceipt(MessageEvent be) throws XMLException {
+		final String confirmedId = be.getId();
+		final BareJID confirmingJID = be.getMessage().getFrom().getBareJid();
+
+		Uri uri = Uri.parse(ChatHistoryProvider.CONFIRM_RECEIVING_URI + "/" + confirmingJID.toString()
+				+ (confirmedId == null ? "" : ("?id=" + confirmedId)));
+		ContentValues values = new ContentValues();
+		values.put(ChatTableMetaData.FIELD_RECEIPT_STATUS, 2);
+
+		getContentResolver().update(uri, values, null, null);
 	}
 
 	protected synchronized void updateRosterItem(final PresenceEvent be) throws XMLException {

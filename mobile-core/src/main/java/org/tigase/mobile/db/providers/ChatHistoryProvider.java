@@ -37,6 +37,8 @@ public class ChatHistoryProvider extends ContentProvider {
 
 	protected static final int CHAT_ITEM_URI_INDICATOR = 2;
 
+	private static final int CHAT_RECEIPT_URI_INDICATOR = 4;
+
 	public static final String CHAT_URI = "content://" + AUTHORITY + "/chat";
 
 	protected static final int CHAT_URI_INDICATOR = 1;
@@ -55,8 +57,14 @@ public class ChatHistoryProvider extends ContentProvider {
 			put(ChatTableMetaData.FIELD_AUTHOR_JID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_AUTHOR_JID);
 			put(ChatTableMetaData.FIELD_AUTHOR_NICKNAME, ChatTableMetaData.TABLE_NAME + "."
 					+ ChatTableMetaData.FIELD_AUTHOR_NICKNAME);
+			put(ChatTableMetaData.FIELD_MESSAGE_ID, ChatTableMetaData.TABLE_NAME + "." + ChatTableMetaData.FIELD_MESSAGE_ID);
+			put(ChatTableMetaData.FIELD_RECEIPT_STATUS, ChatTableMetaData.TABLE_NAME + "."
+					+ ChatTableMetaData.FIELD_RECEIPT_STATUS);
+
 		}
 	};
+
+	public static final String CONFIRM_RECEIVING_URI = "content://" + AUTHORITY + "/confirm";
 
 	public static final String UNSENT_MESSAGES_URI = "content://" + AUTHORITY + "/unsent";
 
@@ -124,10 +132,10 @@ public class ChatHistoryProvider extends ContentProvider {
 
 		if (l.get(0).equals("unsent"))
 			return UNSENT_MESSAGES_URI_INDICATOR;
-
-		if (!l.get(0).equals("chat"))
+		else if (l.get(0).equals("confirm"))
+			return CHAT_RECEIPT_URI_INDICATOR;
+		else if (!l.get(0).equals("chat"))
 			return 0;
-
 		else if (l.size() == 2)
 			return CHAT_URI_INDICATOR;
 		else if (l.size() == 3)
@@ -193,7 +201,33 @@ public class ChatHistoryProvider extends ContentProvider {
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		if (match(uri) != CHAT_ITEM_URI_INDICATOR) {
+		if (match(uri) == CHAT_RECEIPT_URI_INDICATOR) {
+			final SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+			final String jid = uri.getLastPathSegment();
+			final String messageId = uri.getQueryParameter("id");
+
+			int changed = 0;
+
+			if (messageId == null) {
+				Cursor c = db.query(ChatTableMetaData.TABLE_NAME, new String[] { ChatTableMetaData.FIELD_ID },
+						ChatTableMetaData.FIELD_JID + "='" + jid + "' AND " + ChatTableMetaData.FIELD_RECEIPT_STATUS + "= 1",
+						null, null, null, ChatTableMetaData.FIELD_TIMESTAMP + " DESC", "0,1");
+				if (c.moveToNext()) {
+					int id = c.getInt(c.getColumnIndex(ChatTableMetaData.FIELD_ID));
+					changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_ID + " = " + id, null);
+				}
+			} else {
+				changed = db.update(ChatTableMetaData.TABLE_NAME, values, ChatTableMetaData.FIELD_JID + "='" + jid + "' AND "
+						+ ChatTableMetaData.FIELD_RECEIPT_STATUS + "= 1 AND " + ChatTableMetaData.FIELD_MESSAGE_ID + " = '"
+						+ messageId + "'", null);
+			}
+			if (changed > 0) {
+				Uri u = Uri.parse(CHAT_URI + "/" + jid);
+				getContext().getContentResolver().notifyChange(u, null);
+			}
+			return changed;
+		} else if (match(uri) != CHAT_ITEM_URI_INDICATOR) {
 			if (match(uri) == CHAT_URI_INDICATOR) {
 				final SQLiteDatabase db = dbHelper.getWritableDatabase();
 				String jid = uri.getLastPathSegment();
@@ -205,6 +239,7 @@ public class ChatHistoryProvider extends ContentProvider {
 				}
 				return changed;
 			}
+
 			throw new IllegalArgumentException("Unknown URI ");
 		}
 

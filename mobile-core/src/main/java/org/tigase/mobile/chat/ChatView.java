@@ -26,6 +26,7 @@ import org.tigase.mobile.R;
 import org.tigase.mobile.RosterDisplayTools;
 import org.tigase.mobile.db.ChatTableMetaData;
 import org.tigase.mobile.db.providers.ChatHistoryProvider;
+import org.tigase.mobile.db.providers.DBChatManager;
 import org.tigase.mobile.roster.CPresence;
 
 import tigase.jaxmpp.core.client.JID;
@@ -35,7 +36,9 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.ChatState;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import android.content.ContentValues;
 import android.content.Context;
@@ -67,14 +70,14 @@ public class ChatView extends RelativeLayout {
 
 	private ImageView clientTypeIndicator;
 
+	protected boolean composing = false;
+
 	private EditText ed;
 
 	private ImageView itemPresence;
 
 	private final SharedPreferences prefs;
 
-	protected boolean composing = false;
-	
 	public ChatView(Context context) {
 		super(context);
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -115,12 +118,12 @@ public class ChatView extends RelativeLayout {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				boolean ets = prefs.getBoolean(Preferences.ENTER_TO_SEND_KEY, true);
-				// this is not always called - sometimes we need to use TextWatcher
+				// this is not always called - sometimes we need to use
+				// TextWatcher
 				if (ets && keyCode == KeyEvent.KEYCODE_ENTER) {
 					sendMessage();
 					return true;
-				}
-				else {
+				} else {
 					updateComposing(true);
 				}
 				return false;
@@ -134,27 +137,25 @@ public class ChatView extends RelativeLayout {
 			}
 
 			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after) {
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before,
-					int count) {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 		});
 		this.ed.setOnFocusChangeListener(new OnFocusChangeListener() {
 
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (!hasFocus) {
-					updateComposing(false);					
-					cancelEdit();					
+					updateComposing(false);
+					cancelEdit();
 				}
 			}
 		});
@@ -187,7 +188,7 @@ public class ChatView extends RelativeLayout {
 
 	protected void sendMessage() {
 		composing = false;
-		
+
 		if (ed == null)
 			return;
 
@@ -199,14 +200,19 @@ public class ChatView extends RelativeLayout {
 		if (DEBUG)
 			Log.d(TAG, "Send: " + t);
 
+		final JaxmppCore jaxmpp = ((MessengerApplication) getContext().getApplicationContext()).getMultiJaxmpp().get(
+				chat.getSessionObject());
+		chat.setMessageDeliveryReceiptsEnabled(DBChatManager.isReceiptAvailable(jaxmpp, chat.getJid()));
+
 		AsyncTask<String, Void, Void> task = new AsyncTask<String, Void, Void>() {
 			@Override
 			public Void doInBackground(String... ts) {
 				String t = ts[0];
 				Log.d(TAG, "Send: " + t);
 				int state;
+				Message msg = null;
 				try {
-					chat.sendMessage(t);
+					msg = chat.sendMessage(t);
 					state = ChatTableMetaData.STATE_OUT_SENT;
 				} catch (Exception e) {
 					state = ChatTableMetaData.STATE_OUT_NOT_SENT;
@@ -224,6 +230,20 @@ public class ChatView extends RelativeLayout {
 				values.put(ChatTableMetaData.FIELD_THREAD_ID, chat.getThreadId());
 				values.put(ChatTableMetaData.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
 				values.put(ChatTableMetaData.FIELD_STATE, state);
+
+				int receiptStatus = 0;
+				String msgId = null;
+				try {
+					if (msg != null) {
+						receiptStatus = msg.getChildrenNS("request", MessageModule.RECEIPTS_XMLNS) != null ? 1 : 0;
+						msgId = msg.getId();
+					}
+				} catch (Exception e) {
+					Log.w(TAG, "Can't check Receipt Status", e);
+					// do nothing
+				}
+				values.put(ChatTableMetaData.FIELD_RECEIPT_STATUS, receiptStatus);
+				values.put(ChatTableMetaData.FIELD_MESSAGE_ID, msgId);
 
 				getContext().getContentResolver().insert(uri, values);
 
@@ -337,6 +357,7 @@ public class ChatView extends RelativeLayout {
 		if (composing != value) {
 			composing = value;
 			new Thread() {
+				@Override
 				public void run() {
 					try {
 						chat.setLocalChatState(composing ? ChatState.composing : ChatState.active);
@@ -346,7 +367,7 @@ public class ChatView extends RelativeLayout {
 					} catch (JaxmppException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}					
+					}
 				}
 			}.start();
 		}

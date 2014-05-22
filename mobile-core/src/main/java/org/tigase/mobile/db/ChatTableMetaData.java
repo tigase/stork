@@ -37,6 +37,17 @@ public class ChatTableMetaData implements BaseColumns {
 
 	public static final String FIELD_JID = "jid";
 
+	public static final String FIELD_MESSAGE_ID = "message_id";
+
+	/**
+	 * <ul>
+	 * <li><code>0</code> - nothing</li>
+	 * <li><code>1</code> - requested sent</li>
+	 * <li><code>2</code> - responsed (means: message received by destination)</li>
+	 * </ul>
+	 */
+	public static final String FIELD_RECEIPT_STATUS = "receipt_status";
+
 	/**
 	 * <ul>
 	 * <li><code>0</code> - incoming message</li>

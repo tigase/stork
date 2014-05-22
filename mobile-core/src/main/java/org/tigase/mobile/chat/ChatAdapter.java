@@ -125,10 +125,20 @@ public class ChatAdapter extends SimpleCursorAdapter {
 			holder.webview.setTextColor(context.getResources().getColor(R.color.message_mine_text));
 			holder.timestamp.setTextColor(context.getResources().getColor(R.color.message_mine_text));
 
-			if (state == ChatTableMetaData.STATE_OUT_SENT)
-				holder.msgStatus.setVisibility(View.GONE);
-			else if (state == ChatTableMetaData.STATE_OUT_NOT_SENT)
+			if (state == ChatTableMetaData.STATE_OUT_SENT) {
+				int recpt = cursor.getInt(cursor.getColumnIndex(ChatTableMetaData.FIELD_RECEIPT_STATUS));
+				if (recpt == 1) {
+					holder.msgStatus.setImageResource(R.drawable.message_sent);
+					holder.msgStatus.setVisibility(View.GONE);
+				} else if (recpt == 2) {
+					holder.msgStatus.setImageResource(R.drawable.message_delivered);
+					holder.msgStatus.setVisibility(View.VISIBLE);
+				} else
+					holder.msgStatus.setVisibility(View.GONE);
+			} else if (state == ChatTableMetaData.STATE_OUT_NOT_SENT) {
+				holder.msgStatus.setImageResource(R.drawable.message_not_sent);
 				holder.msgStatus.setVisibility(View.VISIBLE);
+			}
 
 			view.setBackgroundColor(context.getResources().getColor(R.color.message_mine_background));
 		} else {

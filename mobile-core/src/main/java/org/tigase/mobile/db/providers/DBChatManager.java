@@ -19,9 +19,11 @@ package org.tigase.mobile.db.providers;
 
 import java.util.Date;
 
+import org.tigase.mobile.MessengerApplication;
 import org.tigase.mobile.db.OpenChatsTableMetaData;
 
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -37,6 +39,32 @@ public class DBChatManager extends AbstractChatManager {
 	private static final boolean DEBUG = false;
 
 	private static final String TAG = "tigase";
+
+	public static boolean isReceiptAvailable(JaxmppCore jaxmpp, JID j) {
+		return true;
+		// try {
+		// CapabilitiesCache capsCache =
+		// jaxmpp.getModule(CapabilitiesModule.class).getCache();
+		// Presence p = jaxmpp.getPresence().getPresence(j);
+		// if (p != null) {
+		// Element c = p.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		// if (c == null) {
+		// return false;
+		// }
+		//
+		// final String node = c.getAttribute("node");
+		// final String ver = c.getAttribute("ver");
+		//
+		// Set<String> features = capsCache.getFeatures(node + "#" + ver);
+		//
+		// return features.contains(MessageModule.RECEIPTS_XMLNS);
+		// }
+		//
+		// return false;
+		// } catch (Exception ex) {
+		// return false;
+		// }
+	}
 
 	private final Context context;
 
@@ -74,6 +102,9 @@ public class DBChatManager extends AbstractChatManager {
 		Chat chat = new Chat(rowId, packetWriter, sessionObject);
 		chat.setJid(jid);
 		chat.setThreadId(threadId);
+
+		chat.setMessageDeliveryReceiptsEnabled(isReceiptAvailable(jid));
+
 		return chat;
 	}
 
@@ -101,6 +132,8 @@ public class DBChatManager extends AbstractChatManager {
 				chat.setJid(jid);
 				chat.setThreadId(threadId);
 
+				chat.setMessageDeliveryReceiptsEnabled(isReceiptAvailable(jid));
+
 				chats.add(chat);
 
 			}
@@ -110,10 +143,17 @@ public class DBChatManager extends AbstractChatManager {
 		}
 	}
 
+	protected boolean isReceiptAvailable(JID j) {
+		final JaxmppCore jaxmpp = ((MessengerApplication) context.getApplicationContext()).getMultiJaxmpp().get(sessionObject);
+		return isReceiptAvailable(jaxmpp, j);
+	}
+
 	@Override
 	protected boolean update(Chat chat, JID fromJid, String threadId) throws JaxmppException {
+		chat.setMessageDeliveryReceiptsEnabled(isReceiptAvailable(fromJid));
 		boolean x = super.update(chat, fromJid, threadId);
 		if (x) {
+
 			SQLiteDatabase db = helper.getWritableDatabase();
 			final ContentValues values = new ContentValues();
 			JID jid = chat.getJid();
