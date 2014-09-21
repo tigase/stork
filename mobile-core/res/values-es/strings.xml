@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">1.6-RC2</string>
+    <string name="app_version">1.6</string>
     <string name="app_name">Tigase Messenger</string>
     <string name="pingServer">Ping</string>
     <string name="auth_rerequested">Autorización requerida por %1$s (%2$s)</string>
-    <string name="auth_removed">Autirización denegada por %1$s (%2$s)</string>
+    <string name="auth_removed">Autorización denegada por %1$s (%2$s)</string>
     <string name="auth_resent">Envía autorización a %1$s (%2$s)</string>
     <string name="contact_edit">Editar</string>
     <string name="contact_remove">Eliminar</string>
@@ -13,7 +13,7 @@
     <string name="contact_add">Añadir</string>
     <string name="contact_editor">Editar contacto</string>
     <string name="contact_details">Detalles del contacto</string>
-    <string name="pref_entertosend_summary">Si está marcada, entonces Enter enviará su mensaje</string>
+    <string name="pref_entertosend_summary">Si está marcada, entonces Enter enviará tu mensaje</string>
     <string name="pref_entertosend_title">Enter para enviar</string>
     <string name="pref_autostart_title">Auto-encendido</string>
     <string name="pref_autostart_summary">Conectarse después que encienda el teléfono</string>
@@ -39,14 +39,14 @@
     <string name="pref_advanced_section_summary">Configuración avanzada</string>
     <string name="pref_default_priority_summary">La prioridad en línea es %1$s</string>
     <string name="pref_default_priority_title">Prioridad en línea</string>
-    <string name="pref_default_priority_dialog">Introduzca la prioridad en línea</string>
+    <string name="pref_default_priority_dialog">Introduce la prioridad en línea</string>
     <string name="pref_auto_away_priority_summary">La prioridad de auto-ausente es %1$s</string>
     <string name="pref_auto_away_priority_title">Prioridad de auto-ausente</string>
     <string name="pref_auto_away_priority_dialog">Teclea la prioridad auto-ausente</string>
-    <string name="pref_keepalive_time_summary">El tiempo de mantenerse activo es %1$s minutes</string>
-    <string name="pref_keepalive_time_title">Tiempo manteniéndose activvo</string>
-    <string name="pref_keepalive_time_dialog">Introduce el tiempo para mantenerse activo</string>
-    <string name="pref_reconnect_time_summary">El cliente esperará %1$s sec between reconnects</string>
+    <string name="pref_keepalive_time_summary">El tiempo para mantenerse activo es %1$s minutos</string>
+    <string name="pref_keepalive_time_title">Tiempo manteniéndose activo</string>
+    <string name="pref_keepalive_time_dialog">Introduzca el tiempo para mantenerse activo</string>
+    <string name="pref_reconnect_time_summary">El cliente esperará %1$s seg entre reconexiones</string>
     <string name="pref_reconnect_time_title">Retraso en la conexión</string>
     <string name="pref_reconnect_time_dialog">Introduce el tiempo de retraso en conectar</string>
     <string name="pref_login_ui_section_title">Interfaz de usuario</string>
@@ -66,7 +66,7 @@
     <string name="account_add_login">Ya tengo una cuenta</string>
     <string name="account_add_description">Hola Mundo</string>
     <string name="account_add_create">Crear una nueva cuenta</string>
-    <string name="account_dialog_enter_details">Introduce los detalles de cuenta XMPP</string>
+    <string name="account_dialog_enter_details">Introduce los detalles de la cuenta XMPP</string>
     <string name="account_dialog_username_hint">Nombre de usuario</string>
     <string name="account_dialog_hostname_hint">Nombre del servidor</string>
     <string name="account_dialog_password_hint">Contraseña</string>
@@ -83,17 +83,17 @@
     <!-- Message shown in progress dialog while app connects to the server -->
     <string name="ui_activity_authenticating">Autenticando\u2026</string>
     <!-- Message shown in dialog if the username or password is invalid. -->
-    <string name="login_activity_loginfail_text_both">El nombre de usuario o contraseña no es válido. Es necesario una cuenta XMPP. Por favor intentelo nuevamente. </string>
+    <string name="login_activity_loginfail_text_both">El nombre de usuario o contraseña no es válido. Es necesario una cuenta XMPP. Por favor inténtalo nuevamente. </string>
     <!-- Message shown in dialog if the password is invalid -->
-    <string name="login_activity_loginfail_text_pwonly">Escribiste la contraseña incorrecta o su cuenta ha cambiado.       
-         Por favor vuelva a introducir su contraseña.</string>
+    <string name="login_activity_loginfail_text_pwonly">Escribiste la contraseña incorrecta o la cuenta ha cambiado.       
+         Por favor vuelve a introducir tu contraseña.</string>
     <!-- Message shown in dialog to prompt the user for their password -->
     <string name="login_activity_loginfail_text_pwmissing">Escribe la contraseña para esta cuenta.</string>
     <!--
         Message shown if the provided account doesn't support the current
         activity.
     -->
-    <string name="login_activity_newaccount_text">Inicia la sesión con su cuenta XMPP. </string>
+    <string name="login_activity_newaccount_text">Inicia sesión con tu cuenta XMPP. </string>
     <string name="vcard_editor_activity_title">Información personal</string>
     <string name="accountVCard">Información personal</string>
     <string name="vcard_fullname">Nombre completo</string>
@@ -103,9 +103,9 @@
     <string name="vcard_homepage">Página web</string>
     <string name="vcard_phone">Teléfono</string>
     <string name="vcard_subscription">Subscripción</string>
-    <string name="vcard_jabberid">Actualiza</string>
-    <string name="vcard_editor_refresh">Actualiza</string>
-    <string name="vcard_editor_publish">Publica</string>
+    <string name="vcard_jabberid">Actualizar</string>
+    <string name="vcard_editor_refresh">Actualizar</string>
+    <string name="vcard_editor_publish">Publicar</string>
     <string name="vcard_published_toast">Información publicada</string>
     <string name="vcard_timeout_toast">Agotado el tiempo de operación</string>
     <string name="vcard_error_toast">Fallo en la operación</string>
@@ -123,22 +123,22 @@
     <string name="reject">Rechazar</string>
     <string name="account_advanced_preferences">Más ajustes…</string>
     <string name="mobile_optimizations_not_supported">Tu servidor no está soportado, prueba Tigase - sure.im, jabber.me, tigase.im</string>
-    <string name="mobile_optimizations">Optimización para movil</string>
+    <string name="mobile_optimizations">Optimización para móvil</string>
     <string name="presence_queue_max_timeout">Máximo tiempo de espera de la cola de presencia</string>
-    <string name="auth_request_info">Este usuario desea suscribirse a su presencia.</string>
+    <string name="auth_request_info">Este usuario desea suscribirse a tu presencia.</string>
     <string name="geolocation_listen">Recibe geolocalización</string>
     <string name="geolocation_publish">Publica geolocalización</string>
     <string name="geolocation_precision">Precisión de la geolocalización</string>
     <string name="geolocation_show">Geolocalización</string>
     <string name="ok">De acuerdo</string>
-    <string name="yes">Si</string>
+    <string name="yes">Sí</string>
     <string name="no">No</string>
-    <string name="cancel">Cancela</string>
+    <string name="cancel">Cancelar</string>
     <string name="warning_dialog_title">Atención</string>
     <string name="auth_request_cant_deny">No se puede negar la suscripción</string>
-    <string name="auth_request_cant_accept">No puede aceptar la suscripción</string>
+    <string name="auth_request_cant_accept">No se puede aceptar la suscripción</string>
     <string name="contact_edit_wrn_jid_cant_be_empty">JID no puede estar vacío</string>
-    <string name="contact_edit_wrn_wrong_jid">Incorrecta identificación de jabber</string>
+    <string name="contact_edit_wrn_wrong_jid">Identificación de Jabber incorrecta</string>
     <string name="contact_edit_wrn_name_cant_be_empty">El nombre no puede estar vacío</string>
     <string name="contact_edit_wrn_unkown">Desconocido</string>
     <string name="contact_edit_wrn_timeout">Tiempo de espera</string>
@@ -162,7 +162,7 @@
     <string name="service_connecting_notification_text">Conectando %d cuentas...</string>
     <string name="service_connected_notification_title">Conectado</string>
     <string name="service_online_notification_text">En línea</string>
-    <string name="service_no_active_accounts_notification_text">No hay cuentas activas!</string>
+    <string name="service_no_active_accounts_notification_text">¡No hay cuentas activas!</string>
     <string name="service_file_transfer_sending_file">Enviando archivo %1$s a %2$s</string>
     <string name="service_file_transfer_receiving_file">Recibiendo archivo %1$s de %2$s</string>
     <string name="service_file_transfer_negotiating">Negociando...</string>
@@ -189,5 +189,6 @@
     <string name="trustcert_subject">Asunto: %s</string>
     <string name="trustcert_issuer">Emisor: %s</string>
     <string name="trustcert_accountnotification">Certificado incorrecto para %s</string>
-
+	<string name="pref_chat_state_enabled_summary">Recibir y enviar notificaciones sobre el estado de chat</string>
+	<string name="pref_chat_state_enabled_title">Notificación de estado de chat</string>
 </resources>

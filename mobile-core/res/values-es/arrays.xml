@@ -41,19 +41,19 @@
         <item>15 min</item>
     </string-array>
     <string-array name="geolocation_precision">
-        <item>Pais</item>
+        <item>País</item>
         <item>Ciudad</item>
         <item>Calle</item>
         <item>Latitud/Longitud</item>
     </string-array>
     <string-array name="pref_notification_vibrate_values_entries">
-        <item>Por defecto</item>
-        <item>Si</item>
+        <item>Predeterminado</item>
+        <item>Sí</item>
         <item>No</item>
     </string-array>
     <string-array name="pref_notification_vibrate_values">
-        <item>Por defecto</item>
-        <item>Si</item>
+        <item>Predeterminado</item>
+        <item>Sí</item>
         <item>No</item>
     </string-array>
 
