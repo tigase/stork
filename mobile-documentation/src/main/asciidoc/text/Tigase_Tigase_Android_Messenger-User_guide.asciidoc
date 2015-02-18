@@ -1,0 +1,10 @@
+image::images/tiger-looking-left-small.png[]
+
+[[TigaseAndroidMessenger_UserGuide]]
+== Obtaining Application
+
+== Installation
+
+== Adding accounts
+
+== Configuration

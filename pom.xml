@@ -5,12 +5,25 @@
 	<artifactId>tigase-mobile</artifactId>
 	<version>1.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>tigase-mobile</name>
+	<name>Tigase Android Messenger</name>
 	<modules>
 		<module>mobile-commons</module>
 		<module>mobile-core</module>
 		<module>mobile-phone-pro</module>
 	</modules>
+
+	<profiles>
+		<profile>
+			<id>docs</id>
+			<properties>
+				<maven.javadoc.skip>false</maven.javadoc.skip>
+			</properties>
+			<modules>
+				<module>mobile-documentation</module>
+			</modules>
+		</profile>
+	</profiles>
+
 	<properties>
 		<platform.version>4.1.1.4</platform.version>
 		<platform.number>16</platform.number>
@@ -33,6 +46,30 @@
 	</dependencies>
   
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>aggregate</goal>
+							<goal>aggregate-jar</goal>
+						</goals>
+						<configuration>
+							<source>1.7</source>
+							<quiet>true</quiet>
+							<aggregate>true</aggregate>
+							<reportOutputDirectory>docs/javadoc</reportOutputDirectory>
+							<destDir>docs/javadoc</destDir>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 		<extensions>
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
