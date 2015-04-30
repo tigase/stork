@@ -1,10 +1,145 @@
-image::images/tiger-looking-left-small.png[]
+Tigase Messenger User Guide
+===========================
+Eric Dziewa
+v1.0, April 2015: Tigase Messenger User Guide
+:website: http://tigase.net
+:Date: 2015-04-30
 
-[[TigaseAndroidMessenger_UserGuide]]
-== Obtaining Application
+*Tigase Messenger* is the most intuitive, and user friendly mobile XMPP client in the market. You might feel hesitant to try it out if you've tried other clients. Don't be. A few presses and swipes with Tigase Messenger and you are finished!
 
-== Installation
+Installation
+------------
 
-== Adding accounts
+. Open the Play store and search for tigase.
++
+image:images/Screenshot_2015-04-26-13-38-30.png[]
++
+. Tigase Messenger Free, and Tigase Messenger are the same. Select Tigase Messenger.
++
+image:images/Screenshot_2015-04-26-13-38-46.png[]
++
+. Click INSTALL.
++
+image:images/Screenshot_2015-04-26-13-40-14.png[]
++
+. Click ACCEPT.
+. Done.
 
-== Configuration
+Setting up Accounts
+-------------------
+
+- Now that we have the nice Tigase icon, open it to set up accounts.
++
+image:images/Screenshot_2015-04-26-13-40-53.png[]
++
+- When you open Tigase Messenger for the first time you will be greeted by this screen.
++
+image:images/Screenshot_2015-04-26-13-41-20.png[]
++
+- If you have an account go ahead and add it here. For the purpose of this guide we will be creating an account.
++
+image:images/Screenshot_2015-04-26-13-41-42.png[]
++
+- On the Create Account screen there is a dropdown containing a list of Tigase domains which you can register new accounts on.
++
+image:images/Screenshot_2015-04-26-13-42-20.png[]
++
+- Fill in password, and email address fields. Click Ok.
++
+image:images/Screenshot_2015-04-26-13-43-54.png[]
++
+- That's it. You now have an XMPP account registered on Tigase servers. You can chat with users on other federated servers like jabber.org.
++
+image:images/Screenshot_2015-04-26-14-01-50.png[]
++
+- You can add as many accounts as you'd like.
+
+Configuration
+-------------
+
+- When the application is open you can click to left of the Tigase icon to access Settings.
++
+image:images/Screenshot_2015-04-26-14-00-37.png[]
++
+- Roster layout.
++
+image:images/Screenshot_2015-04-26-14-00-49.png[]
++
+- Roster sorting.
++
+image:images/Screenshot_2015-04-26-14-00-56.png[]
++
+- Vibration?
++
+image:images/Screenshot_2015-04-26-14-01-13.png[]
++
+- This is a cool feature. Set custom sounds when someone sends you a message or calls your name in a multi user chat.
++
+image:images/Screenshot_2015-04-26-14-01-23.png[]
++
+- Advanced settings. The defaults should be fine.
++
+image:images/Screenshot_2015-04-26-14-01-31.png[]
++
+- Scroll left and right in the application. To disconnect, view the Accounts screen and long press the account.
++
+image:images/Screenshot_2015-04-26-14-02-01.png[]
++
+- You can set your personal information for the account here too.
++
+image:images/Screenshot_2015-04-26-14-02-36.png[]
++
+- Turn on geolocation through the More settings option. Let your friends see where you are!
++
+image:images/Screenshot_2015-04-26-14-03-06.png[]
++
+- Fast swipe right when on the buddy list window to join a conference, access bookmarks, etc.
++
+image:images/Screenshot_2015-04-26-14-03-16.png[]
+
+Managing Contacts
+-----------------
+
+- To add a contact, press the circled plus icon from the buddy list window. Type in their Jabber ID, a name for the contact if you wish, sort them into groups if you wish, and press Ok.
++
+image:images/Screenshot_2015-04-26-14-04-35.png[]
++
+- Until they authorize you the contact will be grey with a question mark. Offline contacts are also grey.
++
+image:images/Screenshot_2015-04-26-14-05-35.png[]
++
+- Here the buddy has granted authorization and is online. Indicated by the green circle. A yellow circle means the contact is away. A clock means the contact is extended away.
++
+image:images/Screenshot_2015-04-26-14-06-03.png[]
++
+- An authorization request has been received.
++
+image:images/Screenshot_2015-04-26-14-07-03.png[]
++
+image:images/Screenshot_2015-04-26-14-07-11.png[]
+
+Joining Conferences
+-------------------
+
+- Here is the screen where you can join or create conferences.
++
+image:images/Screenshot_2015-04-26-14-08-09.png[]
++
+- For MUC Server, if using our domains, just prefix the domain name with 'muc.' .
++
+image:images/Screenshot_2015-04-26-14-09-31.png[]
++
+image:images/Screenshot_2015-04-26-14-15-35.png[]
++
+- Add frequently visited conferences to your bookmarks so you don't have to enter their details each time.
++
+image:images/Screenshot_2015-04-26-14-18-03.png[]
+
+Links
+-----
+
+- Drop by our link:https://projects.tigase.org/projects/tigase-mobilemessenger/boards[forum] to discuss *Tigase Messenger*.
+- Our other link:https://projects.tigase.org/[projects].
+- Receive Tigase news on our link:http://tigase.net[blog], link:https://twitter.com/tigase[Twitter], and link:https://www.facebook.com/Tigase[Facebook].
+
+
