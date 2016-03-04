@@ -1,5 +1,6 @@
 package org.tigase.messenger.phone.pro;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -94,9 +95,8 @@ public class MainActivity extends AppCompatActivity
             fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(1)
             ).commit();
         } else if (id == R.id.nav_settings) {
-
-        } else if (id == R.id.nav_view) {
-
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         }
 
         setTitle(menuItem.getTitle());
