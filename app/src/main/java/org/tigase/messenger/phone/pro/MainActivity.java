@@ -14,10 +14,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent;
 import org.tigase.messenger.phone.pro.dummy.RosterDummyContent;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnListFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnListFragmentInteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,10 +88,11 @@ public class MainActivity extends AppCompatActivity
             // Handle the camera action
         } else if (id == R.id.nav_roster) {
             FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, new RosterItemFragment()).commit();
-
+            fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(1)).commit();
         } else if (id == R.id.nav_chats) {
-
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(1)
+            ).commit();
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_view) {
@@ -106,6 +108,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onListFragmentInteraction(RosterDummyContent.DummyItem item) {
+
+    }
+
+    @Override
+    public void onListFragmentInteraction(OpenChatsDummyContent.DummyItem item) {
 
     }
 }
