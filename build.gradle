@@ -14,6 +14,10 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenLocal()
+        maven {
+            url "http://build.xmpp-test.net/maven/"
+        }
         jcenter()
     }
 }
