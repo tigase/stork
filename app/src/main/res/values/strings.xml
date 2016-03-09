@@ -77,4 +77,10 @@
     <string name="prompt_host">Hostname (optional)</string>
     <string name="prompt_resource">Resource</string>
     <string name="prompt_nickname">Nickname (optional)</string>
+
+    <string name="title_activity_about">About</string>
+    <string name="about_application_name">Tigase Messenger</string>
+    <string name="about_version_name">Version %s</string>
+    <string name="about_copyright">ⓒ 2011–2016 Tigase Inc.</string>
+    <string name="about_rights">All rights reserved.</string>
 </resources>

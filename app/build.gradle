@@ -34,10 +34,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.0'
-    compile 'com.android.support:design:23.2.0'
-    compile 'com.android.support:support-v4:23.2.0'
-    compile 'com.android.support:recyclerview-v7:23.2.0'
 
     compile group: 'tigase', name: 'jaxmpp-android', version: jaxmppVersion
     compile group: 'tigase', name: 'jaxmpp-muc', version: jaxmppVersion
@@ -54,4 +50,8 @@ dependencies {
     compile group: 'tigase', name: 'jaxmpp-core', version: jaxmppVersion
     compile group: 'tigase', name: 'jaxmpp-j2se', version: jaxmppVersion
     compile group: 'tigase', name: 'tigase-xmltools', version: '3.4.5'
+    compile 'com.android.support:appcompat-v7:23.2.0'
+    compile 'com.android.support:design:23.2.0'
+    compile 'com.android.support:support-v4:23.2.0'
+    compile 'com.android.support:recyclerview-v7:23.2.0'
 }
