@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+    <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        android:enabled="true"
+        android:key="auth"
+        android:title="Title?">
+        <intent
+            android:action="android.intent.action.EDIT"
+            android:targetPackage="org.tigase.messenger.phone.pro"
+            android:targetClass="org.tigase.messenger.phone.pro.account.LoginActivity" />
+    </PreferenceScreen>
+    -->
+</PreferenceScreen>
