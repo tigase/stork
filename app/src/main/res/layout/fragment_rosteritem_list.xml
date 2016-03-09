@@ -6,8 +6,7 @@
     android:name="org.tigase.messenger.phone.pro.RosterItemFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:clickable="false"
     app:layoutManager="LinearLayoutManager"
     tools:context="org.tigase.messenger.phone.pro.RosterItemFragment"
     tools:listitem="@layout/fragment_rosteritem" />
