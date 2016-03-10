@@ -11,17 +11,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent;
 import org.tigase.messenger.phone.pro.dummy.RosterDummyContent;
 
+import butterknife.ButterKnife;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnListFragmentInteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
+
+    private Menu navigationMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -44,6 +51,10 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        this.navigationMenu = navigationView.getMenu();
+
+        switchMainFragment(R.id.nav_roster);
+
     }
 
     @Override
@@ -84,37 +95,49 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = menuItem.getItemId();
 
-        if (id == R.id.nav_about) {
-            Intent intent = new Intent(this, AboutActivity.class);
-            startActivity(intent);
-            return true;
-        } else if (id == R.id.nav_roster) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(1)).commit();
-        } else if (id == R.id.nav_chats) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(1)
-            ).commit();
-        } else if (id == R.id.nav_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        }
+        switchMainFragment(id);
 
-        setTitle(menuItem.getTitle());
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
+    private void switchMainFragment(final int id) {
+        MenuItem menuItem = navigationMenu.findItem(id);
+        menuItem.setChecked(true);
+        setTitle(menuItem.getTitle());
+        switch (id) {
+            case R.id.nav_about: {
+                Intent intent = new Intent(this, AboutActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.nav_roster: {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(1)).commit();
+                break;
+            }
+            case R.id.nav_chats: {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(1)).commit();
+                break;
+            }
+            case R.id.nav_settings: {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            }
+        }
+    }
+
     @Override
     public void onListFragmentInteraction(RosterDummyContent.DummyItem item) {
-
+        Toast.makeText(this, "RosterDummyContent click", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onListFragmentInteraction(OpenChatsDummyContent.DummyItem item) {
-
+        Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
     }
 }

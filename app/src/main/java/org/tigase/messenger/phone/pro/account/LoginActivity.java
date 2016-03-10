@@ -29,6 +29,8 @@ import android.widget.TextView;
 
 import org.tigase.messenger.phone.pro.R;
 
+import butterknife.ButterKnife;
+
 
 /**
  * A login screen that offers login via email/password.
@@ -57,9 +59,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
+        ButterKnife.bind(this);
+
         mAccountManager = AccountManager.get(this);
 
-        setContentView(R.layout.activity_login);
         // Set up the login form.
         mXMPPIDView = (EditText) findViewById(R.id.xmppid);
 
