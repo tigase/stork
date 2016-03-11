@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
-
-def jaxmppVersion = '3.1.0-SNAPSHOT'
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 android {
     compileSdkVersion 23
@@ -29,27 +29,30 @@ android {
             signingConfig signingConfigs.release
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-
-    compile group: 'tigase', name: 'jaxmpp-android', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-muc', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-chat', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-presence', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-roster', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-registration', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-vcard', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-filetransfer', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-jingle', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-socks5', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-pubsub', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-im', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-core', version: jaxmppVersion
-    compile group: 'tigase', name: 'jaxmpp-j2se', version: jaxmppVersion
-    compile group: 'tigase', name: 'tigase-xmltools', version: '3.4.5'
+    compile 'tigase:jaxmpp-android:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-muc:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-chat:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-presence:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-roster:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-registration:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-vcard:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-filetransfer:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-jingle:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-socks5:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-pubsub:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-im:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-core:3.1.0-SNAPSHOT'
+    compile 'tigase:jaxmpp-j2se:3.1.0-SNAPSHOT'
+    compile 'tigase:tigase-xmltools:3.4.5'
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:design:23.2.0'
     compile 'com.android.support:support-v4:23.2.0'
