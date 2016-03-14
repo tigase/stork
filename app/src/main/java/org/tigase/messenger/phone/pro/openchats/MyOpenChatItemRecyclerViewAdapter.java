@@ -1,3 +1,24 @@
+/*
+ * MyOpenChatItemRecyclerViewAdapter.java
+ *
+ * Tigase Android Messenger
+ * Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
+
 package org.tigase.messenger.phone.pro.openchats;
 
 import android.support.v7.widget.RecyclerView;
@@ -11,48 +32,51 @@ import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent.DummyItem;
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
- * specified {@link OpenChatItemFragment.OnListFragmentInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
+ * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a
+ * call to the specified
+ * {@link OpenChatItemFragment.OnListFragmentInteractionListener}. TODO: Replace
+ * the implementation with code for your data type.
  */
 public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder> {
 
-    private final List<DummyItem> mValues;
-    private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
+	private final List<DummyItem> mValues;
+	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
-    public MyOpenChatItemRecyclerViewAdapter(List<DummyItem> items, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
-        mValues = items;
-        mListener = listener;
-    }
+	public MyOpenChatItemRecyclerViewAdapter(List<DummyItem> items,
+											 OpenChatItemFragment.OnListFragmentInteractionListener listener) {
+		mValues = items;
+		mListener = listener;
+	}
 
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_openchatitem, parent, false);
-        return new ViewHolder(view);
-    }
+	@Override
+	public int getItemCount() {
+		return mValues.size();
+	}
 
-    @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
-        // holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+	@Override
+	public void onBindViewHolder(final ViewHolder holder, int position) {
+		// holder.mItem = mValues.get(position);
+		holder.mIdView.setText(mValues.get(position).id);
+		holder.mContentView.setText(mValues.get(position).content);
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction();
-                }
-            }
-        });
-    }
+		holder.itemView.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (null != mListener) {
+					// Notify the active callbacks interface (the activity, if
+					// the
+					// fragment is attached to one) that an item has been
+					// selected.
+					mListener.onListFragmentInteraction();
+				}
+			}
+		});
+	}
 
-    @Override
-    public int getItemCount() {
-        return mValues.size();
-    }
+	@Override
+	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
+		return new ViewHolder(view);
+	}
 
 }

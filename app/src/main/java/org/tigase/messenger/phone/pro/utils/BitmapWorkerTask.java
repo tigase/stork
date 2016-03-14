@@ -1,10 +1,13 @@
 /*
- * Tigase Mobile Messenger for Android
- * Copyright (C) 2011-2013 "Artur Hefczyc" <artur.hefczyc@tigase.org>
+ * BitmapWorkerTask.java
+ *
+ * Tigase Android Messenger
+ * Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, version 3 of the License.
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +32,9 @@ import tigase.jaxmpp.core.client.BareJID;
 public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
 
 	private final Context context;
-	protected BareJID data = null;
 	private final WeakReference<ImageView> imageViewReference;
 	private final Integer size;
+	protected BareJID data = null;
 
 	public BitmapWorkerTask(Context context, ImageView imageView, Integer size) {
 		this.context = context;

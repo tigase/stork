@@ -1,3 +1,24 @@
+/*
+ * MainActivity.java
+ *
+ * Tigase Android Messenger
+ * Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. Look for COPYING file in the top folder.
+ * If not, see http://www.gnu.org/licenses/.
+ */
+
 package org.tigase.messenger.phone.pro;
 
 import android.content.Intent;
@@ -19,128 +40,126 @@ import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+		RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
 
-    private Menu navigationMenu;
+	private Menu navigationMenu;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+	@Override
+	public void onBackPressed() {
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		if (drawer.isDrawerOpen(GravityCompat.START)) {
+			drawer.closeDrawer(GravityCompat.START);
+		} else {
+			super.onBackPressed();
+		}
+	}
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		ButterKnife.bind(this);
 
-        /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-        */
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+		/*
+		 * FloatingActionButton fab = (FloatingActionButton)
+		 * findViewById(R.id.fab); fab.setOnClickListener(new
+		 * View.OnClickListener() {
+		 *
+		 * @Override public void onClick(View view) { Snackbar.make(view,
+		 * "Replace with your own action", Snackbar.LENGTH_LONG)
+		 * .setAction("Action", null).show(); } });
+		 */
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        this.navigationMenu = navigationView.getMenu();
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
+				R.string.navigation_drawer_close);
+		drawer.setDrawerListener(toggle);
+		toggle.syncState();
 
-        switchMainFragment(R.id.nav_roster);
+		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		navigationView.setNavigationItemSelectedListener(this);
+		this.navigationMenu = navigationView.getMenu();
 
-        Intent startServiceIntent = new Intent(this, XMPPService.class);
-        startService(startServiceIntent);
-    }
+		switchMainFragment(R.id.nav_roster);
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
+		Intent startServiceIntent = new Intent(this, XMPPService.class);
+		startService(startServiceIntent);
+	}
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+	@Override
+	public void onListFragmentInteraction(int id, String account, String jid) {
+		Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
+	}
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+	@Override
+	public void onListFragmentInteraction() {
+		Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
+	}
 
-        return super.onOptionsItemSelected(item);
-    }
+	@SuppressWarnings("StatementWithEmptyBody")
+	@Override
+	public boolean onNavigationItemSelected(MenuItem menuItem) {
+		// Handle navigation view item clicks here.
+		int id = menuItem.getItemId();
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem menuItem) {
-        // Handle navigation view item clicks here.
-        int id = menuItem.getItemId();
+		switchMainFragment(id);
 
-        switchMainFragment(id);
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawer.closeDrawer(GravityCompat.START);
+		return true;
+	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
+		// noinspection SimplifiableIfStatement
+		if (id == R.id.action_settings) {
+			return true;
+		}
 
-    private void switchMainFragment(final int id) {
-        MenuItem menuItem = navigationMenu.findItem(id);
-        menuItem.setChecked(true);
-        setTitle(menuItem.getTitle());
-        switch (id) {
-            case R.id.nav_about: {
-                Intent intent = new Intent(this, AboutActivity.class);
-                startActivity(intent);
-                break;
-            }
-            case R.id.nav_roster: {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance()).commit();
-                break;
-            }
-            case R.id.nav_chats: {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance()).commit();
-                break;
-            }
-            case R.id.nav_settings: {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                break;
-            }
-        }
-    }
+		return super.onOptionsItemSelected(item);
+	}
 
-    @Override
-    public void onListFragmentInteraction(int id, String account, String jid) {
-        Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onListFragmentInteraction() {
-        Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
-    }
+	private void switchMainFragment(final int id) {
+		MenuItem menuItem = navigationMenu.findItem(id);
+		menuItem.setChecked(true);
+		setTitle(menuItem.getTitle());
+		switch (id) {
+			case R.id.nav_about: {
+				Intent intent = new Intent(this, AboutActivity.class);
+				startActivity(intent);
+				break;
+			}
+			case R.id.nav_roster: {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance()).commit();
+				break;
+			}
+			case R.id.nav_chats: {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance()).commit();
+				break;
+			}
+			case R.id.nav_settings: {
+				Intent intent = new Intent(this, SettingsActivity.class);
+				startActivity(intent);
+				break;
+			}
+		}
+	}
 }
