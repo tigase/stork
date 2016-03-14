@@ -58,4 +58,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.0'
     compile 'com.android.support:recyclerview-v7:23.2.0'
     compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.androidessence:recyclerviewcursoradapter:1.0.0'
 }

@@ -1,27 +1,26 @@
-package org.tigase.messenger.phone.pro;
+package org.tigase.messenger.phone.pro.openchats;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
-import org.tigase.messenger.phone.pro.OpenChatItemFragment.OnListFragmentInteractionListener;
+import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent.DummyItem;
 
 import java.util.List;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
+ * specified {@link OpenChatItemFragment.OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
-public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<MyOpenChatItemRecyclerViewAdapter.ViewHolder> {
+public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     private final List<DummyItem> mValues;
-    private final OnListFragmentInteractionListener mListener;
+    private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
-    public MyOpenChatItemRecyclerViewAdapter(List<DummyItem> items, OnListFragmentInteractionListener listener) {
+    public MyOpenChatItemRecyclerViewAdapter(List<DummyItem> items, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -35,17 +34,17 @@ public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<MyOp
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
+        // holder.mItem = mValues.get(position);
         holder.mIdView.setText(mValues.get(position).id);
         holder.mContentView.setText(mValues.get(position).content);
 
-        holder.mView.setOnClickListener(new View.OnClickListener() {
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
+                    mListener.onListFragmentInteraction();
                 }
             }
         });
@@ -56,22 +55,4 @@ public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<MyOp
         return mValues.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
-        public final TextView mIdView;
-        public final TextView mContentView;
-        public DummyItem mItem;
-
-        public ViewHolder(View view) {
-            super(view);
-            mView = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
-            mContentView = (TextView) view.findViewById(R.id.content);
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + " '" + mContentView.getText() + "'";
-        }
-    }
 }

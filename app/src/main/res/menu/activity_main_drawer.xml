@@ -5,23 +5,23 @@
         <item
             android:id="@+id/nav_roster"
             android:icon="@drawable/ic_menu_roster"
-            android:title="Roster" />
+            android:title="@string/main_menu_roster" />
         <item
             android:id="@+id/nav_chats"
             android:icon="@drawable/ic_menu_chats"
-            android:title="Chats" />
+            android:title="@string/main_menu_openchats" />
     </group>
 
-    <item android:title="Other">
+    <item android:title="@string/main_menu_othersection">
         <menu>
             <item
                 android:id="@+id/nav_settings"
                 android:icon="@drawable/ic_menu_settings"
-                android:title="Settings" />
+                android:title="@string/main_menu_settings" />
             <item
                 android:id="@+id/nav_about"
                 android:icon="@drawable/ic_menu_about"
-                android:title="About" />
+                android:title="@string/main_menu_about" />
         </menu>
     </item>
 

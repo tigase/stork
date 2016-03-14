@@ -7,5 +7,5 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layoutManager="LinearLayoutManager"
-    tools:context="org.tigase.messenger.phone.pro.OpenChatItemFragment"
+    tools:context=".openchats.OpenChatItemFragment"
     tools:listitem="@layout/fragment_openchatitem" />

@@ -13,13 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent;
-import org.tigase.messenger.phone.pro.dummy.RosterDummyContent;
+import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
+import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
+import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnListFragmentInteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
 
     private Menu navigationMenu;
 
@@ -55,6 +56,8 @@ public class MainActivity extends AppCompatActivity
 
         switchMainFragment(R.id.nav_roster);
 
+        Intent startServiceIntent = new Intent(this, XMPPService.class);
+        startService(startServiceIntent);
     }
 
     @Override
@@ -115,12 +118,12 @@ public class MainActivity extends AppCompatActivity
             }
             case R.id.nav_roster: {
                 FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(1)).commit();
+                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance()).commit();
                 break;
             }
             case R.id.nav_chats: {
                 FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(1)).commit();
+                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance()).commit();
                 break;
             }
             case R.id.nav_settings: {
@@ -132,12 +135,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onListFragmentInteraction(RosterDummyContent.DummyItem item) {
-        Toast.makeText(this, "RosterDummyContent click", Toast.LENGTH_SHORT).show();
+    public void onListFragmentInteraction(int id, String account, String jid) {
+        Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onListFragmentInteraction(OpenChatsDummyContent.DummyItem item) {
+    public void onListFragmentInteraction() {
         Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
     }
 }
