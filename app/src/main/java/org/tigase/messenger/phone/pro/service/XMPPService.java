@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
@@ -79,340 +80,362 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 public class XMPPService extends Service {
 
-	private final static String TAG = "XMPPService";
-	private static final StanzaExecutor executor = new StanzaExecutor();
-	protected final Timer timer = new Timer();
-	private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
-	private DatabaseHelper dbHelper;
-	private ConnectivityManager connManager;
-	private int usedNetworkType;
-	private RosterProviderExt rosterProvider;
-	private PresenceHandler presenceHandler;
-	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
+    private final static String TAG = "XMPPService";
+    private static final StanzaExecutor executor = new StanzaExecutor();
+    protected final Timer timer = new Timer();
+    private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
+    private DatabaseHelper dbHelper;
+    private ConnectivityManager connManager;
+    private int usedNetworkType;
+    private RosterProviderExt rosterProvider;
+    private PresenceHandler presenceHandler;
+    private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 
-	public XMPPService() {
-		Logger logger = Logger.getLogger("tigase.jaxmpp");
-		Handler handler = new AndroidLoggingHandler();
-		handler.setLevel(Level.ALL);
-		logger.addHandler(handler);
-		logger.setLevel(Level.ALL);
+    public class LocalBinder extends Binder {
+        public XMPPService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return XMPPService.this;
+        }
+    }
 
-	}
 
-	private void connectJaxmpp(final Jaxmpp jaxmpp, final Date date) {
-		if (isLocked(jaxmpp.getSessionObject())) {
-			Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid() + " because it is locked");
-			return;
-		}
+    public XMPPService() {
+        Logger logger = Logger.getLogger("tigase.jaxmpp");
+        Handler handler = new AndroidLoggingHandler();
+        handler.setLevel(Level.ALL);
+        logger.addHandler(handler);
+        logger.setLevel(Level.ALL);
 
-		final Runnable r = new Runnable() {
-			@Override
-			public void run() {
-				lock(jaxmpp.getSessionObject(), false);
-				if (isDisabled(jaxmpp.getSessionObject())) {
-					Log.v(TAG,
-							"cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid() + " because it is disabled");
-					return;
-				}
-				setUsedNetworkType(getActiveNetworkType());
-				if (getUsedNetworkType() != -1) {
-					final Connector.State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-					if (state == null || state == Connector.State.disconnected) {
-						(new Thread() {
-							@Override
-							public void run() {
-								try {
-									if (jaxmpp.isConnected())
-										return;
+    }
 
-									jaxmpp.getSessionObject().setProperty("messenger#error", null);
-									jaxmpp.login();
-								} catch (Exception e) {
-									// incrementConnectionError(jaxmpp.getSessionObject().getUserBareJid());
-									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
-								}
-							}
-						}).start();
-					}
-				}
-			}
-		};
-		lock(jaxmpp.getSessionObject(), true);
+    private void connectJaxmpp(final Jaxmpp jaxmpp, final Date date) {
+        if (isLocked(jaxmpp.getSessionObject())) {
+            Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid() + " because it is locked");
+            return;
+        }
 
-		if (date == null) {
-			r.run();
-		} else {
-			timer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					r.run();
-				}
-			}, date);
-		}
-	}
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                lock(jaxmpp.getSessionObject(), false);
+                if (isDisabled(jaxmpp.getSessionObject())) {
+                    Log.v(TAG,
+                            "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid() + " because it is disabled");
+                    return;
+                }
+                setUsedNetworkType(getActiveNetworkType());
+                if (getUsedNetworkType() != -1) {
+                    final Connector.State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+                    if (state == null || state == Connector.State.disconnected) {
+                        (new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    if (jaxmpp.isConnected())
+                                        return;
 
-	private void connectJaxmpp(final Jaxmpp jaxmpp, final Long delay) {
-		connectJaxmpp(jaxmpp, delay == null ? null : new Date(delay + System.currentTimeMillis()));
-	}
+                                    jaxmpp.getSessionObject().setProperty("messenger#error", null);
+                                    jaxmpp.login();
+                                } catch (Exception e) {
+                                    // incrementConnectionError(jaxmpp.getSessionObject().getUserBareJid());
+                                    Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
+                                }
+                            }
+                        }).start();
+                    }
+                }
+            }
+        };
+        lock(jaxmpp.getSessionObject(), true);
 
-	private Jaxmpp createJaxmpp(final Account account, final AccountManager am) {
-		BareJID accountJid = BareJID.bareJIDInstance(account.name);
-		String password = am.getPassword(account);
-		String nickname = am.getUserData(account, AccountsConstants.FIELD_NICKNAME);
-		String hostname = am.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
-		String resource = am.getUserData(account, AccountsConstants.FIELD_RESOURCE);
-		hostname = hostname == null ? null : hostname.trim();
+        if (date == null) {
+            r.run();
+        } else {
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    r.run();
+                }
+            }, date);
+        }
+    }
 
-		final SessionObject sessionObject = new J2SESessionObject();
+    private void connectJaxmpp(final Jaxmpp jaxmpp, final Long delay) {
+        	connectJaxmpp(jaxmpp, delay == null ? null : new Date(delay + System.currentTimeMillis()));
+    }
 
-		sessionObject.setUserProperty(SessionObject.USER_BARE_JID, accountJid);
-		sessionObject.setUserProperty(SessionObject.PASSWORD, password);
-		sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
-		if (hostname != null && TextUtils.isEmpty(hostname))
-			hostname = null;
-		// sessionObject.setUserProperty(SessionObject.DOMAIN_NAME, hostname);
-		if (TextUtils.isEmpty(resource))
-			resource = null;
-		sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
+    private Jaxmpp createJaxmpp(final Account account, final AccountManager am) {
+        BareJID accountJid = BareJID.bareJIDInstance(account.name);
+        String password = am.getPassword(account);
+        String nickname = am.getUserData(account, AccountsConstants.FIELD_NICKNAME);
+        String hostname = am.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
+        String resource = am.getUserData(account, AccountsConstants.FIELD_RESOURCE);
+        hostname = hostname == null ? null : hostname.trim();
 
-		sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, "XXX");
-		sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, getString(R.string.app_name));
-		sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
+        final SessionObject sessionObject = new J2SESessionObject();
 
-		sessionObject.setUserProperty(DiscoveryModule.IDENTITY_CATEGORY_KEY, "client");
-		sessionObject.setUserProperty(DiscoveryModule.IDENTITY_TYPE_KEY, "phone");
-		sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
+        sessionObject.setUserProperty(SessionObject.USER_BARE_JID, accountJid);
+        sessionObject.setUserProperty(SessionObject.PASSWORD, password);
+        sessionObject.setUserProperty(SessionObject.NICKNAME, nickname);
+        if (hostname != null && TextUtils.isEmpty(hostname))
+            hostname = null;
+        // sessionObject.setUserProperty(SessionObject.DOMAIN_NAME, hostname);
+        if (TextUtils.isEmpty(resource))
+            resource = null;
+        sessionObject.setUserProperty(SessionObject.RESOURCE, resource);
 
-		sessionObject.setUserProperty("ID", (long) account.hashCode());
-		sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
-		sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
-		sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
+        sessionObject.setUserProperty(SoftwareVersionModule.VERSION_KEY, "XXX");
+        sessionObject.setUserProperty(SoftwareVersionModule.NAME_KEY, getString(R.string.app_name));
+        sessionObject.setUserProperty(SoftwareVersionModule.OS_KEY, "Android " + android.os.Build.VERSION.RELEASE);
 
-		sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
-		sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
-		sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
+        sessionObject.setUserProperty(DiscoveryModule.IDENTITY_CATEGORY_KEY, "client");
+        sessionObject.setUserProperty(DiscoveryModule.IDENTITY_TYPE_KEY, "phone");
+        sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
 
-		// sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY,
-		// sslSocketFactory);
+        sessionObject.setUserProperty("ID", (long) account.hashCode());
+        sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
+        sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
+        sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
 
-		final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
-		jaxmpp.setExecutor(executor);
+        sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
+        sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
+        sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
 
-		RosterModule.setRosterStore(sessionObject, new AndroidRosterStore(this.rosterProvider));
-		jaxmpp.getModulesManager().register(new RosterModule(this.rosterProvider));
-		PresenceModule.setPresenceStore(sessionObject, new J2SEPresenceStore());
-		jaxmpp.getModulesManager().register(new PresenceModule());
-		jaxmpp.getModulesManager().register(new VCardModule());
+        // sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY,
+        // sslSocketFactory);
 
-		return jaxmpp;
-	}
+        final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
+        jaxmpp.setExecutor(executor);
 
-	private int getActiveNetworkType() {
-		NetworkInfo info = connManager.getActiveNetworkInfo();
-		if (info == null)
-			return -1;
-		if (!info.isConnected())
-			return -1;
-		return info.getType();
-	}
+        RosterModule.setRosterStore(sessionObject, new AndroidRosterStore(this.rosterProvider));
+        jaxmpp.getModulesManager().register(new RosterModule(this.rosterProvider));
+        PresenceModule.setPresenceStore(sessionObject, new J2SEPresenceStore());
+        jaxmpp.getModulesManager().register(new PresenceModule());
+        jaxmpp.getModulesManager().register(new VCardModule());
 
-	private int getUsedNetworkType() {
-		return this.usedNetworkType;
-	}
+        return jaxmpp;
+    }
 
-	private void setUsedNetworkType(int type) {
-		this.usedNetworkType = type;
-	}
+    private int getActiveNetworkType() {
+        NetworkInfo info = connManager.getActiveNetworkInfo();
+        if (info == null)
+            return -1;
+        if (!info.isConnected())
+            return -1;
+        return info.getType();
+    }
 
-	public boolean isDisabled(SessionObject sessionObject) {
-		Boolean x = sessionObject.getProperty("CC:DISABLED");
-		return x == null ? false : x;
-	}
+    private int getUsedNetworkType() {
+        return this.usedNetworkType;
+    }
 
-	private boolean isLocked(SessionObject sessionObject) {
-		synchronized (locked) {
-			return locked.contains(sessionObject);
-		}
-	}
+    private void setUsedNetworkType(int type) {
+        this.usedNetworkType = type;
+    }
 
-	private void lock(SessionObject sessionObject, boolean value) {
-		synchronized (locked) {
-			if (value) {
-				locked.add(sessionObject);
-			} else {
-				locked.remove(sessionObject);
-			}
-		}
-	}
+    public boolean isDisabled(SessionObject sessionObject) {
+        Boolean x = sessionObject.getProperty("CC:DISABLED");
+        return x == null ? false : x;
+    }
 
-	@Override
-	public IBinder onBind(Intent intent) {
-		// TODO: Return the communication channel to the service.
-		throw new UnsupportedOperationException("Not yet implemented");
-	}
+    private boolean isLocked(SessionObject sessionObject) {
+        synchronized (locked) {
+            return locked.contains(sessionObject);
+        }
+    }
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
+    private void lock(SessionObject sessionObject, boolean value) {
+        synchronized (locked) {
+            if (value) {
+                locked.add(sessionObject);
+            } else {
+                locked.remove(sessionObject);
+            }
+        }
+    }
 
-		AvatarHelper.initilize(this);
-		this.dbHelper = new DatabaseHelper(this);
-		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    private final IBinder mBinder = new LocalBinder();
 
-		this.dbHelper = new DatabaseHelper(this);
-		this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
-			@Override
-			public void onChange(Long rosterItemId) {
-				Uri uri = rosterItemId != null ? ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterItemId)
-						: RosterProvider.ROSTER_URI;
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
 
-				Log.i(TAG, "Content change: " + uri);
-				getApplicationContext().getContentResolver().notifyChange(uri, null);
+    }
 
-			}
-		}, "roster_version");
-		rosterProvider.resetStatus();
+    public MultiJaxmpp getMultiJaxmpp(){
+        return this.multiJaxmpp;
+    }
 
-		this.presenceHandler = new PresenceHandler(this);
+    public Jaxmpp getJaxmpp(String account) {
+        return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
+    }
 
-		multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.BeforePresenceSendHandler.BeforePresenceSendEvent.class, presenceHandler);
-	}
+    public Jaxmpp getJaxmpp(BareJID account) {
+        return this.multiJaxmpp.get(account);
+    }
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i(TAG, "onStartCommand " + this.hashCode());
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
-		AccountManager am = AccountManager.get(this);
-		for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-			BareJID accountJid = BareJID.bareJIDInstance(account.name);
-			Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
-			if (jaxmpp == null) {
+        AvatarHelper.initilize(this);
+        this.dbHelper = new DatabaseHelper(this);
+        this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-				jaxmpp = createJaxmpp(account, am);
-				multiJaxmpp.add(jaxmpp);
-				connectJaxmpp(jaxmpp, (Long) null);
-			}
-		}
+        this.dbHelper = new DatabaseHelper(this);
+        this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
+            @Override
+            public void onChange(Long rosterItemId) {
+                Uri uri = rosterItemId != null ? ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterItemId)
+                        : RosterProvider.ROSTER_URI;
 
-		return super.onStartCommand(intent, flags, startId);
-	}
+                Log.i(TAG, "Content change: " + uri);
+                getApplicationContext().getContentResolver().notifyChange(uri, null);
 
-	private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
-		try {
-			JaxmppCore jaxmpp = multiJaxmpp.get(sessionObject);
-			if (jaxmpp == null)
-				return;
-			// final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
-			VCardModule vcardModule = jaxmpp.getModule(VCardModule.class);
-			if (vcardModule != null)
-				vcardModule.retrieveVCard(JID.jidInstance(jid), (long) 3 * 60 * 1000, new VCardModule.VCardAsyncCallback() {
+            }
+        }, "roster_version");
+        rosterProvider.resetStatus();
 
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					}
+        this.presenceHandler = new PresenceHandler(this);
 
-					@Override
-					public void onTimeout() throws JaxmppException {
-					}
+        multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
+        multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
+        multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
+        multiJaxmpp.addHandler(PresenceModule.BeforePresenceSendHandler.BeforePresenceSendEvent.class, presenceHandler);
+    }
 
-					@Override
-					protected void onVCardReceived(VCard vcard) throws XMLException {
-						try {
-							if (vcard.getPhotoVal() != null && vcard.getPhotoVal().length() > 0) {
-								byte[] buffer = Base64.decode(vcard.getPhotoVal());
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "onStartCommand " + this.hashCode());
 
-								rosterProvider.updateVCardHash(sessionObject, jid, buffer);
-								Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
-								intent.putExtra("jid", jid.toString());
-								XMPPService.this.sendBroadcast(intent);
-							}
-						} catch (Exception e) {
-							Log.e("tigase", "WTF?", e);
-						}
-					}
-				});
-		} catch (Exception e) {
-			Log.e("tigase", "WTF?", e);
-		}
-	}
+        AccountManager am = AccountManager.get(this);
+        for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+            BareJID accountJid = BareJID.bareJIDInstance(account.name);
+            Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
+            if (jaxmpp == null) {
 
-	protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {
-		if (p != null) {
-			Element x = p.getChildrenNS("x", "vcard-temp:x:update");
-			if (x != null) {
-				for (Element c : x.getChildren()) {
-					if (c.getName().equals("photo") && c.getValue() != null) {
-						boolean retrieve = false;
-						final String sha = c.getValue();
-						if (sha == null)
-							continue;
-						retrieve = !rosterProvider.checkVCardHash(sessionObject, p.getFrom().getBareJid(), sha);
+                jaxmpp = createJaxmpp(account, am);
+                multiJaxmpp.add(jaxmpp);
+                connectJaxmpp(jaxmpp, (Long) null);
+            }
+        }
 
-						if (retrieve)
-							retrieveVCard(sessionObject, p.getFrom().getBareJid());
-					}
-				}
-			}
-		}
+        return super.onStartCommand(intent, flags, startId);
+    }
 
-		// Synchronize contact status
-		BareJID from = p.getFrom().getBareJid();
-		PresenceStore store = PresenceModule.getPresenceStore(sessionObject);
-		Presence bestPresence = store.getBestPresence(from);
-		// SyncAdapter.syncContactStatus(getApplicationContext(),
-		// sessionObject.getUserBareJid(), from, bestPresence);
-	}
+    private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
+        try {
+            JaxmppCore jaxmpp = multiJaxmpp.get(sessionObject);
+            if (jaxmpp == null)
+                return;
+            // final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
+            VCardModule vcardModule = jaxmpp.getModule(VCardModule.class);
+            if (vcardModule != null)
+                vcardModule.retrieveVCard(JID.jidInstance(jid), (long) 3 * 60 * 1000, new VCardModule.VCardAsyncCallback() {
 
-	private class PresenceHandler implements PresenceModule.ContactAvailableHandler, PresenceModule.ContactUnavailableHandler,
-			PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler {
+                    @Override
+                    public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+                    }
 
-		private final XMPPService jaxmppService;
+                    @Override
+                    public void onTimeout() throws JaxmppException {
+                    }
 
-		public PresenceHandler(XMPPService jaxmppService) {
-			this.jaxmppService = jaxmppService;
-		}
+                    @Override
+                    protected void onVCardReceived(VCard vcard) throws XMLException {
+                        try {
+                            if (vcard.getPhotoVal() != null && vcard.getPhotoVal().length() > 0) {
+                                byte[] buffer = Base64.decode(vcard.getPhotoVal());
 
-		@Override
-		public void onBeforePresenceSend(SessionObject sessionObject, Presence presence) throws JaxmppException {
-			// presence.setStatus(userStatusMessage);
-			// if (focused) {
-			// presence.setShow(userStatusShow);
-			// presence.setPriority(prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY,
-			// 5));
-			// } else {
-			// presence.setShow(Presence.Show.away);
-			// presence.setPriority(prefs.getInt(Preferences.AWAY_PRIORITY_KEY,
-			// 0));
-			// }
-			// activityFeature.beforePresenceSend(prefs, presence);
-		}
+                                rosterProvider.updateVCardHash(sessionObject, jid, buffer);
+                                Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
+                                intent.putExtra("jid", jid.toString());
+                                XMPPService.this.sendBroadcast(intent);
+                            }
+                        } catch (Exception e) {
+                            Log.e("tigase", "WTF?", e);
+                        }
+                    }
+                });
+        } catch (Exception e) {
+            Log.e("tigase", "WTF?", e);
+        }
+    }
 
-		@Override
-		public void onContactAvailable(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show, String status,
-									   Integer priority) throws JaxmppException {
-			updateRosterItem(sessionObject, stanza);
-			rosterProvider.updateStatus(sessionObject, jid);
-		}
+    protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {
+        if (p != null) {
+            Element x = p.getChildrenNS("x", "vcard-temp:x:update");
+            if (x != null) {
+                for (Element c : x.getChildren()) {
+                    if (c.getName().equals("photo") && c.getValue() != null) {
+                        boolean retrieve = false;
+                        final String sha = c.getValue();
+                        if (sha == null)
+                            continue;
+                        retrieve = !rosterProvider.checkVCardHash(sessionObject, p.getFrom().getBareJid(), sha);
 
-		@Override
-		public void onContactChangedPresence(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show,
-											 String status, Integer priority) throws JaxmppException {
-			updateRosterItem(sessionObject, stanza);
-			rosterProvider.updateStatus(sessionObject, jid);
-		}
+                        if (retrieve)
+                            retrieveVCard(sessionObject, p.getFrom().getBareJid());
+                    }
+                }
+            }
+        }
 
-		@Override
-		public void onContactUnavailable(SessionObject sessionObject, Presence stanza, JID jid, String status) {
-			try {
-				updateRosterItem(sessionObject, stanza);
-			} catch (JaxmppException ex) {
-				Log.v(TAG, "Exception updating roster item presence", ex);
-			}
-			rosterProvider.updateStatus(sessionObject, jid);
-		}
+        // Synchronize contact status
+        BareJID from = p.getFrom().getBareJid();
+        PresenceStore store = PresenceModule.getPresenceStore(sessionObject);
+        Presence bestPresence = store.getBestPresence(from);
+        // SyncAdapter.syncContactStatus(getApplicationContext(),
+        // sessionObject.getUserBareJid(), from, bestPresence);
+    }
 
-	}
+    private class PresenceHandler implements PresenceModule.ContactAvailableHandler, PresenceModule.ContactUnavailableHandler,
+            PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler {
+
+        private final XMPPService jaxmppService;
+
+        public PresenceHandler(XMPPService jaxmppService) {
+            this.jaxmppService = jaxmppService;
+        }
+
+        @Override
+        public void onBeforePresenceSend(SessionObject sessionObject, Presence presence) throws JaxmppException {
+            // presence.setStatus(userStatusMessage);
+            // if (focused) {
+            // presence.setShow(userStatusShow);
+            // presence.setPriority(prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY,
+            // 5));
+            // } else {
+            // presence.setShow(Presence.Show.away);
+            // presence.setPriority(prefs.getInt(Preferences.AWAY_PRIORITY_KEY,
+            // 0));
+            // }
+            // activityFeature.beforePresenceSend(prefs, presence);
+        }
+
+        @Override
+        public void onContactAvailable(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show, String status,
+                                       Integer priority) throws JaxmppException {
+            updateRosterItem(sessionObject, stanza);
+            rosterProvider.updateStatus(sessionObject, jid);
+        }
+
+        @Override
+        public void onContactChangedPresence(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show,
+                                             String status, Integer priority) throws JaxmppException {
+            updateRosterItem(sessionObject, stanza);
+            rosterProvider.updateStatus(sessionObject, jid);
+        }
+
+        @Override
+        public void onContactUnavailable(SessionObject sessionObject, Presence stanza, JID jid, String status) {
+            try {
+                updateRosterItem(sessionObject, stanza);
+            } catch (JaxmppException ex) {
+                Log.v(TAG, "Exception updating roster item presence", ex);
+            }
+            rosterProvider.updateStatus(sessionObject, jid);
+        }
+
+    }
 }

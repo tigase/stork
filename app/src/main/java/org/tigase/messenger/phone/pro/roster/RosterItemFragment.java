@@ -22,26 +22,40 @@
 package org.tigase.messenger.phone.pro.roster;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
+import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.roster.contact.EditContactActivity;
+import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 
 /**
  * A fragment representing a list of Items.
@@ -56,6 +70,30 @@ public class RosterItemFragment extends Fragment {
     RecyclerView recyclerView;
     private OnRosterItemIteractionListener mListener;
     private MyRosterItemRecyclerViewAdapter adapter;
+    private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
+    private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
+
+        @Override
+        public void onRosterItemDelete(int id, final String account, final String jid, final String name) {
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case DialogInterface.BUTTON_POSITIVE:
+                            (new RemoveContactTask(BareJID.bareJIDInstance(account), BareJID.bareJIDInstance(jid))).execute();
+                            break;
+                    }
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setMessage(getContext().getString(R.string.roster_delete_contact, jid, name))
+                    .setPositiveButton(android.R.string.yes, dialogClickListener)
+                    .setNegativeButton(android.R.string.no, dialogClickListener)
+                    .show();
+        }
+    };
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -66,64 +104,45 @@ public class RosterItemFragment extends Fragment {
 
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static RosterItemFragment newInstance() {
+    public static RosterItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
         RosterItemFragment fragment = new RosterItemFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
     }
 
-    private Cursor loadData() {
-        final SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
-
-        String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
-                DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, DatabaseContract.RosterItemsCache.FIELD_JID,
-                DatabaseContract.RosterItemsCache.FIELD_NAME, DatabaseContract.RosterItemsCache.FIELD_STATUS};
-
-        boolean showOffline = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
-        String selection = "1=1 ";
-
-        if (!showOffline) {
-            selection += " AND " + DatabaseContract.RosterItemsCache.FIELD_STATUS + ">=5 ";
-        }
-
-        String sort;
-        String s = sharedPref.getString("roster_sort", "presence");
-        switch (s) {
-            case "name":
-                sort = DatabaseContract.RosterItemsCache.FIELD_NAME + " COLLATE NOCASE ASC";
-                break;
-            case "jid":
-                sort = DatabaseContract.RosterItemsCache.FIELD_JID + " ASC";
-                break;
-            case "presence":
-                sort = DatabaseContract.RosterItemsCache.FIELD_STATUS + " DESC," + DatabaseContract.RosterItemsCache.FIELD_NAME
-                        + " COLLATE NOCASE ASC";
-                break;
-            default:
-                sort = "";
-        }
-
-        Cursor cursor = getContext().getContentResolver().query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null,
-                sort);
-
-        return cursor;
+    @OnClick(R.id.roster_add_contact)
+    void onAddContactClick() {
+        Intent intent = new Intent(getContext(), EditContactActivity.class);
+        startActivity(intent);
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
         if (context instanceof OnRosterItemIteractionListener) {
             mListener = (OnRosterItemIteractionListener) context;
         } else {
             throw new RuntimeException(context.toString() + " must implement OnRosterItemIteractionListener");
         }
+
+        Intent intent = new Intent(context, XMPPService.class);
+        getActivity().bindService(intent, mConnection, 0);
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = this.getActivity().getMenuInflater();
+        inflater.inflate(R.menu.roster_context, menu);
     }
 
     @Override
@@ -140,29 +159,39 @@ public class RosterItemFragment extends Fragment {
         recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
         recyclerView.setLayoutManager(new LinearLayoutManager(root.getContext()));
 
-        this.adapter = new MyRosterItemRecyclerViewAdapter(getContext(), loadData(), mListener) {
+        this.adapter = new MyRosterItemRecyclerViewAdapter(getContext(), null, mListener, mItemLongClickListener) {
             @Override
             protected void onContentChanged() {
                 refreshRoster();
             }
         };
         recyclerView.setAdapter(adapter);
+
+        registerForContextMenu(recyclerView);
+
+        refreshRoster();
+
         return root;
     }
 
     @Override
     public void onDetach() {
-        super.onDetach();
+        recyclerView.setAdapter(null);
+        adapter.changeCursor(null);
+        getActivity().unbindService(mConnection);
         mListener = null;
+        super.onDetach();
     }
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        final SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
+
         SharedPreferences.Editor editor;
         switch (item.getItemId()) {
             case R.id.menu_roster_sort_presence:
                 item.setChecked(true);
+
                 editor = sharedPref.edit();
                 editor.putString("roster_sort", "presence");
                 editor.commit();
@@ -188,10 +217,9 @@ public class RosterItemFragment extends Fragment {
         }
     }
 
-
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        final SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
 
         boolean v = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
         menu.findItem(R.id.menu_roster_show_offline).setChecked(v);
@@ -208,11 +236,87 @@ public class RosterItemFragment extends Fragment {
     }
 
     private void refreshRoster() {
-        adapter.changeCursor(loadData());
+        (new DBUpdateTask()).execute();
     }
 
+
     public interface OnRosterItemIteractionListener {
-        // TODO: Update argument type and name
         void onListFragmentInteraction(int id, String account, String jid);
+
     }
+
+    public interface OnRosterItemDeleteListener {
+        void onRosterItemDelete(int id, String account, String jid, String name);
+
+    }
+
+    private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
+        @Override
+        protected Cursor doInBackground(Void... params) {
+            SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
+
+            String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
+                    DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, DatabaseContract.RosterItemsCache.FIELD_JID,
+                    DatabaseContract.RosterItemsCache.FIELD_NAME, DatabaseContract.RosterItemsCache.FIELD_STATUS};
+
+            boolean showOffline = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
+            String selection = "1=1 ";
+
+            if (!showOffline) {
+                selection += " AND " + DatabaseContract.RosterItemsCache.FIELD_STATUS + ">=5 ";
+            }
+
+            String sort;
+            String s = sharedPref.getString("roster_sort", "presence");
+            switch (s) {
+                case "name":
+                    sort = DatabaseContract.RosterItemsCache.FIELD_NAME + " COLLATE NOCASE ASC";
+                    break;
+                case "jid":
+                    sort = DatabaseContract.RosterItemsCache.FIELD_JID + " ASC";
+                    break;
+                case "presence":
+                    sort = DatabaseContract.RosterItemsCache.FIELD_STATUS + " DESC," + DatabaseContract.RosterItemsCache.FIELD_NAME
+                            + " COLLATE NOCASE ASC";
+                    break;
+                default:
+                    sort = "";
+            }
+            Cursor cursor = getContext().getContentResolver().query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null,
+                    sort);
+
+            return cursor;
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            adapter.changeCursor(cursor);
+        }
+    }
+
+    private class RemoveContactTask extends AsyncTask<Void, Void, Void> {
+
+        private final BareJID jid;
+        private final BareJID account;
+
+        public RemoveContactTask(BareJID account, BareJID jid) {
+            this.jid = jid;
+            this.account = account;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            final XMPPService mService = mConnection.getService();
+            try {
+                RosterStore store = RosterModule.getRosterStore(mService.getJaxmpp(account).getSessionObject());
+                store.remove(jid);
+            } catch (Exception e) {
+                Log.e(this.getClass().getSimpleName(), "Can't remove contact from roster", e);
+                Toast.makeText(getContext(), "ERROR " + e.getMessage(), Toast.LENGTH_SHORT);
+            }
+            return null;
+        }
+    }
+
+
 }

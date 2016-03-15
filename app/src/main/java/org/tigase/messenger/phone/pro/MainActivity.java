@@ -21,8 +21,11 @@
 
 package org.tigase.messenger.phone.pro;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -41,31 +44,31 @@ import org.tigase.messenger.phone.pro.service.XMPPService;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-		RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
+        RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
 
-	private Menu navigationMenu;
+    private Menu navigationMenu;
 
-	@Override
-	public void onBackPressed() {
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		if (drawer.isDrawerOpen(GravityCompat.START)) {
-			drawer.closeDrawer(GravityCompat.START);
-		} else {
-			super.onBackPressed();
-		}
-	}
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		ButterKnife.bind(this);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
 		/*
-		 * FloatingActionButton fab = (FloatingActionButton)
+         * FloatingActionButton fab = (FloatingActionButton)
 		 * findViewById(R.id.fab); fab.setOnClickListener(new
 		 * View.OnClickListener() {
 		 *
@@ -74,92 +77,129 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		 * .setAction("Action", null).show(); } });
 		 */
 
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
-				R.string.navigation_drawer_close);
-		drawer.setDrawerListener(toggle);
-		toggle.syncState();
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
 
-		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-		navigationView.setNavigationItemSelectedListener(this);
-		this.navigationMenu = navigationView.getMenu();
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        this.navigationMenu = navigationView.getMenu();
 
-		switchMainFragment(R.id.nav_roster);
+        switchMainFragment(R.id.nav_roster);
 
-		Intent startServiceIntent = new Intent(this, XMPPService.class);
-		startService(startServiceIntent);
-	}
+        Intent startServiceIntent = new Intent(this, XMPPService.class);
+        startService(startServiceIntent);
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
 
-	@Override
-	public void onListFragmentInteraction(int id, String account, String jid) {
-		Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
-	}
+    @Override
+    public void onListFragmentInteraction(int id, String account, String jid) {
+        Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
+    }
 
-	@Override
-	public void onListFragmentInteraction() {
-		Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
-	}
+    @Override
+    public void onListFragmentInteraction() {
+        Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
+    }
 
-	@SuppressWarnings("StatementWithEmptyBody")
-	@Override
-	public boolean onNavigationItemSelected(MenuItem menuItem) {
-		// Handle navigation view item clicks here.
-		int id = menuItem.getItemId();
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem menuItem) {
+        // Handle navigation view item clicks here.
+        int id = menuItem.getItemId();
 
-		switchMainFragment(id);
+        switchMainFragment(id);
 
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawer.closeDrawer(GravityCompat.START);
-		return true;
-	}
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent service = new Intent(getApplicationContext(), XMPPService.class);
+        bindService(service, mServiceConnection, 0);
+    }
 
-		// noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings) {
-			return true;
-		}
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(mServiceConnection);
+    }
 
-		return super.onOptionsItemSelected(item);
-	}
 
-	private void switchMainFragment(final int id) {
-		MenuItem menuItem = navigationMenu.findItem(id);
-		menuItem.setChecked(true);
-		setTitle(menuItem.getTitle());
-		switch (id) {
-			case R.id.nav_about: {
-				Intent intent = new Intent(this, AboutActivity.class);
-				startActivity(intent);
-				break;
-			}
-			case R.id.nav_roster: {
-				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance()).commit();
-				break;
-			}
-			case R.id.nav_chats: {
-				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance()).commit();
-				break;
-			}
-			case R.id.nav_settings: {
-				Intent intent = new Intent(this, SettingsActivity.class);
-				startActivity(intent);
-				break;
-			}
-		}
-	}
+    public static class XMPPServiceConnection implements ServiceConnection {
+        private XMPPService mService;
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
+            mService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+
+        public XMPPService getService() {
+            return mService;
+        }
+    }
+
+
+    private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        // noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void switchMainFragment(final int id) {
+        MenuItem menuItem = navigationMenu.findItem(id);
+        menuItem.setChecked(true);
+        setTitle(menuItem.getTitle());
+        switch (id) {
+            case R.id.nav_about: {
+                Intent intent = new Intent(this, AboutActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.nav_roster: {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(mServiceConnection)).commit();
+                break;
+            }
+            case R.id.nav_chats: {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(mServiceConnection)).commit();
+                break;
+            }
+            case R.id.nav_settings: {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            }
+        }
+    }
 }

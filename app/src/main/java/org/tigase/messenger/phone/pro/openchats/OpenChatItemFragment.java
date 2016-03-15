@@ -32,6 +32,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent;
 
@@ -54,7 +55,7 @@ public class OpenChatItemFragment extends Fragment {
 
 	// TODO: Customize parameter initialization
 	@SuppressWarnings("unused")
-	public static OpenChatItemFragment newInstance() {
+	public static OpenChatItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
 		OpenChatItemFragment fragment = new OpenChatItemFragment();
 		Bundle args = new Bundle();
 		fragment.setArguments(args);

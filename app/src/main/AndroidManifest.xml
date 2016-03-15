@@ -17,8 +17,7 @@
   ~ You should have received a copy of the GNU Affero General Public License
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
-  -->
-
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.tigase.messenger.phone.pro">
 
@@ -88,13 +87,19 @@
         <service
             android:name=".service.XMPPService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <provider
             android:name=".providers.RosterProvider"
             android:authorities="org.tigase.messenger.phone.pro.Roster"
             android:enabled="true"
-            android:exported="false"></provider>
+            android:exported="false" />
+
+        <activity android:name=".roster.contact.EditContactActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tigase.messenger.phone.pro.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
