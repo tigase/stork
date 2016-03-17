@@ -28,10 +28,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -45,8 +47,10 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.db.CPresence;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.db.RosterProviderExt;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 
 import java.util.Date;
@@ -58,6 +62,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.android.chat.AndroidChatManager;
+import tigase.jaxmpp.android.muc.AndroidRoomsManager;
 import tigase.jaxmpp.android.roster.AndroidRosterStore;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Base64;
@@ -72,15 +78,24 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatState;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatStateExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
+import tigase.jaxmpp.core.client.xmpp.utils.delay.XmppDelay;
 import tigase.jaxmpp.j2se.J2SEPresenceStore;
 import tigase.jaxmpp.j2se.J2SESessionObject;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
@@ -139,6 +154,10 @@ public class XMPPService extends Service {
             }
         }
     };
+
+    private MessageHandler messageHandler;
+    private tigase.jaxmpp.android.chat.ChatProvider chatProvider;
+    private MucHandler mucHandler;
 
     public XMPPService() {
         Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -278,6 +297,15 @@ public class XMPPService extends Service {
         jaxmpp.getModulesManager().register(new PresenceModule());
         jaxmpp.getModulesManager().register(new VCardModule());
 
+        AndroidChatManager chatManager = new AndroidChatManager(this.chatProvider);
+        MessageModule messageModule = new MessageModule(chatManager);
+        jaxmpp.getModulesManager().register(messageModule);
+
+        messageModule.addExtension(new ChatStateExtension(chatManager));
+
+        jaxmpp.getModulesManager().register(new MucModule(new AndroidRoomsManager(this.chatProvider)));
+
+
         return jaxmpp;
     }
 
@@ -411,7 +439,18 @@ public class XMPPService extends Service {
         rosterProvider.resetStatus();
 
         this.presenceHandler = new PresenceHandler(this);
-
+        this.messageHandler = new MessageHandler();
+        this.chatProvider = new tigase.jaxmpp.android.chat.ChatProvider(this, dbHelper, new tigase.jaxmpp.android.chat.ChatProvider.Listener() {
+            @Override
+            public void onChange(Long chatId) {
+                Uri uri = chatId != null
+                        ? ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId)
+                        : ChatProvider.OPEN_CHATS_URI;
+                getApplicationContext().getContentResolver().notifyChange(uri, null);
+            }
+        });
+        chatProvider.resetRoomState(CPresence.OFFLINE);
+        this.mucHandler = new MucHandler();
         registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
 
         IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
@@ -423,6 +462,10 @@ public class XMPPService extends Service {
         multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
         multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
         multiJaxmpp.addHandler(PresenceModule.BeforePresenceSendHandler.BeforePresenceSendEvent.class, presenceHandler);
+
+        multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
+        multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
+        multiJaxmpp.addHandler(ChatStateExtension.ChatStateChangedHandler.ChatStateChangedEvent.class, messageHandler);
 
         startKeepAlive();
     }
@@ -530,6 +573,76 @@ public class XMPPService extends Service {
         alarmMgr.cancel(pi);
     }
 
+    private void storeMessage(SessionObject sessionObject, Chat chat, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, boolean showNotification) throws XMLException {
+        // for now let's ignore messages without body element
+        if (msg.getBody() == null && msg.getType() != StanzaType.error)
+            return;
+        BareJID authorJid = msg.getFrom() == null ? sessionObject.getUserBareJid() : msg.getFrom().getBareJid();
+        String author = authorJid.toString();
+        String jid = null;
+        if (chat != null) {
+            jid = chat.getJid().getBareJid().toString();
+        } else {
+            jid = (sessionObject.getUserBareJid().equals(authorJid) ? msg.getTo().getBareJid() : authorJid).toString();
+        }
+
+        Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + Uri.encode(jid));
+
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, author);
+        values.put(DatabaseContract.ChatHistory.FIELD_JID, jid);
+
+        XmppDelay delay = XmppDelay.extract(msg);
+        values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, ((delay == null || delay.getStamp() == null) ? new Date() : delay.getStamp()).getTime());
+        if (msg.getType() == StanzaType.error) {
+            ErrorElement error = ErrorElement.extract(msg);
+            String body = "Error: ";
+            if (error != null) {
+                if (error.getText() != null) {
+                    body += error.getText();
+                } else {
+                    XMPPException.ErrorCondition errorCondition = error
+                            .getCondition();
+                    if (errorCondition != null) {
+                        body += errorCondition.getElementName();
+                    }
+                }
+            }
+            if (msg.getBody() != null) {
+                body += " ------ ";
+                body += msg.getBody();
+            }
+            values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+        } else {
+            values.put(DatabaseContract.ChatHistory.FIELD_BODY, msg.getBody());
+        }
+        if (chat != null) {
+            values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, chat.getThreadId());
+        }
+        values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
+
+        int type = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
+        Element geoloc = msg.getChildrenNS("geoloc", "http://jabber.org/protocol/geoloc");
+        if (geoloc != null) {
+            values.put(DatabaseContract.ChatHistory.FIELD_DATA, geoloc.getAsString());
+            type = DatabaseContract.ChatHistory.ITEM_TYPE_LOCALITY;
+        }
+        values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, type);
+        values.put(DatabaseContract.ChatHistory.FIELD_STATE, sessionObject.getUserBareJid().equals(authorJid)
+                ? DatabaseContract.ChatHistory.STATE_OUT_SENT : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        long id = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, null, values);
+        Log.v(TAG, "inserted message - id = " + id);
+        getApplicationContext().getContentResolver().notifyChange(uri, null);
+        //context.getContentResolver().insert(uri, values);
+
+//        if (!sessionObject.getUserBareJid().equals(authorJid) && showNotification
+//                && (this.activeChatJid == null || !this.activeChatJid.getBareJid().equals(authorJid))) {
+//            notificationHelper.notifyNewChatMessage(sessionObject, msg);
+//        }
+    }
+
     protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {
         if (p != null) {
             Element x = p.getChildrenNS("x", "vcard-temp:x:update");
@@ -555,6 +668,152 @@ public class XMPPService extends Service {
         Presence bestPresence = store.getBestPresence(from);
         // SyncAdapter.syncContactStatus(getApplicationContext(),
         // sessionObject.getUserBareJid(), from, bestPresence);
+    }
+
+    private class MessageHandler implements MessageModule.MessageReceivedHandler, MessageCarbonsModule.CarbonReceivedHandler,
+            ChatStateExtension.ChatStateChangedHandler {
+
+        @Override
+        public void onCarbonReceived(
+                SessionObject sessionObject,
+                MessageCarbonsModule.CarbonEventType carbonType,
+                tigase.jaxmpp.core.client.xmpp.stanzas.Message msg,
+                Chat chat) {
+            try {
+                storeMessage(sessionObject, chat, msg, false);
+            } catch (Exception ex) {
+                Log.e(TAG, "Exception handling received carbon message", ex);
+            }
+        }
+
+        @Override
+        public void onChatStateChanged(SessionObject sessionObject, Chat chat, ChatState state) {
+            try {
+                Log.v(TAG, "received chat state chaged event for " + chat.getJid().toString() + ", new state = " + state);
+                Uri uri = chat != null
+                        ? ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chat.getId())
+                        : ChatProvider.OPEN_CHATS_URI;
+                getApplicationContext().getContentResolver().notifyChange(uri, null);
+            } catch (Exception ex) {
+                Log.e(TAG, "Exception handling received chat state change event", ex);
+            }
+        }
+
+        @Override
+        public void onMessageReceived(SessionObject sessionObject, Chat chat,
+                                      tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) {
+            try {
+                storeMessage(sessionObject, chat, msg, true);
+            } catch (Exception ex) {
+                Log.e(TAG, "Exception handling received message", ex);
+            }
+        }
+
+    }
+
+    private class MucHandler implements MucModule.MucMessageReceivedHandler, MucModule.YouJoinedHandler,
+            MucModule.MessageErrorHandler, MucModule.StateChangeHandler, MucModule.PresenceErrorHandler {
+
+        @Override
+        public void onMessageError(SessionObject sessionObject,
+                                   tigase.jaxmpp.core.client.xmpp.stanzas.Message message,
+                                   Room room, String nickname, Date timestamp) {
+            try {
+                Log.e(TAG, "Error from room " + room.getRoomJid() + ", error = " + message.getAsString());
+            } catch (XMLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onMucMessageReceived(SessionObject sessionObject,
+                                         tigase.jaxmpp.core.client.xmpp.stanzas.Message msg,
+                                         Room room, String nickname, Date timestamp) {
+            try {
+                if (msg == null || msg.getBody() == null || room == null)
+                    return;
+                String body = msg.getBody();
+                Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + Uri.encode(room.getRoomJid().toString()));
+
+                ContentValues values = new ContentValues();
+                values.put(DatabaseContract.ChatHistory.FIELD_JID, room.getRoomJid().toString());
+                values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME, nickname);
+                values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timestamp.getTime());
+                values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+                values.put(DatabaseContract.ChatHistory.FIELD_STATE, 0);
+                values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
+
+                getContentResolver().insert(uri, values);
+
+//                if (activeChatJid == null || !activeChatJid.getBareJid().equals(room.getRoomJid())) {
+//                    if (body.toLowerCase().contains(room.getNickname().toLowerCase())) {
+//                        notificationHelper.notifyNewMucMessage(sessionObject, msg);
+//                    }
+//                }
+            } catch (Exception ex) {
+                Log.e(TAG, "Exception handling received MUC message", ex);
+            }
+
+        }
+
+        @Override
+        public void onPresenceError(SessionObject sessionObject, Room room, Presence presence, String nickname) {
+            Intent intent = new Intent();
+
+            // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            // intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+//            intent.setAction(MainActivity.ERROR_ACTION);
+            intent.putExtra("account", sessionObject.getUserBareJid().toString());
+            intent.putExtra("jid", "" + room.getRoomJid().toString());
+            intent.putExtra("type", "muc");
+
+            try {
+                XMPPException.ErrorCondition c = presence.getErrorCondition();
+                if (c != null) {
+                    intent.putExtra("errorCondition", c.name());
+                    intent.putExtra("errorMessage", c.name());
+                } else {
+                    intent.putExtra("errorCondition", "-");
+                    intent.putExtra("errorMessage", "-");
+                }
+            } catch (XMLException ex) {
+                ex.printStackTrace();
+            }
+
+//            if (focused) {
+//                intent.setAction(ERROR_MESSAGE);
+//                sendBroadcast(intent);
+//            } else {
+//                intent.setClass(getApplicationContext(), MainActivity.class);
+//                notificationHelper.showMucError(room.getRoomJid().toString(), intent);
+//            }
+        }
+
+        @Override
+        public void onStateChange(SessionObject sessionObject, Room room,
+                                  tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State oldState,
+                                  tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State newState) {
+            Log.v(TAG, "room " + room.getRoomJid() + " changed state from " + oldState + " to " + newState);
+            int state = CPresence.OFFLINE;
+            switch (newState) {
+                case joined:
+                    state = CPresence.ONLINE;
+                    break;
+                default:
+                    state = CPresence.OFFLINE;
+            }
+            chatProvider.updateRoomState(sessionObject, room.getRoomJid(), state);
+        }
+
+        @Override
+        public void onYouJoined(SessionObject sessionObject, Room room,
+                                String asNickname) {
+            // TODO Auto-generated method stub
+            Log.v(TAG, "joined room " + room.getRoomJid() + " as " + asNickname);
+        }
+
     }
 
     public class LocalBinder extends Binder {

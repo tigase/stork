@@ -155,6 +155,7 @@ public class RosterItemFragment extends Fragment {
         inflater.inflate(R.menu.roster_fragment, menu);
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_rosteritem_list, container, false);
@@ -256,6 +257,10 @@ public class RosterItemFragment extends Fragment {
     private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
         @Override
         protected Cursor doInBackground(Void... params) {
+            if (sharedPref == null) {
+                Log.e("RosterItemFragment", "Shared preferences are empty?");
+                return null;
+            }
             String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
                     DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, DatabaseContract.RosterItemsCache.FIELD_JID,
                     DatabaseContract.RosterItemsCache.FIELD_NAME, DatabaseContract.RosterItemsCache.FIELD_STATUS};

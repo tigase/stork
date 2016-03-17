@@ -23,6 +23,7 @@ package org.tigase.messenger.phone.pro.openchats;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.tigase.messenger.phone.pro.R;
@@ -32,19 +33,18 @@ import butterknife.ButterKnife;
 
 public class ViewHolder extends RecyclerView.ViewHolder {
 
-	@Bind(R.id.id)
-	TextView mIdView;
+	@Bind(R.id.contact_display_name)
+	TextView mContactName;
 
-	@Bind(R.id.content)
-	TextView mContentView;
+	@Bind(R.id.last_message)
+	TextView mLastMessage;
+
+	@Bind(R.id.contact_avatar)
+	ImageView mContactAvatar;
 
 	public ViewHolder(View itemView) {
 		super(itemView);
 		ButterKnife.bind(this, itemView);
 	}
 
-	@Override
-	public String toString() {
-		return super.toString() + " '" + mContentView.getText() + "'";
-	}
 }

@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<?xml version="1.0" encoding="utf-8"?>
+<!--
   ~ AndroidManifest.xml
   ~
   ~ Tigase Android Messenger
@@ -24,8 +25,8 @@
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-    <!--<uses-permission android:name="android.permission.READ_PROFILE"/>-->
-    <!--<uses-permission android:name="android.permission.READ_CONTACTS"/>-->
+    <!-- <uses-permission android:name="android.permission.READ_PROFILE"/> -->
+    <!-- <uses-permission android:name="android.permission.READ_CONTACTS"/> -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -102,6 +103,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
+
+        <provider
+            android:name=".providers.ChatProvider"
+            android:authorities="org.tigase.messenger.phone.pro.Chat"
+            android:enabled="true"
+            android:exported="false">
+        </provider>
     </application>
 
 </manifest>

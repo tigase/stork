@@ -21,15 +21,20 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent.DummyItem;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
-import java.util.List;
+import tigase.jaxmpp.core.client.BareJID;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a
@@ -37,46 +42,45 @@ import java.util.List;
  * {@link OpenChatItemFragment.OnListFragmentInteractionListener}. TODO: Replace
  * the implementation with code for your data type.
  */
-public class MyOpenChatItemRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder> {
+public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
-	private final List<DummyItem> mValues;
-	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
+    private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
-	public MyOpenChatItemRecyclerViewAdapter(List<DummyItem> items,
-											 OpenChatItemFragment.OnListFragmentInteractionListener listener) {
-		mValues = items;
-		mListener = listener;
-	}
+    public MyOpenChatItemRecyclerViewAdapter(Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
+        super(cursor);
+        mListener = listener;
+    }
 
-	@Override
-	public int getItemCount() {
-		return mValues.size();
-	}
+    @Override
+    public void onBindViewHolderCursor(final ViewHolder holder, Cursor cursor) {
+        final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+        final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+        final String account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+        final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
+        final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
 
-	@Override
-	public void onBindViewHolder(final ViewHolder holder, int position) {
-		// holder.mItem = mValues.get(position);
-		holder.mIdView.setText(mValues.get(position).id);
-		holder.mContentView.setText(mValues.get(position).content);
+        holder.mContactName.setText(name);
+        holder.mLastMessage.setText(lastMessage);
+        AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
 
-		holder.itemView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (null != mListener) {
-					// Notify the active callbacks interface (the activity, if
-					// the
-					// fragment is attached to one) that an item has been
-					// selected.
-					mListener.onListFragmentInteraction();
-				}
-			}
-		});
-	}
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mListener) {
+                    // Notify the active callbacks interface (the activity, if
+                    // the
+                    // fragment is attached to one) that an item has been
+                    // selected.
+                    mListener.onListFragmentInteraction();
+                }
+            }
+        });
+    }
 
-	@Override
-	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
-		return new ViewHolder(view);
-	}
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
+        return new ViewHolder(view);
+    }
 
 }
