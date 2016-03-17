@@ -59,32 +59,38 @@ public class MyRosterItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<V
         final String name = cursor.getString(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_NAME));
         int status = cursor.getInt(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_STATUS));
 
-        holder.mJidView.setText(jid);
         holder.mContactNameView.setText(name);
 
+        int presenceIconResource;
         switch (status) {
             case CPresence.OFFLINE:
-                holder.mContactPresence.setImageResource(R.drawable.presence_offline);
+                presenceIconResource = android.R.drawable.presence_invisible;
                 break;
             case CPresence.ERROR:
-                holder.mContactPresence.setImageResource(R.drawable.presence_error);
+                presenceIconResource = android.R.drawable.presence_offline;
                 break;
             case CPresence.DND:
-                holder.mContactPresence.setImageResource(R.drawable.presence_busy);
+                presenceIconResource = android.R.drawable.presence_busy;
                 break;
             case CPresence.XA:
-                holder.mContactPresence.setImageResource(R.drawable.presence_xa);
+                presenceIconResource = android.R.drawable.presence_away;
                 break;
             case CPresence.AWAY:
-                holder.mContactPresence.setImageResource(R.drawable.presence_away);
+                presenceIconResource = android.R.drawable.presence_away;
                 break;
             case CPresence.ONLINE:
-                holder.mContactPresence.setImageResource(R.drawable.presence_available);
+                presenceIconResource = android.R.drawable.presence_online;
                 break;
             case CPresence.CHAT: // chat
-                holder.mContactPresence.setImageResource(R.drawable.presence_chat);
+                presenceIconResource = android.R.drawable.presence_online;
                 break;
+            default:
+                presenceIconResource = android.R.drawable.presence_offline;
         }
+
+        holder.mContactPresence.setImageResource(presenceIconResource);
+        holder.mJidView.setText(jid);
+
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

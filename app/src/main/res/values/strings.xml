@@ -119,4 +119,10 @@
     <string name="menu_roster_delete_contact">Delete</string>
     <string name="roster_delete_contact">Delete contact %2$s (%1$s)</string>
     <string name="contact_xmppid_invalid">Invalid XMPP ID</string>
+    <string name="status_chat">Free for chat</string>
+    <string name="status_online">Online</string>
+    <string name="status_away">Away</string>
+    <string name="status_xa">Extended Away</string>
+    <string name="status_dnd">Do Not Disturb</string>
+    <string name="status_offline">Offline</string>
 </resources>

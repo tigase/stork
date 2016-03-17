@@ -48,7 +48,10 @@
             android:singleLine="true"
             android:text="Contact"
             android:textColor="#000000"
-            android:textSize="20sp" />
+            android:textSize="17sp"
+            android:fontFamily="sans-serif"
+            />
+
 
         <TextView
             android:id="@+id/contact_jid"
@@ -57,7 +60,7 @@
             android:singleLine="true"
             android:text="Contact"
             android:textColor="?attr/colorPrimaryDark"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
     <ImageView

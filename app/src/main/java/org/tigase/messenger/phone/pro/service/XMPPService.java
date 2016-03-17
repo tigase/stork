@@ -23,13 +23,19 @@ package org.tigase.messenger.phone.pro.service;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.text.TextUtils;
@@ -38,10 +44,10 @@ import android.util.Log;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
+import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.db.RosterProviderExt;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -74,30 +80,65 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.J2SEPresenceStore;
 import tigase.jaxmpp.j2se.J2SESessionObject;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 public class XMPPService extends Service {
 
+    public static final String CLIENT_PRESENCE_CHANGED_ACTION = "org.tigase.messenger.phone.pro.PRESENCE_CHANGED";
+    private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
     private final static String TAG = "XMPPService";
     private static final StanzaExecutor executor = new StanzaExecutor();
     protected final Timer timer = new Timer();
     private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
+    final BroadcastReceiver presenceChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long presenceId = intent.getLongExtra("presence", CPresence.ONLINE);
+            if (presenceId == CPresence.OFFLINE) {
+
+                stopSelf();
+            } else {
+                processPresenceUpdate();
+            }
+        }
+    };
+    private final IBinder mBinder = new LocalBinder();
+    private long keepaliveInterval = 1000 * 60 * 3;
+    private JaxmppCore.ConnectedHandler jaxmppConnectedHandler = new JaxmppCore.ConnectedHandler() {
+        @Override
+        public void onConnected(SessionObject sessionObject) {
+
+        }
+    };
     private DatabaseHelper dbHelper;
     private ConnectivityManager connManager;
     private int usedNetworkType;
+    private final BroadcastReceiver connReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NetworkInfo netInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+            onNetworkChange(netInfo);
+        }
+
+    };
     private RosterProviderExt rosterProvider;
     private PresenceHandler presenceHandler;
     private HashSet<SessionObject> locked = new HashSet<SessionObject>();
-
-    public class LocalBinder extends Binder {
-        public XMPPService getService() {
-            // Return this instance of LocalService so clients can call public methods
-            return XMPPService.this;
+    private JaxmppCore.DisconnectedHandler jaxmppDisconnectedHandler = new JaxmppCore.DisconnectedHandler() {
+        @Override
+        public void onDisconnected(SessionObject sessionObject) {
+            Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
+            if (getUsedNetworkType() != -1) {
+                if (jaxmpp != null) {
+                    XMPPService.this.connectJaxmpp(jaxmpp, 5 * 1000L);
+                }
+            }
         }
-    }
-
+    };
 
     public XMPPService() {
         Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -106,6 +147,30 @@ public class XMPPService extends Service {
         logger.addHandler(handler);
         logger.setLevel(Level.ALL);
 
+    }
+
+    private void connectAllJaxmpp(Long delay) {
+        setUsedNetworkType(getActiveNetworkType());
+        //geolocationFeature.registerLocationListener();
+
+        for (final JaxmppCore jaxmpp : multiJaxmpp.get()) {
+            Log.v(TAG, "connecting account " + jaxmpp.getSessionObject().getUserBareJid());
+            connectJaxmpp((Jaxmpp) jaxmpp, delay);
+        }
+    }
+
+    private void connectAllJaxmpp() {
+        AccountManager am = AccountManager.get(this);
+        for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+            BareJID accountJid = BareJID.bareJIDInstance(account.name);
+            Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
+            if (jaxmpp == null) {
+
+                jaxmpp = createJaxmpp(account, am);
+                multiJaxmpp.add(jaxmpp);
+                connectJaxmpp(jaxmpp, (Long) null);
+            }
+        }
     }
 
     private void connectJaxmpp(final Jaxmpp jaxmpp, final Date date) {
@@ -161,7 +226,7 @@ public class XMPPService extends Service {
     }
 
     private void connectJaxmpp(final Jaxmpp jaxmpp, final Long delay) {
-        	connectJaxmpp(jaxmpp, delay == null ? null : new Date(delay + System.currentTimeMillis()));
+        connectJaxmpp(jaxmpp, delay == null ? null : new Date(delay + System.currentTimeMillis()));
     }
 
     private Jaxmpp createJaxmpp(final Account account, final AccountManager am) {
@@ -216,6 +281,37 @@ public class XMPPService extends Service {
         return jaxmpp;
     }
 
+    private void disconnectAllJaxmpp(final boolean cleaning) {
+        setUsedNetworkType(-1);
+//        if (geolocationFeature != null) {
+//        	geolocationFeature.unregisterLocationListener();
+//        }
+        for (final JaxmppCore j : multiJaxmpp.get()) {
+            disconnectJaxmpp((Jaxmpp) j, cleaning);
+        }
+
+//        synchronized (connectionErrorsCounter) {
+//                connectionErrorsCounter.clear();
+//        }
+    }
+
+    private void disconnectJaxmpp(final Jaxmpp jaxmpp, final boolean cleaning) {
+        (new Thread() {
+            @Override
+            public void run() {
+                try {
+                    //    geolocationFeature.accountDisconnect(jaxmpp);
+                    jaxmpp.disconnect(false);
+                    // is this needed any more??
+                    //JaxmppService.this.rosterProvider.resetStatus(jaxmpp.getSessionObject());
+//                            app.clearPresences(j.getSessionObject(), !cleaning);
+                } catch (Exception e) {
+                    Log.e(TAG, "cant; disconnect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
+                }
+            }
+        }).start();
+    }
+
     private int getActiveNetworkType() {
         NetworkInfo info = connManager.getActiveNetworkInfo();
         if (info == null)
@@ -223,6 +319,18 @@ public class XMPPService extends Service {
         if (!info.isConnected())
             return -1;
         return info.getType();
+    }
+
+    public Jaxmpp getJaxmpp(String account) {
+        return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
+    }
+
+    public Jaxmpp getJaxmpp(BareJID account) {
+        return this.multiJaxmpp.get(account);
+    }
+
+    public MultiJaxmpp getMultiJaxmpp() {
+        return this.multiJaxmpp;
     }
 
     private int getUsedNetworkType() {
@@ -244,6 +352,27 @@ public class XMPPService extends Service {
         }
     }
 
+    private void keepAlive() {
+        new Thread() {
+            @Override
+            public void run() {
+                for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
+                    try {
+                        if (jaxmpp.isConnected()) {
+                            Log.i("XMPPService", "Sending keepAlive for " + jaxmpp.getSessionObject().getUserBareJid());
+                            jaxmpp.getConnector().keepalive();
+                            //         GeolocationFeature.sendQueuedGeolocation(jaxmpp, JaxmppService.this);
+                        }
+                    } catch (JaxmppException ex) {
+                        Log.e(TAG, "error sending keep alive for = "
+                                + jaxmpp.getSessionObject().getUserBareJid()
+                                .toString(), ex);
+                    }
+                }
+            }
+        }.start();
+    }
+
     private void lock(SessionObject sessionObject, boolean value) {
         synchronized (locked) {
             if (value) {
@@ -254,31 +383,16 @@ public class XMPPService extends Service {
         }
     }
 
-    private final IBinder mBinder = new LocalBinder();
-
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
 
     }
 
-    public MultiJaxmpp getMultiJaxmpp(){
-        return this.multiJaxmpp;
-    }
-
-    public Jaxmpp getJaxmpp(String account) {
-        return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
-    }
-
-    public Jaxmpp getJaxmpp(BareJID account) {
-        return this.multiJaxmpp.get(account);
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
 
-        AvatarHelper.initilize(this);
         this.dbHelper = new DatabaseHelper(this);
         this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -298,35 +412,70 @@ public class XMPPService extends Service {
 
         this.presenceHandler = new PresenceHandler(this);
 
+        registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
+
+        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+        registerReceiver(connReceiver, filter);
+
+        multiJaxmpp.addHandler(JaxmppCore.ConnectedHandler.ConnectedEvent.class, jaxmppConnectedHandler);
+        multiJaxmpp.addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, jaxmppDisconnectedHandler);
         multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
         multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
         multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
         multiJaxmpp.addHandler(PresenceModule.BeforePresenceSendHandler.BeforePresenceSendEvent.class, presenceHandler);
+
+        startKeepAlive();
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(presenceChangedReceiver);
+
+        stopForeground(true);
+        disconnectAllJaxmpp(true);
+    }
+
+    private void onNetworkChange(final NetworkInfo netInfo) {
+        if (netInfo != null && netInfo.isConnected()) {
+            connectAllJaxmpp(5000l);
+        } else {
+            disconnectAllJaxmpp(false);
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand " + this.hashCode());
-
-        AccountManager am = AccountManager.get(this);
-        for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-            BareJID accountJid = BareJID.bareJIDInstance(account.name);
-            Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
-            if (jaxmpp == null) {
-
-                jaxmpp = createJaxmpp(account, am);
-                multiJaxmpp.add(jaxmpp);
-                connectJaxmpp(jaxmpp, (Long) null);
-            }
+        if (intent != null && "connect-all".equals(intent.getAction())) {
+            connectAllJaxmpp();
+        } else if (intent != null && KEEPALIVE_ACTION.equals(intent.getAction())) {
+            keepAlive();
         }
 
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private void processPresenceUpdate() {
+
+
+        (new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
+                    try {
+                        jaxmpp.getModule(PresenceModule.class).sendInitialPresence();
+                    } catch (JaxmppException e) {
+                        Log.e("TAG", "Can't update presence", e);
+                    }
+                }
+                return null;
+            }
+        }).execute();
+    }
+
     private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
         try {
             JaxmppCore jaxmpp = multiJaxmpp.get(sessionObject);
-            if (jaxmpp == null)
+            if (jaxmpp == null || !jaxmpp.isConnected())
                 return;
             // final RosterItem rosterItem = jaxmpp.getRoster().get(jid);
             VCardModule vcardModule = jaxmpp.getModule(VCardModule.class);
@@ -362,6 +511,25 @@ public class XMPPService extends Service {
         }
     }
 
+    private void startKeepAlive() {
+        Intent i = new Intent();
+        i.setClass(this, XMPPService.class);
+        i.setAction(KEEPALIVE_ACTION);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+
+        AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval, keepaliveInterval, pi);
+    }
+
+    private void stopKeepAlive() {
+        Intent i = new Intent();
+        i.setClass(this, XMPPService.class);
+        i.setAction(KEEPALIVE_ACTION);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+        AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmMgr.cancel(pi);
+    }
+
     protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {
         if (p != null) {
             Element x = p.getChildrenNS("x", "vcard-temp:x:update");
@@ -389,6 +557,13 @@ public class XMPPService extends Service {
         // sessionObject.getUserBareJid(), from, bestPresence);
     }
 
+    public class LocalBinder extends Binder {
+        public XMPPService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return XMPPService.this;
+        }
+    }
+
     private class PresenceHandler implements PresenceModule.ContactAvailableHandler, PresenceModule.ContactUnavailableHandler,
             PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler {
 
@@ -400,17 +575,30 @@ public class XMPPService extends Service {
 
         @Override
         public void onBeforePresenceSend(SessionObject sessionObject, Presence presence) throws JaxmppException {
-            // presence.setStatus(userStatusMessage);
-            // if (focused) {
-            // presence.setShow(userStatusShow);
-            // presence.setPriority(prefs.getInt(Preferences.DEFAULT_PRIORITY_KEY,
-            // 5));
-            // } else {
-            // presence.setShow(Presence.Show.away);
-            // presence.setPriority(prefs.getInt(Preferences.AWAY_PRIORITY_KEY,
-            // 0));
-            // }
-            // activityFeature.beforePresenceSend(prefs, presence);
+            SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+            int presenceId = Long.valueOf(sharedPref.getLong("presence", CPresence.ONLINE)).intValue();
+
+            switch (presenceId) {
+                case CPresence.OFFLINE:
+                    presence.setType(StanzaType.unavailable);
+                    break;
+                case CPresence.DND:
+                    presence.setShow(Presence.Show.dnd);
+                    break;
+                case CPresence.XA:
+                    presence.setShow(Presence.Show.xa);
+                    break;
+                case CPresence.AWAY:
+                    presence.setShow(Presence.Show.away);
+                    break;
+                case CPresence.ONLINE:
+                    presence.setShow(Presence.Show.online);
+                    break;
+                case CPresence.CHAT:
+                    presence.setShow(Presence.Show.chat);
+                    break;
+
+            }
         }
 
         @Override

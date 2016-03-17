@@ -93,6 +93,7 @@ public class RosterItemFragment extends Fragment {
                     .show();
         }
     };
+    private SharedPreferences sharedPref;
 
 
     /**
@@ -100,6 +101,7 @@ public class RosterItemFragment extends Fragment {
      * fragment (e.g. upon screen orientation changes).
      */
     public RosterItemFragment() {
+        super();
     }
 
     // TODO: Customize parameter initialization
@@ -119,6 +121,8 @@ public class RosterItemFragment extends Fragment {
 
     @Override
     public void onAttach(Context context) {
+        this.sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
+
         super.onAttach(context);
 
         if (context instanceof OnRosterItemIteractionListener) {
@@ -128,6 +132,7 @@ public class RosterItemFragment extends Fragment {
         }
 
         Intent intent = new Intent(context, XMPPService.class);
+
         getActivity().bindService(intent, mConnection, 0);
     }
 
@@ -176,6 +181,7 @@ public class RosterItemFragment extends Fragment {
 
     @Override
     public void onDetach() {
+        sharedPref = null;
         recyclerView.setAdapter(null);
         adapter.changeCursor(null);
         getActivity().unbindService(mConnection);
@@ -185,7 +191,6 @@ public class RosterItemFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor;
         switch (item.getItemId()) {
@@ -219,8 +224,6 @@ public class RosterItemFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
-
         boolean v = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
         menu.findItem(R.id.menu_roster_show_offline).setChecked(v);
 
@@ -253,8 +256,6 @@ public class RosterItemFragment extends Fragment {
     private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
         @Override
         protected Cursor doInBackground(Void... params) {
-            SharedPreferences sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
-
             String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
                     DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, DatabaseContract.RosterItemsCache.FIELD_JID,
                     DatabaseContract.RosterItemsCache.FIELD_NAME, DatabaseContract.RosterItemsCache.FIELD_STATUS};
@@ -307,6 +308,10 @@ public class RosterItemFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             final XMPPService mService = mConnection.getService();
+            if (mService == null) {
+                Log.i("RosterItemFragment", "Service is disconnected!!!");
+                return null;
+            }
             try {
                 RosterStore store = RosterModule.getRosterStore(mService.getJaxmpp(account).getSessionObject());
                 store.remove(jid);

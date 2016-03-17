@@ -19,18 +19,11 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
 
-    <android.support.design.widget.FloatingActionButton
-    android:id="@+id/roster_add_contact"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|end"
-    android:layout_margin="@dimen/fab_margin"
-    android:src="@android:drawable/ic_input_add" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/roster_list"
@@ -40,6 +33,20 @@
         android:clickable="false"
         app:layoutManager="LinearLayoutManager"
         tools:context=".roster.RosterItemFragment"
-        tools:listitem="@layout/fragment_rosteritem" />
+        tools:listitem="@layout/fragment_rosteritem"/>
+
+    <android.support.design.widget.FloatingActionButton
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/roster_add_contact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/colorPrimaryDark"
+        app:borderWidth="0dp"
+        app:elevation="6dp"
+        app:fabSize="normal"/>
+
 
 </FrameLayout>

@@ -22,8 +22,10 @@
 package org.tigase.messenger.phone.pro;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
@@ -33,10 +35,15 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -58,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    Spinner statusSelector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,20 +86,65 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		 * .setAction("Action", null).show(); } });
 		 */
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         this.navigationMenu = navigationView.getMenu();
 
+        View headerLayout = navigationView.getHeaderView(0);
+        this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
+
         switchMainFragment(R.id.nav_roster);
 
-        Intent startServiceIntent = new Intent(this, XMPPService.class);
-        startService(startServiceIntent);
+
+        StatusSelectorAdapter statusAdapter = StatusSelectorAdapter.instance(this);
+        statusSelector.setAdapter(statusAdapter);
+        statusSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                doPresenceChange(id);
+                drawer.closeDrawers();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+        statusSelector.setSelection(statusAdapter.getPosition(sharedPref.getLong("presence", CPresence.OFFLINE)));
+
+        checkService();
+    }
+
+    private void checkService() {
+        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+        long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
+
+        if (presenceId != CPresence.OFFLINE && mServiceConnection.getService() == null) {
+            Log.i("MainActivity", "Service is turnedOff. Starting!");
+
+            Intent startServiceIntent = new Intent(this, XMPPService.class);
+            startServiceIntent.setAction("connect-all");
+            startService(startServiceIntent);
+        }
+    }
+
+    private void doPresenceChange(long presenceId) {
+        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong("presence", presenceId);
+        editor.commit();
+
+        checkService();
+
+        Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
+        action.putExtra("presence", presenceId);
+        sendBroadcast(action);
     }
 
     @Override
@@ -140,14 +194,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static class XMPPServiceConnection implements ServiceConnection {
         private XMPPService mService;
 
+        public XMPPServiceConnection() {
+        }
+
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
             mService = binder.getService();
+            Log.i("MainActivity", "Service binded");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.i("MainActivity", "Service unbinded");
             mService = null;
         }
 
