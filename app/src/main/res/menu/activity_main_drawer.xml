@@ -23,13 +23,13 @@
 
     <group android:checkableBehavior="single">
         <item
+                android:id="@+id/nav_chats"
+                android:icon="@drawable/ic_menu_chats"
+                android:title="@string/main_menu_openchats"/>
+        <item
             android:id="@+id/nav_roster"
             android:icon="@drawable/ic_menu_roster"
             android:title="@string/main_menu_roster" />
-        <item
-            android:id="@+id/nav_chats"
-            android:icon="@drawable/ic_menu_chats"
-            android:title="@string/main_menu_openchats" />
     </group>
 
     <item android:title="@string/main_menu_othersection">

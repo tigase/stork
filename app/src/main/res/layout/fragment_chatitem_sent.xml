@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="3dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="3dp">
+
+    <TextView
+            android:id="@+id/id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/text_margin"
+            android:visibility="gone"
+    />
+
+    <LinearLayout
+            android:id="@+id/message_box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_bubble_sent"
+            android:layout_marginLeft="30dp"
+            android:minWidth="150sp"
+            android:orientation="vertical"
+            android:longClickable="true" android:layout_alignParentBottom="true" android:layout_alignParentEnd="true">
+        <TextView
+                android:id="@+id/content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoLink="web"
+                android:textColor="#ff000000"
+                android:text="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25"
+                android:textSize="15sp" android:layout_marginLeft="3dp" android:layout_marginRight="3dp"
+                android:layout_marginTop="3dp"/>
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
+                      android:orientation="horizontal" android:layout_gravity="right" android:layout_marginRight="3dp">
+            <TextView
+                    android:id="@+id/chat_timestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autoLink="web"
+                    android:text="wczoraj"
+                    android:textColor="#bdbdbd"
+                    android:textSize="12sp"/>
+            <ImageView android:id="@+id/chat_delivery_status" android:layout_width="wrap_content"
+                       android:layout_height="match_parent"
+                       android:tint="#bdbdbd"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

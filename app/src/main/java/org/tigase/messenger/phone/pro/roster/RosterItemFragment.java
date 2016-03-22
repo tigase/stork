@@ -21,6 +21,17 @@
 
 package org.tigase.messenger.phone.pro.roster;
 
+import org.tigase.messenger.phone.pro.DividerItemDecoration;
+import org.tigase.messenger.phone.pro.MainActivity;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.roster.contact.EditContactActivity;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,29 +44,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ContextMenu;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.Toast;
-
-import org.tigase.messenger.phone.pro.DividerItemDecoration;
-import org.tigase.messenger.phone.pro.MainActivity;
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.providers.RosterProvider;
-import org.tigase.messenger.phone.pro.roster.contact.EditContactActivity;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 
 /**
  * A fragment representing a list of Items.
@@ -132,7 +125,6 @@ public class RosterItemFragment extends Fragment {
         }
 
         Intent intent = new Intent(context, XMPPService.class);
-
         getActivity().bindService(intent, mConnection, 0);
     }
 

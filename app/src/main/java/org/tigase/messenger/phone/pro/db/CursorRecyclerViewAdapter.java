@@ -172,6 +172,10 @@ public abstract class CursorRecyclerViewAdapter<VH extends android.support.v7.wi
 		}
 	}
 
+	protected boolean isDataValid() {
+		return mDataValid;
+	}
+
 	/**
 	 * This method will move the Cursor to the correct position and call
 	 * {@link #onBindViewHolderCursor(android.support.v7.widget.RecyclerView.ViewHolder, android.database.Cursor)}

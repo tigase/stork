@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+    <android.support.v7.widget.RecyclerView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/chat_list"
+            android:name="org.tigase.messenger.phone.pro.chat.ChatItemFragment"
+            android:layout_width="match_parent"
+            android:scrollbars="vertical"
+            android:background="#e0e0e0"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            android:layout_above="@+id/editorPanel"
+            tools:context="org.tigase.messenger.phone.pro.chat.ChatItemFragment"/>
+
+    <RelativeLayout android:id="@+id/editorPanel" android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="5dp"
+                    android:background="#ECEFF1"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true">
+
+        <EditText android:id="@+id/messageText"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:inputType="textShortMessage|textCapSentences"
+                  android:ems="10"
+                  android:minLines="1"
+                  android:imeActionId="@+id/send"
+                  android:imeActionLabel="Send"
+                  android:layout_toLeftOf="@+id/send_button"
+                  android:imeOptions="actionSend|flagNoExtractUi"
+        />
+        <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:src="@drawable/ic_send_24dp"
+                android:id="@+id/send_button" android:layout_alignBottom="@+id/messageText"
+                android:layout_alignTop="@+id/messageText"/>
+
+    </RelativeLayout>
+</RelativeLayout>

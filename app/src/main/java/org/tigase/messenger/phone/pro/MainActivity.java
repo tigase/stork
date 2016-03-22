@@ -21,11 +21,18 @@
 
 package org.tigase.messenger.phone.pro;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
+import org.tigase.messenger.phone.pro.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.db.CPresence;
+import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
+import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import android.content.*;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
@@ -41,43 +48,53 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
-import android.widget.Toast;
-
-import org.tigase.messenger.phone.pro.db.CPresence;
-import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
-import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnListFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity
+		implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnRosterItemIteractionListener,
+		OpenChatItemFragment.OnListFragmentInteractionListener, OpenChatItemFragment.OnAddChatListener {
 
-    private Menu navigationMenu;
+	Spinner statusSelector;
+	private Menu navigationMenu;
+	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
+	private void doPresenceChange(long presenceId) {
+		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putLong("presence", presenceId);
+		editor.commit();
 
-    Spinner statusSelector;
+		Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
+		action.putExtra("presence", presenceId);
+		sendBroadcast(action);
+	}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+	@Override
+	public void onAddChatClick() {
+		switchMainFragment(R.id.nav_roster);
+	}
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+	@Override
+	public void onBackPressed() {
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		if (drawer.isDrawerOpen(GravityCompat.START)) {
+			drawer.closeDrawer(GravityCompat.START);
+		} else {
+			super.onBackPressed();
+		}
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		ButterKnife.bind(this);
+
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
 
 		/*
-         * FloatingActionButton fab = (FloatingActionButton)
+		 * FloatingActionButton fab = (FloatingActionButton)
 		 * findViewById(R.id.fab); fab.setOnClickListener(new
 		 * View.OnClickListener() {
 		 *
@@ -86,179 +103,178 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		 * .setAction("Action", null).show(); } });
 		 */
 
-        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
+				R.string.navigation_drawer_close);
+		drawer.setDrawerListener(toggle);
+		toggle.syncState();
 
-        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        this.navigationMenu = navigationView.getMenu();
+		final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		navigationView.setNavigationItemSelectedListener(this);
+		this.navigationMenu = navigationView.getMenu();
 
-        View headerLayout = navigationView.getHeaderView(0);
-        this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
+		View headerLayout = navigationView.getHeaderView(0);
+		this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
 
-        switchMainFragment(R.id.nav_roster);
+		final SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		switch (sharedPref.getString("menu", "chats")) {
+		case "roster":
+			switchMainFragment(R.id.nav_roster);
+			break;
+		default:
+			switchMainFragment(R.id.nav_chats);
+			break;
+		}
 
+		StatusSelectorAdapter statusAdapter = StatusSelectorAdapter.instance(this);
+		statusSelector.setAdapter(statusAdapter);
+		statusSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				doPresenceChange(id);
+				drawer.closeDrawers();
+			}
 
-        StatusSelectorAdapter statusAdapter = StatusSelectorAdapter.instance(this);
-        statusSelector.setAdapter(statusAdapter);
-        statusSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                doPresenceChange(id);
-                drawer.closeDrawers();
-            }
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
+		statusSelector.setSelection(statusAdapter.getPosition(sharedPref.getLong("presence", CPresence.OFFLINE)));
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-        statusSelector.setSelection(statusAdapter.getPosition(sharedPref.getLong("presence", CPresence.OFFLINE)));
+	}
 
-        checkService();
-    }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
 
-    private void checkService() {
-        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-        long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
+	@Override
+	public void onListFragmentInteraction(int id, String account, String jid) {
+		Jaxmpp jaxmpp = mServiceConnection.getService().getJaxmpp(account);
+		try {
+			Chat chat = jaxmpp.getModule(MessageModule.class).createChat(JID.jidInstance(jid));
+			onOpenChatItemInteraction((int) chat.getId(), jid, account);
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+		}
+	}
 
-        if (presenceId != CPresence.OFFLINE && mServiceConnection.getService() == null) {
-            Log.i("MainActivity", "Service is turnedOff. Starting!");
+	@SuppressWarnings("StatementWithEmptyBody")
+	@Override
+	public boolean onNavigationItemSelected(MenuItem menuItem) {
+		// Handle navigation view item clicks here.
+		int id = menuItem.getItemId();
 
-            Intent startServiceIntent = new Intent(this, XMPPService.class);
-            startServiceIntent.setAction("connect-all");
-            startService(startServiceIntent);
-        }
-    }
+		switchMainFragment(id);
 
-    private void doPresenceChange(long presenceId) {
-        SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putLong("presence", presenceId);
-        editor.commit();
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawer.closeDrawer(GravityCompat.START);
+		return true;
+	}
 
-        checkService();
+	@Override
+	public void onOpenChatItemInteraction(final int openChatId, final String jid, final String account) {
+		Intent intent = new Intent(this, ChatActivity.class);
+		intent.putExtra("openChatId", openChatId);
+		intent.putExtra("jid", jid);
+		intent.putExtra("account", account);
+		startActivity(intent);
+	}
 
-        Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
-        action.putExtra("presence", presenceId);
-        sendBroadcast(action);
-    }
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+		// noinspection SimplifiableIfStatement
+		if (id == R.id.action_settings) {
+			return true;
+		}
 
-    @Override
-    public void onListFragmentInteraction(int id, String account, String jid) {
-        Toast.makeText(this, "RosterDummyContent click " + jid, Toast.LENGTH_SHORT).show();
-    }
+		return super.onOptionsItemSelected(item);
+	}
 
-    @Override
-    public void onListFragmentInteraction() {
-        Toast.makeText(this, "OpenChatsDummyContent click", Toast.LENGTH_SHORT).show();
-    }
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Intent service = new Intent(getApplicationContext(), XMPPService.class);
+		bindService(service, mServiceConnection, 0);
+	}
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem menuItem) {
-        // Handle navigation view item clicks here.
-        int id = menuItem.getItemId();
+	@Override
+	protected void onStop() {
+		super.onStop();
+		unbindService(mServiceConnection);
+	}
 
-        switchMainFragment(id);
+	private void switchMainFragment(final int id) {
+		MenuItem menuItem = navigationMenu.findItem(id);
+		menuItem.setChecked(true);
+		setTitle(menuItem.getTitle());
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
+		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent service = new Intent(getApplicationContext(), XMPPService.class);
-        bindService(service, mServiceConnection, 0);
-    }
+		switch (id) {
+		case R.id.nav_about: {
+			Intent intent = new Intent(this, AboutActivity.class);
+			startActivity(intent);
+			break;
+		}
+		case R.id.nav_roster: {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(R.id.flContent,
+					RosterItemFragment.newInstance(mServiceConnection)).commit();
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        unbindService(mServiceConnection);
-    }
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "roster");
+			editor.commit();
 
+			break;
+		}
+		case R.id.nav_chats: {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(R.id.flContent,
+					OpenChatItemFragment.newInstance(mServiceConnection)).commit();
 
-    public static class XMPPServiceConnection implements ServiceConnection {
-        private XMPPService mService;
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "chats");
+			editor.commit();
 
-        public XMPPServiceConnection() {
-        }
+			break;
+		}
+		case R.id.nav_settings: {
+			Intent intent = new Intent(this, SettingsActivity.class);
+			startActivity(intent);
+			break;
+		}
+		}
+	}
 
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
-            mService = binder.getService();
-            Log.i("MainActivity", "Service binded");
-        }
+	public static class XMPPServiceConnection implements ServiceConnection {
+		private XMPPService mService;
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.i("MainActivity", "Service unbinded");
-            mService = null;
-        }
+		public XMPPServiceConnection() {
+		}
 
-        public XMPPService getService() {
-            return mService;
-        }
-    }
+		public XMPPService getService() {
+			return mService;
+		}
 
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
+			mService = binder.getService();
+			Log.i("MainActivity", "Service binded");
+		}
 
-    private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        // noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void switchMainFragment(final int id) {
-        MenuItem menuItem = navigationMenu.findItem(id);
-        menuItem.setChecked(true);
-        setTitle(menuItem.getTitle());
-        switch (id) {
-            case R.id.nav_about: {
-                Intent intent = new Intent(this, AboutActivity.class);
-                startActivity(intent);
-                break;
-            }
-            case R.id.nav_roster: {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, RosterItemFragment.newInstance(mServiceConnection)).commit();
-                break;
-            }
-            case R.id.nav_chats: {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.flContent, OpenChatItemFragment.newInstance(mServiceConnection)).commit();
-                break;
-            }
-            case R.id.nav_settings: {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                break;
-            }
-        }
-    }
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			Log.i("MainActivity", "Service unbinded");
+			mService = null;
+		}
+	}
 }

@@ -21,12 +21,6 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
-import android.database.Cursor;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -35,6 +29,11 @@ import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
 import tigase.jaxmpp.core.client.BareJID;
+import android.database.Cursor;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a
@@ -71,7 +70,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
                     // the
                     // fragment is attached to one) that an item has been
                     // selected.
-                    mListener.onListFragmentInteraction();
+					mListener.onOpenChatItemInteraction(id, jid, account);
                 }
             }
         });

@@ -125,4 +125,5 @@
     <string name="status_xa">Extended Away</string>
     <string name="status_dnd">Do Not Disturb</string>
     <string name="status_offline">Offline</string>
+    <string name="title_activity_chat">ChatActivity</string>
 </resources>

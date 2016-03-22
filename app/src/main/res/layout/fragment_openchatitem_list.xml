@@ -18,14 +18,30 @@
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
   -->
-
-<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-                                        xmlns:app="http://schemas.android.com/apk/res-auto"
-                                        xmlns:tools="http://schemas.android.com/tools"
-                                        android:id="@+id/openchats_list"
-                                        android:name="org.tigase.messenger.phone.pro.OpenChatItemFragment"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        app:layoutManager="LinearLayoutManager"
-                                        tools:context=".openchats.OpenChatItemFragment"
-                                        tools:listitem="@layout/fragment_openchatitem" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/openchats_list"
+            android:name="org.tigase.messenger.phone.pro.OpenChatItemFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            tools:context=".openchats.OpenChatItemFragment"
+            tools:listitem="@layout/fragment_openchatitem"/>
+    <android.support.design.widget.FloatingActionButton
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/roster_add_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@drawable/ic_add_chat_24dp"
+            app:backgroundTint="@color/colorPrimaryDark"
+            app:borderWidth="0dp"
+            app:elevation="6dp"
+            android:tint="#ffffffff"
+            app:fabSize="normal"/>
+</FrameLayout>

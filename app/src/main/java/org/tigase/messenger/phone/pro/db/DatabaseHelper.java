@@ -21,14 +21,14 @@
 
 package org.tigase.messenger.phone.pro.db;
 
+import tigase.jaxmpp.android.caps.CapsDbHelper;
+import tigase.jaxmpp.android.chat.OpenChatDbHelper;
+import tigase.jaxmpp.android.roster.RosterDbHelper;
+import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
-import tigase.jaxmpp.android.chat.OpenChatDbHelper;
-import tigase.jaxmpp.android.roster.RosterDbHelper;
-import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -41,6 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Log.i("DatabaseHelper", "Create database");
 		RosterDbHelper.onCreate(db);
 		OpenChatDbHelper.onCreate(db);
+
+		CapsDbHelper.onCreate(db);
 
 		db.execSQL("ALTER TABLE " + RosterItemsCacheTableMetaData.TABLE_NAME + " ADD COLUMN "
 				+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
@@ -58,8 +60,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i("DatabaseHelper", "Update database from " + oldVersion + " to " + newVersion);
-		db.execSQL("ALTER TABLE " + RosterItemsCacheTableMetaData.TABLE_NAME + " ADD COLUMN "
-				+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
-
 	}
 }
