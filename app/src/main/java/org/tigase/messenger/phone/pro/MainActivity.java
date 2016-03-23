@@ -28,6 +28,7 @@ import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -153,8 +154,18 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	public void onListFragmentInteraction(int id, String account, String jid) {
 		Jaxmpp jaxmpp = mServiceConnection.getService().getJaxmpp(account);
+		final BareJID bareJID = BareJID.bareJIDInstance(jid);
 		try {
-			Chat chat = jaxmpp.getModule(MessageModule.class).createChat(JID.jidInstance(jid));
+			Chat chat = null;
+			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+				if (c.getJid().getBareJid().equals(bareJID)) {
+					chat = c;
+					break;
+				}
+			}
+			if (chat == null) {
+				chat = jaxmpp.getModule(MessageModule.class).createChat(JID.jidInstance(jid));
+			}
 			onOpenChatItemInteraction((int) chat.getId(), jid, account);
 		} catch (JaxmppException e) {
 			e.printStackTrace();

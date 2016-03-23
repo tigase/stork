@@ -8,6 +8,8 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
+    <ImageView android:id="@+id/contact_avatar" android:layout_width="wrap_content" android:layout_height="wrap_content"
+               android:src="@drawable/user_avatar" android:layout_alignParentBottom="true"/>
     <LinearLayout
             android:id="@+id/message_box"
             android:layout_width="wrap_content"
@@ -15,6 +17,7 @@
             android:background="@drawable/message_bubble_received"
             android:layout_marginRight="30dp"
             android:orientation="vertical"
+            android:layout_toRightOf="@id/contact_avatar"
             android:longClickable="true" android:layout_alignParentBottom="true">
         <TextView
                 android:id="@+id/content"

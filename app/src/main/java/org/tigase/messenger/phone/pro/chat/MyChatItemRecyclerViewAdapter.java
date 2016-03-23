@@ -25,7 +25,9 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.chat.dummy.DummyContent.DummyItem;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
+import tigase.jaxmpp.core.client.BareJID;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
@@ -95,6 +97,9 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyC
 				break;
 			}
 		}
+		if (holder.mAvatar != null) {
+			AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mAvatar);
+		}
 		holder.itemView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -134,11 +139,13 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyC
 		@Bind(R.id.chat_timestamp)
 		TextView mTimestamp;
 		ImageView mDeliveryStatus;
+		ImageView mAvatar;
 
 		public ViewHolder(View itemView) {
 			super(itemView);
 			ButterKnife.bind(this, itemView);
 			mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
+			mAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
 		}
 
 		@Override

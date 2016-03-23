@@ -23,20 +23,28 @@ package org.tigase.messenger.phone.pro.chat;
 
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.chat.dummy.DummyContent;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import android.app.NotificationManager;
+import android.content.ContentUris;
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.TextView;
+import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class ChatActivity extends AppCompatActivity implements ChatItemFragment.OnListFragmentInteractionListener {
 
+	@Bind(R.id.contact_display_name)
+	TextView mContactName;
 	private JID jid;
 	private BareJID account;
 	private int openChatId;
@@ -51,6 +59,22 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 
 	public int getOpenChatId() {
 		return openChatId;
+	}
+
+	private void loadContact() {
+		final String[] cols = new String[] { DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_ACCOUNT,
+				DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME, ChatProvider.FIELD_UNREAD_COUNT,
+				DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_STATE, ChatProvider.FIELD_LAST_MESSAGE };
+		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols, null,
+				null, null);
+		try {
+			c.moveToNext();
+			String displayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
+
+			mContactName.setText(displayName);
+		} finally {
+			c.close();
+		}
 	}
 
 	@Override
@@ -76,6 +100,7 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		// }
 		// });
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 	}
 
 	@Override
@@ -88,6 +113,8 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		super.onResume();
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(("chat:" + openChatId).hashCode());
+
+		loadContact();
 	}
 
 }

@@ -49,10 +49,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -140,10 +137,17 @@ public class ChatItemFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		// setHasOptionsMenu(true);
 
 		// if (getArguments() != null) {
 		// mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
 		// }
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO
+		inflater.inflate(R.menu.openchat_fragment, menu);
 	}
 
 	@Override

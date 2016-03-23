@@ -175,7 +175,7 @@ public class ChatProvider extends ContentProvider {
 			cursor = queryOpenChats(projection, selection, selectionArgs, sortOrder);
 			break;
 		case URI_INDICATOR_OPENCHAT_BY_ID:
-			cursor = queryOpenChats(projection, DatabaseContract.OpenChats.FIELD_ID + "=?",
+			cursor = queryOpenChats(projection, "open_chats." + DatabaseContract.OpenChats.FIELD_ID + "=?",
 					new String[] { uri.getLastPathSegment() }, sortOrder);
 			break;
 		case URI_INDICATOR_OPENCHAT_BY_JID:
@@ -224,6 +224,7 @@ public class ChatProvider extends ContentProvider {
 				+ DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT
 				+ " AND recipient." + DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats."
 				+ DatabaseContract.OpenChats.FIELD_JID);
+
 
 		// may be removed later on production build - left to make tests easier
 		qb.appendWhere("open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " IS NOT NULL");
