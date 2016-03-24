@@ -22,6 +22,7 @@
 package org.tigase.messenger.phone.pro.openchats;
 
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.dummy.OpenChatsDummyContent.DummyItem;
@@ -43,43 +44,72 @@ import android.view.ViewGroup;
  */
 public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
-    private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
+	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
-    public MyOpenChatItemRecyclerViewAdapter(Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
-        super(cursor);
-        mListener = listener;
-    }
+	public MyOpenChatItemRecyclerViewAdapter(Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
+		super(cursor);
+		mListener = listener;
+	}
 
-    @Override
-    public void onBindViewHolderCursor(final ViewHolder holder, Cursor cursor) {
-        final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
-        final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
-        final String account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
-        final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
-        final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
+	@Override
+	public void onBindViewHolderCursor(final ViewHolder holder, Cursor cursor) {
+		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+		final String account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+		final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
+		final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
+		final int state = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_STATE));
 
-        holder.mContactName.setText(name);
-        holder.mLastMessage.setText(lastMessage);
-        AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
+		int presenceIconResource;
+		switch (state) {
+		case CPresence.OFFLINE:
+			presenceIconResource = android.R.drawable.presence_invisible;
+			break;
+		case CPresence.ERROR:
+			presenceIconResource = android.R.drawable.presence_offline;
+			break;
+		case CPresence.DND:
+			presenceIconResource = android.R.drawable.presence_busy;
+			break;
+		case CPresence.XA:
+			presenceIconResource = android.R.drawable.presence_away;
+			break;
+		case CPresence.AWAY:
+			presenceIconResource = android.R.drawable.presence_away;
+			break;
+		case CPresence.ONLINE:
+			presenceIconResource = android.R.drawable.presence_online;
+			break;
+		case CPresence.CHAT: // chat
+			presenceIconResource = android.R.drawable.presence_online;
+			break;
+		default:
+			presenceIconResource = android.R.drawable.presence_offline;
+		}
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if
-                    // the
-                    // fragment is attached to one) that an item has been
-                    // selected.
+		holder.mStatus.setImageResource(presenceIconResource);
+		holder.mContactName.setText(name);
+		holder.mLastMessage.setText(lastMessage);
+		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
+
+		holder.itemView.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (null != mListener) {
+					// Notify the active callbacks interface (the activity, if
+					// the
+					// fragment is attached to one) that an item has been
+					// selected.
 					mListener.onOpenChatItemInteraction(id, jid, account);
-                }
-            }
-        });
-    }
+				}
+			}
+		});
+	}
 
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
-        return new ViewHolder(view);
-    }
+	@Override
+	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
+		return new ViewHolder(view);
+	}
 
 }

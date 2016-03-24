@@ -19,8 +19,16 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
-package org.tigase.messenger.phone.pro;
+package org.tigase.messenger.phone.pro.settings;
 
+import java.util.List;
+
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.account.Authenticator;
+import org.tigase.messenger.phone.pro.account.LoginActivity;
+
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
@@ -30,18 +38,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
+import android.preference.*;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
-
-import java.util.List;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -140,6 +141,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 		return PreferenceFragment.class.getName().equals(fragmentName)
 				|| GeneralPreferenceFragment.class.getName().equals(fragmentName)
 				|| DataSyncPreferenceFragment.class.getName().equals(fragmentName)
+				|| AccountsPreferenceFragment.class.getName().equals(fragmentName)
 				|| NotificationPreferenceFragment.class.getName().equals(fragmentName);
 	}
 
@@ -267,6 +269,46 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			// updated to reflect the new value, per the Android Design
 			// guidelines.
 			bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+		}
+
+		@Override
+		public boolean onOptionsItemSelected(MenuItem item) {
+			int id = item.getItemId();
+			if (id == android.R.id.home) {
+				startActivity(new Intent(getActivity(), SettingsActivity.class));
+				return true;
+			}
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	/**
+	 * This fragment shows data and sync preferences only. It is used when the
+	 * activity is showing a two-pane settings UI.
+	 */
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	public static class AccountsPreferenceFragment extends PreferenceFragment {
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			addPreferencesFromResource(R.xml.pref_accounts_list);
+			setHasOptionsMenu(true);
+
+			final PreferenceScreen screen = this.getPreferenceScreen(); // "null".
+																		// See
+																		// onViewCreated.
+
+			AccountManager am = AccountManager.get(screen.getContext());
+			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+				Preference category = new Preference(screen.getContext());
+				Intent x = new Intent(screen.getContext(), LoginActivity.class);
+				x.putExtra("account_name", account.name);
+				category.setIntent(x);
+
+				category.setTitle(account.name);
+				screen.addPreference(category);
+			}
+
 		}
 
 		@Override

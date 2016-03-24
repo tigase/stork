@@ -19,7 +19,7 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
-package org.tigase.messenger.phone.pro;
+package org.tigase.messenger.phone.pro.settings;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

@@ -18,24 +18,34 @@
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/toolbar"
 
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize">
+            <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+                            android:gravity="center_vertical">
+                <ImageView android:layout_width="wrap_content"
+                           android:layout_height="wrap_content"
+                           android:id="@+id/contact_presence"
+                           android:src="@android:drawable/presence_away"
+                           android:layout_centerVertical="true"
+                           android:layout_marginRight="5dp"
+                />
+
                 <TextView
                         android:id="@+id/contact_display_name"
                         android:orientation="horizontal"
                         android:layout_width="wrap_content"
-                        android:layout_height="fill_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginRight="?attr/actionBarSize"
-                        android:layout_gravity="center"
-                        android:gravity="center_vertical"
+                        android:text="Bartek"
                         android:textColor="#ffffffff"
                         style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse"
+                        android:layout_centerVertical="true" android:layout_toEndOf="@+id/contact_presence"
                 />
+
             </RelativeLayout>
         </android.support.v7.widget.Toolbar>
 

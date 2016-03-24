@@ -25,29 +25,42 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.chat.dummy.DummyContent;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
 
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import android.app.NotificationManager;
 import android.content.ContentUris;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class ChatActivity extends AppCompatActivity implements ChatItemFragment.OnListFragmentInteractionListener {
 
+	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	@Bind(R.id.contact_display_name)
 	TextView mContactName;
+	@Bind(R.id.contact_presence)
+	ImageView mContactPresence;
 	private JID jid;
 	private BareJID account;
 	private int openChatId;
+	private Uri contactUri;
+	private Integer rosterId;
 
 	public BareJID getAccount() {
 		return account;
@@ -77,11 +90,48 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		}
 	}
 
+	private Integer loadRosterID(BareJID account, BareJID jid) {
+		Uri u = Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid);
+		Cursor c = getContentResolver().query(u, new String[] { DatabaseContract.RosterItemsCache.FIELD_ID }, null, null, null);
+		try {
+			if (c.moveToNext()) {
+				return c.getInt(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
+			}
+		} finally {
+			c.close();
+		}
+		return null;
+	}
+
+	private void loadUserPresence() {
+		if (contactUri == null)
+			return;
+		Cursor contactCursor = getContentResolver().query(contactUri,
+				new String[] { DatabaseContract.RosterItemsCache.FIELD_STATUS }, null, null, null);
+		try {
+			if (contactCursor.moveToNext()) {
+				final int status = contactCursor.getInt(
+						contactCursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_STATUS));
+				mContactPresence.setVisibility(View.VISIBLE);
+				mContactPresence.setImageResource(PresenceIconMapper.getPresenceResource(status));
+			} else {
+				mContactPresence.setVisibility(View.INVISIBLE);
+			}
+		} finally {
+			contactCursor.close();
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		this.openChatId = getIntent().getIntExtra("openChatId", Integer.MIN_VALUE);
 		this.jid = JID.jidInstance(getIntent().getStringExtra("jid"));
 		this.account = BareJID.bareJIDInstance(getIntent().getStringExtra("account"));
+		this.rosterId = loadRosterID(account, jid.getBareJid());
+
+		this.contactUri = rosterId == null ? null : Uri.parse(RosterProvider.ROSTER_URI + "/" + rosterId);
+
+		getContentResolver().registerContentObserver(contactUri, true, contactPresenceChangeObserver);
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
@@ -104,6 +154,12 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 	}
 
 	@Override
+	protected void onDestroy() {
+		getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
+		super.onDestroy();
+	}
+
+	@Override
 	public void onListFragmentInteraction(DummyContent.DummyItem item) {
 
 	}
@@ -115,6 +171,26 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		mNotificationManager.cancel(("chat:" + openChatId).hashCode());
 
 		loadContact();
+		loadUserPresence();
+	}
+
+	private class ContactPresenceChangeObserver extends ContentObserver {
+		public ContactPresenceChangeObserver() {
+			super(new Handler());
+		}
+
+		@Override
+		public boolean deliverSelfNotifications() {
+			Log.i("ChatActivity", "deliverSelfNotifications");
+			return true;
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			Log.i("ChatActivity", "onChange " + selfChange);
+			Toast.makeText(getApplicationContext(), "GOT IT!", Toast.LENGTH_LONG);
+			loadUserPresence();
+		}
 	}
 
 }

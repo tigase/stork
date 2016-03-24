@@ -26,11 +26,14 @@ import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
 
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -47,6 +50,18 @@ import butterknife.OnClick;
  */
 public class OpenChatItemFragment extends Fragment {
 
+	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
+
+		@Override
+		public boolean deliverSelfNotifications() {
+			return true;
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			refreshChatlist();
+		}
+	};
 	@Bind(R.id.openchats_list)
 	RecyclerView recyclerView;
 	private OnListFragmentInteractionListener mListener;
@@ -84,6 +99,9 @@ public class OpenChatItemFragment extends Fragment {
 		} else {
 			throw new RuntimeException(context.toString() + " must implement OnRosterItemIteractionListener");
 		}
+
+		getContext().getContentResolver().registerContentObserver(RosterProvider.ROSTER_URI, true,
+				contactPresenceChangeObserver);
 	}
 
 	@Override
@@ -119,6 +137,7 @@ public class OpenChatItemFragment extends Fragment {
 
 	@Override
 	public void onDetach() {
+		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
 		// getActivity().unbindService(mConnection);
@@ -155,14 +174,14 @@ public class OpenChatItemFragment extends Fragment {
 		private final String[] cols = new String[] { DatabaseContract.OpenChats.FIELD_ID,
 				DatabaseContract.OpenChats.FIELD_ACCOUNT, DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
 				ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_STATE,
-				ChatProvider.FIELD_LAST_MESSAGE };
+				ChatProvider.FIELD_LAST_MESSAGE, ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP };
 
 		@Override
 		protected Cursor doInBackground(Void... params) {
 			if (getContext() == null)
 				return null;
 			Cursor cursor = getContext().getContentResolver().query(ChatProvider.OPEN_CHATS_URI, cols, null, null,
-					ChatProvider.FIELD_NAME);
+					ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
 
 			return cursor;
 		}

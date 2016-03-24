@@ -26,6 +26,7 @@ import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.settings.SettingsActivity;
 
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;

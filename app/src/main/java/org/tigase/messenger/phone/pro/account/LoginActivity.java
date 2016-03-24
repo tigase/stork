@@ -21,6 +21,9 @@
 
 package org.tigase.messenger.phone.pro.account;
 
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.MobileModeFeature;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.animation.Animator;
@@ -46,10 +49,9 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
-
-import org.tigase.messenger.phone.pro.R;
-
+import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
@@ -61,12 +63,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	 * Id to identity READ_CONTACTS permission request.
 	 */
 	private static final int REQUEST_READ_CONTACTS = 0;
-
+	private static final String TAG = "LoginActivity";
+	@Bind(R.id.account_active)
+	Switch mActiveView;
+	@Bind(R.id.email_sign_in_button)
+	Button mEmailSignInButton;
 	/**
 	 * Keep track of the login task to ensure we can cancel it if requested.
 	 */
 	private UserLoginTask mAuthTask = null;
-
 	// UI references.
 	private EditText mXMPPIDView;
 	private EditText mPasswordView;
@@ -97,6 +102,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		String hostname = mHostnameView.getText().toString();
 		String nickname = mNicknameView.getText().toString();
 		String resource = mResourceView.getText().toString();
+		boolean active = this.mActiveView.isChecked();
 
 		boolean cancel = false;
 		View focusView = null;
@@ -124,12 +130,38 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 			// form field with an error.
 			focusView.requestFocus();
 		} else {
+
+			boolean skipLoginTest = false;
+			Account account = getAccount(xmppID);
+			if (account != null) {
+				skipLoginTest = password.equals(mAccountManager.getPassword(account));
+				skipLoginTest &= hostname.equals(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
+			}
+
 			// Show a progress spinner, and kick off a background task to
 			// perform the user login attempt.
-			showProgress(true);
-			mAuthTask = new UserLoginTask(xmppID, password, hostname, resource, nickname);
-			mAuthTask.execute((Void) null);
+			if (skipLoginTest) {
+				mAccountManager.setUserData(account, AccountsConstants.FIELD_NICKNAME, nickname);
+				mAccountManager.setUserData(account, AccountsConstants.FIELD_HOSTNAME, hostname);
+				mAccountManager.setUserData(account, AccountsConstants.FIELD_RESOURCE, resource);
+				mAccountManager.setUserData(account, AccountsConstants.FIELD_ACTIVE, Boolean.toString(active));
+				mAccountManager.setPassword(account, password);
+				mAccountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED, Boolean.toString(true));
+
+				finish();
+			} else {
+				mAuthTask = new UserLoginTask(xmppID, password, hostname, resource, nickname, active);
+				mAuthTask.execute((Void) null);
+			}
 		}
+	}
+
+	private Account getAccount(String name) {
+		for (Account account : mAccountManager.getAccounts()) {
+			if (account.name.equals(name))
+				return account;
+		}
+		return null;
 	}
 
 	private boolean isEmailValid(String email) {
@@ -179,7 +211,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 				return false;
 			}
 		});
-		Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
 		mEmailSignInButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -189,6 +220,23 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 		mLoginFormView = findViewById(R.id.login_form);
 		mProgressView = findViewById(R.id.login_progress);
+
+		if (getIntent().getStringExtra("account_name") != null) {
+			// edit existing account mode
+			Account account = getAccount(getIntent().getStringExtra("account_name"));
+			mXMPPIDView.setEnabled(false);
+
+			mXMPPIDView.setText(account.name);
+			String tmp = mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE);
+			Log.i("LoginActivity", AccountsConstants.FIELD_ACTIVE + " = " + tmp);
+			mActiveView.setChecked(Boolean.parseBoolean(tmp == null ? "true" : tmp));
+			mPasswordView.setText(mAccountManager.getPassword(account));
+			mHostnameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
+			mNicknameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME));
+			mResourceView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_RESOURCE));
+
+			mEmailSignInButton.setText(R.string.action_update_account);
+		}
 	}
 
 	@Override
@@ -200,7 +248,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 				// Select only email addresses.
 				ContactsContract.Contacts.Data.MIMETYPE + " = ?",
-				new String[]{ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE},
+				new String[] { ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE },
 
 				// Show primary email addresses first. Note that there won't be
 				// a primary email address if the user hasn't specified one.
@@ -258,8 +306,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	}
 
 	private interface ProfileQuery {
-		String[] PROJECTION = {ContactsContract.CommonDataKinds.Email.ADDRESS,
-				ContactsContract.CommonDataKinds.Email.IS_PRIMARY,};
+		String[] PROJECTION = { ContactsContract.CommonDataKinds.Email.ADDRESS,
+				ContactsContract.CommonDataKinds.Email.IS_PRIMARY, };
 
 		int ADDRESS = 0;
 		int IS_PRIMARY = 1;
@@ -276,13 +324,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		private final String mNickname;
 		private final String mHostname;
 		private final String mResource;
+		private final boolean mActive;
 
-		UserLoginTask(String xmppId, String password, String hostname, String resource, String nickname) {
+		UserLoginTask(String xmppId, String password, String hostname, String resource, String nickname, boolean active) {
 			mXmppId = xmppId;
 			mPassword = password;
 			mNickname = nickname;
 			mHostname = hostname;
 			mResource = resource;
+			mActive = active;
 		}
 
 		@Override
@@ -318,6 +368,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_NICKNAME, mNickname);
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_HOSTNAME, mHostname);
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_RESOURCE, mResource);
+					mAccountManager.setUserData(account, AccountsConstants.FIELD_ACTIVE, Boolean.toString(mActive));
+					mAccountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED,
+							Boolean.toString(true));
 
 					final Intent intent = new Intent();
 					intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
@@ -338,6 +391,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 				mPasswordView.setError(getString(R.string.error_incorrect_password));
 				mPasswordView.requestFocus();
 			}
+		}
+
+		@Override
+		protected void onPreExecute() {
+			showProgress(true);
+			super.onPreExecute();
 		}
 	}
 

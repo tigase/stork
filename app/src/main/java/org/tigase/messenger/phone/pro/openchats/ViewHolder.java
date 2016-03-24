@@ -21,13 +21,12 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
+import org.tigase.messenger.phone.pro.R;
+
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import org.tigase.messenger.phone.pro.R;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -41,6 +40,9 @@ public class ViewHolder extends RecyclerView.ViewHolder {
 
 	@Bind(R.id.contact_avatar)
 	ImageView mContactAvatar;
+
+	@Bind(R.id.contact_presence)
+	ImageView mStatus;
 
 	public ViewHolder(View itemView) {
 		super(itemView);

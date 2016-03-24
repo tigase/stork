@@ -42,4 +42,12 @@
             android:textSize="12sp"/>
     </LinearLayout>
 
+    <ImageView
+            android:id="@+id/contact_presence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/presence_online"/>
+
 </RelativeLayout>

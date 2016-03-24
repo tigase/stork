@@ -41,8 +41,6 @@
                     android:text="wczoraj"
                     android:textColor="#bdbdbd"
                     android:textSize="12sp"/>
-
-            />
         </LinearLayout>
 
     </LinearLayout>

@@ -48,6 +48,7 @@ public class ChatProvider extends ContentProvider {
 	public static final String FIELD_UNREAD_COUNT = "unread";
 	public static final String FIELD_STATE = "state";
 	public static final String FIELD_LAST_MESSAGE = "last_message";
+	public static final String FIELD_LAST_MESSAGE_TIMESTAMP = "last_message_timestamp";
 	private static final UriMatcher sUriMatcher = new UriMatcher(1);
 	private final static int URI_INDICATOR_OPENCHATS = 2;
 	private final static int URI_INDICATOR_OPENCHAT_BY_ID = 3;
@@ -87,6 +88,13 @@ public class ChatProvider extends ContentProvider {
 							+ " = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY "
 							+ DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as "
 							+ ChatProvider.FIELD_LAST_MESSAGE);
+			put(ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP,
+					"(SELECT " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " FROM "
+							+ DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT
+							+ " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND "
+							+ DatabaseContract.ChatHistory.FIELD_JID + " = open_chats." + DatabaseContract.OpenChats.FIELD_JID
+							+ " ORDER BY " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as "
+							+ ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP);
 			put(DatabaseContract.OpenChats.FIELD_THREAD_ID, "open_chats." + DatabaseContract.OpenChats.FIELD_THREAD_ID + " as "
 					+ DatabaseContract.OpenChats.FIELD_THREAD_ID);
 			put(DatabaseContract.OpenChats.FIELD_NICKNAME, "open_chats." + DatabaseContract.OpenChats.FIELD_NICKNAME + " as "
@@ -224,7 +232,6 @@ public class ChatProvider extends ContentProvider {
 				+ DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT
 				+ " AND recipient." + DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats."
 				+ DatabaseContract.OpenChats.FIELD_JID);
-
 
 		// may be removed later on production build - left to make tests easier
 		qb.appendWhere("open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " IS NOT NULL");
