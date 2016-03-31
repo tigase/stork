@@ -81,10 +81,13 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols, null,
 				null, null);
 		try {
-			c.moveToNext();
-			String displayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
+			if (c.moveToNext()) {
+				String displayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
 
-			mContactName.setText(displayName);
+				mContactName.setText(displayName);
+			} else {
+				mContactName.setText(jid.getBareJid().toString());
+			}
 		} finally {
 			c.close();
 		}
@@ -131,7 +134,9 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 
 		this.contactUri = rosterId == null ? null : Uri.parse(RosterProvider.ROSTER_URI + "/" + rosterId);
 
-		getContentResolver().registerContentObserver(contactUri, true, contactPresenceChangeObserver);
+		if (contactUri != null) {
+			getContentResolver().registerContentObserver(contactUri, true, contactPresenceChangeObserver);
+		}
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
