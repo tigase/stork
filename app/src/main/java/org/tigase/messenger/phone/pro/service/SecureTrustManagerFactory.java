@@ -32,13 +32,15 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import org.tigase.messenger.phone.pro.R;
+
 import android.content.Context;
 import android.util.Log;
 
 public class SecureTrustManagerFactory {
 
 	private final static char[] DEFAULT_PASSWORD = "Tigase".toCharArray();
-	private final static String TAG = "SecureTrustManagerFactory";
+	private final static String TAG = "TrustManager";
 	private static SecureTrustManagerFactory instance;
 
 	static {
@@ -52,31 +54,23 @@ public class SecureTrustManagerFactory {
 	private SecureTrustManagerFactory() throws KeyStoreException, NoSuchAlgorithmException {
 		String ksType = KeyStore.getDefaultType();
 		String mfAlg = TrustManagerFactory.getDefaultAlgorithm();
-		// Log.d(TAG, "Creating Factory with KeyStore type " + ksType + " and
-		// TrustManagert algoritm " + mfAlg);
+		Log.d(TAG, "Creating Factory with KeyStore type " + ksType + " and TrustManagert algoritm  " + mfAlg);
 		keyStore = KeyStore.getInstance(ksType);
 		factory = TrustManagerFactory.getInstance(mfAlg);
 	}
 
 	public static TrustManager[] getTrustManagers(Context ctx) {
-		return new TrustManager[] { new X509TrustManager() {
-			@Override
-			public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+		initIfRequired(ctx);
+		return instance.getManagers(ctx);
+	}
 
-			}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
-			}
-
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return new X509Certificate[0];
-			}
-		} };
-		// initIfRequired(ctx);
-		// return instance.getManagers(ctx);
+	public static void addCertificate(Context ctx, X509Certificate crt) {
+		initIfRequired(ctx);
+		try {
+			instance.addTrustKey(new X509Certificate[] { crt });
+		} catch (KeyStoreException e) {
+			Log.e(TAG, "Can't add certificate to store", e);
+		}
 	}
 
 	private static void initIfRequired(Context ctx) {
@@ -93,9 +87,10 @@ public class SecureTrustManagerFactory {
 	}
 
 	private void addTrustKey(X509Certificate[] chain) throws KeyStoreException {
-
 		for (X509Certificate c : chain) {
-			keyStore.setCertificateEntry(c.getSubjectDN().toString(), c);
+			String alias = c.getSubjectDN().toString();
+			Log.d(TAG, "Adding certificate " + alias);
+			keyStore.setCertificateEntry(alias, c);
 		}
 
 		storeKeystore(keyStoreFile);
@@ -121,26 +116,22 @@ public class SecureTrustManagerFactory {
 	}
 
 	private void init(Context ctx) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-		// loadKeystore(ctx.getResources().openRawResource(R.raw.trust_store_bks),
-		// null);
-		// loadKeystore(System.getProperty("javax.net.ssl.trustStore"));
-		// // this.keyStoreFile = new
-		// // File(MessengerApplication.app.getDir("TrustStore",
-		// // Context.MODE_PRIVATE) + File.separator
-		// // + "TrustStore.bks");
-		// // loadKeystore(keyStoreFile, DEFAULT_PASSWORD);
-		//
-		// factory.init(keyStore);
-		//
-		// for (TrustManager tm : factory.getTrustManagers()) {
-		// if (tm instanceof X509TrustManager) {
-		// defaultTrustManager = (X509TrustManager) tm;
-		// break;
-		// }
-		// }
-		//
-		// Log.i(TAG, "Factory initialized! (known ca: " + keyStore.size() +
-		// ")");
+		loadKeystore(ctx.getResources().openRawResource(R.raw.trust_store_bks), null);
+		loadKeystore(System.getProperty("javax.net.ssl.trustStore"));
+		this.keyStoreFile = new File(
+				ctx.getApplicationContext().getDir("TrustStore", Context.MODE_PRIVATE) + File.separator + "TrustStore.bks");
+		loadKeystore(keyStoreFile, DEFAULT_PASSWORD);
+
+		factory.init(keyStore);
+
+		for (TrustManager tm : factory.getTrustManagers()) {
+			if (tm instanceof X509TrustManager) {
+				defaultTrustManager = (X509TrustManager) tm;
+				break;
+			}
+		}
+
+		Log.i(TAG, "Factory initialized! (known ca: " + keyStore.size() + ")");
 	}
 
 	private void loadKeystore(File file, char[] password) {
@@ -228,7 +219,7 @@ public class SecureTrustManagerFactory {
 				defaultTrustManager.checkServerTrusted(chain, authType);
 			} catch (CertificateException e) {
 				Log.e(TAG, "certificate validation failed = " + e.getMessage());
-				// throw new DataCertificateException(e, chain, authType);
+				throw new DataCertificateException(e, chain, authType);
 			}
 		}
 

@@ -19,7 +19,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Tigase Messenger</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
@@ -129,4 +129,23 @@
     <string name="pref_header_accounts">Accounts</string>
     <string name="account_active">Account active</string>
     <string name="action_update_account">Update</string>
+    <string name="notification_certificate_error_title">Certificate error for
+        <xliff:g id="account">%s</xliff:g>
+    </string>
+    <string name="notification_certificate_error_text">Check your server settings</string>
+    <string name="notification_credentials_error_title">Invalid password for
+        <xliff:g id="account">%s</xliff:g>
+    </string>
+    <string name="account_certificate_info_chain">\nCertificate chain[<xliff:g id="chain_position">%s</xliff:g>]:\n
+    </string>
+    <string name="account_certificate_info_subject">Subject: %s\n</string>
+    <string name="account_certificate_info_issuer">Issuer: %s\n</string>
+    <string name="account_certificate_info_fingerprint_sha">Fingerprint (SHA-1): %s\n</string>
+    <string name="account_certificate_info_fingerprint_md5">Fingerprint (MD5): %s\n</string>
+    <string name="account_certificate_info_title">Unknown certificate</string>
+    <string name="account_certificate_info_description">Server presented unknown certificates. If you are sure that
+        certificates are valid, press Accept.\n
+    </string>
+    <string name="account_certificate_info_button_accept">Accept</string>
+    <string name="account_certificate_info_button_reject">Reject</string>
 </resources>

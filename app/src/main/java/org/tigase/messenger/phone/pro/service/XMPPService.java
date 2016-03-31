@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
+import org.tigase.messenger.phone.pro.account.LoginActivity;
 import org.tigase.messenger.phone.pro.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -49,6 +50,8 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.EntityTimeModule;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
@@ -313,8 +316,12 @@ public class XMPPService extends Service {
 									jaxmpp.getSessionObject().setProperty("messenger#error", null);
 									jaxmpp.login();
 								} catch (Exception e) {
-									// incrementConnectionError(jaxmpp.getSessionObject().getUserBareJid());
-									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
+									if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+										processCertificateError(jaxmpp,
+												(SecureTrustManagerFactory.DataCertificateException) e.getCause());
+									} else
+										Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
+
 								}
 							}
 						}).start();
@@ -568,6 +575,18 @@ public class XMPPService extends Service {
 		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class, streamHandler);
 		multiJaxmpp.addHandler(JaxmppCore.ConnectedHandler.ConnectedEvent.class, jaxmppConnectedHandler);
 		multiJaxmpp.addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, jaxmppDisconnectedHandler);
+		// multiJaxmpp.addHandler(SocketConnector.ErrorHandler.ErrorEvent.class,
+		// );
+		//
+		// this.connectorListener = new Connector.ErrorHandler() {
+		//
+		// @Override
+		// public void onError(SessionObject sessionObject, StreamError
+		// condition, Throwable caught) throws JaxmppException {
+		// AbstractSocketXmppSessionLogic.this.processConnectorErrors(condition,
+		// caught);
+		// }
+		// };
 		multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
 		multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
 		multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
@@ -576,8 +595,15 @@ public class XMPPService extends Service {
 		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(ChatStateExtension.ChatStateChangedHandler.ChatStateChangedEvent.class, messageHandler);
+		multiJaxmpp.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
 
-		registerReceiver(accountModifyReceiver, new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION));
+			@Override
+			public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error) throws JaxmppException {
+				processAuthenticationError((Jaxmpp) multiJaxmpp.get(sessionObject));
+			}
+		});
+
+		registerReceiver(accountModifyReceiver, new IntentFilter(LoginActivity.ACCOUNT_MODIFIED_MSG));
 
 		startKeepAlive();
 
@@ -621,6 +647,72 @@ public class XMPPService extends Service {
 		}
 
 		return super.onStartCommand(intent, flags, startId);
+	}
+
+	private void processAuthenticationError(final Jaxmpp jaxmpp) {
+		Log.e(TAG, "Invalid credentials of account " + jaxmpp.getSessionObject().getUserBareJid());
+		jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", true);
+
+		String title = getString(R.string.notification_credentials_error_title,
+				jaxmpp.getSessionObject().getUserBareJid().toString());
+		String text = getString(R.string.notification_certificate_error_text);
+
+		Intent resultIntent = new Intent(this, LoginActivity.class);
+		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
+
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(ChatActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+		// .setSmallIcon(R.drawable.ic_messenger_icon)
+		.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+				title).setContentTitle(title).setContentText(text).setContentIntent(
+						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+		builder.setLights(0xffff0000, 100, 100);
+
+		// getNotificationManager().notify(notificationId, builder.build());
+
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(("error:" + jaxmpp.getSessionObject().getUserBareJid().toString()).hashCode(),
+				builder.build());
+	}
+
+	private void processCertificateError(final Jaxmpp jaxmpp, final SecureTrustManagerFactory.DataCertificateException cause) {
+		Log.e(TAG, "Invalid certificate of account " + jaxmpp.getSessionObject().getUserBareJid() + ": " + cause.getMessage());
+		jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", true);
+
+		String title = getString(R.string.notification_certificate_error_title,
+				jaxmpp.getSessionObject().getUserBareJid().toString());
+		String text = getString(R.string.notification_certificate_error_text);
+
+		Intent resultIntent = new Intent(this, LoginActivity.class);
+		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
+
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(ChatActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+		// .setSmallIcon(R.drawable.ic_messenger_icon)
+		.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+				title).setContentTitle(title).setContentText(text).setContentIntent(
+						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+		builder.setLights(0xffff0000, 100, 100);
+
+		// getNotificationManager().notify(notificationId, builder.build());
+
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(("error:" + jaxmpp.getSessionObject().getUserBareJid().toString()).hashCode(),
+				builder.build());
 	}
 
 	private void processPresenceUpdate() {
@@ -713,7 +805,7 @@ public class XMPPService extends Service {
 		String text = msg.getBody();
 
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this).setSmallIcon(
-				R.mipmap.ic_launcher).setContentTitle(title).setContentText(text);
+				R.drawable.ic_messenger_icon).setContentTitle(title).setContentText(text);
 
 		Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 

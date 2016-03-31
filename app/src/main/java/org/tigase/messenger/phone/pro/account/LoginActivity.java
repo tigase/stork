@@ -21,8 +21,14 @@
 
 package org.tigase.messenger.phone.pro.account;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
+
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
+import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -31,6 +37,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
@@ -40,6 +47,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -58,6 +66,8 @@ import butterknife.ButterKnife;
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+
+	public static final String ACCOUNT_MODIFIED_MSG = "org.tigase.messenger.phone.pro.ACCOUNT_MODIFIED_MSG";
 
 	/**
 	 * Id to identity READ_CONTACTS permission request.
@@ -81,6 +91,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	private View mProgressView;
 	private View mLoginFormView;
 	private AccountManager mAccountManager;
+	private boolean mUpdateAccountMode = false;
+
+	private static String bytesToHex(byte[] bytes) {
+		final char[] hexArray = "0123456789ABCDEF".toCharArray();
+		StringBuilder result = new StringBuilder();
+		for (int j = 0; j < bytes.length; j++) {
+			int v = bytes[j] & 0xFF;
+			result.append(hexArray[v >>> 4]);
+			result.append(hexArray[v & 0x0F]);
+			if (j < bytes.length)
+				result.append(":");
+		}
+		return result.toString();
+	}
+
+	private void acceptCertificate(X509Certificate x509Certificate) {
+		SecureTrustManagerFactory.addCertificate(LoginActivity.this, x509Certificate);
+	}
 
 	/**
 	 * Attempts to sign in or register the account specified by the login form.
@@ -138,21 +166,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 				skipLoginTest &= hostname.equals(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
 			}
 
-			// Show a progress spinner, and kick off a background task to
-			// perform the user login attempt.
-			if (skipLoginTest) {
-				mAccountManager.setUserData(account, AccountsConstants.FIELD_NICKNAME, nickname);
-				mAccountManager.setUserData(account, AccountsConstants.FIELD_HOSTNAME, hostname);
-				mAccountManager.setUserData(account, AccountsConstants.FIELD_RESOURCE, resource);
-				mAccountManager.setUserData(account, AccountsConstants.FIELD_ACTIVE, Boolean.toString(active));
-				mAccountManager.setPassword(account, password);
-				mAccountManager.setUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED, Boolean.toString(true));
+			skipLoginTest = false;
 
-				finish();
-			} else {
-				mAuthTask = new UserLoginTask(xmppID, password, hostname, resource, nickname, active);
-				mAuthTask.execute((Void) null);
-			}
+			mAuthTask = new UserLoginTask(skipLoginTest, xmppID, password, hostname, resource, nickname, active);
+			mAuthTask.execute((Void) null);
 		}
 	}
 
@@ -225,7 +242,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 			// edit existing account mode
 			Account account = getAccount(getIntent().getStringExtra("account_name"));
 			mXMPPIDView.setEnabled(false);
-
+			mUpdateAccountMode = true;
 			mXMPPIDView.setText(account.name);
 			String tmp = mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE);
 			Log.i("LoginActivity", AccountsConstants.FIELD_ACTIVE + " = " + tmp);
@@ -269,6 +286,62 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	 */
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+	}
+
+	private void showInvalidCertificateDialog(final X509Certificate[] chain) {
+		StringBuilder msg = new StringBuilder(100);
+
+		MessageDigest sha1 = null;
+		MessageDigest md5 = null;
+		try {
+			sha1 = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			Log.wtf(TAG, "SHA1 should be here!", e);
+		}
+		try {
+			md5 = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			Log.wtf(TAG, "MD5 should be here!", e);
+		}
+
+		for (int i = 0; i < chain.length; i++) {
+			msg.append(getString(R.string.account_certificate_info_chain, i));
+			msg.append(getString(R.string.account_certificate_info_subject, chain[i].getSubjectDN().toString()));
+			msg.append(getString(R.string.account_certificate_info_issuer, chain[i].getIssuerDN().toString()));
+			if (sha1 != null) {
+				sha1.reset();
+				try {
+					msg.append(getString(R.string.account_certificate_info_fingerprint_sha,
+							bytesToHex(sha1.digest(chain[i].getEncoded()))));
+
+				} catch (CertificateEncodingException e) {
+					Log.e(TAG, "Cannot add SHA1 to info", e);
+				}
+			}
+			if (md5 != null) {
+				md5.reset();
+				try {
+					msg.append(getString(R.string.account_certificate_info_fingerprint_md5,
+							bytesToHex(md5.digest(chain[i].getEncoded()))));
+
+				} catch (CertificateEncodingException e) {
+					Log.e(TAG, "Cannot add MD5 to info", e);
+				}
+			}
+		}
+
+		new AlertDialog.Builder(LoginActivity.this).setTitle(getString(R.string.account_certificate_info_title)).setMessage(
+				getString(R.string.account_certificate_info_description) + " " + msg.toString()).setCancelable(
+						true).setPositiveButton(getString(R.string.account_certificate_info_button_accept),
+								new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int which) {
+										acceptCertificate(chain[0]);
+									}
+								}).setNegativeButton(getString(R.string.account_certificate_info_button_reject),
+										new DialogInterface.OnClickListener() {
+											public void onClick(DialogInterface dialog, int which) {
+											}
+										}).show();
 	}
 
 	/**
@@ -325,29 +398,38 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		private final String mHostname;
 		private final String mResource;
 		private final boolean mActive;
+		private final ConnectionChecker checker;
+		private final boolean skipLoginTest;
 
-		UserLoginTask(String xmppId, String password, String hostname, String resource, String nickname, boolean active) {
+		UserLoginTask(boolean skipLoginTest, String xmppId, String password, String hostname, String resource, String nickname,
+				boolean active) {
+			this.skipLoginTest = skipLoginTest;
 			mXmppId = xmppId;
 			mPassword = password;
 			mNickname = nickname;
 			mHostname = hostname;
 			mResource = resource;
 			mActive = active;
+			this.checker = new ConnectionChecker(mXmppId, mPassword, mHostname);
+			Log.i(TAG, "Connection checker created");
+
 		}
 
 		@Override
 		protected Boolean doInBackground(Void... params) {
-			// TODO: attempt authentication against a network service.
+			if (skipLoginTest)
+				return Boolean.TRUE;
 
+			// TODO: attempt authentication against a network service.
 			try {
+				boolean result = checker.check(getApplicationContext());
 				// Simulate network access.
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
+				Log.i(TAG, "Connection checking result: " + result);
+				return result;
+			} catch (Exception e) {
+				Log.e(TAG, "What the hell?", e);
 				return false;
 			}
-
-			// TODO: register the new account here.
-			return true;
 		}
 
 		@Override
@@ -363,8 +445,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 			if (success) {
 				try {
-					final Account account = new Account(mXmppId, Authenticator.ACCOUNT_TYPE);
-					mAccountManager.addAccountExplicitly(account, mPassword, null);
+					Account account = getAccount(mXmppId);
+					if (account == null) {
+						account = new Account(mXmppId, Authenticator.ACCOUNT_TYPE);
+						Log.d(TAG, "Adding account " + mXmppId + ":" + mPassword);
+						mAccountManager.addAccountExplicitly(account, mPassword, null);
+					} else {
+						Log.d(TAG, "Updating account " + mXmppId + ":" + mPassword);
+						mAccountManager.setPassword(account, mPassword);
+					}
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_NICKNAME, mNickname);
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_HOSTNAME, mHostname);
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_RESOURCE, mResource);
@@ -378,18 +467,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 					// setAccountAuthenticatorResult(intent.getExtras());
 					setResult(RESULT_OK, intent);
 
-					// Intent i = new Intent();
-					// i.setAction(ACCOUNT_MODIFIED_MSG);
-					// i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
-					// sendBroadcast(i);
+					Intent i = new Intent();
+					i.setAction(ACCOUNT_MODIFIED_MSG);
+					i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
+					sendBroadcast(i);
 
 				} catch (Exception e) {
 					Log.e("LoginActivity", "Can't add account", e);
 				}
 				finish();
 			} else {
-				mPasswordView.setError(getString(R.string.error_incorrect_password));
-				mPasswordView.requestFocus();
+				Log.i(TAG, "Any problem?", checker.getException());
+				if (checker.getException() != null
+						&& checker.getException().getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+					X509Certificate[] chain = ((SecureTrustManagerFactory.DataCertificateException) checker.getException().getCause()).getChain();
+
+					showInvalidCertificateDialog(chain);
+				} else if (checker.isPasswordInvalid()) {
+					mPasswordView.setError(getString(R.string.error_incorrect_password));
+					mPasswordView.requestFocus();
+				} else {
+					AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+					builder.setMessage("Connection error.").setPositiveButton(android.R.string.ok, null).show();
+				}
 			}
 		}
 
