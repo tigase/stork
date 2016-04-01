@@ -1,0 +1,18 @@
+apply plugin: 'org.asciidoctor.gradle.asciidoctor'
+
+asciidoctorj {
+    version = '1.5.4'
+}
+
+asciidoctor {
+    outputDir = new File("$buildDir/docs")
+    options = [
+            doctype   : 'book',
+            attributes: [
+                    'source-highlighter': 'coderay',
+                    toc                 : '',
+                    idprefix            : '',
+                    idseparator         : '-'
+            ]
+    ]
+}
