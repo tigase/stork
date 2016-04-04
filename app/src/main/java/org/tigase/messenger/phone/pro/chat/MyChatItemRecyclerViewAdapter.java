@@ -22,7 +22,6 @@
 package org.tigase.messenger.phone.pro.chat;
 
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.chat.dummy.DummyContent.DummyItem;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
@@ -30,23 +29,19 @@ import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 import android.content.Context;
 import android.database.Cursor;
-import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
+import android.widget.PopupMenu;
 
-public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyChatItemRecyclerViewAdapter.ViewHolder> {
+public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
-	private final ChatItemFragment.OnListFragmentInteractionListener mListener;
+	private final ChatItemFragment.ChatItemIterationListener mListener;
 	private final Context context;
 
-	public MyChatItemRecyclerViewAdapter(Context context, Cursor cursor,
-			ChatItemFragment.OnListFragmentInteractionListener listener) {
+	public MyChatItemRecyclerViewAdapter(Context context, Cursor cursor, ChatItemFragment.ChatItemIterationListener listener) {
 		super(cursor);
 		mListener = listener;
 		this.context = context;
@@ -117,6 +112,16 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyC
 				}
 			}
 		});
+		holder.setContextMenu(R.menu.chatitem_context, new PopupMenu.OnMenuItemClickListener() {
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				if (item.getItemId() == R.id.menu_chat_copytext) {
+					mListener.onCopyChatMessage(id, jid, body);
+					return true;
+				} else
+					return false;
+			}
+		});
 	}
 
 	@Override
@@ -136,26 +141,4 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyC
 		return new ViewHolder(view);
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder {
-
-		public DummyItem mItem;
-		@Bind(R.id.content)
-		TextView mContentView;
-		@Bind(R.id.chat_timestamp)
-		TextView mTimestamp;
-		ImageView mDeliveryStatus;
-		ImageView mAvatar;
-
-		public ViewHolder(View itemView) {
-			super(itemView);
-			ButterKnife.bind(this, itemView);
-			mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
-			mAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
-		}
-
-		@Override
-		public String toString() {
-			return super.toString() + " '" + mContentView.getText() + "'";
-		}
-	}
 }

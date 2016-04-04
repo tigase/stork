@@ -49,7 +49,7 @@ import android.widget.Toast;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class ChatActivity extends AppCompatActivity implements ChatItemFragment.OnListFragmentInteractionListener {
+public class ChatActivity extends AppCompatActivity {
 
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	@Bind(R.id.contact_display_name)
@@ -181,11 +181,6 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 	protected void onDestroy() {
 		getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
 		super.onDestroy();
-	}
-
-	@Override
-	public void onListFragmentInteraction() {
-
 	}
 
 	@Override

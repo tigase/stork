@@ -1,5 +1,17 @@
 package org.tigase.messenger.phone.pro.roster.contact;
 
+import java.util.ArrayList;
+
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -10,32 +22,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.Spinner;
-import android.widget.Toast;
-
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
-import java.util.ArrayList;
-
+import android.widget.*;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class EditContactActivity extends AppCompatActivity {
 
@@ -161,6 +152,7 @@ public class EditContactActivity extends AppCompatActivity {
                     }
                 });
 
+				jaxmpp.getModule(PresenceModule.class).subscribed(JID.jidInstance(jid));
                 jaxmpp.getModule(PresenceModule.class).subscribe(JID.jidInstance(jid));
 
                 synchronized (AddContactTask.this) {

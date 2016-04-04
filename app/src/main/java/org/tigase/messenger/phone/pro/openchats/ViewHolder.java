@@ -26,6 +26,7 @@ import org.tigase.messenger.phone.pro.R;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -47,6 +48,20 @@ public class ViewHolder extends RecyclerView.ViewHolder {
 	public ViewHolder(View itemView) {
 		super(itemView);
 		ButterKnife.bind(this, itemView);
+	}
+
+	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {
+		itemView.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				PopupMenu popup = new PopupMenu(itemView.getContext(), itemView);
+				popup.inflate(menuId);
+				popup.setOnMenuItemClickListener(menuClick);
+				popup.show();
+				return true;
+			}
+		});
+
 	}
 
 }

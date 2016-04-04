@@ -35,10 +35,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
-import android.content.ComponentName;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -56,12 +53,6 @@ import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-/**
- * A fragment representing a list of Items.
- * <p/>
- * Activities containing this fragment MUST implement the
- * {@link OnListFragmentInteractionListener} interface.
- */
 public class ChatItemFragment extends Fragment {
 
 	@Bind(R.id.chat_list)
@@ -96,7 +87,17 @@ public class ChatItemFragment extends Fragment {
 			super.onServiceDisconnected(name);
 		}
 	};
-	private OnListFragmentInteractionListener mListener;
+	private ChatItemIterationListener mListener = new ChatItemIterationListener() {
+
+		@Override
+		public void onCopyChatMessage(int id, String jid, String body) {
+			ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext().getSystemService(
+					Context.CLIPBOARD_SERVICE);
+			ClipData clip = ClipData.newPlainText("Message from " + jid, body);
+
+			clipboard.setPrimaryClip(clip);
+		}
+	};
 	private MyChatItemRecyclerViewAdapter adapter;
 	private Uri uri;
 
@@ -122,12 +123,6 @@ public class ChatItemFragment extends Fragment {
 
 		this.uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + ((ChatActivity) getContext()).getAccount() + "/"
 				+ ((ChatActivity) getContext()).getJid());
-
-		if (context instanceof OnListFragmentInteractionListener) {
-			mListener = (OnListFragmentInteractionListener) context;
-		} else {
-			throw new RuntimeException(context.toString() + " must implement OnListFragmentInteractionListener");
-		}
 
 		Intent intent = new Intent(context, XMPPService.class);
 		getActivity().bindService(intent, mConnection, 0);
@@ -218,9 +213,8 @@ public class ChatItemFragment extends Fragment {
 		this.chat = chat;
 	}
 
-	public interface OnListFragmentInteractionListener {
-		// TODO: Update argument type and name
-		void onListFragmentInteraction();
+	public interface ChatItemIterationListener {
+		void onCopyChatMessage(int id, String jid, String body);
 	}
 
 	private class SendMessageTask extends AsyncTask<String, Void, Void> {

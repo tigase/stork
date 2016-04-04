@@ -24,11 +24,18 @@ package org.tigase.messenger.phone.pro.openchats;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.service.XMPPService;
 
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.Context;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -37,6 +44,7 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.*;
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -64,9 +72,24 @@ public class OpenChatItemFragment extends Fragment {
 	};
 	@Bind(R.id.openchats_list)
 	RecyclerView recyclerView;
-	private OnListFragmentInteractionListener mListener;
 	private OnAddChatListener mAddChatListener;
 	private MyOpenChatItemRecyclerViewAdapter adapter;
+	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
+	private OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
+		@Override
+		public void onArchiveChat(int chatId, String jid, String account) {
+			OpenChatItemFragment.this.onArchiveChat(chatId, jid, account);
+		}
+
+		@Override
+		public void onEnterToChat(final int openChatId, final String jid, final String account) {
+			Intent intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
+			intent.putExtra("openChatId", openChatId);
+			intent.putExtra("jid", jid);
+			intent.putExtra("account", account);
+			startActivity(intent);
+		}
+	};
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -86,19 +109,46 @@ public class OpenChatItemFragment extends Fragment {
 
 	@OnClick(R.id.roster_add_chat)
 	void onAddContactClick() {
+
 		mAddChatListener.onAddChatClick();
+	}
+
+	private void onArchiveChat(final int chatId, String jid, final String account) {
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
+				Chat chat = null;
+				for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+					if (c.getId() == chatId) {
+						chat = c;
+						break;
+					}
+				}
+				if (chat != null) {
+					try {
+						jaxmpp.getModule(MessageModule.class).close(chat);
+					} catch (JaxmppException e) {
+						Log.e("OpenChat", "Cannot close chat", e);
+					}
+				}
+				return null;
+			}
+		}.execute();
+
 	}
 
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
+		if (context instanceof MainActivity) {
+
+		}
 		if (context instanceof OnAddChatListener)
 			mAddChatListener = (OnAddChatListener) context;
-		if (context instanceof OnListFragmentInteractionListener) {
-			mListener = (OnListFragmentInteractionListener) context;
-		} else {
-			throw new RuntimeException(context.toString() + " must implement OnRosterItemIteractionListener");
-		}
+
+		Intent intent = new Intent(context, XMPPService.class);
+		getActivity().bindService(intent, mConnection, 0);
 
 		getContext().getContentResolver().registerContentObserver(RosterProvider.ROSTER_URI, true,
 				contactPresenceChangeObserver);
@@ -108,6 +158,7 @@ public class OpenChatItemFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(false);
+
 	}
 
 	@Override
@@ -140,7 +191,7 @@ public class OpenChatItemFragment extends Fragment {
 		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
-		// getActivity().unbindService(mConnection);
+		getActivity().unbindService(mConnection);
 		mListener = null;
 		mAddChatListener = null;
 		super.onDetach();
@@ -160,8 +211,9 @@ public class OpenChatItemFragment extends Fragment {
 	 * >Communicating with Other Fragments</a> for more information.
 	 */
 	public interface OnListFragmentInteractionListener {
-		// TODO: Update argument type and name
-		void onOpenChatItemInteraction(int oenChatId, String jid, String account);
+		void onArchiveChat(int chatId, String jid, String account);
+
+		void onEnterToChat(int oenChatId, String jid, String account);
 	}
 
 	public interface OnAddChatListener {

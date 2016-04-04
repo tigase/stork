@@ -52,9 +52,8 @@ import android.widget.AdapterView;
 import android.widget.Spinner;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener, RosterItemFragment.OnRosterItemIteractionListener,
-		OpenChatItemFragment.OnListFragmentInteractionListener, OpenChatItemFragment.OnAddChatListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+		RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnAddChatListener {
 
 	Spinner statusSelector;
 	private Menu navigationMenu;
@@ -167,7 +166,13 @@ public class MainActivity extends AppCompatActivity
 			if (chat == null) {
 				chat = jaxmpp.getModule(MessageModule.class).createChat(JID.jidInstance(jid));
 			}
-			onOpenChatItemInteraction((int) chat.getId(), jid, account);
+
+			Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+			intent.putExtra("openChatId", (int) chat.getId());
+			intent.putExtra("jid", jid);
+			intent.putExtra("account", account);
+			startActivity(intent);
+
 		} catch (JaxmppException e) {
 			e.printStackTrace();
 		}
@@ -184,15 +189,6 @@ public class MainActivity extends AppCompatActivity
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
 		return true;
-	}
-
-	@Override
-	public void onOpenChatItemInteraction(final int openChatId, final String jid, final String account) {
-		Intent intent = new Intent(this, ChatActivity.class);
-		intent.putExtra("openChatId", openChatId);
-		intent.putExtra("jid", jid);
-		intent.putExtra("account", account);
-		startActivity(intent);
 	}
 
 	// @Override

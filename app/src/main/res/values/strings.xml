@@ -148,4 +148,6 @@
     </string>
     <string name="account_certificate_info_button_accept">Accept</string>
     <string name="account_certificate_info_button_reject">Reject</string>
+    <string name="menu_chat_archive">Archive chat</string>
+    <string name="menu_chat_copytext">Copy text</string>
 </resources>
