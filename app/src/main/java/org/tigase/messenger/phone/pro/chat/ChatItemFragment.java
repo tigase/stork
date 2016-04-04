@@ -25,7 +25,6 @@ import java.util.Date;
 
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.chat.dummy.DummyContent.DummyItem;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -178,7 +177,7 @@ public class ChatItemFragment extends Fragment {
 		// DividerItemDecoration.VERTICAL_LIST));
 
 		LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-		// linearLayoutManager.setReverseLayout(true);
+		linearLayoutManager.setReverseLayout(true);
 
 		recyclerView.setLayoutManager(linearLayoutManager);
 		this.adapter = new MyChatItemRecyclerViewAdapter(getContext(), null, mListener) {
@@ -219,18 +218,9 @@ public class ChatItemFragment extends Fragment {
 		this.chat = chat;
 	}
 
-	/**
-	 * This interface must be implemented by activities that contain this
-	 * fragment to allow an interaction in this fragment to be communicated to
-	 * the activity and potentially other fragments contained in that activity.
-	 * <p/>
-	 * See the Android Training lesson <a href=
-	 * "http://developer.android.com/training/basics/fragments/communicating.html"
-	 * >Communicating with Other Fragments</a> for more information.
-	 */
 	public interface OnListFragmentInteractionListener {
 		// TODO: Update argument type and name
-		void onListFragmentInteraction(DummyItem item);
+		void onListFragmentInteraction();
 	}
 
 	private class SendMessageTask extends AsyncTask<String, Void, Void> {
@@ -288,7 +278,7 @@ public class ChatItemFragment extends Fragment {
 			if (getContext() == null)
 				return null;
 			Cursor cursor = getContext().getContentResolver().query(uri, cols, null, null,
-					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+					DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
 
 			return cursor;
 		}
@@ -296,9 +286,7 @@ public class ChatItemFragment extends Fragment {
 		@Override
 		protected void onPostExecute(Cursor cursor) {
 			adapter.changeCursor(cursor);
-			int size = cursor.getCount();
-			/// recyclerView.smoothScrollToPosition(size-1);
-			recyclerView.scrollToPosition(size - 1);
+			recyclerView.smoothScrollToPosition(0);
 		}
 	}
 }

@@ -29,14 +29,14 @@
         <EditText android:id="@+id/messageText"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:inputType="textShortMessage|textCapSentences"
+                  android:inputType="textCapSentences|textShortMessage|textMultiLine"
                   android:ems="10"
                   android:minLines="1"
                   android:imeActionId="@+id/send"
                   android:imeActionLabel="Send"
                   android:layout_toLeftOf="@+id/send_button"
                   android:imeOptions="actionSend|flagNoExtractUi"
-        />
+                  android:autoLink="all"/>
         <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

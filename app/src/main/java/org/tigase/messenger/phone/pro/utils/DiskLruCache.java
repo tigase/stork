@@ -22,6 +22,8 @@
 package org.tigase.messenger.phone.pro.utils;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -107,18 +109,17 @@ public abstract class DiskLruCache<T> {
 							Log.w("DiskLruCache", "File list is null! Why???");
 							return;
 						}
-						//
-						// Arrays.sort(files, new Comparator<File>() {
-						// public int compare(File f1, File f2) {
-						// return
-						// Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
-						// }
-						// });
-						// for (File f : files) {
-						// Entry e = new Entry(f.getName());
-						// e.file = f;
-						// entries.put(f.getName(), e);
-						// }
+
+						Arrays.sort(files, new Comparator<File>() {
+							public int compare(File f1, File f2) {
+								return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+							}
+						});
+						for (File f : files) {
+							Entry e = new Entry(f.getName());
+							e.file = f;
+							entries.put(f.getName(), e);
+						}
 					}
 				}
 			}.start();

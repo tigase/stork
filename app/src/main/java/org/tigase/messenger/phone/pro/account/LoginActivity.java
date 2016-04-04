@@ -336,6 +336,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 								new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) {
 										acceptCertificate(chain[0]);
+										attemptLogin();
 									}
 								}).setNegativeButton(getString(R.string.account_certificate_info_button_reject),
 										new DialogInterface.OnClickListener() {

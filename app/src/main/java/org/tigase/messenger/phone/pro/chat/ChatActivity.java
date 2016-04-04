@@ -22,7 +22,6 @@
 package org.tigase.messenger.phone.pro.chat;
 
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.chat.dummy.DummyContent;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
@@ -36,6 +35,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -125,6 +125,25 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 		}
 	}
 
+	private void makeMessagesRead() {
+		(new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				// Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" +
+				// getAccount() + "/"
+				// + getJid());
+				//
+				// ContentValues values = new ContentValues();
+				// values.put(DatabaseContract.ChatHistory.FIELD_STATE,
+				// DatabaseContract.ChatHistory.ST);
+				// getContentResolver().update(uri, values, null,
+				// null);
+
+				return null;
+			}
+		}).execute();
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		this.openChatId = getIntent().getIntExtra("openChatId", Integer.MIN_VALUE);
@@ -165,7 +184,7 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 	}
 
 	@Override
-	public void onListFragmentInteraction(DummyContent.DummyItem item) {
+	public void onListFragmentInteraction() {
 
 	}
 
@@ -177,6 +196,8 @@ public class ChatActivity extends AppCompatActivity implements ChatItemFragment.
 
 		loadContact();
 		loadUserPresence();
+
+		makeMessagesRead();
 	}
 
 	private class ContactPresenceChangeObserver extends ContentObserver {

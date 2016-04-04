@@ -87,6 +87,11 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<MyC
 		holder.mContentView.setText(body);
 		holder.mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
 				DateUtils.WEEK_IN_MILLIS, 0));
+
+		if (state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
+			// holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
+		}
+
 		if (holder.mDeliveryStatus != null) {
 			switch (state) {
 			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
