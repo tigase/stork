@@ -151,7 +151,7 @@ public class ChatActivity extends AppCompatActivity {
 		this.account = BareJID.bareJIDInstance(getIntent().getStringExtra("account"));
 		this.rosterId = loadRosterID(account, jid.getBareJid());
 
-		this.contactUri = rosterId == null ? null : Uri.parse(RosterProvider.ROSTER_URI + "/" + rosterId);
+		this.contactUri = rosterId == null ? null : ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterId);
 
 		if (contactUri != null) {
 			getContentResolver().registerContentObserver(contactUri, true, contactPresenceChangeObserver);

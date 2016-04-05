@@ -21,16 +21,10 @@
 
 package org.tigase.messenger.phone.pro.db;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
 import java.security.MessageDigest;
 import java.util.Date;
+
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
 import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 import tigase.jaxmpp.core.client.BareJID;
@@ -38,11 +32,17 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 public class RosterProviderExt extends tigase.jaxmpp.android.roster.RosterProvider {
 
-	private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+	private static final char[] DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 	public RosterProviderExt(Context context, SQLiteOpenHelper dbHelper, Listener listener, String versionKeyPrefix) {
 		super(context, dbHelper, listener, versionKeyPrefix);
@@ -62,21 +62,13 @@ public class RosterProviderExt extends tigase.jaxmpp.android.roster.RosterProvid
 		return new String(out);
 	}
 
-	public static long createId(SessionObject sessionObject, BareJID jid) {
-		return (sessionObject.getUserBareJid() + "::" + jid).hashCode();
-	}
-
-	public static long createId(BareJID account, BareJID jid) {
-		return (account + "::" + jid).hashCode();
-	}
-
 	public boolean checkVCardHash(SessionObject sessionObject, BareJID jid, String hash) {
 		boolean ok = false;
 		Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.VCardsCache.TABLE_NAME,
-				new String[]{DatabaseContract.VCardsCache.FIELD_JID, DatabaseContract.VCardsCache.FIELD_DATA,
-						DatabaseContract.VCardsCache.FIELD_HASH},
+				new String[] { DatabaseContract.VCardsCache.FIELD_JID, DatabaseContract.VCardsCache.FIELD_DATA,
+						DatabaseContract.VCardsCache.FIELD_HASH },
 				DatabaseContract.VCardsCache.FIELD_JID + "=? AND " + DatabaseContract.VCardsCache.FIELD_HASH + "=?",
-				new String[]{jid.toString(), hash}, null, null, null);
+				new String[] { jid.toString(), hash }, null, null, null);
 		ok = c.moveToNext();
 		c.close();
 		return ok;
@@ -87,7 +79,7 @@ public class RosterProviderExt extends tigase.jaxmpp.android.roster.RosterProvid
 		ContentValues values = new ContentValues();
 		values.put(DatabaseContract.RosterItemsCache.FIELD_STATUS, CPresence.OFFLINE);
 		db.update(RosterItemsCacheTableMetaData.TABLE_NAME, values, RosterItemsCacheTableMetaData.FIELD_ACCOUNT + " = ?",
-				new String[]{sessionObject.getUserBareJid().toString()});
+				new String[] { sessionObject.getUserBareJid().toString() });
 		if (listener != null) {
 			listener.onChange(null);
 		}
@@ -104,7 +96,6 @@ public class RosterProviderExt extends tigase.jaxmpp.android.roster.RosterProvid
 	}
 
 	public void updateStatus(SessionObject sessionObject, JID jid) {
-		long id = createId(sessionObject, jid.getBareJid());
 		int status = 0;
 		try {
 			Presence p = PresenceModule.getPresenceStore(sessionObject).getBestPresence(jid.getBareJid());
@@ -114,13 +105,19 @@ public class RosterProviderExt extends tigase.jaxmpp.android.roster.RosterProvid
 		} catch (XMLException ex) {
 		}
 
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		ContentValues values = new ContentValues();
-		values.put(DatabaseContract.RosterItemsCache.FIELD_STATUS, status);
-		db.update(RosterItemsCacheTableMetaData.TABLE_NAME, values, RosterItemsCacheTableMetaData.FIELD_ID + " = ?",
-				new String[]{String.valueOf(id)});
-		if (listener != null) {
-			listener.onChange(id);
+		RosterItem item = getItem(sessionObject, jid.getBareJid());
+		if (item != null) {
+			long id = item.getId();
+
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			ContentValues values = new ContentValues();
+			values.put(DatabaseContract.RosterItemsCache.FIELD_STATUS, status);
+
+			db.update(RosterItemsCacheTableMetaData.TABLE_NAME, values, RosterItemsCacheTableMetaData.FIELD_ID + " = ?",
+					new String[] { String.valueOf(id) });
+			if (listener != null) {
+				listener.onChange(id);
+			}
 		}
 	}
 
