@@ -19,7 +19,7 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
-package org.tigase.messenger.phone.pro.chat;
+package org.tigase.messenger.phone.pro.conversations.chat;
 
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -45,7 +45,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -209,7 +208,6 @@ public class ChatActivity extends AppCompatActivity {
 		@Override
 		public void onChange(boolean selfChange) {
 			Log.i("ChatActivity", "onChange " + selfChange);
-			Toast.makeText(getApplicationContext(), "GOT IT!", Toast.LENGTH_LONG);
 			loadUserPresence();
 		}
 	}

@@ -1,4 +1,4 @@
-package org.tigase.messenger.phone.pro.chat;
+package org.tigase.messenger.phone.pro.conversations.chat;
 
 import org.tigase.messenger.phone.pro.R;
 

@@ -24,7 +24,7 @@ package org.tigase.messenger.phone.pro.openchats;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;

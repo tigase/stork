@@ -30,7 +30,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
-import org.tigase.messenger.phone.pro.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;

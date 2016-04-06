@@ -19,7 +19,7 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
-package org.tigase.messenger.phone.pro.chat;
+package org.tigase.messenger.phone.pro.conversations.chat;
 
 import java.util.Date;
 

@@ -119,7 +119,7 @@
         </provider>
 
         <activity
-                android:name=".chat.ChatActivity"
+                android:name=".conversations.chat.ChatActivity"
                 android:label="@string/title_activity_chat"
                 android:parentActivityName=".MainActivity"
                 android:theme="@style/AppTheme.NoActionBar">

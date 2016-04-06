@@ -21,7 +21,7 @@
 
 package org.tigase.messenger.phone.pro;
 
-import org.tigase.messenger.phone.pro.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
