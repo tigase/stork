@@ -103,31 +103,46 @@
                         android:layout_height="wrap_content">
                     <EditText
                             android:id="@+id/contact_vcard_name"
+                            android:hint="@string/contact_vcard_fullname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="@string/contact_name"
-                            android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:singleLine="true"
-                            android:imeActionId="@+id/add_contact"
-                            android:imeActionLabel="@string/contact_vcard_fullname"
-                            android:imeOptions="actionDone"/>
+                            android:singleLine="true"/>
                 </android.support.design.widget.TextInputLayout>
                 <android.support.design.widget.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                     <EditText
                             android:id="@+id/contact_vcard_nickname"
+                            android:hint="@string/contact_vcard_nickname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="@string/contact_name"
-                            android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:singleLine="true"
-                            android:imeActionId="@+id/add_contact"
-                            android:imeActionLabel="@string/contact_vcard_fullname"
-                            android:imeOptions="actionDone"/>
+                            android:singleLine="true"/>
                 </android.support.design.widget.TextInputLayout>
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                    <EditText
+                            android:id="@+id/contact_vcard_phone"
+                            android:hint="@string/contact_vcard_phone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxLines="1"
+                            android:singleLine="true"/>
+                </android.support.design.widget.TextInputLayout>
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                    <EditText
+                            android:id="@+id/contact_vcard_work"
+                            android:hint="@string/contact_vcard_work"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxLines="1"
+                            android:singleLine="true"/>
+                </android.support.design.widget.TextInputLayout>
+
             </LinearLayout>
 
             <LinearLayout android:layout_below="@+id/user_details_form"

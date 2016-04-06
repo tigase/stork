@@ -41,10 +41,6 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 	ImageView avatar;
 	@Bind(R.id.user_details_form)
 	LinearLayout mDetailsForm;
-	@Bind(R.id.contact_vcard_name)
-	EditText mVCardName;
-	@Bind(R.id.contact_vcard_nickname)
-	EditText mVCardNickname;
 	private BareJID jid;
 	private String account;
 	private BroadcastReceiver avatarUpdatedListener = new BroadcastReceiver() {
@@ -88,11 +84,13 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 
 	private void fillVCard(VCard vcard) {
 		String fn = vcard.getFullName();
-		set(mVCardName, fn);
+		set(R.id.contact_vcard_name, fn);
 		if (fn != null && !fn.toString().isEmpty() && mName.getText().toString().equals(jid.getLocalpart())) {
 			mName.setText(fn);
 		}
-		set(mVCardNickname, vcard.getNickName());
+		set(R.id.contact_vcard_nickname, vcard.getNickName());
+		set(R.id.contact_vcard_phone, vcard.getHomeTelVoice());
+		set(R.id.contact_vcard_work, vcard.getOrgName());
 	}
 
 	@OnClick(R.id.contact_add_button)
@@ -248,6 +246,11 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 			}
 		}).execute();
 
+	}
+
+	private void set(int id, String value) {
+		EditText f = (EditText) findViewById(id);
+		set(f, value);
 	}
 
 }

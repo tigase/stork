@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
 
 		final SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-		switch (sharedPref.getString("menu", "chats")) {
+		switch (sharedPref.getString("menu", "roster")) {
 		case "roster":
 			switchMainFragment(R.id.nav_roster);
 			break;
