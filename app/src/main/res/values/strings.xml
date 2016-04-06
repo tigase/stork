@@ -150,4 +150,11 @@
     <string name="account_certificate_info_button_reject">Reject</string>
     <string name="menu_chat_archive">Archive chat</string>
     <string name="menu_chat_copytext">Copy text</string>
+    <string name="notification_subscription_request_title">Subscription request from %s</string>
+    <string name="notification_subscription_request_text">Someone added you to roster.</string>
+    <string name="contact_allow_button">Allow</string>
+    <string name="contact_reject_button">Reject</string>
+    <string name="contact_subscription_info">Someone adds you to his roster and want to see your presence status.
+    </string>
+    <string name="contact_vcard_fullname">Full name</string>
 </resources>

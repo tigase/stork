@@ -127,6 +127,8 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
+        <activity android:name=".roster.request.SubscriptionRequestActivity">
+        </activity>
     </application>
 
 </manifest>

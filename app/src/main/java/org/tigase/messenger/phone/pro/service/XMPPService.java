@@ -37,6 +37,7 @@ import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.db.RosterProviderExt;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
 
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.android.caps.CapabilitiesDBCache;
@@ -102,7 +103,7 @@ public class XMPPService extends Service {
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
 	private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
 	private final IBinder mBinder = new LocalBinder();
-	DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
+	private final DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
 
 		@Override
 		public void onServerFeaturesReceived(final SessionObject sessionObject, IQ stanza, String[] featuresArr) {
@@ -199,6 +200,13 @@ public class XMPPService extends Service {
 	private ConnectivityManager connManager;
 	private int usedNetworkType;
 	private RosterProviderExt rosterProvider;
+	private final PresenceModule.SubscribeRequestHandler subscribeHandler = new PresenceModule.SubscribeRequestHandler() {
+		@Override
+		public void onSubscribeRequest(SessionObject sessionObject, Presence stanza, BareJID jid) {
+			XMPPService.this.processSubscriptionRequest(sessionObject, stanza, jid);
+		}
+
+	};
 	final BroadcastReceiver presenceChangedReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -591,6 +599,7 @@ public class XMPPService extends Service {
 		multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
 		multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class, presenceHandler);
 		multiJaxmpp.addHandler(PresenceModule.BeforePresenceSendHandler.BeforePresenceSendEvent.class, presenceHandler);
+		multiJaxmpp.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscribeHandler);
 
 		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
@@ -734,6 +743,40 @@ public class XMPPService extends Service {
 				return null;
 			}
 		}).execute();
+	}
+
+	private void processSubscriptionRequest(final SessionObject sessionObject, final Presence stanza, final BareJID jid) {
+		Log.e(TAG, "Subscription request from  " + jid);
+
+		retrieveVCard(sessionObject, jid);
+
+		String title = getString(R.string.notification_subscription_request_title, jid.toString());
+		String text = getString(R.string.notification_subscription_request_text);
+
+		Intent resultIntent = new Intent(this, SubscriptionRequestActivity.class);
+		resultIntent.putExtra("account_name", sessionObject.getUserBareJid().toString());
+		resultIntent.putExtra("jid", jid.toString());
+
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(ChatActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+		// .setSmallIcon(R.drawable.ic_messenger_icon)
+		.setSmallIcon(R.drawable.ic_messenger_icon).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+				title).setContentTitle(title).setContentText(text).setContentIntent(
+						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+		builder.setLights(0xff0000ff, 100, 100);
+
+		// getNotificationManager().notify(notificationId, builder.build());
+
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(("request:" + sessionObject.getUserBareJid().toString() + ":" + jid).hashCode(),
+				builder.build());
 	}
 
 	private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
@@ -1278,7 +1321,8 @@ public class XMPPService extends Service {
 	}
 
 	private class PresenceHandler implements PresenceModule.ContactAvailableHandler, PresenceModule.ContactUnavailableHandler,
-			PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler {
+			PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler,
+			PresenceModule.ContactUnsubscribedHandler {
 
 		private final XMPPService jaxmppService;
 
@@ -1338,5 +1382,14 @@ public class XMPPService extends Service {
 			rosterProvider.updateStatus(sessionObject, jid);
 		}
 
+		@Override
+		public void onContactUnsubscribed(SessionObject sessionObject, Presence stanza, BareJID jid) {
+			try {
+				updateRosterItem(sessionObject, stanza);
+			} catch (JaxmppException ex) {
+				Log.v(TAG, "Exception updating roster item presence", ex);
+			}
+			rosterProvider.updateStatus(sessionObject, JID.jidInstance(jid));
+		}
 	}
 }
