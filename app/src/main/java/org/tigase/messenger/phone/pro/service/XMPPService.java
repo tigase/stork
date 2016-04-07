@@ -443,7 +443,8 @@ public class XMPPService extends Service {
 					if (jaxmpp.isConnected())
 						jaxmpp.disconnect(false);
 					// is this needed any more??
-					XMPPService.this.rosterProvider.resetStatus(jaxmpp.getSessionObject());
+					if (cleaning || !StreamManagementModule.isResumptionEnabled(jaxmpp.getSessionObject()))
+						XMPPService.this.rosterProvider.resetStatus(jaxmpp.getSessionObject());
 				} catch (Exception e) {
 					Log.e(TAG, "cant; disconnect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
 				}
@@ -580,6 +581,16 @@ public class XMPPService extends Service {
 		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
 		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 
+		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
+				new StreamManagementModule.StreamManagementFailedHandler() {
+					@Override
+					public void onStreamManagementFailed(final SessionObject sessionObject,
+							XMPPException.ErrorCondition condition) {
+						if (condition != null && condition.getElementName().equals("item-not-found")) {
+							XMPPService.this.rosterProvider.resetStatus(sessionObject);
+						}
+					}
+				});
 		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class, streamHandler);
 		multiJaxmpp.addHandler(JaxmppCore.ConnectedHandler.ConnectedEvent.class, jaxmppConnectedHandler);
 		multiJaxmpp.addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, jaxmppDisconnectedHandler);
