@@ -20,12 +20,11 @@
  */
 package org.tigase.messenger.phone.pro.db;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Client side presence

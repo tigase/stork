@@ -33,6 +33,7 @@ import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
@@ -88,6 +89,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -144,7 +146,9 @@ public class XMPPService extends Service {
 		}
 
 	};
+	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
 	private Integer focusedOnChatId = null;
+	private Integer focusedOnRoomId = null;
 	private final Application.ActivityLifecycleCallbacks mActivityCallbacks = new Application.ActivityLifecycleCallbacks() {
 		@Override
 		public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
@@ -163,6 +167,10 @@ public class XMPPService extends Service {
 			if (activity instanceof ChatActivity) {
 				XMPPService.this.focusedOnChatId = null;
 			}
+			if (activity instanceof MucActivity) {
+				XMPPService.this.focusedOnRoomId = null;
+			}
+			autopresenceManager.start();
 		}
 
 		@Override
@@ -173,7 +181,12 @@ public class XMPPService extends Service {
 				XMPPService.this.focusedOnChatId = v;
 				Log.i("ActivityLifecycle", "focusedOnChatId = " + v + "; " + ((ChatActivity) activity).getAccount());
 			}
-
+			if (activity instanceof MucActivity) {
+				int v = ((MucActivity) activity).getOpenChatId();
+				XMPPService.this.focusedOnRoomId = v;
+				Log.i("ActivityLifecycle", "focusedOnRoomId = " + v + "; " + ((MucActivity) activity).getAccount());
+			}
+			autopresenceManager.stop();
 		}
 
 		@Override
@@ -292,7 +305,7 @@ public class XMPPService extends Service {
 	}
 
 	private void connectJaxmpp(final Jaxmpp jaxmpp, final Date date) {
-		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
 		if (presenceId == CPresence.OFFLINE)
 			return;
@@ -354,7 +367,6 @@ public class XMPPService extends Service {
 			}
 		};
 		lock(jaxmpp.getSessionObject(), true);
-
 
 		if (date == null) {
 			Log.d(TAG, "Starting connection NOW");
@@ -603,6 +615,7 @@ public class XMPPService extends Service {
 		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
 
 		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
+
 		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 
 		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
@@ -765,8 +778,7 @@ public class XMPPService extends Service {
 				builder.build());
 	}
 
-	private void processPresenceUpdate() {
-
+	void processPresenceUpdate() {
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
@@ -885,18 +897,29 @@ public class XMPPService extends Service {
 		if (this.focusedOnChatId != null && chat.getId() == this.focusedOnChatId)
 			return;
 
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+		if (!sharedPref.getBoolean("notifications_new_message", true))
+			return;
+
+		String sound = sharedPref.getString("notifications_new_message_ringtone", null);
+		boolean vibrate = sharedPref.getBoolean("notifications_new_message_vibrate", true);
+
 		String title = chat.getJid().getBareJid().toString();
 		String text = msg.getBody();
 
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this).setSmallIcon(
 				R.drawable.ic_messenger_icon).setContentTitle(title).setContentText(text);
 
-		Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		Uri soundUri = sound == null ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(sound);
 
 		mBuilder.setAutoCancel(true);
 		mBuilder.setSound(soundUri);
 		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
-
+		if (vibrate) {
+			final long[] pattern = { 0, 400, 200, 100, 200, 100 };
+			mBuilder.setVibrate(pattern);
+		}
 		Intent resultIntent = new Intent(this, ChatActivity.class);
 		resultIntent.putExtra("openChatId", (int) chat.getId());
 		resultIntent.putExtra("jid", chat.getJid().getBareJid().toString());
@@ -917,6 +940,58 @@ public class XMPPService extends Service {
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		// mId allows you to update the notification later on.
 		mNotificationManager.notify(("chat:" + chat.getId()).hashCode(), mBuilder.build());
+
+	}
+
+	private void sendNotification(SessionObject sessionObject, Room room, Message msg) throws XMLException {
+		Log.i("ActivityLifecycle", "focused=" + focusedOnRoomId + "; chatId=" + room.getId());
+
+		if (this.focusedOnRoomId != null && room.getId() == this.focusedOnRoomId)
+			return;
+
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+		if (!sharedPref.getBoolean("notifications_new_groupmessage", true))
+			return;
+
+		String sound = sharedPref.getString("notifications_new_groupmessage_ringtone", null);
+		boolean vibrate = sharedPref.getBoolean("notifications_new_groupmessage_vibrate", true);
+
+		String title = room.getRoomJid().toString();
+		String text = msg.getBody();
+
+		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this).setSmallIcon(
+				R.drawable.ic_messenger_icon).setContentTitle(title).setContentText(text);
+
+		Uri soundUri = sound == null ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(sound);
+
+		mBuilder.setAutoCancel(true);
+		mBuilder.setSound(soundUri);
+		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
+		if (vibrate) {
+			final long[] pattern = { 0, 400, 200, 100, 200, 100 };
+			mBuilder.setVibrate(pattern);
+		}
+		Intent resultIntent = new Intent(this, MucActivity.class);
+		resultIntent.putExtra("openChatId", (int) room.getId());
+		resultIntent.putExtra("jid", room.getRoomJid().toString());
+		resultIntent.putExtra("account", sessionObject.getUserBareJid().toString());
+
+		// The stack builder object will contain an artificial back stack for
+		// the
+		// started Activity.
+		// This ensures that navigating backward from the Activity leads out of
+		// your application to the Home screen.
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(ChatActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+		mBuilder.setContentIntent(resultPendingIntent);
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// mId allows you to update the notification later on.
+		mNotificationManager.notify(("muc:" + room.getId()).hashCode(), mBuilder.build());
 
 	}
 
@@ -1393,6 +1468,8 @@ public class XMPPService extends Service {
 				values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timestamp.getTime());
 				values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, msg.getId());
 
+				boolean notify = false;
+
 				if (msg.getType() == StanzaType.error) {
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
@@ -1421,12 +1498,13 @@ public class XMPPService extends Service {
 							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				} else if (nickname != null) {
-					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
 							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+					notify = true;
 				} else {
-					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				}
@@ -1435,7 +1513,10 @@ public class XMPPService extends Service {
 
 				Uri uri = Uri.parse(ChatProvider.MUC_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/"
 						+ Uri.encode(room.getRoomJid().toString()));
-				getContentResolver().insert(uri, values);
+				Uri x = getContentResolver().insert(uri, values);
+
+				if (notify && x != null)
+					sendNotification(sessionObject, room, msg);
 
 				// if (activeChatJid == null ||
 				// !activeChatJid.getBareJid().equals(room.getRoomJid())) {
@@ -1530,8 +1611,10 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onBeforePresenceSend(SessionObject sessionObject, Presence presence) throws JaxmppException {
-			SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-			int presenceId = Long.valueOf(sharedPref.getLong("presence", CPresence.ONLINE)).intValue();
+			SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+			int defaultPresence = Long.valueOf(sharedPref.getLong("presence", CPresence.ONLINE)).intValue();
+			int presenceId = Long.valueOf(sharedPref.getLong("auto_presence", defaultPresence)).intValue();
 
 			switch (presenceId) {
 			case CPresence.OFFLINE:
@@ -1552,7 +1635,6 @@ public class XMPPService extends Service {
 			case CPresence.CHAT:
 				presence.setShow(Presence.Show.chat);
 				break;
-
 			}
 		}
 

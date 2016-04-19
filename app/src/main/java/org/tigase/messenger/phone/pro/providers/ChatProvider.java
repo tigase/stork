@@ -176,7 +176,7 @@ public class ChatProvider extends ContentProvider {
 
 				Uri u = ContentUris.withAppendedId(uri, mId);
 				getContext().getContentResolver().notifyChange(u, null);
-				return u;
+				return null;
 			} else if (mId != null) {
 				Log.d("ChatProvider", "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
 				return null;

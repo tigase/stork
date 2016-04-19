@@ -146,7 +146,7 @@ public class ConnectionStatusesFragment extends Fragment {
 		this.adapter = new StatusesRecyclerViewAdapter(this.mListener);
 		recyclerView.setAdapter(adapter);
 
-		if (mConnection != null) {
+		if (mConnection != null && mConnection.getService() != null) {
 			adapter.setMultiJaxmpp(mConnection.getService().getMultiJaxmpp());
 		}
 

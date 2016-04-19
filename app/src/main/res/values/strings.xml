@@ -41,16 +41,22 @@
     <string name="pref_title_display_name">Display name</string>
     <string name="pref_default_display_name">John Smith</string>
 
-    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
+    <string name="pref_auto_away_after_title">Auto Away presence delay</string>
+    <string-array name="pref_auto_away_after_labels">
+        <item>Off</item>
+        <item>30 sec</item>
+        <item>45 sec</item>
+        <item>60 sec</item>
+        <item>90 sec</item>
+        <item>120 sec</item>
     </string-array>
-    <string-array name="pref_example_list_values">
-        <item>1</item>
-        <item>0</item>
+    <string-array name="pref_auto_away_after_values">
         <item>-1</item>
+        <item>30</item>
+        <item>45</item>
+        <item>60</item>
+        <item>90</item>
+        <item>120</item>
     </string-array>
 
     <!-- Example settings for Data & Sync -->
@@ -171,4 +177,7 @@
     <string name="menu_chat_leaveroom">Leave room</string>
     <string name="main_menu_connectionstatus">Connection info</string>
     <string name="menu_connectionstatus_ping">Ping server</string>
+    <string name="pref_auto_x_away_after_title">Auto eXtended Away delay (after Away)</string>
+    <string name="pref_chat_notifications_title">Chats</string>
+    <string name="pref_muc_notifications_title">Groupchats</string>
 </resources>

@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class ServiceRestarter extends BroadcastReceiver {
@@ -35,7 +36,7 @@ public class ServiceRestarter extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		SharedPreferences sharedPref = context.getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
 		long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
 
 		if (presenceId != CPresence.OFFLINE) {

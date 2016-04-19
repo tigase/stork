@@ -36,9 +36,13 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -62,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
 
 	private void doPresenceChange(long presenceId) {
-		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putLong("presence", presenceId);
 		editor.commit();
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		View headerLayout = navigationView.getHeaderView(0);
 		this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
 
-		final SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (sharedPref.getString("menu", "roster")) {
 		case "roster":
 			switchMainFragment(R.id.nav_roster);
@@ -227,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	private void switchMainFragment(final int id) {
 		final MenuItem menuItem = navigationMenu.findItem(id);
 
-		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
 		switch (id) {
 		case R.id.nav_about: {
