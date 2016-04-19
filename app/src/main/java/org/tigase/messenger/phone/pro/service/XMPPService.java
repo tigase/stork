@@ -26,6 +26,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
@@ -80,11 +82,8 @@ import android.content.*;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.media.RingtoneManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
+import android.net.*;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
@@ -196,7 +195,6 @@ public class XMPPService extends Service {
 		}
 	};
 	private long keepaliveInterval = 1000 * 60 * 3;
-	private DatabaseHelper dbHelper;
 	private ConnectivityManager connManager;
 	private int usedNetworkType;
 	private RosterProviderExt rosterProvider;
@@ -233,9 +231,9 @@ public class XMPPService extends Service {
 	private MessageHandler messageHandler;
 	private tigase.jaxmpp.android.chat.ChatProvider chatProvider;
 	private MucHandler mucHandler;
-	private JaxmppCore.DisconnectedHandler jaxmppDisconnectedHandler = new JaxmppCore.DisconnectedHandler() {
+	private JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
 		@Override
-		public void onDisconnected(SessionObject sessionObject) {
+		public void onLoggedOut(SessionObject sessionObject) {
 			Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
 			Log.i("XMPPService", "JAXMPP disconnected " + sessionObject.getUserBareJid());
 			if (getUsedNetworkType() != -1) {
@@ -248,9 +246,9 @@ public class XMPPService extends Service {
 	private CapabilitiesDBCache capsCache;
 	private AccountModifyReceiver accountModifyReceiver = new AccountModifyReceiver();
 	private MobileModeFeature mobileModeFeature;
-	private JaxmppCore.ConnectedHandler jaxmppConnectedHandler = new JaxmppCore.ConnectedHandler() {
+	private JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
 		@Override
-		public void onConnected(SessionObject sessionObject) {
+		public void onLoggedIn(SessionObject sessionObject) {
 			Log.i("XMPPService", "JAXMPP connected " + sessionObject.getUserBareJid());
 
 			final Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
@@ -262,8 +260,11 @@ public class XMPPService extends Service {
 			}
 
 			(new SendUnsentMessages(sessionObject)).execute();
+			(new RejoinToMucRooms(sessionObject)).execute();
 		}
 	};
+	private SSLSocketFactory sslSocketFactory;
+	private DatabaseHelper dbHelper;
 
 	public XMPPService() {
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -304,6 +305,8 @@ public class XMPPService extends Service {
 		final Runnable r = new Runnable() {
 			@Override
 			public void run() {
+				Log.v(TAG, "Trying to connect account  " + jaxmpp.getSessionObject().getUserBareJid());
+
 				lock(jaxmpp.getSessionObject(), false);
 				if (isDisabled(jaxmpp.getSessionObject())) {
 					Log.v(TAG,
@@ -311,37 +314,53 @@ public class XMPPService extends Service {
 					return;
 				}
 				setUsedNetworkType(getActiveNetworkType());
-				if (getUsedNetworkType() != -1) {
-					final Connector.State state = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-					if (state == null || state == Connector.State.disconnected) {
-						(new Thread() {
-							@Override
-							public void run() {
-								try {
-									if (jaxmpp.isConnected())
-										return;
-
-									jaxmpp.getSessionObject().setProperty("messenger#error", null);
-									jaxmpp.login();
-								} catch (Exception e) {
-									if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
-										processCertificateError(jaxmpp,
-												(SecureTrustManagerFactory.DataCertificateException) e.getCause());
-									} else
-										Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
-
+				int tmpNetworkType = getUsedNetworkType();
+				Log.v(TAG, "Network state is " + tmpNetworkType);
+				if (tmpNetworkType != -1) {
+					(new Thread() {
+						@Override
+						public void run() {
+							try {
+								if (jaxmpp.isConnected()) {
+									Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid()
+											+ " because it is connected already");
+									return;
 								}
+
+								final Connector.State state = jaxmpp.getSessionObject().getProperty(
+										Connector.CONNECTOR_STAGE_KEY);
+								Log.v(TAG, "Account " + jaxmpp.getSessionObject().getUserBareJid() + " is in state " + state);
+								if (state != null && state != Connector.State.disconnected) {
+									Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid()
+											+ " because it state " + state);
+									return;
+								}
+
+								jaxmpp.getSessionObject().setProperty("messenger#error", null);
+								jaxmpp.login();
+							} catch (Exception e) {
+								if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
+									jaxmpp.getSessionObject().setProperty("CC:DISABLED", Boolean.TRUE);
+									processCertificateError(jaxmpp,
+											(SecureTrustManagerFactory.DataCertificateException) e.getCause());
+								} else
+									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
+
 							}
-						}).start();
-					}
+						}
+					}).start();
+
 				}
 			}
 		};
 		lock(jaxmpp.getSessionObject(), true);
 
+
 		if (date == null) {
+			Log.d(TAG, "Starting connection NOW");
 			r.run();
 		} else {
+			Log.d(TAG, "Starting connection LATER");
 			timer.schedule(new TimerTask() {
 				@Override
 				public void run() {
@@ -384,6 +403,8 @@ public class XMPPService extends Service {
 		sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 		sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
 		sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
+
+		sessionObject.setUserProperty(JaxmppCore.AUTOADD_STANZA_ID_KEY, Boolean.TRUE);
 
 		// sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY,
 		// sslSocketFactory);
@@ -543,6 +564,9 @@ public class XMPPService extends Service {
 		this.dbHelper = new DatabaseHelper(this);
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
+		SSLSessionCache sslSessionCache = new SSLSessionCache(this);
+		this.sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
+
 		this.dbHelper = new DatabaseHelper(this);
 		this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
 			@Override
@@ -592,8 +616,8 @@ public class XMPPService extends Service {
 					}
 				});
 		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class, streamHandler);
-		multiJaxmpp.addHandler(JaxmppCore.ConnectedHandler.ConnectedEvent.class, jaxmppConnectedHandler);
-		multiJaxmpp.addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class, jaxmppDisconnectedHandler);
+		multiJaxmpp.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, jaxmppConnectedHandler);
+		multiJaxmpp.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, jaxmppDisconnectedHandler);
 		// multiJaxmpp.addHandler(SocketConnector.ErrorHandler.ErrorEvent.class,
 		// );
 		//
@@ -622,6 +646,12 @@ public class XMPPService extends Service {
 				processAuthenticationError((Jaxmpp) multiJaxmpp.get(sessionObject));
 			}
 		});
+
+		multiJaxmpp.addHandler(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.MessageErrorHandler.MessageErrorEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, mucHandler);
 
 		registerReceiver(accountModifyReceiver, new IntentFilter(LoginActivity.ACCOUNT_MODIFIED_MSG));
 
@@ -924,8 +954,6 @@ public class XMPPService extends Service {
 			jid = (sessionObject.getUserBareJid().equals(authorJid) ? msg.getTo().getBareJid() : authorJid).toString();
 		}
 
-		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + Uri.encode(jid));
-
 		ContentValues values = new ContentValues();
 		values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, author);
 		values.put(DatabaseContract.ChatHistory.FIELD_JID, jid);
@@ -933,7 +961,14 @@ public class XMPPService extends Service {
 		XmppDelay delay = XmppDelay.extract(msg);
 		values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP,
 				((delay == null || delay.getStamp() == null) ? new Date() : delay.getStamp()).getTime());
+
 		if (msg.getType() == StanzaType.error) {
+
+			if (chat == null) {
+				Log.e(TAG, "Error message from " + jid + " has no Chat. Skipping store.");
+				return;
+			}
+
 			ErrorElement error = ErrorElement.extract(msg);
 			String body = "Error: ";
 			if (error != null) {
@@ -947,32 +982,36 @@ public class XMPPService extends Service {
 				}
 			}
 			if (msg.getBody() != null) {
-				body += " ------ ";
+				body += "\n ------ \n";
 				body += msg.getBody();
 			}
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
 		} else {
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, msg.getBody());
+
+			Element geoloc = msg.getChildrenNS("geoloc", "http://jabber.org/protocol/geoloc");
+			if (geoloc != null) {
+				values.put(DatabaseContract.ChatHistory.FIELD_DATA, geoloc.getAsString());
+				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_LOCALITY);
+			} else {
+				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
+			}
 		}
+
 		values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, msg.getId());
 		if (chat != null) {
 			values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, chat.getThreadId());
 		}
 		values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 
-		int type = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
-		Element geoloc = msg.getChildrenNS("geoloc", "http://jabber.org/protocol/geoloc");
-		if (geoloc != null) {
-			values.put(DatabaseContract.ChatHistory.FIELD_DATA, geoloc.getAsString());
-			type = DatabaseContract.ChatHistory.ITEM_TYPE_LOCALITY;
-		}
-		values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, type);
+		// DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
+
 		values.put(DatabaseContract.ChatHistory.FIELD_STATE, sessionObject.getUserBareJid().equals(authorJid)
 				? DatabaseContract.ChatHistory.STATE_OUT_SENT : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		long id = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, null, values);
-		Log.v(TAG, "inserted message - id = " + id);
+		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + Uri.encode(jid));
+		uri = getContentResolver().insert(uri, values);
 
 		getApplicationContext().getContentResolver().notifyChange(
 				ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chat.getId()), null);
@@ -1001,6 +1040,10 @@ public class XMPPService extends Service {
 				jaxmpp = createJaxmpp(accountJid, account.hashCode());
 				multiJaxmpp.add(jaxmpp);
 			}
+
+			// workaround for unknown certificate error
+			jaxmpp.getSessionObject().setProperty("jaxmpp#ThrowedException", null);
+
 			String password = am.getPassword(account);
 			String nickname = am.getUserData(account, AccountsConstants.FIELD_NICKNAME);
 			String hostname = am.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
@@ -1085,6 +1128,38 @@ public class XMPPService extends Service {
 		// sessionObject.getUserBareJid(), from, bestPresence);
 	}
 
+	private class RejoinToMucRooms extends AsyncTask<Void, Void, Void> {
+		private final SessionObject sessionObject;
+
+		public RejoinToMucRooms(SessionObject sessionObject) {
+			this.sessionObject = sessionObject;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Log.i(TAG, "Rejoining to MUC Rooms. Account=" + sessionObject.getUserBareJid());
+			try {
+				Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
+				MucModule mucModule = jaxmpp.getModule(MucModule.class);
+				for (Room room : mucModule.getRooms()) {
+					Log.d(TAG, "Room " + room.getRoomJid() + " is in state " + room.getState());
+					if (room.getState() != Room.State.joined) {
+						Log.d(TAG, "Rejoinning to " + room.getRoomJid());
+
+						room.rejoin();
+					} else {
+						(new SendUnsentGroupMessages(room)).execute();
+					}
+				}
+			} catch (JaxmppException e) {
+				Log.e(TAG, "Exception while rejoining to rooms on connect for account "
+						+ sessionObject.getUserBareJid().toString());
+			}
+
+			return null;
+		}
+	}
+
 	private class ScreenStateReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -1136,7 +1211,9 @@ public class XMPPService extends Service {
 		@Override
 		protected Void doInBackground(Void... params) {
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + sessionObject.getUserBareJid());
-			Cursor c = getContentResolver().query(u, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+			Cursor c = getContentResolver().query(u, cols, DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "!=?",
+					new String[] { "" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE },
+					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
 			try {
 				while (c.moveToNext()) {
 					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
@@ -1146,6 +1223,7 @@ public class XMPPService extends Service {
 					final String stanzaId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STANZA_ID));
 
 					JaxmppCore jaxmpp = getJaxmpp(sessionObject.getUserBareJid());
+					MessageModule messageModule = jaxmpp.getModule(MessageModule.class);
 					if (jaxmpp.isConnected()) {
 						try {
 							Message msg = Message.create();
@@ -1154,14 +1232,84 @@ public class XMPPService extends Service {
 							msg.setThread(threadId);
 							msg.setBody(body);
 							msg.setId(stanzaId);
-
-							jaxmpp.send(msg);
-
+							messageModule.sendMessage(msg);
 							ContentValues values = new ContentValues();
 							values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
 							getContentResolver().update(Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/"
 									+ sessionObject.getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values, null,
 									null);
+						} catch (JaxmppException e) {
+							Log.w("XMPPService", "Cannot send unsent message", e);
+						}
+					} else {
+						Log.w("XMPPService", "Can't find chat object for message");
+					}
+				}
+			} finally {
+				c.close();
+			}
+
+			return null;
+		}
+	}
+
+	private class SendUnsentGroupMessages extends AsyncTask<Void, Void, Void> {
+
+		private final String[] cols = new String[] { DatabaseContract.ChatHistory.FIELD_ID,
+				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
+				DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
+				DatabaseContract.ChatHistory.FIELD_BODY, DatabaseContract.ChatHistory.FIELD_DATA,
+				DatabaseContract.ChatHistory.FIELD_JID, DatabaseContract.ChatHistory.FIELD_STATE,
+				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_STANZA_ID,
+				DatabaseContract.ChatHistory.FIELD_TIMESTAMP };
+
+		private final Room room;
+
+		public SendUnsentGroupMessages(Room room) {
+			this.room = room;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Log.d("SendUnsentGroupMessages", "Sending unsent MUC " + room.getRoomJid() + " messages ");
+
+			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + room.getSessionObject().getUserBareJid());
+
+			Cursor c = getContentResolver().query(u, cols,
+					DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "==? AND " + DatabaseContract.ChatHistory.FIELD_JID + "=?",
+					new String[] { "" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE,
+							room.getRoomJid().toString() },
+					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+
+			try {
+				while (c.moveToNext()) {
+					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
+					final JID toJid = JID.jidInstance(c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
+					final String threadId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_THREAD_ID));
+					final String body = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+					final String stanzaId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STANZA_ID));
+
+					Log.d("SendUnsentGroupMessages", "Preparing " + id + ": " + body);
+
+					JaxmppCore jaxmpp = getJaxmpp(room.getSessionObject().getUserBareJid());
+
+					if (jaxmpp.isConnected()) {
+						try {
+							Message msg = Message.create();
+							msg.setTo(toJid);
+							msg.setType(StanzaType.groupchat);
+							msg.setThread(threadId);
+							msg.setBody(body);
+							msg.setId(stanzaId);
+
+							room.sendMessage(msg);
+
+							ContentValues values = new ContentValues();
+							values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
+							values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, System.currentTimeMillis());
+							getContentResolver().update(Uri.parse(ChatProvider.MUC_HISTORY_URI + "/"
+									+ room.getSessionObject().getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values,
+									null, null);
 						} catch (JaxmppException e) {
 							Log.w("XMPPService", "Cannot send unsent message", e);
 						}
@@ -1220,34 +1368,73 @@ public class XMPPService extends Service {
 			MucModule.MessageErrorHandler, MucModule.StateChangeHandler, MucModule.PresenceErrorHandler {
 
 		@Override
-		public void onMessageError(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message message,
-				Room room, String nickname, Date timestamp) {
+		public void onMessageError(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Room room,
+				String nickname, Date timestamp) {
 			try {
-				Log.e(TAG, "Error from room " + room.getRoomJid() + ", error = " + message.getAsString());
+				Log.e(TAG, "Error from room " + room.getRoomJid() + ", error = " + msg.getAsString());
 			} catch (XMLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
+			onMucMessageReceived(sessionObject, msg, room, nickname, timestamp);
 		}
 
 		@Override
 		public void onMucMessageReceived(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg,
 				Room room, String nickname, Date timestamp) {
 			try {
+				Log.d(TAG, "Received groupchat message: " + msg.getBody() + "; room=" + room);
+
 				if (msg == null || msg.getBody() == null || room == null)
 					return;
 				String body = msg.getBody();
-				Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/"
-						+ Uri.encode(room.getRoomJid().toString()));
 
 				ContentValues values = new ContentValues();
 				values.put(DatabaseContract.ChatHistory.FIELD_JID, room.getRoomJid().toString());
 				values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME, nickname);
 				values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timestamp.getTime());
-				values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
-				values.put(DatabaseContract.ChatHistory.FIELD_STATE, 0);
+				values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, msg.getId());
+
+				if (msg.getType() == StanzaType.error) {
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
+
+					ErrorElement error = ErrorElement.extract(msg);
+					body = "Error: ";
+					if (error != null) {
+						if (error.getText() != null) {
+							body += error.getText();
+						} else {
+							XMPPException.ErrorCondition errorCondition = error.getCondition();
+							if (errorCondition != null) {
+								body += errorCondition.getElementName();
+							}
+						}
+					}
+					if (msg.getBody() != null) {
+						body += "\n ------ \n";
+						body += msg.getBody();
+					}
+
+					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+				} else if (nickname != null && room.getNickname().equals(nickname)) {
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_DELIVERED);
+					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
+					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+				} else if (nickname != null) {
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
+					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+				} else {
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
+					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+				}
+
 				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 
+				Uri uri = Uri.parse(ChatProvider.MUC_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/"
+						+ Uri.encode(room.getRoomJid().toString()));
 				getContentResolver().insert(uri, values);
 
 				// if (activeChatJid == null ||

@@ -21,7 +21,9 @@
 
 package org.tigase.messenger.phone.pro;
 
+import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
@@ -122,6 +124,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		case "roster":
 			switchMainFragment(R.id.nav_roster);
 			break;
+		case "connectionstatus":
+			switchMainFragment(R.id.nav_connectionstatus);
+			break;
 		default:
 			switchMainFragment(R.id.nav_chats);
 			break;
@@ -220,9 +225,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	}
 
 	private void switchMainFragment(final int id) {
-		MenuItem menuItem = navigationMenu.findItem(id);
-		menuItem.setChecked(true);
-		setTitle(menuItem.getTitle());
+		final MenuItem menuItem = navigationMenu.findItem(id);
 
 		SharedPreferences sharedPref = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
 
@@ -230,6 +233,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		case R.id.nav_about: {
 			Intent intent = new Intent(this, AboutActivity.class);
 			startActivity(intent);
+			break;
+		}
+		case R.id.nav_connectionstatus: {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(R.id.flContent, ConnectionStatusesFragment.newInstance()).commit();
+
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "connectionstatus");
+			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
+
 			break;
 		}
 		case R.id.nav_roster: {
@@ -240,6 +255,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putString("menu", "roster");
 			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
 
 			break;
 		}
@@ -251,7 +268,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putString("menu", "chats");
 			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
 
+			break;
+		}
+		case R.id.nav_joinmuc: {
+			Intent intent = new Intent(this, JoinMucActivity.class);
+			startActivity(intent);
 			break;
 		}
 		case R.id.nav_settings: {

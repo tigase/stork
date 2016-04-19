@@ -81,18 +81,17 @@ public class ConnectionChecker {
 						// wakeup();
 					}
 				});
-		contact.getEventBus().addHandler(JaxmppCore.ConnectedHandler.ConnectedEvent.class, new JaxmppCore.ConnectedHandler() {
+		contact.getEventBus().addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, new JaxmppCore.LoggedInHandler() {
 			@Override
-			public void onConnected(SessionObject sessionObject) {
+			public void onLoggedIn(SessionObject sessionObject) {
 				Log.w(TAG, "Jaxmpp connected");
 				wakeup();
 			}
 		});
-		contact.getEventBus().addHandler(JaxmppCore.DisconnectedHandler.DisconnectedEvent.class,
-				new JaxmppCore.DisconnectedHandler() {
+		contact.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, new JaxmppCore.LoggedOutHandler() {
 
 					@Override
-					public void onDisconnected(SessionObject sessionObject) {
+			public void onLoggedOut(SessionObject sessionObject) {
 						Log.w(TAG, "Jaxmpp disconnected");
 						wakeup();
 					}

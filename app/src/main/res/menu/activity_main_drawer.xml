@@ -30,6 +30,14 @@
             android:id="@+id/nav_roster"
             android:icon="@drawable/ic_menu_roster"
             android:title="@string/main_menu_roster" />
+        <item
+                android:id="@+id/nav_joinmuc"
+                android:icon="@drawable/ic_muc_24dp"
+                android:title="@string/main_menu_joinroom"/>
+        <item
+                android:id="@+id/nav_connectionstatus"
+                android:icon="@drawable/ic_connection_info_24dp"
+                android:title="@string/main_menu_connectionstatus"/>
     </group>
 
     <item android:title="@string/main_menu_othersection">

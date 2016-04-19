@@ -1,34 +1,12 @@
-/*
- * MyChatItemRecyclerViewAdapter.java
- *
- * Tigase Android Messenger
- * Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License,
- * or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. Look for COPYING file in the top folder.
- * If not, see http://www.gnu.org/licenses/.
- */
-
-package org.tigase.messenger.phone.pro.conversations.chat;
+package org.tigase.messenger.phone.pro.conversations.muc;
 
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
-import tigase.jaxmpp.core.client.BareJID;
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -36,19 +14,69 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 
-public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
+public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	public static final int ITEM_ERROR = 1;
 	public static final int ITEM_MESSAGE_IN = 20;
 	public static final int ITEM_MESSAGE_OUT = 30;
 
-	private final ChatItemFragment.ChatItemIterationListener mListener;
+	private final MucItemFragment.ChatItemIterationListener mListener;
 	private final Context context;
 
-	public MyChatItemRecyclerViewAdapter(Context context, Cursor cursor, ChatItemFragment.ChatItemIterationListener listener) {
+	public MucItemRecyclerViewAdapter(Context context, Cursor cursor, MucItemFragment.ChatItemIterationListener listener) {
 		super(cursor);
 		mListener = listener;
 		this.context = context;
+	}
+
+	private int getColor(String nickname) {
+		final int i = ((Math.abs(nickname.hashCode()) + 3) * 13) % 19;
+		switch (i) {
+		case 0:
+			return R.color.mucmessage_his_nickname_0;
+		case 1:
+			return R.color.mucmessage_his_nickname_1;
+		case 2:
+			return R.color.mucmessage_his_nickname_2;
+		case 3:
+			return R.color.mucmessage_his_nickname_3;
+		case 4:
+			return R.color.mucmessage_his_nickname_4;
+		case 5:
+			return R.color.mucmessage_his_nickname_5;
+		case 6:
+			return R.color.mucmessage_his_nickname_6;
+		case 7:
+			return R.color.mucmessage_his_nickname_7;
+		case 8:
+			return R.color.mucmessage_his_nickname_8;
+		case 9:
+			return R.color.mucmessage_his_nickname_9;
+		case 10:
+			return R.color.mucmessage_his_nickname_10;
+		case 11:
+			return R.color.mucmessage_his_nickname_11;
+		case 12:
+			return R.color.mucmessage_his_nickname_12;
+		case 13:
+			return R.color.mucmessage_his_nickname_13;
+		case 14:
+			return R.color.mucmessage_his_nickname_14;
+		case 15:
+			return R.color.mucmessage_his_nickname_15;
+		case 16:
+			return R.color.mucmessage_his_nickname_16;
+		case 17:
+			return R.color.mucmessage_his_nickname_17;
+		case 18:
+			return R.color.mucmessage_his_nickname_18;
+		case 19:
+			return R.color.mucmessage_his_nickname_19;
+		default:
+			return R.color.mucmessage_his_nickname_0;
+
+		}
+
 	}
 
 	@Override
@@ -85,12 +113,19 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
 		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+		final String nickname = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 		final long timestampt = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
 		final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 
 		holder.mContentView.setText(body);
 		holder.mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
 				DateUtils.WEEK_IN_MILLIS, 0));
+		if (holder.mNickname != null) {
+			holder.mNickname.setVisibility(View.VISIBLE);
+			int col = ContextCompat.getColor(context, getColor(nickname));
+			holder.mNickname.setTextColor(col);
+			holder.mNickname.setText(nickname);
+		}
 
 		if (state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
 			// holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
@@ -109,9 +144,7 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 				break;
 			}
 		}
-		if (holder.mAvatar != null) {
-			AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mAvatar);
-		}
+
 		holder.itemView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -141,10 +174,10 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		View view;
 		switch (viewType) {
 		case ITEM_MESSAGE_IN:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_received, parent, false);
+			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_received, parent, false);
 			break;
 		case ITEM_MESSAGE_OUT:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sent, parent, false);
+			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_sent, parent, false);
 			break;
 		case ITEM_ERROR:
 			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);

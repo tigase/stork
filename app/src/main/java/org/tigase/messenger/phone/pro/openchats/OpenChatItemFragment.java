@@ -25,15 +25,19 @@ import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -82,12 +86,29 @@ public class OpenChatItemFragment extends Fragment {
 		}
 
 		@Override
-		public void onEnterToChat(final int openChatId, final String jid, final String account) {
-			Intent intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
+		public void onEnterToChat(final int type, final int openChatId, final String jid, final String account) {
+			Intent intent;
+			switch (type) {
+			case DatabaseContract.OpenChats.TYPE_CHAT:
+				intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
+				break;
+			case DatabaseContract.OpenChats.TYPE_MUC:
+				intent = new Intent(OpenChatItemFragment.this.getContext(), MucActivity.class);
+				break;
+			default:
+				throw new RuntimeException("Unrecognized open_chat type = " + type);
+			}
 			intent.putExtra("openChatId", openChatId);
 			intent.putExtra("jid", jid);
 			intent.putExtra("account", account);
+
 			startActivity(intent);
+		}
+
+		@Override
+		public void onLeaveMucRoom(int chatId, String roomJID, String account) {
+			OpenChatItemFragment.this.onLeaveRoom(chatId, roomJID, account);
+
 		}
 	};
 
@@ -197,6 +218,25 @@ public class OpenChatItemFragment extends Fragment {
 		super.onDetach();
 	}
 
+	private void onLeaveRoom(final int chatId, final String roomJID, final String account) {
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
+				MucModule mucModule = jaxmpp.getModule(MucModule.class);
+				Room room = mucModule.getRoom(BareJID.bareJIDInstance(roomJID));
+				if (room != null) {
+					try {
+						mucModule.leave(room);
+					} catch (JaxmppException e) {
+						Log.e("OpenChat", "Cannot leave room", e);
+					}
+				}
+				return null;
+			}
+		}.execute();
+	}
+
 	private void refreshChatlist() {
 		(new DBUpdateTask()).execute();
 	}
@@ -213,7 +253,9 @@ public class OpenChatItemFragment extends Fragment {
 	public interface OnListFragmentInteractionListener {
 		void onArchiveChat(int chatId, String jid, String account);
 
-		void onEnterToChat(int oenChatId, String jid, String account);
+		void onEnterToChat(int type, int openChatId, String jid, String account);
+
+		void onLeaveMucRoom(int chatId, String roomJID, String account);
 	}
 
 	public interface OnAddChatListener {

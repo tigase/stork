@@ -25,4 +25,28 @@
     <color name="colorAccent">#0000FF</color>
 
     <color name="black_overlay">#66000000</color>
+
+
+    <color name="mucmessage_his_nickname_0">#35cd96</color>
+    <color name="mucmessage_his_nickname_1">#6bcbef</color>
+    <color name="mucmessage_his_nickname_2">#e542a3</color>
+    <color name="mucmessage_his_nickname_3">#91ab01</color>
+    <color name="mucmessage_his_nickname_4">#ffa97a</color>
+    <color name="mucmessage_his_nickname_5">#1f7aec</color>
+    <color name="mucmessage_his_nickname_6">#dfb610</color>
+    <color name="mucmessage_his_nickname_7">#029d00</color>
+    <color name="mucmessage_his_nickname_8">#8b7add</color>
+    <color name="mucmessage_his_nickname_9">#fe7c7f</color>
+    <color name="mucmessage_his_nickname_10">#ba33dc</color>
+    <color name="mucmessage_his_nickname_11">#59d368</color>
+    <color name="mucmessage_his_nickname_12">#b04632</color>
+    <color name="mucmessage_his_nickname_13">#fd85d4</color>
+    <color name="mucmessage_his_nickname_14">#8393ca</color>
+    <color name="mucmessage_his_nickname_15">#ff8f2c</color>
+    <color name="mucmessage_his_nickname_16">#a3e2cb</color>
+    <color name="mucmessage_his_nickname_17">#b4876e</color>
+    <color name="mucmessage_his_nickname_18">#c90379</color>
+    <color name="mucmessage_his_nickname_19">#ef4b4f</color>
+
+
 </resources>

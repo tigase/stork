@@ -222,15 +222,22 @@ public class ChatItemFragment extends Fragment {
 		protected Void doInBackground(String... params) {
 			for (String param : params) {
 				int state;
+				Message msg;
 				String stanzaId = null;
-
 				try {
-					MessageModule m = mConnection.getService().getJaxmpp(chat.getSessionObject().getUserBareJid()).getModule(
+					msg = chat.createMessage(param);
+					stanzaId = msg.getId();
+
+					Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(chat.getSessionObject().getUserBareJid());
+					MessageModule m = jaxmpp.getModule(
 							MessageModule.class);
-					Message msg = m.sendMessage(chat, param);
-					if (msg != null)
-						stanzaId = msg.getId();
-					state = DatabaseContract.ChatHistory.STATE_OUT_SENT;
+
+					if (jaxmpp.isConnected()) {
+						m.sendMessage(msg);
+						state = DatabaseContract.ChatHistory.STATE_OUT_SENT;
+					} else {
+						state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
+					}
 				} catch (Exception e) {
 					state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
 					Log.w("ChatItemFragment", "Cannot send message", e);
@@ -246,12 +253,12 @@ public class ChatItemFragment extends Fragment {
 				values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, chat.getThreadId());
 				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
 				values.put(DatabaseContract.ChatHistory.FIELD_STATE, state);
+				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
 				if (stanzaId != null)
 					values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, stanzaId);
 
 				Uri u = getContext().getContentResolver().insert(uri, values);
 				getContext().getContentResolver().notifyChange(u, null);
-
 			}
 
 			return null;

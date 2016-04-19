@@ -119,18 +119,18 @@ public final class DatabaseContract {
 		/**
 		 * Description of values for FIELD_STATE (state)
 		 * <ul>
-		 * <li><code>0</code> - incoming message</li>
-		 * <li><code>1</code> - outgoing, not sent</li>
-		 * <li><code>2</code> - outgoing, sent</li>
-		 * <li><code>3</code> - incoming unread</li>
-		 * <li><code>4</code> - incoming locality</li>
-		 * <li><code>5</code> - outgoing locality</li>
+		 * <li><code>0</code> - incoming</li>
+		 * <li><code>1</code> - outgoing, sent</li>
+		 * <li><code>2</code> - incoming unread</li>
+		 * <li><code>3</code> - outgoing, not sent</li>
+		 * <li><code>4</code> - outgoing, delivered</li>
 		 * </ul>
 		 */
 		public static final String FIELD_STATE = "state";
 		public static final String FIELD_THREAD_ID = "thread_id";
 		public static final String FIELD_STANZA_ID = "stanza_id";
 		public static final String FIELD_TIMESTAMP = "timestamp";
+
 		/**
 		 * Description of values for FIELD_ITEM_TYPE (item_type)
 		 * <ul>
@@ -139,31 +139,40 @@ public final class DatabaseContract {
 		 * <li><code>2</code> - file</li>
 		 * <li><code>3</code> - image</li>
 		 * <li><code>4</code> - video</li>
+		 * <li><code>5</code> - error message</li>
+		 * <li><code>6</code> - groupchat message</li>
 		 * </ul>
 		 */
 		public static final String FIELD_ITEM_TYPE = "item_type";
 
 		public final static int ITEM_TYPE_MESSAGE = 0;
-
 		public final static int ITEM_TYPE_LOCALITY = 1;
-
 		public final static int ITEM_TYPE_FILE = 2;
-
 		public final static int ITEM_TYPE_IMAGE = 3;
-
 		public final static int ITEM_TYPE_VIDEO = 4;
+		public final static int ITEM_TYPE_ERROR = 5;
+		public final static int ITEM_TYPE_GROUPCHAT_MESSAGE = 6;
 
+		/**
+		 * Incoming message or object.
+		 */
 		public final static int STATE_INCOMING = 0;
-
-		public final static int STATE_INCOMING_LOCALITY = 4;
-
-		public final static int STATE_INCOMING_UNREAD = 3;
-
-		public final static int STATE_OUT_LOCALITY = 5;
-
-		public final static int STATE_OUT_NOT_SENT = 1;
-
-		public final static int STATE_OUT_SENT = 2;
+		/**
+		 * Outgoing message or object. Sent.
+		 */
+		public final static int STATE_OUT_SENT = 1;
+		/**
+		 * Incoming message or object. Unread.
+		 */
+		public final static int STATE_INCOMING_UNREAD = 2;
+		/**
+		 * Outgoing message or object. Not sent.
+		 */
+		public final static int STATE_OUT_NOT_SENT = 3;
+		/**
+		 * Outgoing message or object. Delivered to recipient.
+		 */
+		public final static int STATE_OUT_DELIVERED = 4;
 
 		/**
 		 * index name

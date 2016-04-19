@@ -22,6 +22,7 @@
 package org.tigase.messenger.phone.pro.conversations.chat;
 
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
@@ -39,7 +40,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -48,26 +48,16 @@ import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AbstractConversationActivity {
 
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	@Bind(R.id.contact_display_name)
 	TextView mContactName;
 	@Bind(R.id.contact_presence)
 	ImageView mContactPresence;
-	private JID jid;
-	private BareJID account;
 	private int openChatId;
 	private Uri contactUri;
 	private Integer rosterId;
-
-	public BareJID getAccount() {
-		return account;
-	}
-
-	public JID getJid() {
-		return jid;
-	}
 
 	public int getOpenChatId() {
 		return openChatId;
@@ -85,7 +75,7 @@ public class ChatActivity extends AppCompatActivity {
 
 				mContactName.setText(displayName);
 			} else {
-				mContactName.setText(jid.getBareJid().toString());
+				mContactName.setText(getJid().getBareJid().toString());
 			}
 		} finally {
 			c.close();
@@ -146,9 +136,9 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		this.openChatId = getIntent().getIntExtra("openChatId", Integer.MIN_VALUE);
-		this.jid = JID.jidInstance(getIntent().getStringExtra("jid"));
-		this.account = BareJID.bareJIDInstance(getIntent().getStringExtra("account"));
-		this.rosterId = loadRosterID(account, jid.getBareJid());
+		setJid(JID.jidInstance(getIntent().getStringExtra("jid")));
+		setAccount(BareJID.bareJIDInstance(getIntent().getStringExtra("account")));
+		this.rosterId = loadRosterID(getAccount(), getJid().getBareJid());
 
 		this.contactUri = rosterId == null ? null : ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterId);
 

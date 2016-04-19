@@ -53,6 +53,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 		final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
 		final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
 		final int state = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_STATE));
+		final int type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
 
 		int presenceIconResource;
 		switch (state) {
@@ -94,21 +95,33 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 					// the
 					// fragment is attached to one) that an item has been
 					// selected.
-					mListener.onEnterToChat(id, jid, account);
+					mListener.onEnterToChat(type, id, jid, account);
 				}
 			}
 		});
-		holder.setContextMenu(R.menu.openchat_context, new PopupMenu.OnMenuItemClickListener() {
+
+		PopupMenu.OnMenuItemClickListener menuListener = new PopupMenu.OnMenuItemClickListener() {
 			@Override
 			public boolean onMenuItemClick(MenuItem item) {
 				if (item.getItemId() == R.id.menu_chat_archive) {
 					mListener.onArchiveChat(id, jid, account);
 					return true;
+				} else if (item.getItemId() == R.id.menu_chat_leaveroom) {
+					mListener.onLeaveMucRoom(id, jid, account);
+					return true;
 				} else
 					return false;
 			}
-		});
+		};
 
+		switch (type) {
+		case DatabaseContract.OpenChats.TYPE_MUC:
+			holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
+			break;
+		case DatabaseContract.OpenChats.TYPE_CHAT:
+			holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
+			break;
+		}
 	}
 
 	@Override

@@ -161,4 +161,14 @@
     <string name="contact_vcard_phone">Phone</string>
     <string name="contact_vcard_work">Work</string>
     <string name="contact_vcard_position">Position</string>
+    <string name="join">Join</string>
+    <string name="cancel">Cancel</string>
+    <string name="join_room_address">Room address</string>
+    <string name="join_room_nickname">Nickname</string>
+    <string name="main_menu_joinroom">Join chat room</string>
+    <string name="title_activity_join_muc">Join chat room</string>
+    <string name="title_activity_muc">Room</string>
+    <string name="menu_chat_leaveroom">Leave room</string>
+    <string name="main_menu_connectionstatus">Connection info</string>
+    <string name="menu_connectionstatus_ping">Ping server</string>
 </resources>

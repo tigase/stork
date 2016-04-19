@@ -21,6 +21,7 @@
 
 package org.tigase.messenger.phone.pro.providers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Log;
 
 public class ChatProvider extends ContentProvider {
 
@@ -43,6 +45,7 @@ public class ChatProvider extends ContentProvider {
 	public static final String SCHEME = "content://";
 	public static final Uri OPEN_CHATS_URI = Uri.parse(SCHEME + AUTHORITY + "/openchat");
 	public static final Uri CHAT_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/chat");
+	public static final Uri MUC_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/muc");
 	public static final Uri UNSENT_MESSAGES_URI = Uri.parse(SCHEME + AUTHORITY + "/unsent");
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_UNREAD_COUNT = "unread";
@@ -50,9 +53,6 @@ public class ChatProvider extends ContentProvider {
 	public static final String FIELD_LAST_MESSAGE = "last_message";
 	public static final String FIELD_LAST_MESSAGE_TIMESTAMP = "last_message_timestamp";
 	private static final UriMatcher sUriMatcher = new UriMatcher(1);
-	private final static int URI_INDICATOR_OPENCHATS = 2;
-	private final static int URI_INDICATOR_OPENCHAT_BY_ID = 3;
-	private final static int URI_INDICATOR_OPENCHAT_BY_JID = 4;
 	private final static Map<String, String> openChatsProjectionMap = new HashMap<String, String>() {
 
 		private static final long serialVersionUID = 1L;
@@ -102,16 +102,22 @@ public class ChatProvider extends ContentProvider {
 		}
 	};
 
+	private final static int URI_INDICATOR_OPENCHATS = 2;
+	private final static int URI_INDICATOR_OPENCHAT_BY_ID = 3;
+	private final static int URI_INDICATOR_OPENCHAT_BY_JID = 4;
 	/**
 	 * Chat message by /account/destinationBareJID/id
 	 */
 	private static final int URI_INDICATOR_CHAT_ITEM = 6;
+	private static final int URI_INDICATOR_GROUP_CHAT_ITEM = 10;
+
 	private static final int URI_INDICATOR_UNSENT = 7;
 
 	/**
 	 * List of chat messages by /account/destinationBareJID
 	 */
 	private static final int URI_INDICATOR_CHATS_ACCOUNT = 8;
+	private static final int URI_INDICATOR_GROUP_CHATS_ACCOUNT = 9;
 
 	static {
 		sUriMatcher.addURI(AUTHORITY, "unsent/*", URI_INDICATOR_UNSENT);
@@ -120,6 +126,8 @@ public class ChatProvider extends ContentProvider {
 		sUriMatcher.addURI(AUTHORITY, "openchat/*", URI_INDICATOR_OPENCHAT_BY_JID);
 		sUriMatcher.addURI(AUTHORITY, "chat/*/*/#", URI_INDICATOR_CHAT_ITEM);
 		sUriMatcher.addURI(AUTHORITY, "chat/*/*", URI_INDICATOR_CHATS_ACCOUNT);
+		sUriMatcher.addURI(AUTHORITY, "muc/*/*/#", URI_INDICATOR_GROUP_CHAT_ITEM);
+		sUriMatcher.addURI(AUTHORITY, "muc/*/*", URI_INDICATOR_GROUP_CHATS_ACCOUNT);
 	}
 
 	private DatabaseHelper dbHelper;
@@ -154,9 +162,29 @@ public class ChatProvider extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		switch (sUriMatcher.match(uri)) {
+		case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
+			Long mId = isGroupChatMessageAddedAlready(values);
+			if (mId != null && values.getAsInteger(
+					DatabaseContract.ChatHistory.FIELD_STATE) == DatabaseContract.ChatHistory.STATE_OUT_DELIVERED) {
+				// send, but not confirmed!
+				SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+				ContentValues v = new ContentValues();
+				v.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_DELIVERED);
+				db.update(DatabaseContract.ChatHistory.TABLE_NAME, v, DatabaseContract.ChatHistory.FIELD_ID + "=?",
+						new String[] { mId.toString() });
+
+				Uri u = ContentUris.withAppendedId(uri, mId);
+				getContext().getContentResolver().notifyChange(u, null);
+				return u;
+			} else if (mId != null) {
+				Log.d("ChatProvider", "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
+				return null;
+			}
 		case URI_INDICATOR_CHATS_ACCOUNT:
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			long rowId = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_JID, values);
+			Log.d("ChatProvider", "Inserted id=" + rowId + " message to " + DatabaseContract.ChatHistory.TABLE_NAME);
 			if (rowId > 0) {
 				Uri insertedItem = ContentUris.withAppendedId(uri, rowId);
 				getContext().getContentResolver().notifyChange(insertedItem, null);
@@ -166,6 +194,52 @@ public class ChatProvider extends ContentProvider {
 			}
 		default:
 			throw new IllegalArgumentException("Unsupported URI " + uri);
+		}
+	}
+
+	private Long isGroupChatMessageAddedAlready(final ContentValues values) {
+		final String[] columns = new String[] { DatabaseContract.ChatHistory.FIELD_ID,
+				DatabaseContract.ChatHistory.FIELD_STANZA_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP };
+
+		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
+		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
+		final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY);
+		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
+		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
+		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+
+		ArrayList<String> selectionArgs = new ArrayList<>();
+
+		String selection = DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? ";
+		selectionArgs.add(account);
+
+		selection += " AND " + DatabaseContract.ChatHistory.FIELD_JID + "=? ";
+		selectionArgs.add(roomJid);
+
+		selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
+		selectionArgs.add(nickname);
+
+		long dt = 1000 * 60 * 5;
+		if (stanzaId != null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=? ";
+			selectionArgs.add(stanzaId);
+			dt = 1000 * 60 * 60;
+		}
+
+		selection += " AND " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " BETWEEN ? AND ? ";
+		selectionArgs.add(String.valueOf(timestamp - dt));
+		selectionArgs.add(String.valueOf(timestamp + dt));
+
+		Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
+				selectionArgs.toArray(new String[] {}), null, null, null);
+		try {
+			if (c.moveToNext()) {
+				return c.getLong(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
+			} else {
+				return null;
+			}
+		} finally {
+			c.close();
 		}
 	}
 
@@ -191,12 +265,21 @@ public class ChatProvider extends ContentProvider {
 					new String[] { uri.getLastPathSegment() }, sortOrder);
 			break;
 		case URI_INDICATOR_UNSENT:
-			cursor = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, projection,
-					DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " + DatabaseContract.ChatHistory.FIELD_STATE + "=?",
-					new String[] { uri.getLastPathSegment(), "" + DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT }, null, null,
-					sortOrder);
+			final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+			qb.setTables(DatabaseContract.ChatHistory.TABLE_NAME);
+
+			qb.appendWhere(DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=");
+			qb.appendWhereEscapeString(uri.getLastPathSegment());
+
+			qb.appendWhere(" AND ");
+
+			qb.appendWhere(DatabaseContract.ChatHistory.FIELD_STATE + "=");
+			qb.appendWhereEscapeString("" + DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT);
+
+			cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null, sortOrder);
 			break;
 		case URI_INDICATOR_CHAT_ITEM:
+		case URI_INDICATOR_GROUP_CHAT_ITEM:
 			String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 			cursor = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, projection,
 					// DatabaseContract.ChatHistory.FIELD_JID + "=? AND " +
@@ -205,6 +288,7 @@ public class ChatProvider extends ContentProvider {
 					DatabaseContract.ChatHistory.FIELD_ID + "=?", new String[] { uri.getLastPathSegment() }, null, null,
 					sortOrder);
 			break;
+		case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 		case URI_INDICATOR_CHATS_ACCOUNT:
 			String account = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 			jid = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
@@ -243,6 +327,7 @@ public class ChatProvider extends ContentProvider {
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		switch (sUriMatcher.match(uri)) {
 		case URI_INDICATOR_CHAT_ITEM:
+		case URI_INDICATOR_GROUP_CHAT_ITEM:
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			// long rowId = db.update(DatabaseContract.ChatHistory.TABLE_NAME,
 			// DatabaseContract.ChatHistory.FIELD_JID, values);
