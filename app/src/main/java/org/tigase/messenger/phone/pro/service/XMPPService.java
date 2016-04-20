@@ -541,6 +541,14 @@ public class XMPPService extends Service {
 							jaxmpp.getConnector().keepalive();
 							// GeolocationFeature.sendQueuedGeolocation(jaxmpp,
 							// JaxmppService.this);
+						} else if (Connector.State.disconnecting == jaxmpp.getSessionObject().getProperty(
+								Connector.CONNECTOR_STAGE_KEY)) {
+							// if jaxmpp hangs on 'disconnecting' state for more
+							// than 45 seconds, stop Connector.
+							final Date x = jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_TIMESTAMP_KEY);
+							if (x != null && x.getTime() < System.currentTimeMillis() - 45 * 1000) {
+								jaxmpp.getConnector().stop(true);
+							}
 						}
 					} catch (JaxmppException ex) {
 						Log.e(TAG, "error sending keep alive for = " + jaxmpp.getSessionObject().getUserBareJid().toString(),
