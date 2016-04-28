@@ -129,10 +129,11 @@
         </activity>
         <activity android:name=".roster.request.SubscriptionRequestActivity">
         </activity>
-        <activity android:name=".conversations.muc.MucActivity"
-                  android:label="@string/title_activity_muc"
-                  android:parentActivityName=".MainActivity"
-                  android:theme="@style/AppTheme.NoActionBar">
+        <activity
+                android:name=".conversations.muc.MucActivity"
+                android:label="@string/title_activity_muc"
+                android:parentActivityName=".MainActivity"
+                android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>

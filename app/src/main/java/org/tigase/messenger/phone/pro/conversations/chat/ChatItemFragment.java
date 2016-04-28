@@ -21,20 +21,6 @@
 
 package org.tigase.messenger.phone.pro.conversations.chat;
 
-import java.util.Date;
-
-import org.tigase.messenger.phone.pro.MainActivity;
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.providers.ChatProvider;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
@@ -52,6 +38,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.MainActivity;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
+
+import java.util.Date;
 
 public class ChatItemFragment extends Fragment {
 
@@ -257,8 +256,7 @@ public class ChatItemFragment extends Fragment {
 				if (stanzaId != null)
 					values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, stanzaId);
 
-				Uri u = getContext().getContentResolver().insert(uri, values);
-				getContext().getContentResolver().notifyChange(u, null);
+				getContext().getContentResolver().insert(uri, values);
 			}
 
 			return null;
@@ -267,12 +265,12 @@ public class ChatItemFragment extends Fragment {
 
 	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
 
-		private final String[] cols = new String[] { DatabaseContract.ChatHistory.FIELD_ID,
+		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
 				DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
 				DatabaseContract.ChatHistory.FIELD_BODY, DatabaseContract.ChatHistory.FIELD_DATA,
 				DatabaseContract.ChatHistory.FIELD_JID, DatabaseContract.ChatHistory.FIELD_STATE,
-				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP };
+				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		@Override
 		protected Cursor doInBackground(Void... params) {

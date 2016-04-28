@@ -21,22 +21,12 @@
 
 package org.tigase.messenger.phone.pro.conversations.chat;
 
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.providers.ChatProvider;
-import org.tigase.messenger.phone.pro.providers.RosterProvider;
-import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
-
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
 import android.app.NotificationManager;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -47,6 +37,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
+import org.tigase.messenger.phone.pro.service.MarkAsRead;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
 
 public class ChatActivity extends AbstractConversationActivity {
 
@@ -58,15 +57,16 @@ public class ChatActivity extends AbstractConversationActivity {
 	private int openChatId;
 	private Uri contactUri;
 	private Integer rosterId;
+	private MarkAsRead markAsRead;
 
 	public int getOpenChatId() {
 		return openChatId;
 	}
 
 	private void loadContact() {
-		final String[] cols = new String[] { DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_ACCOUNT,
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_ACCOUNT,
 				DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME, ChatProvider.FIELD_UNREAD_COUNT,
-				DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_STATE, ChatProvider.FIELD_LAST_MESSAGE };
+				DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE};
 		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols, null,
 				null, null);
 		try {
@@ -84,7 +84,7 @@ public class ChatActivity extends AbstractConversationActivity {
 
 	private Integer loadRosterID(BareJID account, BareJID jid) {
 		Uri u = Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid);
-		Cursor c = getContentResolver().query(u, new String[] { DatabaseContract.RosterItemsCache.FIELD_ID }, null, null, null);
+		Cursor c = getContentResolver().query(u, new String[]{DatabaseContract.RosterItemsCache.FIELD_ID}, null, null, null);
 		try {
 			if (c.moveToNext()) {
 				return c.getInt(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
@@ -99,7 +99,7 @@ public class ChatActivity extends AbstractConversationActivity {
 		if (contactUri == null)
 			return;
 		Cursor contactCursor = getContentResolver().query(contactUri,
-				new String[] { DatabaseContract.RosterItemsCache.FIELD_STATUS }, null, null, null);
+				new String[]{DatabaseContract.RosterItemsCache.FIELD_STATUS}, null, null, null);
 		try {
 			if (contactCursor.moveToNext()) {
 				final int status = contactCursor.getInt(
@@ -114,24 +114,6 @@ public class ChatActivity extends AbstractConversationActivity {
 		}
 	}
 
-	private void makeMessagesRead() {
-		(new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				// Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" +
-				// getAccount() + "/"
-				// + getJid());
-				//
-				// ContentValues values = new ContentValues();
-				// values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-				// DatabaseContract.ChatHistory.ST);
-				// getContentResolver().update(uri, values, null,
-				// null);
-
-				return null;
-			}
-		}).execute();
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -164,6 +146,7 @@ public class ChatActivity extends AbstractConversationActivity {
 		// });
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+		this.markAsRead = new MarkAsRead(this);
 	}
 
 	@Override
@@ -181,7 +164,7 @@ public class ChatActivity extends AbstractConversationActivity {
 		loadContact();
 		loadUserPresence();
 
-		makeMessagesRead();
+		markAsRead.markChatAsRead(this.openChatId, this.getAccount(), this.getJid());
 	}
 
 	private class ContactPresenceChangeObserver extends ContentObserver {

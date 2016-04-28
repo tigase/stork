@@ -21,23 +21,6 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
-import org.tigase.messenger.phone.pro.DividerItemDecoration;
-import org.tigase.messenger.phone.pro.MainActivity;
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
-import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.providers.ChatProvider;
-import org.tigase.messenger.phone.pro.providers.RosterProvider;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
-import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -53,6 +36,22 @@ import android.view.*;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.tigase.messenger.phone.pro.DividerItemDecoration;
+import org.tigase.messenger.phone.pro.MainActivity;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
 /**
  * A fragment representing a list of Items.
@@ -89,14 +88,14 @@ public class OpenChatItemFragment extends Fragment {
 		public void onEnterToChat(final int type, final int openChatId, final String jid, final String account) {
 			Intent intent;
 			switch (type) {
-			case DatabaseContract.OpenChats.TYPE_CHAT:
-				intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
-				break;
-			case DatabaseContract.OpenChats.TYPE_MUC:
-				intent = new Intent(OpenChatItemFragment.this.getContext(), MucActivity.class);
-				break;
-			default:
-				throw new RuntimeException("Unrecognized open_chat type = " + type);
+				case DatabaseContract.OpenChats.TYPE_CHAT:
+					intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
+					break;
+				case DatabaseContract.OpenChats.TYPE_MUC:
+					intent = new Intent(OpenChatItemFragment.this.getContext(), MucActivity.class);
+					break;
+				default:
+					throw new RuntimeException("Unrecognized open_chat type = " + type);
 			}
 			intent.putExtra("openChatId", openChatId);
 			intent.putExtra("jid", jid);
@@ -265,10 +264,10 @@ public class OpenChatItemFragment extends Fragment {
 
 	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
 
-		private final String[] cols = new String[] { DatabaseContract.OpenChats.FIELD_ID,
+		private final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
 				DatabaseContract.OpenChats.FIELD_ACCOUNT, DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
-				ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_STATE,
-				ChatProvider.FIELD_LAST_MESSAGE, ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP };
+				ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_CONTACT_PRESENCE,
+				ChatProvider.FIELD_LAST_MESSAGE, ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP, ChatProvider.FIELD_LAST_MESSAGE_STATE};
 
 		@Override
 		protected Cursor doInBackground(Void... params) {

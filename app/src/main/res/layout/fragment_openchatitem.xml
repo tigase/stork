@@ -6,40 +6,53 @@
                 android:padding="8dp">
 
     <ImageView
-        android:id="@+id/contact_avatar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_alignParentLeft="true"
-        android:scaleType="centerCrop"
-        android:src="@drawable/user_avatar"></ImageView>
+            android:id="@+id/contact_avatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
+            android:scaleType="centerCrop"
+            android:src="@drawable/user_avatar"></ImageView>
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/contact_avatar"
-        android:orientation="vertical"
-        android:paddingLeft="8dp">
-
-        <TextView
-            android:id="@+id/contact_display_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif"
-            android:singleLine="true"
-            android:text="Contact"
-            android:textColor="#000000"
-            android:textSize="17sp"
-            />
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/contact_avatar"
+            android:orientation="vertical"
+            android:paddingLeft="8dp">
 
 
         <TextView
-            android:id="@+id/last_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="Contact"
-            android:textSize="12sp"/>
+                android:id="@+id/contact_display_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:singleLine="true"
+                android:text="Contact"
+                android:textColor="#000000"
+                android:textSize="17sp"
+        />
+
+
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
+                      android:orientation="horizontal" android:layout_marginRight="3dp">
+            <ImageView android:id="@+id/chat_delivery_status" android:layout_width="12dp"
+                       android:layout_height="match_parent"
+                       android:src="@drawable/ic_message_sent_24dp"
+                       android:layout_marginRight="3dp"
+                       android:tint="#bdbdbd"/>
+            <TextView
+                    android:id="@+id/last_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="wczoraj"
+                    android:textColor="#bdbdbd"
+                    android:textSize="12sp"/>
+
+
+        </LinearLayout>
+
+
     </LinearLayout>
 
     <ImageView

@@ -21,20 +21,20 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
+import android.database.Cursor;
+import android.graphics.Typeface;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
 import tigase.jaxmpp.core.client.BareJID;
-import android.database.Cursor;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.PopupMenu;
 
 public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
@@ -52,40 +52,64 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 		final String account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
 		final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
 		final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
-		final int state = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_STATE));
+		final int presence = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_CONTACT_PRESENCE));
+		final int lastMessageState = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE_STATE));
 		final int type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
 
 		int presenceIconResource;
-		switch (state) {
-		case CPresence.OFFLINE:
-			presenceIconResource = android.R.drawable.presence_invisible;
-			break;
-		case CPresence.ERROR:
-			presenceIconResource = android.R.drawable.presence_offline;
-			break;
-		case CPresence.DND:
-			presenceIconResource = android.R.drawable.presence_busy;
-			break;
-		case CPresence.XA:
-			presenceIconResource = android.R.drawable.presence_away;
-			break;
-		case CPresence.AWAY:
-			presenceIconResource = android.R.drawable.presence_away;
-			break;
-		case CPresence.ONLINE:
-			presenceIconResource = android.R.drawable.presence_online;
-			break;
-		case CPresence.CHAT: // chat
-			presenceIconResource = android.R.drawable.presence_online;
-			break;
-		default:
-			presenceIconResource = android.R.drawable.presence_offline;
+		switch (presence) {
+			case CPresence.OFFLINE:
+				presenceIconResource = android.R.drawable.presence_invisible;
+				break;
+			case CPresence.ERROR:
+				presenceIconResource = android.R.drawable.presence_offline;
+				break;
+			case CPresence.DND:
+				presenceIconResource = android.R.drawable.presence_busy;
+				break;
+			case CPresence.XA:
+				presenceIconResource = android.R.drawable.presence_away;
+				break;
+			case CPresence.AWAY:
+				presenceIconResource = android.R.drawable.presence_away;
+				break;
+			case CPresence.ONLINE:
+				presenceIconResource = android.R.drawable.presence_online;
+				break;
+			case CPresence.CHAT: // chat
+				presenceIconResource = android.R.drawable.presence_online;
+				break;
+			default:
+				presenceIconResource = android.R.drawable.presence_offline;
 		}
 
 		holder.mStatus.setImageResource(presenceIconResource);
 		holder.mContactName.setText(name);
 		holder.mLastMessage.setText(lastMessage);
 		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
+
+		if (lastMessageState == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
+			holder.mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
+		} else {
+			holder.mLastMessage.setTypeface(Typeface.DEFAULT);
+		}
+
+		switch (lastMessageState) {
+			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
+				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
+				break;
+			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
+				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
+				break;
+			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
+				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
+				break;
+			default:
+				holder.mDeliveryStatus.setVisibility(View.GONE);
+		}
 
 		holder.itemView.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -115,12 +139,12 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 		};
 
 		switch (type) {
-		case DatabaseContract.OpenChats.TYPE_MUC:
-			holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
-			break;
-		case DatabaseContract.OpenChats.TYPE_CHAT:
-			holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
-			break;
+			case DatabaseContract.OpenChats.TYPE_MUC:
+				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
+				break;
+			case DatabaseContract.OpenChats.TYPE_CHAT:
+				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
+				break;
 		}
 	}
 

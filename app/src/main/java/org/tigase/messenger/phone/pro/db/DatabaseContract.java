@@ -21,10 +21,10 @@
 
 package org.tigase.messenger.phone.pro.db;
 
+import android.provider.BaseColumns;
 import tigase.jaxmpp.android.caps.CapsFeaturesTableMetaData;
 import tigase.jaxmpp.android.chat.OpenChatTableMetaData;
 import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
-import android.provider.BaseColumns;
 
 public final class DatabaseContract {
 
@@ -117,7 +117,7 @@ public final class DatabaseContract {
 		public static final String FIELD_ID = "_id";
 		public static final String FIELD_JID = "jid";
 		/**
-		 * Description of values for FIELD_STATE (state)
+		 * Description of values for FIELD_CONTACT_PRESENCE (state)
 		 * <ul>
 		 * <li><code>0</code> - incoming</li>
 		 * <li><code>1</code> - outgoing, sent</li>

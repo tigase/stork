@@ -21,12 +21,6 @@
 
 package org.tigase.messenger.phone.pro.conversations.chat;
 
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
-import tigase.jaxmpp.core.client.BareJID;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.format.DateUtils;
@@ -35,6 +29,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
+import tigase.jaxmpp.core.client.BareJID;
 
 public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
@@ -64,18 +63,18 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		final int type = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE));
 
 		switch (state) {
-		case DatabaseContract.ChatHistory.STATE_INCOMING:
-		case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
-			if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
-				return ITEM_ERROR;
-			} else
-				return ITEM_MESSAGE_IN;
-		case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-		case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-		case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-			return ITEM_MESSAGE_OUT;
-		default:
-			return -1;
+			case DatabaseContract.ChatHistory.STATE_INCOMING:
+			case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
+				if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
+					return ITEM_ERROR;
+				} else
+					return ITEM_MESSAGE_IN;
+			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+				return ITEM_MESSAGE_OUT;
+			default:
+				return -1;
 		}
 
 	}
@@ -88,25 +87,23 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		final long timestampt = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
 		final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 
+
 		holder.mContentView.setText(body);
 		holder.mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
 				DateUtils.WEEK_IN_MILLIS, 0));
 
-		if (state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
-			// holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
-		}
 
 		if (holder.mDeliveryStatus != null) {
 			switch (state) {
-			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
-				break;
+				case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
+					break;
 			}
 		}
 		if (holder.mAvatar != null) {
@@ -140,17 +137,17 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		View view;
 		switch (viewType) {
-		case ITEM_MESSAGE_IN:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_received, parent, false);
-			break;
-		case ITEM_MESSAGE_OUT:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sent, parent, false);
-			break;
-		case ITEM_ERROR:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
-			break;
-		default:
-			throw new RuntimeException("Unknown view type " + viewType);
+			case ITEM_MESSAGE_IN:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_received, parent, false);
+				break;
+			case ITEM_MESSAGE_OUT:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sent, parent, false);
+				break;
+			case ITEM_ERROR:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
+				break;
+			default:
+				throw new RuntimeException("Unknown view type " + viewType);
 		}
 
 		return new ViewHolder(view);

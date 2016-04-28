@@ -21,13 +21,22 @@
 
 package org.tigase.messenger.phone.pro.service;
 
-import java.util.*;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.net.ssl.SSLSocketFactory;
-
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.app.*;
+import android.content.*;
+import android.content.pm.PackageInfo;
+import android.database.Cursor;
+import android.media.RingtoneManager;
+import android.net.*;
+import android.os.AsyncTask;
+import android.os.Binder;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
+import android.util.Log;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
@@ -41,13 +50,11 @@ import org.tigase.messenger.phone.pro.db.RosterProviderExt;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
-
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.android.caps.CapabilitiesDBCache;
 import tigase.jaxmpp.android.chat.AndroidChatManager;
 import tigase.jaxmpp.android.muc.AndroidRoomsManager;
 import tigase.jaxmpp.android.roster.AndroidRosterStore;
-import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -71,28 +78,16 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.utils.delay.XmppDelay;
 import tigase.jaxmpp.j2se.J2SEPresenceStore;
 import tigase.jaxmpp.j2se.J2SESessionObject;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.app.*;
-import android.content.*;
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.database.Cursor;
-import android.media.RingtoneManager;
-import android.net.*;
-import android.os.AsyncTask;
-import android.os.Binder;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
-import android.text.TextUtils;
-import android.util.Log;
+
+import javax.net.ssl.SSLSocketFactory;
+import java.util.*;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class XMPPService extends Service {
 
@@ -179,6 +174,8 @@ public class XMPPService extends Service {
 			if (activity instanceof ChatActivity) {
 				int v = ((ChatActivity) activity).getOpenChatId();
 				XMPPService.this.focusedOnChatId = v;
+
+
 				Log.i("ActivityLifecycle", "focusedOnChatId = " + v + "; " + ((ChatActivity) activity).getAccount());
 			}
 			if (activity instanceof MucActivity) {
@@ -576,7 +573,6 @@ public class XMPPService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-
 		Log.i("XMPPService", "Service started");
 
 		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
@@ -630,7 +626,7 @@ public class XMPPService extends Service {
 				new StreamManagementModule.StreamManagementFailedHandler() {
 					@Override
 					public void onStreamManagementFailed(final SessionObject sessionObject,
-							XMPPException.ErrorCondition condition) {
+														 XMPPException.ErrorCondition condition) {
 						if (condition != null && condition.getElementName().equals("item-not-found")) {
 							XMPPService.this.rosterProvider.resetStatus(sessionObject);
 						}
@@ -739,9 +735,9 @@ public class XMPPService extends Service {
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-		// .setSmallIcon(R.drawable.ic_messenger_icon)
-		.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
-				title).setContentTitle(title).setContentText(text).setContentIntent(
+				// .setSmallIcon(R.drawable.ic_messenger_icon)
+				.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+						title).setContentTitle(title).setContentText(text).setContentIntent(
 						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
 		builder.setLights(0xffff0000, 100, 100);
@@ -772,9 +768,9 @@ public class XMPPService extends Service {
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-		// .setSmallIcon(R.drawable.ic_messenger_icon)
-		.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
-				title).setContentTitle(title).setContentText(text).setContentIntent(
+				// .setSmallIcon(R.drawable.ic_messenger_icon)
+				.setSmallIcon(android.R.drawable.stat_notify_error).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+						title).setContentTitle(title).setContentText(text).setContentIntent(
 						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
 		builder.setLights(0xffff0000, 100, 100);
@@ -826,9 +822,9 @@ public class XMPPService extends Service {
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-		// .setSmallIcon(R.drawable.ic_messenger_icon)
-		.setSmallIcon(R.drawable.ic_messenger_icon).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
-				title).setContentTitle(title).setContentText(text).setContentIntent(
+				// .setSmallIcon(R.drawable.ic_messenger_icon)
+				.setSmallIcon(R.drawable.ic_messenger_icon).setWhen(System.currentTimeMillis()).setAutoCancel(true).setTicker(
+						title).setContentTitle(title).setContentText(text).setContentIntent(
 						editServerSettingsPendingIntent).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
 		builder.setLights(0xff0000ff, 100, 100);
@@ -925,7 +921,7 @@ public class XMPPService extends Service {
 		mBuilder.setSound(soundUri);
 		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
 		if (vibrate) {
-			final long[] pattern = { 0, 400, 200, 100, 200, 100 };
+			final long[] pattern = {0, 400, 200, 100, 200, 100};
 			mBuilder.setVibrate(pattern);
 		}
 		Intent resultIntent = new Intent(this, ChatActivity.class);
@@ -977,7 +973,7 @@ public class XMPPService extends Service {
 		mBuilder.setSound(soundUri);
 		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
 		if (vibrate) {
-			final long[] pattern = { 0, 400, 200, 100, 200, 100 };
+			final long[] pattern = {0, 400, 200, 100, 200, 100};
 			mBuilder.setVibrate(pattern);
 		}
 		Intent resultIntent = new Intent(this, MucActivity.class);
@@ -1090,15 +1086,21 @@ public class XMPPService extends Service {
 
 		// DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
 
-		values.put(DatabaseContract.ChatHistory.FIELD_STATE, sessionObject.getUserBareJid().equals(authorJid)
-				? DatabaseContract.ChatHistory.STATE_OUT_SENT : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+		if (sessionObject.getUserBareJid().equals(authorJid)) {
+			values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
+		} else {
+			values.put(DatabaseContract.ChatHistory.FIELD_STATE, focusedOnChatId != null && chat.getId() == focusedOnChatId
+					? DatabaseContract.ChatHistory.STATE_INCOMING : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+		}
 
-		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + Uri.encode(jid));
+
+		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + jid);
 		uri = getContentResolver().insert(uri, values);
 
 		getApplicationContext().getContentResolver().notifyChange(
 				ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chat.getId()), null);
-		getApplicationContext().getContentResolver().notifyChange(uri, null);
+
+//		getApplicationContext().getContentResolver().notifyChange(uri, null);
 		// context.getContentResolver().insert(uri, values);
 
 		// if (!sessionObject.getUserBareJid().equals(authorJid) &&
@@ -1277,13 +1279,13 @@ public class XMPPService extends Service {
 
 	private class SendUnsentMessages extends AsyncTask<Void, Void, Void> {
 
-		private final String[] cols = new String[] { DatabaseContract.ChatHistory.FIELD_ID,
+		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
 				DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
 				DatabaseContract.ChatHistory.FIELD_BODY, DatabaseContract.ChatHistory.FIELD_DATA,
 				DatabaseContract.ChatHistory.FIELD_JID, DatabaseContract.ChatHistory.FIELD_STATE,
 				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_STANZA_ID,
-				DatabaseContract.ChatHistory.FIELD_TIMESTAMP };
+				DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		private final SessionObject sessionObject;
 
@@ -1295,7 +1297,7 @@ public class XMPPService extends Service {
 		protected Void doInBackground(Void... params) {
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + sessionObject.getUserBareJid());
 			Cursor c = getContentResolver().query(u, cols, DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "!=?",
-					new String[] { "" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE },
+					new String[]{"" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE},
 					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
 			try {
 				while (c.moveToNext()) {
@@ -1319,7 +1321,7 @@ public class XMPPService extends Service {
 							ContentValues values = new ContentValues();
 							values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
 							getContentResolver().update(Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/"
-									+ sessionObject.getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values, null,
+											+ sessionObject.getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values, null,
 									null);
 						} catch (JaxmppException e) {
 							Log.w("XMPPService", "Cannot send unsent message", e);
@@ -1338,13 +1340,13 @@ public class XMPPService extends Service {
 
 	private class SendUnsentGroupMessages extends AsyncTask<Void, Void, Void> {
 
-		private final String[] cols = new String[] { DatabaseContract.ChatHistory.FIELD_ID,
+		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
 				DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
 				DatabaseContract.ChatHistory.FIELD_BODY, DatabaseContract.ChatHistory.FIELD_DATA,
 				DatabaseContract.ChatHistory.FIELD_JID, DatabaseContract.ChatHistory.FIELD_STATE,
 				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_STANZA_ID,
-				DatabaseContract.ChatHistory.FIELD_TIMESTAMP };
+				DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		private final Room room;
 
@@ -1360,8 +1362,8 @@ public class XMPPService extends Service {
 
 			Cursor c = getContentResolver().query(u, cols,
 					DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "==? AND " + DatabaseContract.ChatHistory.FIELD_JID + "=?",
-					new String[] { "" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE,
-							room.getRoomJid().toString() },
+					new String[]{"" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE,
+							room.getRoomJid().toString()},
 					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
 
 			try {
@@ -1391,7 +1393,7 @@ public class XMPPService extends Service {
 							values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
 							values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, System.currentTimeMillis());
 							getContentResolver().update(Uri.parse(ChatProvider.MUC_HISTORY_URI + "/"
-									+ room.getSessionObject().getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values,
+											+ room.getSessionObject().getUserBareJid() + "/" + toJid.getBareJid() + "/" + id), values,
 									null, null);
 						} catch (JaxmppException e) {
 							Log.w("XMPPService", "Cannot send unsent message", e);
@@ -1413,7 +1415,7 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onCarbonReceived(SessionObject sessionObject, MessageCarbonsModule.CarbonEventType carbonType,
-				tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Chat chat) {
+									 tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Chat chat) {
 			try {
 				storeMessage(sessionObject, chat, msg);
 			} catch (Exception ex) {
@@ -1435,7 +1437,7 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onMessageReceived(SessionObject sessionObject, Chat chat,
-				tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) {
+									  tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) {
 			try {
 
 				storeMessage(sessionObject, chat, msg);
@@ -1452,7 +1454,7 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onMessageError(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Room room,
-				String nickname, Date timestamp) {
+								   String nickname, Date timestamp) {
 			try {
 				Log.e(TAG, "Error from room " + room.getRoomJid() + ", error = " + msg.getAsString());
 			} catch (XMLException e) {
@@ -1462,7 +1464,7 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onMucMessageReceived(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg,
-				Room room, String nickname, Date timestamp) {
+										 Room room, String nickname, Date timestamp) {
 			try {
 				Log.d(TAG, "Received groupchat message: " + msg.getBody() + "; room=" + room);
 
@@ -1506,13 +1508,15 @@ public class XMPPService extends Service {
 							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				} else if (nickname != null) {
-					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, focusedOnRoomId != null && room.getId() == focusedOnRoomId
+							? DatabaseContract.ChatHistory.STATE_INCOMING : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
 							DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 					notify = true;
 				} else {
-					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, focusedOnRoomId != null && room.getId() == focusedOnRoomId
+							? DatabaseContract.ChatHistory.STATE_INCOMING : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				}
@@ -1577,16 +1581,16 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onStateChange(SessionObject sessionObject, Room room,
-				tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State oldState,
-				tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State newState) {
+								  tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State oldState,
+								  tigase.jaxmpp.core.client.xmpp.modules.muc.Room.State newState) {
 			Log.v(TAG, "room " + room.getRoomJid() + " changed state from " + oldState + " to " + newState);
 			int state = CPresence.OFFLINE;
 			switch (newState) {
-			case joined:
-				state = CPresence.ONLINE;
-				break;
-			default:
-				state = CPresence.OFFLINE;
+				case joined:
+					state = CPresence.ONLINE;
+					break;
+				default:
+					state = CPresence.OFFLINE;
 			}
 			chatProvider.updateRoomState(sessionObject, room.getRoomJid(), state);
 		}
@@ -1625,37 +1629,37 @@ public class XMPPService extends Service {
 			int presenceId = Long.valueOf(sharedPref.getLong("auto_presence", defaultPresence)).intValue();
 
 			switch (presenceId) {
-			case CPresence.OFFLINE:
-				presence.setType(StanzaType.unavailable);
-				break;
-			case CPresence.DND:
-				presence.setShow(Presence.Show.dnd);
-				break;
-			case CPresence.XA:
-				presence.setShow(Presence.Show.xa);
-				break;
-			case CPresence.AWAY:
-				presence.setShow(Presence.Show.away);
-				break;
-			case CPresence.ONLINE:
-				presence.setShow(Presence.Show.online);
-				break;
-			case CPresence.CHAT:
-				presence.setShow(Presence.Show.chat);
-				break;
+				case CPresence.OFFLINE:
+					presence.setType(StanzaType.unavailable);
+					break;
+				case CPresence.DND:
+					presence.setShow(Presence.Show.dnd);
+					break;
+				case CPresence.XA:
+					presence.setShow(Presence.Show.xa);
+					break;
+				case CPresence.AWAY:
+					presence.setShow(Presence.Show.away);
+					break;
+				case CPresence.ONLINE:
+					presence.setShow(Presence.Show.online);
+					break;
+				case CPresence.CHAT:
+					presence.setShow(Presence.Show.chat);
+					break;
 			}
 		}
 
 		@Override
 		public void onContactAvailable(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show, String status,
-				Integer priority) throws JaxmppException {
+									   Integer priority) throws JaxmppException {
 			updateRosterItem(sessionObject, stanza);
 			rosterProvider.updateStatus(sessionObject, jid);
 		}
 
 		@Override
 		public void onContactChangedPresence(SessionObject sessionObject, Presence stanza, JID jid, Presence.Show show,
-				String status, Integer priority) throws JaxmppException {
+											 String status, Integer priority) throws JaxmppException {
 			updateRosterItem(sessionObject, stanza);
 			rosterProvider.updateStatus(sessionObject, jid);
 		}
