@@ -46,6 +46,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="wczoraj"
+                    android:singleLine="true"
                     android:textColor="#bdbdbd"
                     android:textSize="12sp"/>
 
