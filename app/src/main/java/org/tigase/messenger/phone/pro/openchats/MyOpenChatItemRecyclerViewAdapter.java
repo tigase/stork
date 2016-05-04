@@ -147,6 +147,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 				break;
 			case DatabaseContract.OpenChats.TYPE_CHAT:
 				holder.mStatus.setImageResource(presenceIconResource);
+				holder.mStatus.setVisibility(View.VISIBLE);
 				holder.mContactName.setText(context.getString(R.string.openchats_chat, name));
 				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
 				AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
