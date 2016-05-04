@@ -31,8 +31,8 @@ android {
         applicationId "org.tigase.messenger.phone.pro"
         minSdkVersion 19
         targetSdkVersion 23
-        versionCode 25
-        versionName "3.0.0-pre_alpha-9"
+        versionCode 26
+        versionName "3.0.0-pre_alpha-10"
     }
     signingConfigs {
         release {
