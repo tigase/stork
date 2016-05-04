@@ -28,7 +28,6 @@ import android.content.*;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
-import android.media.RingtoneManager;
 import android.net.*;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -48,6 +47,7 @@ import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.db.RosterProviderExt;
+import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
@@ -278,6 +278,7 @@ public class XMPPService extends Service {
 	};
 	private SSLSocketFactory sslSocketFactory;
 	private DatabaseHelper dbHelper;
+	private MessageNotification notificationHelper = new MessageNotification();
 
 	public XMPPService() {
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -898,7 +899,7 @@ public class XMPPService extends Service {
 		}).execute();
 	}
 
-	private void sendNotification(SessionObject sessionObject, Chat chat, Message msg) throws XMLException {
+	private void sendNotification(SessionObject sessionObject, Chat chat, Message msg) throws JaxmppException {
 		Log.i("ActivityLifecycle", "focused=" + focusedOnChatId + "; chatId=" + chat.getId());
 
 		if (this.focusedOnChatId != null && chat.getId() == this.focusedOnChatId)
@@ -909,48 +910,10 @@ public class XMPPService extends Service {
 		if (!sharedPref.getBoolean("notifications_new_message", true))
 			return;
 
-		String sound = sharedPref.getString("notifications_new_message_ringtone", null);
-		boolean vibrate = sharedPref.getBoolean("notifications_new_message_vibrate", true);
-
-		String title = chat.getJid().getBareJid().toString();
-		String text = msg.getBody();
-
-		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this).setSmallIcon(
-				R.drawable.ic_messenger_icon).setContentTitle(title).setContentText(text);
-
-		Uri soundUri = sound == null ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(sound);
-
-		mBuilder.setAutoCancel(true);
-		mBuilder.setSound(soundUri);
-		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
-		if (vibrate) {
-			final long[] pattern = {0, 400, 200, 100, 200, 100};
-			mBuilder.setVibrate(pattern);
-		}
-		Intent resultIntent = new Intent(this, ChatActivity.class);
-		resultIntent.putExtra("openChatId", (int) chat.getId());
-		resultIntent.putExtra("jid", chat.getJid().getBareJid().toString());
-		resultIntent.putExtra("account", sessionObject.getUserBareJid().toString());
-
-		// The stack builder object will contain an artificial back stack for
-		// the
-		// started Activity.
-		// This ensures that navigating backward from the Activity leads out of
-		// your application to the Home screen.
-		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-		// Adds the back stack for the Intent (but not the Intent itself)
-		stackBuilder.addParentStack(ChatActivity.class);
-		// Adds the Intent that starts the Activity to the top of the stack
-		stackBuilder.addNextIntent(resultIntent);
-		PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-		mBuilder.setContentIntent(resultPendingIntent);
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		// mId allows you to update the notification later on.
-		mNotificationManager.notify(("chat:" + chat.getId()).hashCode(), mBuilder.build());
-
+		notificationHelper.show(this, chat, msg);
 	}
 
-	private void sendNotification(SessionObject sessionObject, Room room, Message msg) throws XMLException {
+	private void sendNotification(SessionObject sessionObject, Room room, Message msg) throws JaxmppException {
 		Log.i("ActivityLifecycle", "focused=" + focusedOnRoomId + "; chatId=" + room.getId());
 
 		if (this.focusedOnRoomId != null && room.getId() == this.focusedOnRoomId)
@@ -961,45 +924,8 @@ public class XMPPService extends Service {
 		if (!sharedPref.getBoolean("notifications_new_groupmessage", true))
 			return;
 
-		String sound = sharedPref.getString("notifications_new_groupmessage_ringtone", null);
-		boolean vibrate = sharedPref.getBoolean("notifications_new_groupmessage_vibrate", true);
 
-		String title = room.getRoomJid().toString();
-		String text = msg.getBody();
-
-		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this).setSmallIcon(
-				R.drawable.ic_messenger_icon).setContentTitle(title).setContentText(text);
-
-		Uri soundUri = sound == null ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(sound);
-
-		mBuilder.setAutoCancel(true);
-		mBuilder.setSound(soundUri);
-		mBuilder.setCategory(Notification.CATEGORY_MESSAGE);
-		if (vibrate) {
-			final long[] pattern = {0, 400, 200, 100, 200, 100};
-			mBuilder.setVibrate(pattern);
-		}
-		Intent resultIntent = new Intent(this, MucActivity.class);
-		resultIntent.putExtra("openChatId", (int) room.getId());
-		resultIntent.putExtra("jid", room.getRoomJid().toString());
-		resultIntent.putExtra("account", sessionObject.getUserBareJid().toString());
-
-		// The stack builder object will contain an artificial back stack for
-		// the
-		// started Activity.
-		// This ensures that navigating backward from the Activity leads out of
-		// your application to the Home screen.
-		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-		// Adds the back stack for the Intent (but not the Intent itself)
-		stackBuilder.addParentStack(ChatActivity.class);
-		// Adds the Intent that starts the Activity to the top of the stack
-		stackBuilder.addNextIntent(resultIntent);
-		PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-		mBuilder.setContentIntent(resultPendingIntent);
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		// mId allows you to update the notification later on.
-		mNotificationManager.notify(("muc:" + room.getId()).hashCode(), mBuilder.build());
-
+		notificationHelper.show(this, room, msg);
 	}
 
 	private void startKeepAlive() {
@@ -1442,7 +1368,6 @@ public class XMPPService extends Service {
 		public void onMessageReceived(SessionObject sessionObject, Chat chat,
 									  tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) {
 			try {
-
 				storeMessage(sessionObject, chat, msg);
 				if (msg.getBody() != null && !msg.getBody().isEmpty())
 					sendNotification(sessionObject, chat, msg);

@@ -180,4 +180,10 @@
     <string name="pref_auto_x_away_after_title">Auto eXtended Away delay (after Away)</string>
     <string name="pref_chat_notifications_title">Chats</string>
     <string name="pref_muc_notifications_title">Groupchats</string>
+    <string name="openchats_room">Room %s</string>
+    <string name="openchats_chat">%s</string>
+    <string name="notification_new_message_from">New message from %s</string>
+    <string name="notification_new_groupmessage_from">New message in room %s</string>
+    <string name="notification_new_messages">%s new messages</string>
+    <string name="notification_unread_conversations">%s unread conversations</string>
 </resources>

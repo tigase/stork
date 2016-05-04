@@ -8,8 +8,11 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-    <ImageView android:id="@+id/contact_avatar" android:layout_width="wrap_content" android:layout_height="wrap_content"
-               android:src="@drawable/user_avatar" android:layout_alignParentBottom="true"/>
+    <ImageView android:id="@+id/contact_avatar"
+               android:layout_width="48dp"
+               android:layout_height="48dp"
+               android:src="@drawable/user_avatar"
+               android:layout_alignTop="@id/message_box"/>
     <LinearLayout
             android:id="@+id/message_box"
             android:layout_width="wrap_content"

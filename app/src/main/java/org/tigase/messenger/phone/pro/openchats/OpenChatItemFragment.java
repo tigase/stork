@@ -42,6 +42,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -194,7 +195,7 @@ public class OpenChatItemFragment extends Fragment {
 
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-		this.adapter = new MyOpenChatItemRecyclerViewAdapter(null, mListener) {
+		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, mListener) {
 			@Override
 			protected void onContentChanged() {
 				refreshChatlist();
@@ -234,6 +235,12 @@ public class OpenChatItemFragment extends Fragment {
 				return null;
 			}
 		}.execute();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		MessageNotification.cancelSummaryNotification(getContext());
 	}
 
 	private void refreshChatlist() {

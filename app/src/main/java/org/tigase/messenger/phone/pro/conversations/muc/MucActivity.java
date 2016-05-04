@@ -9,6 +9,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.service.MarkAsRead;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -49,7 +50,7 @@ public class MucActivity extends AbstractConversationActivity {
 		super.onResume();
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(("muc:" + openChatId).hashCode());
-
+		MessageNotification.cancelSummaryNotification(this);
 		markAsRead.markGroupchatAsRead(this.openChatId, this.getAccount(), this.getJid());
 	}
 }

@@ -40,6 +40,7 @@ import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
@@ -159,8 +160,9 @@ public class ChatActivity extends AbstractConversationActivity {
 	protected void onResume() {
 		super.onResume();
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotificationManager.cancel(("chat:" + openChatId).hashCode());
 
+		mNotificationManager.cancel(("chat:" + openChatId).hashCode());
+		MessageNotification.cancelSummaryNotification(this);
 		loadContact();
 		loadUserPresence();
 

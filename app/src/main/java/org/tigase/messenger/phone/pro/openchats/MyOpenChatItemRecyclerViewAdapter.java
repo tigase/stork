@@ -21,6 +21,7 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
@@ -39,10 +40,12 @@ import tigase.jaxmpp.core.client.BareJID;
 public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
+	private final Context context;
 
-	public MyOpenChatItemRecyclerViewAdapter(Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
+	public MyOpenChatItemRecyclerViewAdapter(Context context, Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
 		super(cursor);
 		mListener = listener;
+		this.context = context;
 	}
 
 	@Override
@@ -83,10 +86,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 				presenceIconResource = android.R.drawable.presence_offline;
 		}
 
-		holder.mStatus.setImageResource(presenceIconResource);
-		holder.mContactName.setText(name);
 		holder.mLastMessage.setText(lastMessage);
-		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
 
 		if (lastMessageState == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
 			holder.mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
@@ -140,10 +140,16 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 
 		switch (type) {
 			case DatabaseContract.OpenChats.TYPE_MUC:
+				holder.mStatus.setVisibility(View.INVISIBLE);
+				holder.mContactName.setText(context.getString(R.string.openchats_room, name));
 				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
+				holder.mContactAvatar.setImageResource(R.drawable.ic_groupchat_24dp);
 				break;
 			case DatabaseContract.OpenChats.TYPE_CHAT:
+				holder.mStatus.setImageResource(presenceIconResource);
+				holder.mContactName.setText(context.getString(R.string.openchats_chat, name));
 				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
+				AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
 				break;
 		}
 	}

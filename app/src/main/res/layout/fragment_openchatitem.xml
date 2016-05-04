@@ -40,17 +40,15 @@
                        android:layout_height="match_parent"
                        android:src="@drawable/ic_message_sent_24dp"
                        android:layout_marginRight="3dp"
-                       android:tint="#bdbdbd"/>
+                       android:tint="#000000"/>
             <TextView
                     android:id="@+id/last_message"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="wczoraj"
                     android:singleLine="true"
-                    android:textColor="#bdbdbd"
+                    android:textColor="#000000"
                     android:textSize="12sp"/>
-
-
         </LinearLayout>
 
 

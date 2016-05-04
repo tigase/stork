@@ -26,13 +26,7 @@
 
             <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
                             android:gravity="center_vertical">
-                <ImageView android:layout_width="wrap_content"
-                           android:layout_height="wrap_content"
-                           android:id="@+id/contact_presence"
-                           android:src="@android:drawable/presence_away"
-                           android:layout_centerVertical="true"
-                           android:layout_marginRight="5dp"
-                />
+
 
                 <TextView
                         android:id="@+id/contact_display_name"
@@ -43,7 +37,7 @@
                         android:text="MUC"
                         android:textColor="#ffffffff"
                         style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse"
-                        android:layout_centerVertical="true" android:layout_toEndOf="@+id/contact_presence"
+                        android:layout_centerVertical="true"
                 />
 
             </RelativeLayout>
