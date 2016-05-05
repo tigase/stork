@@ -182,6 +182,9 @@ public class AvatarHelper extends ImageHelper {
 	}
 
 	public static Bitmap cropToSquare(Bitmap bitmap) {
+		if (bitmap == null)
+			return null;
+
 		int width = bitmap.getWidth();
 		int height = bitmap.getHeight();
 		int newWidth = (height > width) ? width : height;
@@ -196,6 +199,8 @@ public class AvatarHelper extends ImageHelper {
 	}
 
 	public static Bitmap getCroppedBitmap(Bitmap bitmap) {
+		if (bitmap == null)
+			return null;
 
 		bitmap = cropToSquare(bitmap);
 
