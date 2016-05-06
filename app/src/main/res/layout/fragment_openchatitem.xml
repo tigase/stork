@@ -22,17 +22,27 @@
             android:paddingLeft="8dp">
 
 
-        <TextView
-                android:id="@+id/contact_display_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
-                android:singleLine="true"
-                android:text="Contact"
-                android:textColor="#000000"
-                android:textSize="17sp"
-        />
+        <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <ImageView
+                    android:id="@+id/contact_presence"
+                    android:layout_width="17sp"
+                    android:layout_marginRight="3dp"
+                    android:layout_height="17sp"
+                    android:layout_alignBottom="@id/contact_display_name"
+                    android:src="@drawable/presence_unknown"
+                    android:layout_alignParentTop="true"/>
 
+            <TextView
+                    android:id="@+id/contact_display_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Contact"
+                    android:textColor="#000000"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif"
+                    android:layout_toRightOf="@+id/contact_presence"/>
+        </RelativeLayout>
 
         <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
                       android:orientation="horizontal" android:layout_marginRight="3dp">
@@ -54,12 +64,5 @@
 
     </LinearLayout>
 
-    <ImageView
-            android:id="@+id/contact_presence"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:src="@android:drawable/presence_online"/>
 
 </RelativeLayout>

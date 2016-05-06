@@ -2,7 +2,6 @@ package org.tigase.messenger.phone.pro;
 
 import android.content.Context;
 import android.widget.SimpleAdapter;
-
 import org.tigase.messenger.phone.pro.db.CPresence;
 
 import java.util.ArrayList;
@@ -11,35 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public class StatusSelectorAdapter extends SimpleAdapter {
-
-    private static Map<String, ?> c(String name, String label, Integer value, Integer imgId) {
-        HashMap<String, Object> tmp = new HashMap<>();
-        tmp.put("name", name);
-        tmp.put("label", label);
-        tmp.put("_id", value);
-        tmp.put("img", imgId);
-        return tmp;
-    }
-
-    public static StatusSelectorAdapter instance(Context context) {
-        List<Map<String, ?>> data = new ArrayList<>();
-        data.add(c("chat", context.getString(R.string.status_chat), CPresence.CHAT, android.R.drawable.presence_online));
-        data.add(c("online", context.getString(R.string.status_online), CPresence.ONLINE, android.R.drawable.presence_online));
-        data.add(c("away", context.getString(R.string.status_away), CPresence.AWAY, android.R.drawable.presence_away));
-        data.add(c("xa", context.getString(R.string.status_xa), CPresence.XA, android.R.drawable.presence_away));
-        data.add(c("dnd", context.getString(R.string.status_dnd), CPresence.DND, android.R.drawable.presence_busy));
-        data.add(c("offline", context.getString(R.string.status_offline), CPresence.OFFLINE, android.R.drawable.presence_invisible));
-        return new StatusSelectorAdapter(context, data, R.layout.status_selectoritem, new String[]{"label", "img"}, new int[]{R.id.content, R.id.id});
-    }
-
-
-    public int getPosition(final long itemId) {
-        for (int i = 0; i < getCount(); i++) {
-            long x = getItemId(i);
-            if (x == itemId) return i;
-        }
-        return 5;
-    }
 
     /**
      * Constructor
@@ -59,9 +29,36 @@ public class StatusSelectorAdapter extends SimpleAdapter {
         super(context, data, resource, from, to);
     }
 
+    private static Map<String, ?> c(String name, String label, Integer value, Integer imgId) {
+        HashMap<String, Object> tmp = new HashMap<>();
+        tmp.put("name", name);
+        tmp.put("label", label);
+        tmp.put("_id", value);
+        tmp.put("img", imgId);
+        return tmp;
+    }
+
+    public static StatusSelectorAdapter instance(Context context) {
+        List<Map<String, ?>> data = new ArrayList<>();
+        data.add(c("chat", context.getString(R.string.status_chat), CPresence.CHAT, R.drawable.presence_chat));
+        data.add(c("online", context.getString(R.string.status_online), CPresence.ONLINE, R.drawable.presence_online));
+        data.add(c("away", context.getString(R.string.status_away), CPresence.AWAY, R.drawable.presence_away));
+        data.add(c("xa", context.getString(R.string.status_xa), CPresence.XA, R.drawable.presence_xa));
+        data.add(c("dnd", context.getString(R.string.status_dnd), CPresence.DND, R.drawable.presence_dnd));
+        data.add(c("offline", context.getString(R.string.status_offline), CPresence.OFFLINE, R.drawable.presence_offline));
+        return new StatusSelectorAdapter(context, data, R.layout.status_selectoritem, new String[]{"label", "img"}, new int[]{R.id.content, R.id.id});
+    }
 
     @Override
     public long getItemId(int position) {
         return ((Integer) ((Map<String, ?>) getItem(position)).get("_id")).longValue();
+    }
+
+    public int getPosition(final long itemId) {
+        for (int i = 0; i < getCount(); i++) {
+            long x = getItemId(i);
+            if (x == itemId) return i;
+        }
+        return 5;
     }
 }

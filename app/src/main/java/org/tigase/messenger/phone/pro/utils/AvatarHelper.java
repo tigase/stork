@@ -170,6 +170,7 @@ public class AvatarHelper extends ImageHelper {
 	}
 
 	protected static Bitmap loadAvatar(Context context, BareJID jid, boolean noCache) {
+		if (mPlaceHolderBitmap == null) return null;
 		Bitmap bmp = loadAvatar(context, jid, defaultAvatarSize);
 		if (!noCache) {
 			if (bmp == null) {

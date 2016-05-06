@@ -62,28 +62,28 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 		int presenceIconResource;
 		switch (presence) {
 			case CPresence.OFFLINE:
-				presenceIconResource = android.R.drawable.presence_invisible;
+				presenceIconResource = R.drawable.presence_offline;
 				break;
 			case CPresence.ERROR:
-				presenceIconResource = android.R.drawable.presence_offline;
+				presenceIconResource = R.drawable.presence_error;
 				break;
 			case CPresence.DND:
-				presenceIconResource = android.R.drawable.presence_busy;
+				presenceIconResource = R.drawable.presence_dnd;
 				break;
 			case CPresence.XA:
-				presenceIconResource = android.R.drawable.presence_away;
+				presenceIconResource = R.drawable.presence_xa;
 				break;
 			case CPresence.AWAY:
-				presenceIconResource = android.R.drawable.presence_away;
+				presenceIconResource = R.drawable.presence_away;
 				break;
 			case CPresence.ONLINE:
-				presenceIconResource = android.R.drawable.presence_online;
+				presenceIconResource = R.drawable.presence_online;
 				break;
 			case CPresence.CHAT: // chat
-				presenceIconResource = android.R.drawable.presence_online;
+				presenceIconResource = R.drawable.presence_chat;
 				break;
 			default:
-				presenceIconResource = android.R.drawable.presence_offline;
+				presenceIconResource = R.drawable.presence_unknown;
 		}
 
 		holder.mLastMessage.setText(lastMessage);
@@ -140,7 +140,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 
 		switch (type) {
 			case DatabaseContract.OpenChats.TYPE_MUC:
-				holder.mStatus.setVisibility(View.INVISIBLE);
+				holder.mStatus.setVisibility(View.GONE);
 				holder.mContactName.setText(context.getString(R.string.openchats_room, name));
 				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
 				holder.mContactAvatar.setImageResource(R.drawable.ic_groupchat_24dp);

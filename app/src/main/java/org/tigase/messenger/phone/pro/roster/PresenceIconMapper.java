@@ -21,6 +21,7 @@
 
 package org.tigase.messenger.phone.pro.roster;
 
+import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.CPresence;
 
 public class PresenceIconMapper {
@@ -29,28 +30,28 @@ public class PresenceIconMapper {
 		int presenceIconResource;
 		switch (presenceStatus) {
 		case CPresence.OFFLINE:
-			presenceIconResource = android.R.drawable.presence_invisible;
+			presenceIconResource = R.drawable.presence_offline;
 			break;
 		case CPresence.ERROR:
-			presenceIconResource = android.R.drawable.presence_offline;
+			presenceIconResource = R.drawable.presence_error;
 			break;
 		case CPresence.DND:
-			presenceIconResource = android.R.drawable.presence_busy;
+			presenceIconResource = R.drawable.presence_dnd;
 			break;
 		case CPresence.XA:
-			presenceIconResource = android.R.drawable.presence_away;
+			presenceIconResource = R.drawable.presence_xa;
 			break;
 		case CPresence.AWAY:
-			presenceIconResource = android.R.drawable.presence_away;
+			presenceIconResource = R.drawable.presence_away;
 			break;
 		case CPresence.ONLINE:
-			presenceIconResource = android.R.drawable.presence_online;
+			presenceIconResource = R.drawable.presence_online;
 			break;
 		case CPresence.CHAT: // chat
-			presenceIconResource = android.R.drawable.presence_online;
+			presenceIconResource = R.drawable.presence_chat;
 			break;
 		default:
-			presenceIconResource = android.R.drawable.presence_offline;
+			presenceIconResource = R.drawable.presence_unknown;
 		}
 
 		return presenceIconResource;

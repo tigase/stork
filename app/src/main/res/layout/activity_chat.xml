@@ -26,10 +26,10 @@
 
             <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
                             android:gravity="center_vertical">
-                <ImageView android:layout_width="wrap_content"
-                           android:layout_height="wrap_content"
+                <ImageView android:layout_width="16dp"
+                           android:layout_height="match_parent"
                            android:id="@+id/contact_presence"
-                           android:src="@android:drawable/presence_away"
+                           android:src="@drawable/presence_away"
                            android:layout_centerVertical="true"
                            android:layout_marginRight="5dp"
                 />

@@ -6,19 +6,22 @@
                 android:padding="8dp">
 
     <ImageView
-        android:id="@+id/id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"/>
+            android:id="@+id/id"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:cropToPadding="true"
+            android:src="@drawable/presence_unknown"
+            android:layout_margin="8dp"/>
 
     <TextView
-        android:id="@+id/content"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceListItem"
-        android:textColor="#FFFFFFFF"
-        android:layout_marginLeft="@dimen/text_margin"
-        android:layout_marginRight="@dimen/text_margin"
-        android:layout_centerVertical="true"
-        android:layout_toEndOf="@+id/id"/>
+            android:id="@+id/content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceListItem"
+            android:textColor="#FFFFFFFF"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_centerVertical="true"
+            android:text="Status"
+            android:layout_toEndOf="@+id/id"/>
 </RelativeLayout>
