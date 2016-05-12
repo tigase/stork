@@ -1,8 +1,8 @@
 package org.tigase.messenger.phone.pro.conversations;
 
+import android.support.v7.app.AppCompatActivity;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
-import android.support.v7.app.AppCompatActivity;
 
 public class AbstractConversationActivity extends AppCompatActivity {
 

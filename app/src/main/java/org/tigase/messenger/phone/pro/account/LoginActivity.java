@@ -21,15 +21,6 @@
 
 package org.tigase.messenger.phone.pro.account;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.service.MobileModeFeature;
-import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.animation.Animator;
@@ -61,6 +52,14 @@ import android.widget.Switch;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.MobileModeFeature;
+import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 
 /**
  * A login screen that offers login via email/password.
@@ -265,7 +264,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 				// Select only email addresses.
 				ContactsContract.Contacts.Data.MIMETYPE + " = ?",
-				new String[] { ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE },
+				new String[]{ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE},
 
 				// Show primary email addresses first. Note that there won't be
 				// a primary email address if the user hasn't specified one.
@@ -332,17 +331,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 		new AlertDialog.Builder(LoginActivity.this).setTitle(getString(R.string.account_certificate_info_title)).setMessage(
 				getString(R.string.account_certificate_info_description) + " " + msg.toString()).setCancelable(
-						true).setPositiveButton(getString(R.string.account_certificate_info_button_accept),
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog, int which) {
-										acceptCertificate(chain[0]);
-										attemptLogin();
-									}
-								}).setNegativeButton(getString(R.string.account_certificate_info_button_reject),
-										new DialogInterface.OnClickListener() {
-											public void onClick(DialogInterface dialog, int which) {
-											}
-										}).show();
+				true).setPositiveButton(getString(R.string.account_certificate_info_button_accept),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						acceptCertificate(chain[0]);
+						attemptLogin();
+					}
+				}).setNegativeButton(getString(R.string.account_certificate_info_button_reject),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				}).show();
 	}
 
 	/**
@@ -380,8 +379,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	}
 
 	private interface ProfileQuery {
-		String[] PROJECTION = { ContactsContract.CommonDataKinds.Email.ADDRESS,
-				ContactsContract.CommonDataKinds.Email.IS_PRIMARY, };
+		String[] PROJECTION = {ContactsContract.CommonDataKinds.Email.ADDRESS,
+				ContactsContract.CommonDataKinds.Email.IS_PRIMARY,};
 
 		int ADDRESS = 0;
 		int IS_PRIMARY = 1;
@@ -403,7 +402,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		private final boolean skipLoginTest;
 
 		UserLoginTask(boolean skipLoginTest, String xmppId, String password, String hostname, String resource, String nickname,
-				boolean active) {
+					  boolean active) {
 			this.skipLoginTest = skipLoginTest;
 			mXmppId = xmppId;
 			mPassword = password;

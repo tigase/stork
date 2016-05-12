@@ -1,20 +1,5 @@
 package org.tigase.messenger.phone.pro.conenctionStatus;
 
-import org.tigase.messenger.phone.pro.DividerItemDecoration;
-import org.tigase.messenger.phone.pro.MainActivity;
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.eventbus.Event;
-import tigase.jaxmpp.core.client.eventbus.EventHandler;
-import tigase.jaxmpp.core.client.eventbus.EventListener;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +17,20 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.DividerItemDecoration;
+import org.tigase.messenger.phone.pro.MainActivity;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.eventbus.Event;
+import tigase.jaxmpp.core.client.eventbus.EventHandler;
+import tigase.jaxmpp.core.client.eventbus.EventListener;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class ConnectionStatusesFragment extends Fragment {
 

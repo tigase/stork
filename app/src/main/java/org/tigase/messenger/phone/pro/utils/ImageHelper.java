@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Class implements generic image in-memory caching feature to ensure that we
  * have one memory cache for all images (to reduce memory usage and protect
  * against OutOfMemory).
- * 
+ *
  * @author andrzej
  */
 public class ImageHelper {

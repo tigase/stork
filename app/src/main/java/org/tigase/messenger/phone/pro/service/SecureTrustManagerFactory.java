@@ -21,21 +21,19 @@
 
 package org.tigase.messenger.phone.pro.service;
 
+import android.content.Context;
+import android.util.Log;
+import org.tigase.messenger.phone.pro.R;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
-import org.tigase.messenger.phone.pro.R;
-
-import android.content.Context;
-import android.util.Log;
 
 public class SecureTrustManagerFactory {
 
@@ -67,7 +65,7 @@ public class SecureTrustManagerFactory {
 	public static void addCertificate(Context ctx, X509Certificate crt) {
 		initIfRequired(ctx);
 		try {
-			instance.addTrustKey(new X509Certificate[] { crt });
+			instance.addTrustKey(new X509Certificate[]{crt});
 		} catch (KeyStoreException e) {
 			Log.e(TAG, "Can't add certificate to store", e);
 		}
@@ -108,7 +106,7 @@ public class SecureTrustManagerFactory {
 	private TrustManager[] getManagers(Context ctx) {
 		if (defaultTrustManager != null) {
 			Log.d(TAG, "Using wrapped TrustManager");
-			return new TrustManager[] { new TrustManagerWrapper() };
+			return new TrustManager[]{new TrustManagerWrapper()};
 		} else {
 			Log.d(TAG, "Using system TrustManager");
 			return factory.getTrustManagers();

@@ -21,14 +21,13 @@
 
 package org.tigase.messenger.phone.pro.conenctionStatus;
 
-import org.tigase.messenger.phone.pro.R;
-
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.R;
 
 public class ViewHolder extends RecyclerView.ViewHolder {
 

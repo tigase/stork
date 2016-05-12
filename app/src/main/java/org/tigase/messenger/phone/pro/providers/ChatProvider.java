@@ -32,7 +32,6 @@ import android.net.Uri;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
-import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,9 +64,9 @@ public class ChatProvider extends ContentProvider {
 			put(DatabaseContract.OpenChats.FIELD_JID,
 					"open_chats." + DatabaseContract.OpenChats.FIELD_JID + " as " + DatabaseContract.OpenChats.FIELD_JID);
 			put(ChatProvider.FIELD_NAME,
-					"CASE WHEN recipient." + RosterItemsCacheTableMetaData.FIELD_NAME + " IS NULL THEN " + " open_chats."
+					"CASE WHEN recipient." + DatabaseContract.RosterItemsCache.FIELD_NAME + " IS NULL THEN " + " open_chats."
 							+ DatabaseContract.OpenChats.FIELD_JID + " ELSE recipient."
-							+ RosterItemsCacheTableMetaData.FIELD_NAME + " END as " + ChatProvider.FIELD_NAME);
+							+ DatabaseContract.RosterItemsCache.FIELD_NAME + " END as " + ChatProvider.FIELD_NAME);
 			put(ChatProvider.FIELD_UNREAD_COUNT, "(SELECT COUNT(" + DatabaseContract.ChatHistory.TABLE_NAME + "."
 					+ DatabaseContract.ChatHistory.FIELD_ID + ") from " + DatabaseContract.ChatHistory.TABLE_NAME + " WHERE "
 					+ DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT

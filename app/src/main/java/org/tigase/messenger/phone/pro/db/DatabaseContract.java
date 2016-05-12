@@ -22,9 +22,6 @@
 package org.tigase.messenger.phone.pro.db;
 
 import android.provider.BaseColumns;
-import tigase.jaxmpp.android.caps.CapsFeaturesTableMetaData;
-import tigase.jaxmpp.android.chat.OpenChatTableMetaData;
-import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 
 public final class DatabaseContract {
 
@@ -35,8 +32,6 @@ public final class DatabaseContract {
 	private DatabaseContract() {
 	}
 
-	public static abstract class CapsFeatures extends CapsFeaturesTableMetaData implements BaseColumns {
-	}
 
 	public static abstract class RosterItemsGroupsCache implements BaseColumns {
 		public static final String FIELD_ITEM = "item_id";
@@ -77,7 +72,24 @@ public final class DatabaseContract {
 
 	}
 
-	public static abstract class RosterItemsCache extends RosterItemsCacheTableMetaData {
+	public static abstract class RosterItemsCache implements BaseColumns {
+
+		public static final String FIELD_ACCOUNT = "account";
+
+		public static final String FIELD_ASK = "ask";
+
+		public static final String FIELD_ID = "_id";
+
+		public static final String FIELD_JID = "jid";
+
+		public static final String FIELD_NAME = "name";
+
+		public static final String FIELD_SUBSCRIPTION = "subscription";
+
+		public static final String FIELD_TIMESTAMP = "timestamp";
+
+		public static final String TABLE_NAME = "roster_items";
+
 		/**
 		 * Additional field to keep status of buddy from roster item to speed up
 		 * searches of online users
@@ -101,7 +113,38 @@ public final class DatabaseContract {
 		public static final String ROSTER_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.rosteritem";
 	}
 
-	public static abstract class OpenChats extends OpenChatTableMetaData implements BaseColumns {
+	public static abstract class OpenChats implements BaseColumns {
+
+		// common
+		public static final String FIELD_ACCOUNT = "account";
+		public static final String FIELD_ID = "_id";
+		public static final String FIELD_JID = "jid";
+
+		/**
+		 * <ul>
+		 * <li><code>0</code> - single user chat</li>
+		 * <li><code>1</code> - multi user chat</li>
+		 * </ul>
+		 */
+		public static final String FIELD_TYPE = "type";
+
+		// for chat
+		public static final String FIELD_RESOURCE = "resource";
+		public static final String FIELD_THREAD_ID = "thread_id";
+
+		// for muc
+		public static final String FIELD_NICKNAME = "nickname";
+		public static final String FIELD_PASSWORD = "password";
+		public static final String FIELD_ROOM_STATE = "room_state";
+
+		// common
+		public static final String FIELD_TIMESTAMP = "timestamp";
+
+		public static final String TABLE_NAME = "open_chats";
+
+		public static final int TYPE_CHAT = 0;
+		public static final int TYPE_MUC = 1;
+
 
 		public static final String OPENCHATS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.openchats";
 		public static final String OPENCHAT_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.openchatitem";
@@ -190,6 +233,44 @@ public final class DatabaseContract {
 		public static final String CHATS_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.chatitem";
 	}
 
+	public static class CapsIdentities implements BaseColumns {
+
+		public static final String FIELD_CATEGORY = "category";
+
+		public static final String FIELD_ID = "_id";
+
+		public static final String FIELD_NAME = "name";
+
+		public static final String FIELD_NODE = "node";
+
+		public static final String FIELD_TYPE = "type";
+
+		public static final String TABLE_NAME = "caps_identities";
+
+	}
+
+	public static class CapsFeatures implements BaseColumns {
+
+		public static final String FIELD_FEATURE = "feature";
+
+		public static final String FIELD_ID = "_id";
+
+		public static final String FIELD_NODE = "node";
+
+		public static final String TABLE_NAME = "caps_features";
+
+	}
+
+	public static class RosterItemsGroups implements BaseColumns {
+
+		public static final String FIELD_ITEM = "item_id";
+
+		public static final String FIELD_GROUP = "group_id";
+
+		public static final String TABLE_NAME = "roster_items_groups";
+
+	}
+
 	public class Geolocation implements BaseColumns {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.geoloc";
 		public static final String FIELD_ALT = "alt";
@@ -210,5 +291,4 @@ public final class DatabaseContract {
 		public static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
 				+ FIELD_JID + ")";
 	}
-
 }

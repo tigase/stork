@@ -24,10 +24,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.widget.ImageView;
+import tigase.jaxmpp.core.client.BareJID;
 
 import java.lang.ref.WeakReference;
-
-import tigase.jaxmpp.core.client.BareJID;
 
 public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
 

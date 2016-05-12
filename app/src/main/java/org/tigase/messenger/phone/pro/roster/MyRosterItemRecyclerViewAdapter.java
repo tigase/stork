@@ -21,12 +21,6 @@
 
 package org.tigase.messenger.phone.pro.roster;
 
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
-import tigase.jaxmpp.core.client.BareJID;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.LayoutInflater;
@@ -34,6 +28,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
+import tigase.jaxmpp.core.client.BareJID;
 
 public class MyRosterItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
@@ -42,8 +41,8 @@ public class MyRosterItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<V
 	private final RosterItemFragment.OnRosterItemDeleteListener mLongClickListener;
 
 	public MyRosterItemRecyclerViewAdapter(Context context, Cursor cursor,
-			RosterItemFragment.OnRosterItemIteractionListener mListener,
-			RosterItemFragment.OnRosterItemDeleteListener mRemoveListener) {
+										   RosterItemFragment.OnRosterItemIteractionListener mListener,
+										   RosterItemFragment.OnRosterItemDeleteListener mRemoveListener) {
 		super(cursor);
 		this.mListener = mListener;
 		this.mLongClickListener = mRemoveListener;

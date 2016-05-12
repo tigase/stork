@@ -1,19 +1,18 @@
 package org.tigase.messenger.phone.pro.conenctionStatus;
 
-import java.util.ArrayList;
-
-import org.tigase.messenger.phone.pro.R;
-
-import tigase.jaxmpp.core.client.Connector;
-import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.MultiJaxmpp;
-import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import org.tigase.messenger.phone.pro.R;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
+
+import java.util.ArrayList;
 
 public class StatusesRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder> {
 

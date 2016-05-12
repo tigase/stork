@@ -1,13 +1,12 @@
 package org.tigase.messenger.phone.pro.service;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.tigase.messenger.phone.pro.db.CPresence;
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import org.tigase.messenger.phone.pro.db.CPresence;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AutopresenceManager {
 

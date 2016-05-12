@@ -1,9 +1,5 @@
 package org.tigase.messenger.phone.pro.conversations.muc;
 
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
-import org.tigase.messenger.phone.pro.db.DatabaseContract;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.ContextCompat;
@@ -13,6 +9,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
 
 public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
@@ -32,48 +31,48 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 	private int getColor(String nickname) {
 		final int i = ((Math.abs(nickname.hashCode()) + 3) * 13) % 19;
 		switch (i) {
-		case 0:
-			return R.color.mucmessage_his_nickname_0;
-		case 1:
-			return R.color.mucmessage_his_nickname_1;
-		case 2:
-			return R.color.mucmessage_his_nickname_2;
-		case 3:
-			return R.color.mucmessage_his_nickname_3;
-		case 4:
-			return R.color.mucmessage_his_nickname_4;
-		case 5:
-			return R.color.mucmessage_his_nickname_5;
-		case 6:
-			return R.color.mucmessage_his_nickname_6;
-		case 7:
-			return R.color.mucmessage_his_nickname_7;
-		case 8:
-			return R.color.mucmessage_his_nickname_8;
-		case 9:
-			return R.color.mucmessage_his_nickname_9;
-		case 10:
-			return R.color.mucmessage_his_nickname_10;
-		case 11:
-			return R.color.mucmessage_his_nickname_11;
-		case 12:
-			return R.color.mucmessage_his_nickname_12;
-		case 13:
-			return R.color.mucmessage_his_nickname_13;
-		case 14:
-			return R.color.mucmessage_his_nickname_14;
-		case 15:
-			return R.color.mucmessage_his_nickname_15;
-		case 16:
-			return R.color.mucmessage_his_nickname_16;
-		case 17:
-			return R.color.mucmessage_his_nickname_17;
-		case 18:
-			return R.color.mucmessage_his_nickname_18;
-		case 19:
-			return R.color.mucmessage_his_nickname_19;
-		default:
-			return R.color.mucmessage_his_nickname_0;
+			case 0:
+				return R.color.mucmessage_his_nickname_0;
+			case 1:
+				return R.color.mucmessage_his_nickname_1;
+			case 2:
+				return R.color.mucmessage_his_nickname_2;
+			case 3:
+				return R.color.mucmessage_his_nickname_3;
+			case 4:
+				return R.color.mucmessage_his_nickname_4;
+			case 5:
+				return R.color.mucmessage_his_nickname_5;
+			case 6:
+				return R.color.mucmessage_his_nickname_6;
+			case 7:
+				return R.color.mucmessage_his_nickname_7;
+			case 8:
+				return R.color.mucmessage_his_nickname_8;
+			case 9:
+				return R.color.mucmessage_his_nickname_9;
+			case 10:
+				return R.color.mucmessage_his_nickname_10;
+			case 11:
+				return R.color.mucmessage_his_nickname_11;
+			case 12:
+				return R.color.mucmessage_his_nickname_12;
+			case 13:
+				return R.color.mucmessage_his_nickname_13;
+			case 14:
+				return R.color.mucmessage_his_nickname_14;
+			case 15:
+				return R.color.mucmessage_his_nickname_15;
+			case 16:
+				return R.color.mucmessage_his_nickname_16;
+			case 17:
+				return R.color.mucmessage_his_nickname_17;
+			case 18:
+				return R.color.mucmessage_his_nickname_18;
+			case 19:
+				return R.color.mucmessage_his_nickname_19;
+			default:
+				return R.color.mucmessage_his_nickname_0;
 
 		}
 
@@ -92,18 +91,18 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 		final int type = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE));
 
 		switch (state) {
-		case DatabaseContract.ChatHistory.STATE_INCOMING:
-		case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
-			if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
-				return ITEM_ERROR;
-			} else
-				return ITEM_MESSAGE_IN;
-		case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-		case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-		case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-			return ITEM_MESSAGE_OUT;
-		default:
-			return -1;
+			case DatabaseContract.ChatHistory.STATE_INCOMING:
+			case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
+				if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
+					return ITEM_ERROR;
+				} else
+					return ITEM_MESSAGE_IN;
+			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+				return ITEM_MESSAGE_OUT;
+			default:
+				return -1;
 		}
 
 	}
@@ -133,15 +132,15 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 		if (holder.mDeliveryStatus != null) {
 			switch (state) {
-			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
-				break;
+				case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+					holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
+					break;
 			}
 		}
 
@@ -173,17 +172,17 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		View view;
 		switch (viewType) {
-		case ITEM_MESSAGE_IN:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_received, parent, false);
-			break;
-		case ITEM_MESSAGE_OUT:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_sent, parent, false);
-			break;
-		case ITEM_ERROR:
-			view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
-			break;
-		default:
-			throw new RuntimeException("Unknown view type " + viewType);
+			case ITEM_MESSAGE_IN:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_received, parent, false);
+				break;
+			case ITEM_MESSAGE_OUT:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_sent, parent, false);
+				break;
+			case ITEM_ERROR:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
+				break;
+			default:
+				throw new RuntimeException("Unknown view type " + viewType);
 		}
 
 		return new ViewHolder(view);

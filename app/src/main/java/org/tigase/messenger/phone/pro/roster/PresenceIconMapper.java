@@ -29,29 +29,29 @@ public class PresenceIconMapper {
 	public static int getPresenceResource(int presenceStatus) {
 		int presenceIconResource;
 		switch (presenceStatus) {
-		case CPresence.OFFLINE:
-			presenceIconResource = R.drawable.presence_offline;
-			break;
-		case CPresence.ERROR:
-			presenceIconResource = R.drawable.presence_error;
-			break;
-		case CPresence.DND:
-			presenceIconResource = R.drawable.presence_dnd;
-			break;
-		case CPresence.XA:
-			presenceIconResource = R.drawable.presence_xa;
-			break;
-		case CPresence.AWAY:
-			presenceIconResource = R.drawable.presence_away;
-			break;
-		case CPresence.ONLINE:
-			presenceIconResource = R.drawable.presence_online;
-			break;
-		case CPresence.CHAT: // chat
-			presenceIconResource = R.drawable.presence_chat;
-			break;
-		default:
-			presenceIconResource = R.drawable.presence_unknown;
+			case CPresence.OFFLINE:
+				presenceIconResource = R.drawable.presence_offline;
+				break;
+			case CPresence.ERROR:
+				presenceIconResource = R.drawable.presence_error;
+				break;
+			case CPresence.DND:
+				presenceIconResource = R.drawable.presence_dnd;
+				break;
+			case CPresence.XA:
+				presenceIconResource = R.drawable.presence_xa;
+				break;
+			case CPresence.AWAY:
+				presenceIconResource = R.drawable.presence_away;
+				break;
+			case CPresence.ONLINE:
+				presenceIconResource = R.drawable.presence_online;
+				break;
+			case CPresence.CHAT: // chat
+				presenceIconResource = R.drawable.presence_chat;
+				break;
+			default:
+				presenceIconResource = R.drawable.presence_unknown;
 		}
 
 		return presenceIconResource;

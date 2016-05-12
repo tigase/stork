@@ -1,16 +1,5 @@
 package org.tigase.messenger.phone.pro.conversations.muc;
 
-import java.util.ArrayList;
-
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JaxmppCore;
-import tigase.jaxmpp.core.client.SessionObject;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -27,6 +16,16 @@ import android.widget.Spinner;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+
+import java.util.ArrayList;
 
 public class JoinMucActivity extends AppCompatActivity {
 

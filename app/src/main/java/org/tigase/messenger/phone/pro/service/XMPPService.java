@@ -37,6 +37,10 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
+import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
+import org.tigase.messenger.jaxmpp.android.muc.AndroidRoomsManager;
+import org.tigase.messenger.jaxmpp.android.roster.AndroidRosterStore;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
@@ -52,10 +56,6 @@ import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
 import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.android.caps.CapabilitiesDBCache;
-import tigase.jaxmpp.android.chat.AndroidChatManager;
-import tigase.jaxmpp.android.muc.AndroidRoomsManager;
-import tigase.jaxmpp.android.roster.AndroidRosterStore;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -242,7 +242,7 @@ public class XMPPService extends Service {
 	private PresenceHandler presenceHandler;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private MessageHandler messageHandler;
-	private tigase.jaxmpp.android.chat.ChatProvider chatProvider;
+	private org.tigase.messenger.jaxmpp.android.chat.ChatProvider chatProvider;
 	private MucHandler mucHandler;
 	private JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
 		@Override
@@ -605,8 +605,8 @@ public class XMPPService extends Service {
 
 		this.presenceHandler = new PresenceHandler(this);
 		this.messageHandler = new MessageHandler();
-		this.chatProvider = new tigase.jaxmpp.android.chat.ChatProvider(this, dbHelper,
-				new tigase.jaxmpp.android.chat.ChatProvider.Listener() {
+		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
+				new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
 					@Override
 					public void onChange(Long chatId) {
 						Uri uri = chatId != null ? ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId)
@@ -1159,6 +1159,7 @@ public class XMPPService extends Service {
 					Log.d(TAG, "Room " + room.getRoomJid() + " is in state " + room.getState());
 					if (room.getState() != Room.State.joined) {
 						Log.d(TAG, "Rejoinning to " + room.getRoomJid());
+
 
 						room.rejoin();
 					} else {

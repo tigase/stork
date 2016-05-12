@@ -21,11 +21,10 @@
 
 package org.tigase.messenger.phone.pro;
 
-import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
 import android.app.Application;
 import android.content.Intent;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
 /**
  * Created by bmalkow on 16.03.16.

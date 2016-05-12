@@ -1,21 +1,5 @@
 package org.tigase.messenger.phone.pro.roster.request;
 
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.AsyncCallback;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.XMPPException;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
-import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
-import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
-import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import android.content.*;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,6 +14,21 @@ import android.widget.LinearLayout;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.AsyncCallback;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
+import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class SubscriptionRequestActivity extends AppCompatActivity {
 
@@ -199,46 +198,46 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 				try {
 					module.retrieveVCard(JID.jidInstance(SubscriptionRequestActivity.this.jid),
 							new VCardModule.VCardAsyncCallback() {
-						@Override
-						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-							runOnUiThread(new Runnable() {
-								public void run() {
-									try {
-										mDetailsForm.setVisibility(View.GONE);
-									} catch (Exception ex) {
-										ex.printStackTrace();
-									}
+								@Override
+								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+									runOnUiThread(new Runnable() {
+										public void run() {
+											try {
+												mDetailsForm.setVisibility(View.GONE);
+											} catch (Exception ex) {
+												ex.printStackTrace();
+											}
+										}
+									});
 								}
-							});
-						}
 
-						@Override
-						public void onTimeout() throws JaxmppException {
-							runOnUiThread(new Runnable() {
-								public void run() {
-									try {
-										mDetailsForm.setVisibility(View.GONE);
-									} catch (Exception ex) {
-										ex.printStackTrace();
-									}
+								@Override
+								public void onTimeout() throws JaxmppException {
+									runOnUiThread(new Runnable() {
+										public void run() {
+											try {
+												mDetailsForm.setVisibility(View.GONE);
+											} catch (Exception ex) {
+												ex.printStackTrace();
+											}
+										}
+									});
 								}
-							});
-						}
 
-						@Override
-						protected void onVCardReceived(final VCard vcard) throws XMLException {
-							runOnUiThread(new Runnable() {
-								public void run() {
-									try {
-										mDetailsForm.setVisibility(View.VISIBLE);
-										fillVCard(vcard);
-									} catch (Exception ex) {
-										ex.printStackTrace();
-									}
+								@Override
+								protected void onVCardReceived(final VCard vcard) throws XMLException {
+									runOnUiThread(new Runnable() {
+										public void run() {
+											try {
+												mDetailsForm.setVisibility(View.VISIBLE);
+												fillVCard(vcard);
+											} catch (Exception ex) {
+												ex.printStackTrace();
+											}
+										}
+									});
 								}
 							});
-						}
-					});
 				} catch (JaxmppException e) {
 					Log.e("SubscriptionRequest", "Cannot retrieve VCard", e);
 				}

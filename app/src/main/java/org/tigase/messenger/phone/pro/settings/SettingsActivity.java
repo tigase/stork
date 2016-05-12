@@ -21,12 +21,6 @@
 
 package org.tigase.messenger.phone.pro.settings;
 
-import java.util.List;
-
-import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.account.Authenticator;
-import org.tigase.messenger.phone.pro.account.LoginActivity;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.TargetApi;
@@ -43,6 +37,11 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
+import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.account.Authenticator;
+import org.tigase.messenger.phone.pro.account.LoginActivity;
+
+import java.util.List;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -296,8 +295,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			setHasOptionsMenu(true);
 
 			final PreferenceScreen screen = this.getPreferenceScreen(); // "null".
-																		// See
-																		// onViewCreated.
+			// See
+			// onViewCreated.
 
 			AccountManager am = AccountManager.get(screen.getContext());
 			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {

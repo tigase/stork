@@ -21,21 +21,6 @@
 
 package org.tigase.messenger.phone.pro;
 
-import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
-import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
-import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
-import org.tigase.messenger.phone.pro.db.CPresence;
-import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
-import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
-import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.tigase.messenger.phone.pro.settings.SettingsActivity;
-
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -57,6 +42,20 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
+import org.tigase.messenger.phone.pro.db.CPresence;
+import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
+import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.settings.SettingsActivity;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
 		RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnAddChatListener {
@@ -125,15 +124,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (sharedPref.getString("menu", "roster")) {
-		case "roster":
-			switchMainFragment(R.id.nav_roster);
-			break;
-		case "connectionstatus":
-			switchMainFragment(R.id.nav_connectionstatus);
-			break;
-		default:
-			switchMainFragment(R.id.nav_chats);
-			break;
+			case "roster":
+				switchMainFragment(R.id.nav_roster);
+				break;
+			case "connectionstatus":
+				switchMainFragment(R.id.nav_connectionstatus);
+				break;
+			default:
+				switchMainFragment(R.id.nav_chats);
+				break;
 		}
 
 		StatusSelectorAdapter statusAdapter = StatusSelectorAdapter.instance(this);
@@ -234,59 +233,59 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
 		switch (id) {
-		case R.id.nav_about: {
-			Intent intent = new Intent(this, AboutActivity.class);
-			startActivity(intent);
-			break;
-		}
-		case R.id.nav_connectionstatus: {
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragmentManager.beginTransaction().replace(R.id.flContent, ConnectionStatusesFragment.newInstance()).commit();
+			case R.id.nav_about: {
+				Intent intent = new Intent(this, AboutActivity.class);
+				startActivity(intent);
+				break;
+			}
+			case R.id.nav_connectionstatus: {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(R.id.flContent, ConnectionStatusesFragment.newInstance()).commit();
 
-			SharedPreferences.Editor editor = sharedPref.edit();
-			editor.putString("menu", "connectionstatus");
-			editor.commit();
-			menuItem.setChecked(true);
-			setTitle(menuItem.getTitle());
+				SharedPreferences.Editor editor = sharedPref.edit();
+				editor.putString("menu", "connectionstatus");
+				editor.commit();
+				menuItem.setChecked(true);
+				setTitle(menuItem.getTitle());
 
-			break;
-		}
-		case R.id.nav_roster: {
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragmentManager.beginTransaction().replace(R.id.flContent,
-					RosterItemFragment.newInstance(mServiceConnection)).commit();
+				break;
+			}
+			case R.id.nav_roster: {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(R.id.flContent,
+						RosterItemFragment.newInstance(mServiceConnection)).commit();
 
-			SharedPreferences.Editor editor = sharedPref.edit();
-			editor.putString("menu", "roster");
-			editor.commit();
-			menuItem.setChecked(true);
-			setTitle(menuItem.getTitle());
+				SharedPreferences.Editor editor = sharedPref.edit();
+				editor.putString("menu", "roster");
+				editor.commit();
+				menuItem.setChecked(true);
+				setTitle(menuItem.getTitle());
 
-			break;
-		}
-		case R.id.nav_chats: {
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragmentManager.beginTransaction().replace(R.id.flContent,
-					OpenChatItemFragment.newInstance(mServiceConnection)).commit();
+				break;
+			}
+			case R.id.nav_chats: {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(R.id.flContent,
+						OpenChatItemFragment.newInstance(mServiceConnection)).commit();
 
-			SharedPreferences.Editor editor = sharedPref.edit();
-			editor.putString("menu", "chats");
-			editor.commit();
-			menuItem.setChecked(true);
-			setTitle(menuItem.getTitle());
+				SharedPreferences.Editor editor = sharedPref.edit();
+				editor.putString("menu", "chats");
+				editor.commit();
+				menuItem.setChecked(true);
+				setTitle(menuItem.getTitle());
 
-			break;
-		}
-		case R.id.nav_joinmuc: {
-			Intent intent = new Intent(this, JoinMucActivity.class);
-			startActivity(intent);
-			break;
-		}
-		case R.id.nav_settings: {
-			Intent intent = new Intent(this, SettingsActivity.class);
-			startActivity(intent);
-			break;
-		}
+				break;
+			}
+			case R.id.nav_joinmuc: {
+				Intent intent = new Intent(this, JoinMucActivity.class);
+				startActivity(intent);
+				break;
+			}
+			case R.id.nav_settings: {
+				Intent intent = new Intent(this, SettingsActivity.class);
+				startActivity(intent);
+				break;
+			}
 		}
 	}
 

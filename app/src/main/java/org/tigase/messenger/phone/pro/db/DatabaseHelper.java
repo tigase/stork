@@ -21,14 +21,13 @@
 
 package org.tigase.messenger.phone.pro.db;
 
-import tigase.jaxmpp.android.caps.CapsDbHelper;
-import tigase.jaxmpp.android.chat.OpenChatDbHelper;
-import tigase.jaxmpp.android.roster.RosterDbHelper;
-import tigase.jaxmpp.android.roster.RosterItemsCacheTableMetaData;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import org.tigase.messenger.jaxmpp.android.caps.CapsDbHelper;
+import org.tigase.messenger.jaxmpp.android.chat.OpenChatDbHelper;
+import org.tigase.messenger.jaxmpp.android.roster.RosterDbHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -44,7 +43,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 		CapsDbHelper.onCreate(db);
 
-		db.execSQL("ALTER TABLE " + RosterItemsCacheTableMetaData.TABLE_NAME + " ADD COLUMN "
+		db.execSQL("ALTER TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " ADD COLUMN "
 				+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
 
 		db.execSQL(DatabaseContract.ChatHistory.CREATE_TABLE);

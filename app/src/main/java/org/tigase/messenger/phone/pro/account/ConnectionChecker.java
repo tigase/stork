@@ -1,7 +1,8 @@
 package org.tigase.messenger.phone.pro.account;
 
+import android.content.Context;
+import android.util.Log;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
-
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.connector.StreamError;
@@ -15,8 +16,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
-import android.content.Context;
-import android.util.Log;
 
 public class ConnectionChecker {
 
@@ -76,7 +75,7 @@ public class ConnectionChecker {
 
 					@Override
 					public void onReceivedError(SessionObject sessionObject, IQ responseStanza,
-							XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+												XMPPException.ErrorCondition errorCondition) throws JaxmppException {
 						errorMessage = "Error during registration.";
 						// wakeup();
 					}
@@ -90,12 +89,12 @@ public class ConnectionChecker {
 		});
 		contact.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, new JaxmppCore.LoggedOutHandler() {
 
-					@Override
+			@Override
 			public void onLoggedOut(SessionObject sessionObject) {
-						Log.w(TAG, "Jaxmpp disconnected");
-						wakeup();
-					}
-				});
+				Log.w(TAG, "Jaxmpp disconnected");
+				wakeup();
+			}
+		});
 	}
 
 	public boolean check(Context context) {

@@ -21,16 +21,16 @@
 
 package org.tigase.messenger.phone.pro.utils;
 
+import android.content.Context;
+import android.os.Environment;
+import android.util.Log;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.*;
-
-import android.content.Context;
-import android.os.Environment;
-import android.util.Log;
 
 public abstract class DiskLruCache<T> {
 

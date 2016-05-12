@@ -25,7 +25,6 @@ import android.app.Application;
 import android.content.UriMatcher;
 import android.net.Uri;
 import android.test.ApplicationTestCase;
-
 import junit.framework.Assert;
 
 /**

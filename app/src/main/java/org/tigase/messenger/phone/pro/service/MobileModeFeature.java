@@ -21,8 +21,10 @@
 
 package org.tigase.messenger.phone.pro.service;
 
-import java.util.TimerTask;
-
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.content.Context;
+import android.util.Log;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -32,10 +34,8 @@ import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.content.Context;
-import android.util.Log;
+
+import java.util.TimerTask;
 
 public class MobileModeFeature {
 

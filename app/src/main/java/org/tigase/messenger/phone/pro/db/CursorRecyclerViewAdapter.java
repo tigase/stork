@@ -45,8 +45,7 @@ import android.widget.Filterable;
  * available, so the flag is implied, and only the Adapter behavior using this
  * flag has been ported.
  *
- * @param <VH>
- *            {@inheritDoc}
+ * @param <VH> {@inheritDoc}
  * @see android.support.v7.widget.RecyclerView.Adapter
  * @see android.widget.CursorAdapter
  * @see android.widget.Filterable
