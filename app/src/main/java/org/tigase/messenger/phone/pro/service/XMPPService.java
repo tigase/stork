@@ -674,7 +674,10 @@ public class XMPPService extends Service {
 		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, mucHandler);
 
-		registerReceiver(accountModifyReceiver, new IntentFilter(LoginActivity.ACCOUNT_MODIFIED_MSG));
+		IntentFilter filterAccountModifyReceiver = new IntentFilter();
+		filterAccountModifyReceiver.addAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
+		filterAccountModifyReceiver.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
+		registerReceiver(accountModifyReceiver, filterAccountModifyReceiver);
 
 		startKeepAlive();
 
@@ -1113,6 +1116,9 @@ public class XMPPService extends Service {
 				}).start();
 			}
 		}
+
+		DataRemover dt = new DataRemover();
+		dt.removeUnusedData(this);
 	}
 
 	protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {
@@ -1195,7 +1201,7 @@ public class XMPPService extends Service {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			Log.i("XMPPService", "Updating accounts!");
+			Log.i("XMPPService", "Updating accounts !" + intent.getAction());
 			updateJaxmppInstances();
 			for (JaxmppCore j : multiJaxmpp.get()) {
 				Connector.State st = getState(j.getSessionObject());
