@@ -1,4 +1,4 @@
-package org.tigase.messenger.phone.pro.service;
+package org.tigase.messenger.jaxmpp.android.chat;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -19,7 +19,6 @@ public class MarkAsRead {
 	public MarkAsRead(Context context) {
 		this.context = context.getApplicationContext();
 	}
-
 
 	private void intMarkAsRead(final Uri u, final int chatId, final BareJID account, final JID jid) {
 		(new AsyncTask<Void, Void, Void>() {

@@ -7,10 +7,10 @@ import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
-import org.tigase.messenger.phone.pro.service.MarkAsRead;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 

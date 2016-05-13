@@ -28,6 +28,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,20 +47,57 @@ public class ChatProvider {
 	}
 
 	public boolean close(SessionObject sessionObject, long chatId) {
-		final SQLiteDatabase db = dbHelper.getWritableDatabase();
-		db.beginTransaction();
-		int deleted = 0;
 		try {
-			deleted = db.delete(DatabaseContract.OpenChats.TABLE_NAME, DatabaseContract.OpenChats.FIELD_ID + " = ?",
-					new String[]{String.valueOf(chatId)});
-			db.setTransactionSuccessful();
-		} finally {
-			db.endTransaction();
+			final SQLiteDatabase db = dbHelper.getWritableDatabase();
+			db.beginTransaction();
+			int deleted = 0;
+			try {
+				Cursor openChatCursor = db.query(DatabaseContract.OpenChats.TABLE_NAME, new String[]{
+						DatabaseContract.OpenChats.FIELD_ID,
+						DatabaseContract.OpenChats.FIELD_ACCOUNT,
+						DatabaseContract.OpenChats.FIELD_JID
+				}, DatabaseContract.OpenChats.FIELD_ID + "=?", new String[]{String.valueOf(chatId)}, null, null, null);
+
+				String account = null;
+				String jid = null;
+				if (openChatCursor.moveToNext()) {
+					account = openChatCursor.getString(openChatCursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+					jid = openChatCursor.getString(openChatCursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+				}
+				openChatCursor.close();
+				Log.i("ChatProvider", "Room history for " + account + ", " + jid);
+
+
+				deleted = db.delete(DatabaseContract.OpenChats.TABLE_NAME, DatabaseContract.OpenChats.FIELD_ID + " = ?",
+						new String[]{String.valueOf(chatId)});
+				Log.i("ChatProvider", "Removed " + deleted + " open conversations (" + chatId + ")");
+
+				if (account != null && jid != null) {
+					ContentValues values = new ContentValues();
+					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
+
+					int r = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values,
+							DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND "
+									+ DatabaseContract.ChatHistory.FIELD_JID + "=? AND "
+									+ DatabaseContract.ChatHistory.FIELD_STATE + "=?"
+							,
+							new String[]{account, jid, String.valueOf(DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD)});
+
+					Log.i("ChatProvider", "Marked  " + r + " messages as read ");
+				}
+
+				db.setTransactionSuccessful();
+			} finally {
+				db.endTransaction();
+			}
+			if (listener != null) {
+				listener.onChange(chatId);
+			}
+			return deleted > 0;
+		} catch (Exception e) {
+			Log.e("OpenChat", e.getMessage(), e);
+			throw new RuntimeException(e);
 		}
-		if (listener != null) {
-			listener.onChange(chatId);
-		}
-		return deleted > 0;
 	}
 
 	public long createChat(SessionObject sessionObject, JID fromJid, String threadId) throws JaxmppException {
@@ -194,9 +232,9 @@ public class ChatProvider {
 		return chats;
 	}
 
-	public List<Object[]> getRooms(SessionObject sessionObject) {
+	public List<Room> getRooms(SessionObject sessionObject, tigase.jaxmpp.core.client.Context context) {
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		List<Object[]> rooms = new ArrayList<Object[]>();
+		final List<Room> rooms = new ArrayList<Room>();
 		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME,
 				new String[]{
 						DatabaseContract.OpenChats.FIELD_ID,
@@ -233,7 +271,17 @@ public class ChatProvider {
 				if (timestamp != null)
 					Log.d("ChatProvider", " timestamp=" + (new Date(timestamp)));
 
-				rooms.add(new Object[]{c.getLong(1), BareJID.bareJIDInstance(c.getString(1)), c.getString(2), c.getString(3), timestamp});
+				long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+				BareJID roomJid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID)));
+				String nickname = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_NICKNAME));
+				String password = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_PASSWORD));
+
+				Room room = new Room(id, context, roomJid, nickname);
+				room.setPassword(password);
+				if (timestamp != null) {
+					room.setLastMessageDate(new Date(timestamp - 1000 * 30));
+				}
+				rooms.add(room);
 			}
 		} finally {
 			c.close();

@@ -1,12 +1,12 @@
 package org.tigase.messenger.jaxmpp.android.muc;
 
+import android.util.Log;
 import org.tigase.messenger.jaxmpp.android.chat.ChatProvider;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.AbstractRoomsManager;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
-import java.util.Date;
 import java.util.List;
 
 public class AndroidRoomsManager extends AbstractRoomsManager {
@@ -28,18 +28,9 @@ public class AndroidRoomsManager extends AbstractRoomsManager {
 
 	@Override
 	protected void initialize() {
-		List<Object[]> datas = provider.getRooms(sessionObject);
+		List<Room> datas = provider.getRooms(sessionObject, this.context);
 		if (datas != null) {
-			for (Object[] data : datas) {
-				BareJID roomJid = (BareJID) data[1];
-				String nickname = (String) data[2];
-				String password = (String) data[3];
-				Long timestamp = (Long) data[4];
-				Room room = new Room((Long) data[0], this.context, roomJid, nickname);
-				room.setPassword(password);
-				if (timestamp != null) {
-					room.setLastMessageDate(new Date(timestamp - 1000 * 30));
-				}
+			for (Room room : datas) {
 				this.register(room);
 			}
 		}
@@ -47,6 +38,7 @@ public class AndroidRoomsManager extends AbstractRoomsManager {
 
 	@Override
 	public boolean remove(Room room) {
+		Log.i("AndroidRoomsManager", "Removing room " + room.getRoomJid() + " (" + room.getId() + ")");
 		provider.close(room.getSessionObject(), room.getId());
 		return super.remove(room);
 	}

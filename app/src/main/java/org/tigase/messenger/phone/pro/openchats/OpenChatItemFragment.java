@@ -235,11 +235,13 @@ public class OpenChatItemFragment extends Fragment {
 		new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
+				Log.i("OpenChat", "Leaving room " + roomJID);
 				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
 				MucModule mucModule = jaxmpp.getModule(MucModule.class);
 				Room room = mucModule.getRoom(BareJID.bareJIDInstance(roomJID));
 				if (room != null) {
 					try {
+						Log.i("OpenChat", "Executing Leaving room  " + roomJID);
 						mucModule.leave(room);
 					} catch (JaxmppException e) {
 						Log.e("OpenChat", "Cannot leave room", e);
