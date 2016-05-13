@@ -135,10 +135,23 @@ public class OpenChatItemFragment extends Fragment {
 	}
 
 	private void onArchiveChat(final int chatId, String jid, final String account) {
+		XMPPService service = mConnection.getService();
+
+		if (service == null) {
+			Log.w("OpenChatItemFragment", "Service is not binded");
+			return;
+		}
+
+		final Jaxmpp jaxmpp = service.getJaxmpp(account);
+
+		if (jaxmpp == null) {
+			Log.w("OpenChatItemFragment", "There is no account " + account);
+			return;
+		}
+
 		new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
 				Chat chat = null;
 				for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
 					if (c.getId() == chatId) {
