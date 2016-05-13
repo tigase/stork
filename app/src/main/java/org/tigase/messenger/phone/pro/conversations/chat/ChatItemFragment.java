@@ -65,19 +65,6 @@ public class ChatItemFragment extends Fragment {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			super.onServiceConnected(name, service);
-			BareJID account = ((ChatActivity) getContext()).getAccount();
-			Jaxmpp jaxmpp = getService().getJaxmpp(account);
-			final long chatId = ((ChatActivity) getContext()).getOpenChatId();
-
-			if (jaxmpp == null) {
-
-			}
-
-			for (Chat chat : jaxmpp.getModule(MessageModule.class).getChatManager().getChats()) {
-				if (chat.getId() == chatId) {
-					setChat(chat);
-				}
-			}
 		}
 
 		@Override
@@ -99,6 +86,8 @@ public class ChatItemFragment extends Fragment {
 	};
 	private MyChatItemRecyclerViewAdapter adapter;
 	private Uri uri;
+	private BareJID mAccount;
+	private int mChatId;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -116,9 +105,43 @@ public class ChatItemFragment extends Fragment {
 		return fragment;
 	}
 
+	private Chat getChat() {
+		if (this.chat != null)
+			return this.chat;
+
+		XMPPService service = mConnection.getService();
+
+		if (service == null) {
+			Log.w("ChatItemFragment", "Service is not binded");
+			return null;
+		}
+
+		Jaxmpp jaxmpp = service.getJaxmpp(mAccount);
+
+		if (jaxmpp == null) {
+			Log.w("ChatItemFragment", "There is no account " + mAccount);
+			return null;
+		}
+
+		for (Chat chat : jaxmpp.getModule(MessageModule.class).getChatManager().getChats()) {
+			if (chat.getId() == mChatId) {
+				setChat(chat);
+			}
+		}
+
+		return this.chat;
+	}
+
+	private void setChat(Chat chat) {
+		this.chat = chat;
+	}
+
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
+
+		this.mAccount = ((ChatActivity) context).getAccount();
+		this.mChatId = ((ChatActivity) context).getOpenChatId();
 
 		this.uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + ((ChatActivity) getContext()).getAccount() + "/"
 				+ ((ChatActivity) getContext()).getJid());
@@ -208,10 +231,6 @@ public class ChatItemFragment extends Fragment {
 		(new SendMessageTask()).execute(body);
 	}
 
-	private void setChat(Chat chat) {
-		this.chat = chat;
-	}
-
 	public interface ChatItemIterationListener {
 		void onCopyChatMessage(int id, String jid, String body);
 	}
@@ -224,10 +243,10 @@ public class ChatItemFragment extends Fragment {
 				Message msg;
 				String stanzaId = null;
 				try {
-					msg = chat.createMessage(param);
+					msg = getChat().createMessage(param);
 					stanzaId = msg.getId();
 
-					Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(chat.getSessionObject().getUserBareJid());
+					Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(getChat().getSessionObject().getUserBareJid());
 					MessageModule m = jaxmpp.getModule(
 							MessageModule.class);
 
@@ -242,15 +261,15 @@ public class ChatItemFragment extends Fragment {
 					Log.w("ChatItemFragment", "Cannot send message", e);
 				}
 
-				final JID recipient = chat.getJid();
+				final JID recipient = getChat().getJid();
 
 				ContentValues values = new ContentValues();
-				values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, chat.getSessionObject().getUserBareJid().toString());
+				values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, getChat().getSessionObject().getUserBareJid().toString());
 				values.put(DatabaseContract.ChatHistory.FIELD_JID, recipient.getBareJid().toString());
 				values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, new Date().getTime());
 				values.put(DatabaseContract.ChatHistory.FIELD_BODY, param);
-				values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, chat.getThreadId());
-				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, chat.getSessionObject().getUserBareJid().toString());
+				values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, getChat().getThreadId());
+				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, getChat().getSessionObject().getUserBareJid().toString());
 				values.put(DatabaseContract.ChatHistory.FIELD_STATE, state);
 				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
 				if (stanzaId != null)
