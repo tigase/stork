@@ -22,6 +22,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -209,7 +210,30 @@ public class ChatProvider {
 				}, null, null, null, null);
 		try {
 			while (c.moveToNext()) {
-				rooms.add(new Object[]{c.getLong(0), BareJID.bareJIDInstance(c.getString(1)), c.getString(2), c.getString(3)});
+				Cursor lastMsgCursor = db.query(DatabaseContract.ChatHistory.TABLE_NAME, new String[]{
+								DatabaseContract.ChatHistory.FIELD_ID,
+								DatabaseContract.ChatHistory.FIELD_TIMESTAMP
+						}, DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " +
+								DatabaseContract.ChatHistory.FIELD_JID + "=?",
+						new String[]{sessionObject.getUserBareJid().toString(), c.getString(1)}, null, null,
+						DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC ", "1"
+				);
+
+				Log.d("ChatProvider", "Last messages =" + lastMsgCursor.getCount() + "; ac=" + sessionObject.getUserBareJid().toString() + "; jid=" + c.getString(1));
+
+				Long timestamp = null;
+				try {
+					if (lastMsgCursor.moveToNext()) {
+						timestamp = lastMsgCursor.getLong(lastMsgCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
+					}
+				} finally {
+					lastMsgCursor.close();
+				}
+
+				if (timestamp != null)
+					Log.d("ChatProvider", " timestamp=" + (new Date(timestamp)));
+
+				rooms.add(new Object[]{c.getLong(1), BareJID.bareJIDInstance(c.getString(1)), c.getString(2), c.getString(3), timestamp});
 			}
 		} finally {
 			c.close();

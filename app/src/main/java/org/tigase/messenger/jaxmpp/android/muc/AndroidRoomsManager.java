@@ -6,6 +6,7 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.AbstractRoomsManager;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
+import java.util.Date;
 import java.util.List;
 
 public class AndroidRoomsManager extends AbstractRoomsManager {
@@ -33,8 +34,12 @@ public class AndroidRoomsManager extends AbstractRoomsManager {
 				BareJID roomJid = (BareJID) data[1];
 				String nickname = (String) data[2];
 				String password = (String) data[3];
+				Long timestamp = (Long) data[4];
 				Room room = new Room((Long) data[0], this.context, roomJid, nickname);
 				room.setPassword(password);
+				if (timestamp != null) {
+					room.setLastMessageDate(new Date(timestamp - 1000 * 30));
+				}
 				this.register(room);
 			}
 		}
