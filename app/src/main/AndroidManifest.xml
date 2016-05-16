@@ -92,7 +92,9 @@
                 android:enabled="true"
                 android:exported="false"/>
 
-        <receiver android:name=".service.ServiceRestarter" android:exported="false">
+        <receiver
+                android:name=".service.ServiceRestarter"
+                android:exported="false">
             <intent-filter>
                 <action android:name="org.tigase.messenger.phone.pro.XMPP_SERVICE_DESTROYED">
                 </action>
@@ -142,6 +144,11 @@
                 android:name=".conversations.muc.JoinMucActivity"
                 android:label="@string/title_activity_join_muc"
                 android:parentActivityName=".MainActivity">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="org.tigase.messenger.phone.pro.MainActivity"/>
+        </activity>
+        <activity android:name=".account.NewAccountActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>

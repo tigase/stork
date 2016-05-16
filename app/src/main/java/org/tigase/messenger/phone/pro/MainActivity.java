@@ -21,6 +21,8 @@
 
 package org.tigase.messenger.phone.pro;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -42,6 +44,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
 import butterknife.ButterKnife;
+import org.tigase.messenger.phone.pro.account.Authenticator;
+import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
@@ -150,8 +154,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		});
 		statusSelector.setSelection(statusAdapter.getPosition(sharedPref.getLong("presence", CPresence.OFFLINE)));
 
-	}
 
+		final AccountManager am = AccountManager.get(this);
+		Account[] accounts = am.getAccountsByType(Authenticator.ACCOUNT_TYPE);
+		if (accounts == null || accounts.length == 0) {
+			Intent intent = new Intent(this, NewAccountActivity.class);
+			startActivity(intent);
+		}
+	}
 	// @Override
 	// public boolean onCreateOptionsMenu(Menu menu) {
 	// // Inflate the menu; this adds items to the action bar if it is present.
