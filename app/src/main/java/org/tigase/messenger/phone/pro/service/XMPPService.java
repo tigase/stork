@@ -331,14 +331,14 @@ public class XMPPService extends Service {
 				int tmpNetworkType = getUsedNetworkType();
 				Log.v(TAG, "Network state is " + tmpNetworkType);
 				if (tmpNetworkType != -1) {
-					(new Thread() {
+					(new AsyncTask<Void, Void, Void>() {
 						@Override
-						public void run() {
+						protected Void doInBackground(Void... params) {
 							try {
 								if (jaxmpp.isConnected()) {
 									Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid()
 											+ " because it is connected already");
-									return;
+									return null;
 								}
 
 								final Connector.State state = jaxmpp.getSessionObject().getProperty(
@@ -347,7 +347,7 @@ public class XMPPService extends Service {
 								if (state != null && state != Connector.State.disconnected) {
 									Log.v(TAG, "cancelling connect for " + jaxmpp.getSessionObject().getUserBareJid()
 											+ " because it state " + state);
-									return;
+									return null;
 								}
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
@@ -361,8 +361,11 @@ public class XMPPService extends Service {
 									Log.e(TAG, "Can't connect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
 
 							}
+
+							return null;
 						}
-					}).start();
+					}).execute();
+
 
 				}
 			}
@@ -469,9 +472,9 @@ public class XMPPService extends Service {
 	}
 
 	private void disconnectJaxmpp(final Jaxmpp jaxmpp, final boolean cleaning) {
-		(new Thread() {
+		(new AsyncTask<Void, Void, Void>() {
 			@Override
-			public void run() {
+			protected Void doInBackground(Void... params) {
 				try {
 					// geolocationFeature.accountDisconnect(jaxmpp);
 					if (jaxmpp.isConnected())
@@ -482,8 +485,10 @@ public class XMPPService extends Service {
 				} catch (Exception e) {
 					Log.e(TAG, "cant; disconnect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
 				}
+
+				return null;
 			}
-		}).start();
+		}).execute();
 	}
 
 	private int getActiveNetworkType() {
@@ -532,9 +537,9 @@ public class XMPPService extends Service {
 	}
 
 	private void keepAlive() {
-		new Thread() {
+		(new AsyncTask<Void, Void, Void>() {
 			@Override
-			public void run() {
+			protected Void doInBackground(Void... params) {
 				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
 					try {
 						if (jaxmpp.isConnected()) {
@@ -556,8 +561,9 @@ public class XMPPService extends Service {
 								ex);
 					}
 				}
+				return null;
 			}
-		}.start();
+		}).execute();
 	}
 
 	private void lock(SessionObject sessionObject, boolean value) {
@@ -1099,9 +1105,9 @@ public class XMPPService extends Service {
 			final Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
 			if (jaxmpp != null) {
 				multiJaxmpp.remove(jaxmpp);
-				(new Thread() {
+				(new AsyncTask<Void, Void, Void>() {
 					@Override
-					public void run() {
+					protected Void doInBackground(Void... params) {
 						try {
 							jaxmpp.disconnect();
 							// clear presences for account?
@@ -1112,8 +1118,10 @@ public class XMPPService extends Service {
 						} catch (Exception ex) {
 							Log.e(TAG, "Can't disconnect", ex);
 						}
+
+						return null;
 					}
-				}).start();
+				}).execute();
 			}
 		}
 

@@ -22,6 +22,7 @@
 package org.tigase.messenger.phone.pro.utils;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
@@ -101,13 +102,14 @@ public abstract class DiskLruCache<T> {
 			if (!cacheDir.exists())
 				cacheDir.mkdirs();
 
-			new Thread() {
-				public void run() {
+			(new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
 					synchronized (cacheLock) {
 						File[] files = cacheDir.listFiles();
 						if (files == null) {
 							Log.w("DiskLruCache", "File list is null! Why???");
-							return;
+							return null;
 						}
 
 						Arrays.sort(files, new Comparator<File>() {
@@ -121,8 +123,10 @@ public abstract class DiskLruCache<T> {
 							entries.put(f.getName(), e);
 						}
 					}
+
+					return null;
 				}
-			}.start();
+			}).execute();
 		}
 	}
 

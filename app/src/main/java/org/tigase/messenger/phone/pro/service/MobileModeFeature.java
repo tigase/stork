@@ -24,6 +24,7 @@ package org.tigase.messenger.phone.pro.service;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JaxmppCore;
@@ -93,9 +94,9 @@ public class MobileModeFeature {
 			};
 			jaxmppService.timer.schedule(setMobileModeTask, 1000 * 60);
 		} else {
-			(new Thread() {
+			(new AsyncTask<Void, Void, Void>() {
 				@Override
-				public void run() {
+				protected Void doInBackground(Void... params) {
 					try {
 						for (JaxmppCore jaxmpp : jaxmppService.getMultiJaxmpp().get()) {
 							setMobileMode(jaxmpp, enable);
@@ -103,8 +104,9 @@ public class MobileModeFeature {
 					} catch (Exception e) {
 						Log.e(TAG, "Can't set mobile mode!", e);
 					}
+					return null;
 				}
-			}).start();
+			}).execute();
 		}
 	}
 
