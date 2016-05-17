@@ -122,7 +122,6 @@ public class MessageNotification {
 			NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
 			while (unreadChatsCursor.moveToNext()) {
 				count += unreadChatsCursor.getInt(unreadChatsCursor.getColumnIndex(ChatProvider.FIELD_UNREAD_COUNT));
-
 				style.addLine(Html
 						.fromHtml("<b>"
 								+ unreadChatsCursor.getString(unreadChatsCursor.getColumnIndex(ChatProvider.FIELD_NAME))
@@ -130,7 +129,6 @@ public class MessageNotification {
 			}
 			style.setBigContentTitle(context.getString(R.string.notification_new_messages, count));
 			style.setSummaryText(context.getString(R.string.notification_unread_conversations, unreadChatsCursor.getCount()));
-
 
 			summaryNotificationBuilder.setContentTitle(context.getString(R.string.notification_new_messages, count));
 			summaryNotificationBuilder.setStyle(style);

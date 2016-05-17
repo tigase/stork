@@ -58,6 +58,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 		final int presence = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_CONTACT_PRESENCE));
 		final int lastMessageState = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE_STATE));
 		final int type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
+		final int unreadCount = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_UNREAD_COUNT));
 
 		int presenceIconResource;
 		switch (presence) {
@@ -88,7 +89,7 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 
 		holder.mLastMessage.setText(lastMessage);
 
-		if (lastMessageState == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
+		if (unreadCount > 0) {
 			holder.mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
 		} else {
 			holder.mLastMessage.setTypeface(Typeface.DEFAULT);
