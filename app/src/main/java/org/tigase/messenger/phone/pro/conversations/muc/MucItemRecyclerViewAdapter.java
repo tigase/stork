@@ -2,6 +2,7 @@ package org.tigase.messenger.phone.pro.conversations.muc;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -126,8 +127,13 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 			holder.mNickname.setText(nickname);
 		}
 
-		if (state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) {
-			// holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
+		boolean mentioned = (state == DatabaseContract.ChatHistory.STATE_INCOMING || state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD)
+				&& body != null
+				&& body.toLowerCase().contains(nickname.toLowerCase());
+		if (mentioned) {
+			holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
+		} else {
+			holder.mContentView.setTypeface(Typeface.DEFAULT);
 		}
 
 		if (holder.mDeliveryStatus != null) {

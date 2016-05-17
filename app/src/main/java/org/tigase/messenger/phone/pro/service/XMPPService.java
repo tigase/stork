@@ -928,11 +928,13 @@ public class XMPPService extends Service {
 		if (this.focusedOnRoomId != null && room.getId() == this.focusedOnRoomId)
 			return;
 
+		String body = msg.getBody();
+		boolean mentioned = body != null && body.toLowerCase().contains(room.getNickname().toLowerCase());
+
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-		if (!sharedPref.getBoolean("notifications_new_groupmessage", true))
+		if (!mentioned && !sharedPref.getBoolean("notifications_new_groupmessage", true))
 			return;
-
 
 		notificationHelper.show(this, room, msg);
 	}

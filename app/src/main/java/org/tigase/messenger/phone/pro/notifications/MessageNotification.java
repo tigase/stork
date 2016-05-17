@@ -21,6 +21,7 @@ import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
@@ -39,12 +40,7 @@ public class MessageNotification {
 		return NotificationManagerCompat.from(context);
 	}
 
-	private void _show(Context context, String account, String chatJid, String messageBody, PendingIntent resultPendingIntent, Bitmap avatar, Uri soundUri, long[] vibrationPattern, int notificationId) throws JaxmppException {
-
-
-		String senderName = chatJid;
-
-
+	private void _show(Context context, String senderName, String account, String chatJid, String messageBody, PendingIntent resultPendingIntent, Bitmap avatar, Uri soundUri, long[] vibrationPattern, int notificationId) throws JaxmppException {
 		Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chatJid);
 
 		final String[] chatHistoryCols = new String[]{
@@ -95,7 +91,6 @@ public class MessageNotification {
 
 		final String[] unreadChatsCols = new String[]{
 				DatabaseContract.OpenChats.FIELD_ID,
-				ChatProvider.FIELD_NAME,
 				ChatProvider.FIELD_NAME,
 				ChatProvider.FIELD_UNREAD_COUNT,
 				ChatProvider.FIELD_LAST_MESSAGE,
@@ -181,6 +176,8 @@ public class MessageNotification {
 
 		final String account = room.getSessionObject().getUserBareJid().toString();
 		final String chatJid = room.getRoomJid().toString();
+		final String senderName = msg.getFrom().getResource();
+
 		Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_groupchat_24dp);
 		final Bitmap avatar = AvatarHelper.getCroppedBitmap(bm);
 
@@ -205,13 +202,12 @@ public class MessageNotification {
 		final long[] vibrationPattern = !vibrate ? null : new long[]{0, 400, 200, 100, 200, 100};
 
 
-		_show(context, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("muc:" + room.getId()).hashCode());
+		_show(context, senderName, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("muc:" + room.getId()).hashCode());
 	}
 
 
 	public void show(Context context, Chat chat, Message msg) throws JaxmppException {
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-
 
 		final String account = chat.getSessionObject().getUserBareJid().toString();
 		final String chatJid = chat.getJid().getBareJid().toString();
@@ -231,6 +227,23 @@ public class MessageNotification {
 						PendingIntent.FLAG_UPDATE_CURRENT
 				);
 
+		String senderName = chatJid;
+		Cursor chatHistoryCursor = context.getContentResolver().query(Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + chatJid),
+				new String[]{
+						DatabaseContract.RosterItemsCache.FIELD_ID,
+						DatabaseContract.RosterItemsCache.FIELD_NAME
+				}, null, null, null);
+		if (chatHistoryCursor != null) {
+			try {
+				if (chatHistoryCursor.moveToNext()) {
+					String name = chatHistoryCursor.getString(chatHistoryCursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_NAME));
+					if (name != null && !name.isEmpty())
+						senderName = name;
+				}
+			} finally {
+				chatHistoryCursor.close();
+			}
+		}
 
 		String sound = sharedPref.getString("notifications_new_message_ringtone", null);
 		boolean vibrate = sharedPref.getBoolean("notifications_new_message_vibrate", true);
@@ -239,8 +252,6 @@ public class MessageNotification {
 		final long[] vibrationPattern = !vibrate ? null : new long[]{0, 400, 200, 100, 200, 100};
 
 
-		_show(context, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("chat:" + chat.getId()).hashCode());
+		_show(context, senderName, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("chat:" + chat.getId()).hashCode());
 	}
-
-
 }
