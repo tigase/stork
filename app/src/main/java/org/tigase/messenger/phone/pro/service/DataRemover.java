@@ -18,11 +18,17 @@ import java.util.ArrayList;
 
 public class DataRemover extends BroadcastReceiver {
 
+	private final DatabaseHelper dbHelper;
+
+	DataRemover(DatabaseHelper dbHelper) {
+		this.dbHelper = dbHelper;
+	}
+
 	private void doDirtyJob(SQLiteDatabase db, String tableName, String fieldName, ArrayList<String> accounts) {
 		Log.d("DataRemover", "Remove data from " + tableName + ". Given list: " + accounts);
 
 		if (accounts.size() == 0) {
-			db.execSQL(String.format("DELETE FROM " + tableName + ";"));
+			db.execSQL("DELETE FROM " + tableName + ";");
 		} else {
 			String args = TextUtils.join(", ", accounts);
 			db.execSQL(String.format("DELETE FROM "
@@ -37,7 +43,7 @@ public class DataRemover extends BroadcastReceiver {
 		removeUnusedData(context);
 	}
 
-	public void removeUnusedData(Context context) {
+	void removeUnusedData(Context context) {
 		try {
 			final AccountManager am = AccountManager.get(context);
 
@@ -46,7 +52,6 @@ public class DataRemover extends BroadcastReceiver {
 				accounts.add("'" + account.name + "'");
 			}
 
-			DatabaseHelper dbHelper = new DatabaseHelper(context);
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			db.beginTransaction();
 			try {
@@ -57,7 +62,6 @@ public class DataRemover extends BroadcastReceiver {
 			} finally {
 				db.endTransaction();
 			}
-			dbHelper.close();
 		} finally {
 			context.getContentResolver().notifyChange(RosterProvider.ROSTER_URI, null);
 			context.getContentResolver().notifyChange(ChatProvider.OPEN_CHATS_URI, null);

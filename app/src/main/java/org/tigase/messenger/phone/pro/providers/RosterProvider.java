@@ -23,17 +23,19 @@ package org.tigase.messenger.phone.pro.providers;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 
 public class RosterProvider extends ContentProvider {
 
-	public static final String AUTHORITY = "org.tigase.messenger.phone.pro.Roster";
-	public static final String SCHEME = "content://";
+	private static final String AUTHORITY = "org.tigase.messenger.phone.pro.Roster";
+	private static final String SCHEME = "content://";
 	public static final Uri ROSTER_URI = Uri.parse(SCHEME + AUTHORITY + "/roster");
 	public static final Uri VCARD_URI = Uri.parse(SCHEME + AUTHORITY + "/vcard");
 
@@ -60,18 +62,14 @@ public class RosterProvider extends ContentProvider {
 	public RosterProvider() {
 	}
 
-	private static String nn(String n) {
-		return n == null ? "" : n;
-	}
-
 	@Override
-	public int delete(Uri uri, String selection, String[] selectionArgs) {
+	public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
 		// Implement this to handle requests to delete one or more rows.
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
-	public String getType(Uri uri) {
+	public String getType(@NonNull Uri uri) {
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_ROSTER:
 				return DatabaseContract.RosterItemsCache.ROSTER_TYPE;
@@ -90,19 +88,18 @@ public class RosterProvider extends ContentProvider {
 	}
 
 	@Override
-	public Uri insert(Uri uri, ContentValues values) {
-		// TODO: Implement this to handle requests to insert a new row.
+	public Uri insert(@NonNull Uri uri, ContentValues values) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
 	public boolean onCreate() {
-		this.dbHelper = new DatabaseHelper(getContext());
+		this.dbHelper = DatabaseHelper.getInstance(getContext());
 		return true;
 	}
 
 	@Override
-	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
 		Cursor cursor;
 		switch (sUriMatcher.match(uri)) {
@@ -143,15 +140,16 @@ public class RosterProvider extends ContentProvider {
 				throw new UnsupportedOperationException("Unrecognized URI " + uri);
 		}
 
-		cursor.setNotificationUri(getContext().getContentResolver(), uri);
+		Context context = getContext();
+		if (context != null)
+			cursor.setNotificationUri(context.getContentResolver(), uri);
 		Log.i("RosterProvider", "Setting notificationUri=" + cursor.getNotificationUri());
 
 		return cursor;
 	}
 
 	@Override
-	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		// TODO: Implement this to handle requests to update one or more rows.
+	public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 }
