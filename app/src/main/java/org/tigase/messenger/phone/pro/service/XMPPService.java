@@ -279,6 +279,7 @@ public class XMPPService extends Service {
 	private SSLSocketFactory sslSocketFactory;
 	private DatabaseHelper dbHelper;
 	private MessageNotification notificationHelper = new MessageNotification();
+	private DataRemover dataRemover;
 
 	public XMPPService() {
 		Logger logger = Logger.getLogger("tigase.jaxmpp");
@@ -587,13 +588,13 @@ public class XMPPService extends Service {
 
 		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
 
-		this.dbHelper = new DatabaseHelper(this);
+		this.dbHelper = DatabaseHelper.getInstance(this);
 		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		this.dataRemover = new DataRemover(this.dbHelper);
 
 		SSLSessionCache sslSessionCache = new SSLSessionCache(this);
 		this.sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
 
-		this.dbHelper = new DatabaseHelper(this);
 		this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
 			@Override
 			public void onChange(Long rosterItemId) {
@@ -1127,8 +1128,7 @@ public class XMPPService extends Service {
 			}
 		}
 
-		DataRemover dt = new DataRemover();
-		dt.removeUnusedData(this);
+		dataRemover.removeUnusedData(this);
 	}
 
 	protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p) throws XMLException {

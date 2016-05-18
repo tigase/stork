@@ -21,14 +21,12 @@
 
 package org.tigase.messenger.phone.pro.providers;
 
-import android.content.ContentProvider;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.UriMatcher;
+import android.content.*;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
@@ -39,18 +37,18 @@ import java.util.Map;
 
 public class ChatProvider extends ContentProvider {
 
-	public static final String AUTHORITY = "org.tigase.messenger.phone.pro.Chat";
-	public static final String SCHEME = "content://";
-	public static final Uri OPEN_CHATS_URI = Uri.parse(SCHEME + AUTHORITY + "/openchat");
-	public static final Uri CHAT_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/chat");
-	public static final Uri MUC_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/muc");
-	public static final Uri UNSENT_MESSAGES_URI = Uri.parse(SCHEME + AUTHORITY + "/unsent");
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_UNREAD_COUNT = "unread";
 	public static final String FIELD_CONTACT_PRESENCE = "contact_presence";
 	public static final String FIELD_LAST_MESSAGE = "last_message";
 	public static final String FIELD_LAST_MESSAGE_STATE = "last_message_state";
 	public static final String FIELD_LAST_MESSAGE_TIMESTAMP = "last_message_timestamp";
+	private static final String AUTHORITY = "org.tigase.messenger.phone.pro.Chat";
+	private static final String SCHEME = "content://";
+	public static final Uri OPEN_CHATS_URI = Uri.parse(SCHEME + AUTHORITY + "/openchat");
+	public static final Uri CHAT_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/chat");
+	public static final Uri MUC_HISTORY_URI = Uri.parse(SCHEME + AUTHORITY + "/muc");
+	public static final Uri UNSENT_MESSAGES_URI = Uri.parse(SCHEME + AUTHORITY + "/unsent");
 	private static final UriMatcher sUriMatcher = new UriMatcher(1);
 	private final static Map<String, String> openChatsProjectionMap = new HashMap<String, String>() {
 
@@ -142,13 +140,13 @@ public class ChatProvider extends ContentProvider {
 	}
 
 	@Override
-	public int delete(Uri uri, String selection, String[] selectionArgs) {
+	public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
 		// Implement this to handle requests to delete one or more rows.
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
-	public String getType(Uri uri) {
+	public String getType(@NonNull Uri uri) {
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_OPENCHATS:
 				return DatabaseContract.OpenChats.OPENCHATS_TYPE;
@@ -166,7 +164,8 @@ public class ChatProvider extends ContentProvider {
 	}
 
 	@Override
-	public Uri insert(Uri uri, ContentValues values) {
+	public Uri insert(@NonNull Uri uri, ContentValues values) {
+		final Context context = getContext();
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 				Long mId = isGroupChatMessageAddedAlready(values);
@@ -181,7 +180,8 @@ public class ChatProvider extends ContentProvider {
 							new String[]{mId.toString()});
 
 					Uri u = ContentUris.withAppendedId(uri, mId);
-					getContext().getContentResolver().notifyChange(u, null);
+					if (context != null)
+						context.getContentResolver().notifyChange(u, null);
 					return null;
 				} else if (mId != null) {
 					Log.d("ChatProvider", "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
@@ -193,7 +193,8 @@ public class ChatProvider extends ContentProvider {
 				Log.d("ChatProvider", "Inserted id=" + rowId + " message to " + DatabaseContract.ChatHistory.TABLE_NAME);
 				if (rowId > 0) {
 					Uri insertedItem = ContentUris.withAppendedId(uri, rowId);
-					getContext().getContentResolver().notifyChange(insertedItem, null);
+					if (context != null)
+						context.getContentResolver().notifyChange(insertedItem, null);
 					return insertedItem;
 				} else {
 					throw new RuntimeException("Cannot insert message!");
@@ -209,7 +210,7 @@ public class ChatProvider extends ContentProvider {
 
 		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
 		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
-		final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY);
+		/* final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY); */
 		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
 		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
 		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
@@ -236,27 +237,24 @@ public class ChatProvider extends ContentProvider {
 		selectionArgs.add(String.valueOf(timestamp - dt));
 		selectionArgs.add(String.valueOf(timestamp + dt));
 
-		Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
-				selectionArgs.toArray(new String[]{}), null, null, null);
-		try {
+		try (Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
+				selectionArgs.toArray(new String[]{}), null, null, null)) {
 			if (c.moveToNext()) {
 				return c.getLong(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 			} else {
 				return null;
 			}
-		} finally {
-			c.close();
 		}
 	}
 
 	@Override
 	public boolean onCreate() {
-		this.dbHelper = new DatabaseHelper(getContext());
+		this.dbHelper = DatabaseHelper.getInstance(getContext());
 		return true;
 	}
 
 	@Override
-	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		Cursor cursor;
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_OPENCHATS:
@@ -287,7 +285,7 @@ public class ChatProvider extends ContentProvider {
 			}
 			case URI_INDICATOR_CHAT_ITEM:
 			case URI_INDICATOR_GROUP_CHAT_ITEM:
-				String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
+				// String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, projection,
 						// DatabaseContract.ChatHistory.FIELD_JID + "=? AND " +
 						// DatabaseContract.ChatHistory.FIELD_ID + "=?", new
@@ -298,7 +296,7 @@ public class ChatProvider extends ContentProvider {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 			case URI_INDICATOR_CHATS_ACCOUNT: {
 				String account = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
-				jid = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
+				String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
 
 				final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 				qb.setTables(DatabaseContract.ChatHistory.TABLE_NAME);
@@ -325,7 +323,9 @@ public class ChatProvider extends ContentProvider {
 				throw new UnsupportedOperationException("Unrecognized URI " + uri);
 		}
 
-		cursor.setNotificationUri(getContext().getContentResolver(), uri);
+		Context context = getContext();
+		if (context != null)
+			cursor.setNotificationUri(context.getContentResolver(), uri);
 		return cursor;
 	}
 
@@ -346,7 +346,8 @@ public class ChatProvider extends ContentProvider {
 	}
 
 	@Override
-	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+	public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+		final Context context = getContext();
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
@@ -359,7 +360,8 @@ public class ChatProvider extends ContentProvider {
 								+ DatabaseContract.ChatHistory.FIELD_JID + "=?",
 						new String[]{account, jid});
 
-				getContext().getContentResolver().notifyChange(uri, null);
+				if (context != null)
+					context.getContentResolver().notifyChange(uri, null);
 				return updated;
 			}
 			case URI_INDICATOR_CHAT_ITEM:
@@ -370,7 +372,8 @@ public class ChatProvider extends ContentProvider {
 				int updated = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values,
 						DatabaseContract.ChatHistory.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()});
 				if (updated > 0) {
-					getContext().getContentResolver().notifyChange(uri, null);
+					if (context != null)
+						context.getContentResolver().notifyChange(uri, null);
 					return updated;
 				} else {
 					throw new RuntimeException("Cannot update message!");
