@@ -39,6 +39,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
 import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
+import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.jaxmpp.android.muc.AndroidRoomsManager;
 import org.tigase.messenger.jaxmpp.android.roster.AndroidRosterStore;
 import org.tigase.messenger.phone.pro.R;
@@ -611,7 +612,7 @@ public class XMPPService extends Service {
 		this.mobileModeFeature = new MobileModeFeature(this);
 
 		this.presenceHandler = new PresenceHandler(this);
-		this.messageHandler = new MessageHandler();
+		this.messageHandler = new MessageHandler(this);
 		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
 				new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
 					@Override
@@ -960,11 +961,11 @@ public class XMPPService extends Service {
 		alarmMgr.cancel(pi);
 	}
 
-	private void storeMessage(SessionObject sessionObject, Chat chat, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg)
+	private boolean storeMessage(SessionObject sessionObject, Chat chat, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg)
 			throws XMLException {
 		// for now let's ignore messages without body element
 		if (msg.getBody() == null && msg.getType() != StanzaType.error)
-			return;
+			return false;
 		BareJID authorJid = msg.getFrom() == null ? sessionObject.getUserBareJid() : msg.getFrom().getBareJid();
 		String author = authorJid.toString();
 		String jid = null;
@@ -986,7 +987,7 @@ public class XMPPService extends Service {
 
 			if (chat == null) {
 				Log.e(TAG, "Error message from " + jid + " has no Chat. Skipping store.");
-				return;
+				return false;
 			}
 
 			ErrorElement error = ErrorElement.extract(msg);
@@ -1050,6 +1051,8 @@ public class XMPPService extends Service {
 		// !this.activeChatJid.getBareJid().equals(authorJid))) {
 		// notificationHelper.notifyNewChatMessage(sessionObject, msg);
 		// }
+
+		return true;
 	}
 
 	private final void updateJaxmppInstances() {
@@ -1359,11 +1362,22 @@ public class XMPPService extends Service {
 	private class MessageHandler implements MessageModule.MessageReceivedHandler, MessageCarbonsModule.CarbonReceivedHandler,
 			ChatStateExtension.ChatStateChangedHandler {
 
+		private final Context context;
+		private final MarkAsRead markAsRead;
+
+		public MessageHandler(XMPPService xmppService) {
+			this.context = xmppService.getApplicationContext();
+			this.markAsRead = new MarkAsRead(context);
+		}
+
 		@Override
 		public void onCarbonReceived(SessionObject sessionObject, MessageCarbonsModule.CarbonEventType carbonType,
 									 tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Chat chat) {
 			try {
-				storeMessage(sessionObject, chat, msg);
+				boolean stored = storeMessage(sessionObject, chat, msg);
+				if (stored && carbonType == MessageCarbonsModule.CarbonEventType.sent) {
+					markAsRead.markChatAsRead(chat.getId(), sessionObject.getUserBareJid(), chat.getJid());
+				}
 			} catch (Exception ex) {
 				Log.e(TAG, "Exception handling received carbon message", ex);
 			}
@@ -1385,8 +1399,8 @@ public class XMPPService extends Service {
 		public void onMessageReceived(SessionObject sessionObject, Chat chat,
 									  tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) {
 			try {
-				storeMessage(sessionObject, chat, msg);
-				if (msg.getBody() != null && !msg.getBody().isEmpty())
+				boolean stored = storeMessage(sessionObject, chat, msg);
+				if (stored && msg.getBody() != null && !msg.getBody().isEmpty())
 					sendNotification(sessionObject, chat, msg);
 			} catch (Exception ex) {
 				Log.e(TAG, "Exception handling received message", ex);
@@ -1555,6 +1569,7 @@ public class XMPPService extends Service {
 			return XMPPService.this;
 		}
 	}
+
 
 	private class PresenceHandler implements PresenceModule.ContactAvailableHandler, PresenceModule.ContactUnavailableHandler,
 			PresenceModule.ContactChangedPresenceHandler, PresenceModule.BeforePresenceSendHandler,
