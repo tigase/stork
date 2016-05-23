@@ -59,7 +59,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
 
 		db.execSQL(DatabaseContract.ChatHistory.CREATE_TABLE);
-		db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX);
+		db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_JID);
+		db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_STATE);
 
 		db.execSQL(DatabaseContract.VCardsCache.CREATE_TABLE);
 		db.execSQL(DatabaseContract.VCardsCache.CREATE_INDEX);
@@ -71,5 +72,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.i("DatabaseHelper", "Update database from " + oldVersion + " to " + newVersion);
+		if (oldVersion == 6 && newVersion == 7) {
+			db.execSQL("DROP INDEX " + DatabaseContract.ChatHistory.INDEX_JID);
+
+			db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_JID);
+			db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_STATE);
+
+		}
 	}
 }
