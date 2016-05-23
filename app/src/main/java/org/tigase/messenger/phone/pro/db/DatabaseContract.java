@@ -25,7 +25,7 @@ import android.provider.BaseColumns;
 
 public final class DatabaseContract {
 
-	public static final int DATABASE_VERSION = 6;
+	public static final int DATABASE_VERSION = 7;
 
 	public static final String DATABASE_NAME = "mobile_messenger2.db";
 
@@ -221,13 +221,18 @@ public final class DatabaseContract {
 		 * index name
 		 */
 		public static final String INDEX_JID = "chat_history_jid_index";
+		public static final String INDEX_STATE = "chat_history_state_index";
 
 		public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, "
 				+ FIELD_ACCOUNT + " TEXT, " + FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, "
 				+ FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " + FIELD_ITEM_TYPE
 				+ " INTEGER, " + FIELD_DATA + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE + " INTEGER" + ");";
-		public static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
-				+ FIELD_JID + ")";
+
+		public static final String CREATE_INDEX_JID = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
+				+ FIELD_ACCOUNT + ", " + FIELD_JID + ")";
+
+		public static final String CREATE_INDEX_STATE = "CREATE INDEX IF NOT EXISTS " + INDEX_STATE + " ON " + TABLE_NAME + " ("
+				+ FIELD_STATE + ")";
 
 		public static final String CHATS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.chats";
 		public static final String CHATS_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.chatitem";
