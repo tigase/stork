@@ -40,6 +40,7 @@ import android.view.MenuItem;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
+import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 
 import java.util.List;
 
@@ -299,6 +300,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			// onViewCreated.
 
 			AccountManager am = AccountManager.get(screen.getContext());
+
+			Preference addAccountPref = new Preference(screen.getContext());
+			addAccountPref.setIntent(new Intent(screen.getContext(), NewAccountActivity.class));
+			addAccountPref.setTitle(getActivity().getString(R.string.pref_accounts_newaccount));
+			addAccountPref.setIcon(android.R.drawable.ic_input_add);
+			screen.addPreference(addAccountPref);
+
 			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 				Preference category = new Preference(screen.getContext());
 				Intent x = new Intent(screen.getContext(), LoginActivity.class);
