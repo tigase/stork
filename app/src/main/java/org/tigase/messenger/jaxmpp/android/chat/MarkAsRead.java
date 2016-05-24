@@ -24,27 +24,27 @@ public class MarkAsRead {
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				final Uri uri = Uri.parse(u + "/" + account + "/" + jid);
+				final Uri uri = Uri.parse(u + "/" + account + "/" + jid.getBareJid());
 
 				ContentValues values = new ContentValues();
 				values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
 
-				Cursor c = context.getContentResolver().query(uri,
+				try (Cursor c = context.getContentResolver().query(uri,
 						new String[]{DatabaseContract.ChatHistory.FIELD_ID, DatabaseContract.ChatHistory.FIELD_STATE},
-						DatabaseContract.ChatHistory.FIELD_STATE + "=?", new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD}, null);
-				try {
+						DatabaseContract.ChatHistory.FIELD_STATE + "=?", new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD}, null)) {
 					while (c.moveToNext()) {
 						final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 						Uri u = ContentUris.withAppendedId(uri, id);
 
 						int x = context.getContentResolver().update(u, values, null, null);
-
 						Log.d("MarkAsRead", "Found unread (" + x + ") " + u);
 					}
-				} finally {
-					c.close();
+				} catch (Exception e) {
+					Log.e("MarkAsRead", "Can't mark as read acc=" + account + ", jid=" + jid.getBareJid(), e);
 				}
 
+				context.getContentResolver().notifyChange(
+						ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), null);
 
 				return null;
 			}

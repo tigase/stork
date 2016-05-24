@@ -186,4 +186,5 @@
     <string name="notification_new_groupmessage_from">New message in room %s</string>
     <string name="notification_new_messages">%s new messages</string>
     <string name="notification_unread_conversations">%s unread conversations</string>
+    <string name="pref_accounts_newaccount">Add new account</string>
 </resources>
