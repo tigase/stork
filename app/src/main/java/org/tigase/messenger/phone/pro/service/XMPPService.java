@@ -1245,10 +1245,9 @@ public class XMPPService extends Service {
 		@Override
 		protected Void doInBackground(Void... params) {
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + sessionObject.getUserBareJid());
-			Cursor c = getContentResolver().query(u, cols, DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "!=?",
+			try (Cursor c = getContentResolver().query(u, cols, DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "!=?",
 					new String[]{"" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE},
-					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
-			try {
+					DatabaseContract.ChatHistory.FIELD_TIMESTAMP)) {
 				while (c.moveToNext()) {
 					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 					final JID toJid = JID.jidInstance(c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
@@ -1279,8 +1278,6 @@ public class XMPPService extends Service {
 						Log.w("XMPPService", "Can't find chat object for message");
 					}
 				}
-			} finally {
-				c.close();
 			}
 
 			return null;
@@ -1309,13 +1306,11 @@ public class XMPPService extends Service {
 
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + room.getSessionObject().getUserBareJid());
 
-			Cursor c = getContentResolver().query(u, cols,
+			try (Cursor c = getContentResolver().query(u, cols,
 					DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "==? AND " + DatabaseContract.ChatHistory.FIELD_JID + "=?",
 					new String[]{"" + DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE,
 							room.getRoomJid().toString()},
-					DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
-
-			try {
+					DatabaseContract.ChatHistory.FIELD_TIMESTAMP)) {
 				while (c.moveToNext()) {
 					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 					final JID toJid = JID.jidInstance(c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
@@ -1351,8 +1346,6 @@ public class XMPPService extends Service {
 						Log.w("XMPPService", "Can't find chat object for message");
 					}
 				}
-			} finally {
-				c.close();
 			}
 
 			return null;
