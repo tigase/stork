@@ -40,6 +40,8 @@ public class MucItemFragment extends Fragment {
 	@Bind(R.id.send_button)
 	ImageView sendButton;
 	private Room room;
+	private Uri uri;
+	private MucItemRecyclerViewAdapter adapter;
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -62,8 +64,6 @@ public class MucItemFragment extends Fragment {
 			super.onServiceDisconnected(name);
 		}
 	};
-	private Uri uri;
-	private MucItemRecyclerViewAdapter adapter;
 	private ChatItemIterationListener mListener = new ChatItemIterationListener() {
 
 		@Override
@@ -137,6 +137,9 @@ public class MucItemFragment extends Fragment {
 	private void setRoom(Room room) {
 		this.room = room;
 		message.setEnabled(room != null);
+		if (adapter != null) {
+			adapter.setOwnNickname(room.getNickname());
+		}
 	}
 
 	public interface ChatItemIterationListener {
