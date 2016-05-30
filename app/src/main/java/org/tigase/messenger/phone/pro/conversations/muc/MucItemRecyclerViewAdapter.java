@@ -22,6 +22,7 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 	private final MucItemFragment.ChatItemIterationListener mListener;
 	private final Context context;
+	private String ownNickname;
 
 	public MucItemRecyclerViewAdapter(Context context, Cursor cursor, MucItemFragment.ChatItemIterationListener listener) {
 		super(cursor);
@@ -108,6 +109,14 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 	}
 
+	public String getOwnNickname() {
+		return ownNickname;
+	}
+
+	public void setOwnNickname(String ownNickname) {
+		this.ownNickname = ownNickname;
+	}
+
 	@Override
 	public void onBindViewHolderCursor(ViewHolder holder, Cursor cursor) {
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
@@ -129,7 +138,8 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 		boolean mentioned = (state == DatabaseContract.ChatHistory.STATE_INCOMING || state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD)
 				&& body != null
-				&& body.toLowerCase().contains(nickname.toLowerCase());
+				&& ownNickname != null
+				&& body.toLowerCase().contains(ownNickname.toLowerCase());
 		if (mentioned) {
 			holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
 		} else {
