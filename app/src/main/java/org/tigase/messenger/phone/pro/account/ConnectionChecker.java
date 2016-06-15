@@ -146,6 +146,10 @@ public class ConnectionChecker {
 		}
 	}
 
+	public Jaxmpp getContact() {
+		return contact;
+	}
+
 	public String getErrorMessage() {
 		return errorMessage;
 	}

@@ -57,6 +57,7 @@
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
         <activity
+                android:screenOrientation="locked"
                 android:name=".account.LoginActivity"
                 android:label="@string/title_activity_login">
             <intent-filter>

@@ -187,4 +187,12 @@
     <string name="notification_new_messages">%s new messages</string>
     <string name="notification_unread_conversations">%s unread conversations</string>
     <string name="pref_accounts_newaccount">Add new account</string>
+    <string name="action_sign_in_cancel">Cancel</string>
+
+    <string name="login_checking">Checking connection</string>
+    <string name="login_connected">Connected to server</string>
+    <string name="login_checking_password">Checking password</string>
+    <string name="login_password_valid">Password valid</string>
+    <string name="login_password_invalid">Password invalid</string>
+    <string name="login_successful">Connection successful</string>
 </resources>

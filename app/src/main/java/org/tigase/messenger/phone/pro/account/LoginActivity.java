@@ -23,10 +23,8 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.app.ProgressDialog;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -34,7 +32,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
@@ -52,9 +49,17 @@ import android.widget.Switch;
 import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
+import tigase.jaxmpp.core.client.eventbus.Event;
+import tigase.jaxmpp.core.client.eventbus.EventHandler;
+import tigase.jaxmpp.core.client.eventbus.EventListener;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -87,7 +92,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	private EditText mResourceView;
 	private EditText mHostnameView;
 	private EditText mNicknameView;
-	private View mProgressView;
+	//	private View mProgressView;
 	private View mLoginFormView;
 	private AccountManager mAccountManager;
 	private boolean mUpdateAccountMode = false;
@@ -157,15 +162,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 			// form field with an error.
 			focusView.requestFocus();
 		} else {
-
-			boolean skipLoginTest = false;
+			boolean skipLoginTest = !active;
 			Account account = getAccount(xmppID);
 			if (account != null) {
-				skipLoginTest = password.equals(mAccountManager.getPassword(account));
+				skipLoginTest &= password.equals(mAccountManager.getPassword(account));
 				skipLoginTest &= hostname.equals(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
 			}
-
-			skipLoginTest = false;
 
 			mAuthTask = new UserLoginTask(skipLoginTest, xmppID, password, hostname, resource, nickname, active);
 			mAuthTask.execute((Void) null);
@@ -188,6 +190,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	private boolean isPasswordValid(String password) {
 		// TODO: Replace this with your own logic
 		return password.length() > 4;
+	}
+
+	@OnClick(R.id.cancel_button)
+	void onCancelButton() {
+		finish();
 	}
 
 	@Override
@@ -235,7 +242,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		});
 
 		mLoginFormView = findViewById(R.id.login_form);
-		mProgressView = findViewById(R.id.login_progress);
+//		mProgressView = findViewById(R.id.login_progress);
 
 		if (getIntent().getStringExtra("account_name") != null) {
 			// edit existing account mode
@@ -344,39 +351,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 				}).show();
 	}
 
-	/**
-	 * Shows the progress UI and hides the login form.
-	 */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-	private void showProgress(final boolean show) {
-		// On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-		// for very easy animations. If available, use these APIs to fade-in
-		// the progress spinner.
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-			int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-			mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-			mLoginFormView.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-				@Override
-				public void onAnimationEnd(Animator animation) {
-					mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-				}
-			});
-
-			mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-			mProgressView.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-				@Override
-				public void onAnimationEnd(Animator animation) {
-					mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-				}
-			});
-		} else {
-			// The ViewPropertyAnimator APIs are not available, so simply show
-			// and hide the relevant UI components.
-			mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-			mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-		}
-	}
 
 	private interface ProfileQuery {
 		String[] PROJECTION = {ContactsContract.CommonDataKinds.Email.ADDRESS,
@@ -390,7 +364,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	 * Represents an asynchronous login/registration task used to authenticate
 	 * the user.
 	 */
-	public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+	public class UserLoginTask extends AsyncTask<Void, Integer, Boolean> {
 
 		private final String mXmppId;
 		private final String mPassword;
@@ -400,6 +374,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		private final boolean mActive;
 		private final ConnectionChecker checker;
 		private final boolean skipLoginTest;
+		private ProgressDialog progress;
 
 		UserLoginTask(boolean skipLoginTest, String xmppId, String password, String hostname, String resource, String nickname,
 					  boolean active) {
@@ -435,13 +410,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		@Override
 		protected void onCancelled() {
 			mAuthTask = null;
-			showProgress(false);
+
+			if (progress != null)
+				progress.hide();
 		}
 
 		@Override
 		protected void onPostExecute(final Boolean success) {
 			mAuthTask = null;
-			showProgress(false);
+			if (progress != null)
+				progress.hide();
 
 			if (success) {
 				try {
@@ -495,9 +473,55 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 		@Override
 		protected void onPreExecute() {
-			showProgress(true);
+			this.progress = new ProgressDialog(LoginActivity.this);
+			progress.setMessage(getResources().getString(R.string.login_checking));
+			progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			progress.setIndeterminate(false);
+			progress.setProgress(0);
+			progress.setMax(6);
+
+			progress.show();
+
+			checker.getContact().getEventBus().addListener(new EventListener() {
+				@Override
+				public void onEvent(Event<? extends EventHandler> event) {
+					if (progress != null) {
+						if (event instanceof StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent) {
+							setMessage(getResources().getString(R.string.login_connected), 1);
+						} else if (event instanceof SaslModule.SaslAuthStartHandler.SaslAuthStartEvent) {
+							setMessage(getResources().getString(R.string.login_checking_password), 1);
+						} else if (event instanceof AuthModule.AuthSuccessHandler) {
+							setMessage(getResources().getString(R.string.login_password_valid), 1);
+						} else if (event instanceof AuthModule.AuthFailedHandler) {
+							setMessage(getResources().getString(R.string.login_password_invalid), 0);
+						} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent) {
+
+							setMessage(getResources().getString(R.string.login_successful), 1);
+						}
+					}
+				}
+			});
+
 			super.onPreExecute();
 		}
+
+		@Override
+		protected void onProgressUpdate(final Integer... values) {
+			super.onProgressUpdate(values);
+			progress.setProgress(progress.getProgress() + values[0]);
+		}
+
+		private void setMessage(final String message, final int p) {
+			LoginActivity.this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					progress.setMessage(message);
+
+				}
+			});
+			publishProgress(p);
+		}
+
 	}
 
 }
