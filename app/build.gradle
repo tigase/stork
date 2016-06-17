@@ -24,13 +24,13 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24"
 
     defaultConfig {
         applicationId "org.tigase.messenger.phone.pro"
         minSdkVersion 19
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 33
         versionName "3.0.0 RC3"
     }
@@ -74,9 +74,9 @@ dependencies {
     compile 'tigase:jaxmpp-core:3.2.0-SNAPSHOT'
     compile 'tigase:jaxmpp-j2se:3.2.0-SNAPSHOT'
     compile 'tigase:tigase-xmltools:3.4.5'
-    compile 'com.android.support:appcompat-v7:23.2.1'
-    compile 'com.android.support:design:23.2.1'
-    compile 'com.android.support:support-v4:23.2.1'
-    compile 'com.android.support:recyclerview-v7:23.2.1'
+    compile 'com.android.support:appcompat-v7:24.0.0'
+    compile 'com.android.support:design:24.0.0'
+    compile 'com.android.support:support-v4:24.0.0'
+    compile 'com.android.support:recyclerview-v7:24.0.0'
     compile 'com.jakewharton:butterknife:7.0.1'
 }
