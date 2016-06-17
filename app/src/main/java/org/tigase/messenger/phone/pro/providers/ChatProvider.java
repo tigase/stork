@@ -214,6 +214,10 @@ public class ChatProvider extends ContentProvider {
 		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
 		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
 		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+		final int itemType = values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE);
+
+		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE)
+			return null;
 
 		ArrayList<String> selectionArgs = new ArrayList<>();
 
@@ -223,8 +227,10 @@ public class ChatProvider extends ContentProvider {
 		selection += " AND " + DatabaseContract.ChatHistory.FIELD_JID + "=? ";
 		selectionArgs.add(roomJid);
 
-		selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
-		selectionArgs.add(nickname);
+		if (nickname != null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
+			selectionArgs.add(nickname);
+		}
 
 		long dt = 1000 * 60 * 5;
 		if (stanzaId != null) {

@@ -74,7 +74,9 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatStateExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.XMucUserElement;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
@@ -733,6 +735,7 @@ public class XMPPService extends Service {
 		});
 
 		multiJaxmpp.addHandler(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.OccupantLeavedHandler.OccupantLeavedEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.MessageErrorHandler.MessageErrorEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
@@ -1142,6 +1145,35 @@ public class XMPPService extends Service {
 		return true;
 	}
 
+	private void storeMucSysMsg(SessionObject sessionObject,
+								Room room,
+								String body) {
+		try {
+			if (body == null || body == null || room == null) return;
+
+			ContentValues values = new ContentValues();
+			values.put(DatabaseContract.ChatHistory.FIELD_JID, room.getRoomJid().toString());
+			values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, (new Date()).getTime());
+
+
+			values.put(DatabaseContract.ChatHistory.FIELD_STATE,
+					focusedOnRoomId != null && room.getId() == focusedOnRoomId ? DatabaseContract.ChatHistory.STATE_INCOMING : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
+			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+					DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE);
+			values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+
+
+			values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
+
+			Uri uri = Uri.parse(ChatProvider.MUC_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + Uri.encode(
+					room.getRoomJid().toString()));
+			Uri x = getContentResolver().insert(uri, values);
+		} catch (Exception ex) {
+			Log.e(TAG, "Exception handling received MUC message", ex);
+		}
+
+	}
+
 	private final void updateJaxmppInstances() {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
@@ -1324,7 +1356,7 @@ public class XMPPService extends Service {
 		}
 	}
 
-	private class MucHandler implements MucModule.MucMessageReceivedHandler, MucModule.YouJoinedHandler, MucModule.MessageErrorHandler, MucModule.StateChangeHandler, MucModule.PresenceErrorHandler {
+	private class MucHandler implements MucModule.MucMessageReceivedHandler, MucModule.YouJoinedHandler, MucModule.MessageErrorHandler, MucModule.StateChangeHandler, MucModule.PresenceErrorHandler, MucModule.OccupantLeavedHandler {
 
 		@Override
 		public void onMessageError(SessionObject sessionObject,
@@ -1425,6 +1457,30 @@ public class XMPPService extends Service {
 
 		}
 
+
+		@Override
+		public void onOccupantLeaved(SessionObject sessionObject, Room room, Occupant occupant, Presence presence, XMucUserElement xMucUserElement) {
+			try {
+				if (!occupant.getNickname().equals(room.getNickname()) || xMucUserElement.getStatuses() == null)
+					return;
+				if (xMucUserElement.getStatuses().contains(301)) {
+					storeMucSysMsg(sessionObject, room, "You are banned from the room");
+				} else if (xMucUserElement.getStatuses().contains(307)) {
+					storeMucSysMsg(sessionObject, room, "You are kicked from room");
+				} else if (xMucUserElement.getStatuses().contains(321)) {
+					storeMucSysMsg(sessionObject, room, "You are removed from the room because of an affiliation change");
+				} else if (xMucUserElement.getStatuses().contains(322)) {
+					storeMucSysMsg(sessionObject, room, "You are removed from the room because the room has been changed to members-only and you are not a member");
+				} else if (xMucUserElement.getStatuses().contains(332)) {
+					storeMucSysMsg(sessionObject, room, "You are removed from the room because the MUC service is being shut down");
+				}
+
+			} catch (XMLException e) {
+				Log.e(TAG, "Exception handling", e);
+			}
+		}
+
+
 		@Override
 		public void onPresenceError(SessionObject sessionObject, Room room, Presence presence, String nickname) {
 			Intent intent = new Intent();
@@ -1481,6 +1537,8 @@ public class XMPPService extends Service {
 		public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
 			// TODO Auto-generated method stub
 			Log.v(TAG, "joined room " + room.getRoomJid() + " as " + asNickname);
+			(new SendUnsentGroupMessages(room)).execute();
+
 		}
 
 	}

@@ -17,6 +17,7 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	public static final int ITEM_ERROR = 1;
+	public static final int ITEM_SYS_MSG = 2;
 	public static final int ITEM_MESSAGE_IN = 20;
 	public static final int ITEM_MESSAGE_OUT = 30;
 
@@ -91,14 +92,18 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 		final int state = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 		final int type = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE));
+		final String nickname = getCursor().getString(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 
 		switch (state) {
 			case DatabaseContract.ChatHistory.STATE_INCOMING:
 			case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
 				if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
 					return ITEM_ERROR;
-				} else
+				} else if (type == DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE) {
+					return ITEM_SYS_MSG;
+				} else {
 					return ITEM_MESSAGE_IN;
+				}
 			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
 			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
 			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
@@ -196,6 +201,9 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 				break;
 			case ITEM_ERROR:
 				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
+				break;
+			case ITEM_SYS_MSG:
+				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sysmsg, parent, false);
 				break;
 			default:
 				throw new RuntimeException("Unknown view type " + viewType);

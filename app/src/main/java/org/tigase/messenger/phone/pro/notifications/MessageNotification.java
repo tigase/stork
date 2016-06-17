@@ -145,7 +145,7 @@ public class MessageNotification {
 					PendingIntent.FLAG_UPDATE_CURRENT
 			));
 		} else {
-			summaryNotificationBuilder.setContentTitle(context.getString(R.string.notification_new_message_from, senderName))
+			summaryNotificationBuilder.setContentTitle(senderName)
 					.setContentIntent(resultPendingIntent)
 					.setStyle(new NotificationCompat.BigTextStyle()
 							.bigText(body.toString()))
@@ -200,7 +200,7 @@ public class MessageNotification {
 		final long[] vibrationPattern = !vibrate ? null : new long[]{0, 400, 200, 100, 200, 100};
 
 
-		_show(context, senderName, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("muc:" + room.getId()).hashCode());
+		_show(context, context.getResources().getString(R.string.notification_new_groupmessage_from, chatJid), account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("muc:" + room.getId()).hashCode());
 	}
 
 
@@ -249,7 +249,6 @@ public class MessageNotification {
 		final Uri soundUri = sound == null ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(sound);
 		final long[] vibrationPattern = !vibrate ? null : new long[]{0, 400, 200, 100, 200, 100};
 
-
-		_show(context, senderName, account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("chat:" + chat.getId()).hashCode());
+		_show(context, context.getResources().getString(R.string.notification_new_message_from, senderName), account, chatJid, msg.getBody(), resultPendingIntent, avatar, soundUri, vibrationPattern, ("chat:" + chat.getId()).hashCode());
 	}
 }

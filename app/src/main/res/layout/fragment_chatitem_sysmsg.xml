@@ -20,7 +20,7 @@
             android:id="@+id/message_box"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/message_bubble_error"
+            android:background="@drawable/message_bubble_sysmsg"
             android:minWidth="150sp"
             android:orientation="vertical"
             android:longClickable="true" android:layout_alignParentBottom="true">
