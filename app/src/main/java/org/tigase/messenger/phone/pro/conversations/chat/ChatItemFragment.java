@@ -36,8 +36,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -54,11 +52,8 @@ import java.util.Date;
 
 public class ChatItemFragment extends Fragment {
 
-	@Bind(R.id.chat_list)
 	RecyclerView recyclerView;
-	@Bind(R.id.messageText)
 	EditText message;
-	@Bind(R.id.send_button)
 	ImageView sendButton;
 	private Chat chat;
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
@@ -169,7 +164,10 @@ public class ChatItemFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_chatitem_list, container, false);
-		ButterKnife.bind(this, root);
+
+		recyclerView = (RecyclerView) root.findViewById(R.id.chat_list);
+		message = (EditText) root.findViewById(R.id.messageText);
+		sendButton = (ImageView) root.findViewById(R.id.send_button);
 
 		message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override

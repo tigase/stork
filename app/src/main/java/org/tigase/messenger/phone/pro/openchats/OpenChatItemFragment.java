@@ -28,14 +28,12 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.*;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
@@ -74,7 +72,6 @@ public class OpenChatItemFragment extends Fragment {
 			refreshChatlist();
 		}
 	};
-	@Bind(R.id.openchats_list)
 	RecyclerView recyclerView;
 	private OnAddChatListener mAddChatListener;
 	private MyOpenChatItemRecyclerViewAdapter adapter;
@@ -126,12 +123,6 @@ public class OpenChatItemFragment extends Fragment {
 		Bundle args = new Bundle();
 		fragment.setArguments(args);
 		return fragment;
-	}
-
-	@OnClick(R.id.roster_add_chat)
-	void onAddContactClick() {
-
-		mAddChatListener.onAddChatClick();
 	}
 
 	private void onArchiveChat(final int chatId, String jid, final String account) {
@@ -204,8 +195,11 @@ public class OpenChatItemFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_openchatitem_list, container, false);
-		ButterKnife.bind(this, root);
 
+		FloatingActionButton rosterAddChat = (FloatingActionButton) root.findViewById(R.id.roster_add_chat);
+		rosterAddChat.setOnClickListener(listener -> mAddChatListener.onAddChatClick());
+
+		recyclerView = (RecyclerView) root.findViewById(R.id.openchats_list);
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, mListener) {

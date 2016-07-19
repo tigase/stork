@@ -958,7 +958,7 @@ public class XMPPService extends Service {
 								try {
 									if (vcard.getPhotoVal() != null && vcard.getPhotoVal()
 											.length() > 0) {
-										byte[] buffer = Base64.decode(vcard.getPhotoVal());
+										byte[] buffer = tigase.jaxmpp.core.client.Base64.decode(vcard.getPhotoVal());
 
 										rosterProvider.updateVCardHash(sessionObject, jid, buffer);
 										Intent intent = new Intent(

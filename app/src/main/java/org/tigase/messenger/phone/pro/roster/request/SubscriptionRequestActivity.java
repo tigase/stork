@@ -8,12 +8,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
@@ -32,13 +30,9 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class SubscriptionRequestActivity extends AppCompatActivity {
 
-	@Bind(R.id.contact_xmppid)
 	EditText xmppId;
-	@Bind(R.id.contact_display_name)
 	EditText mName;
-	@Bind(R.id.user_avatar)
 	ImageView avatar;
-	@Bind(R.id.user_details_form)
 	LinearLayout mDetailsForm;
 	private BareJID jid;
 	private String account;
@@ -92,8 +86,7 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 		set(R.id.contact_vcard_work, vcard.getOrgName());
 	}
 
-	@OnClick(R.id.contact_add_button)
-	void onAddClick() {
+	private void onAddClick() {
 		final String name = mName.getText().toString();
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
@@ -132,7 +125,17 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_subscription_request);
-		ButterKnife.bind(this);
+
+		xmppId = (EditText) findViewById(R.id.contact_xmppid);
+		mName = (EditText) findViewById(R.id.contact_display_name);
+		avatar = (ImageView) findViewById(R.id.user_avatar);
+		mDetailsForm = (LinearLayout) findViewById(R.id.user_details_form);
+
+		Button contactRejectButton = (Button) findViewById(R.id.contact_reject_button);
+		contactRejectButton.setOnClickListener(view -> onRejectClick());
+
+		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		contactAddButton.setOnClickListener(view -> onAddClick());
 
 		Bundle extras = getIntent().getExtras();
 		this.account = extras.getString("account_name");
@@ -154,8 +157,7 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 		super.onDestroy();
 	}
 
-	@OnClick(R.id.contact_reject_button)
-	void onRejectClick() {
+	private void onRejectClick() {
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {

@@ -23,7 +23,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24"
+    buildToolsVersion "24.0.0"
 
     defaultConfig {
         applicationId "org.tigase.messenger.phone.pro"
@@ -79,5 +79,4 @@ dependencies {
     compile 'com.android.support:design:24.0.0'
     compile 'com.android.support:support-v4:24.0.0'
     compile 'com.android.support:recyclerview-v7:24.0.0'
-    compile 'com.jakewharton:butterknife:7.0.1'
 }

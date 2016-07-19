@@ -5,17 +5,14 @@ import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import org.tigase.messenger.phone.pro.R;
 
 public class NewAccountActivity extends AppCompatActivity {
 
 	public static final int LOGIN_REQUEST = 1;
 
-	@Bind(R.id.textView3)
 	TextView tv;
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -30,8 +27,18 @@ public class NewAccountActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_new_account);
-		ButterKnife.bind(this);
 
+		tv = (TextView) findViewById(R.id.textView3);
+
+		Button createNewAccountButton = (Button) findViewById(R.id.createNewAccountButton);
+		createNewAccountButton.setOnClickListener(view -> {
+		});
+
+		Button useExistingAccountButton = (Button) findViewById(R.id.useExistingAccountButton);
+		useExistingAccountButton.setOnClickListener(view -> {
+			Intent intent = new Intent(NewAccountActivity.this, LoginActivity.class);
+			startActivityForResult(intent, LOGIN_REQUEST);
+		});
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(), 0);
 			String versionName = pinfo.versionName;
@@ -40,15 +47,5 @@ public class NewAccountActivity extends AppCompatActivity {
 		}
 	}
 
-	@OnClick(value = R.id.createNewAccountButton)
-	void onCreateNewAccountButtonClick() {
-
-	}
-
-	@OnClick(value = R.id.useExistingAccountButton)
-	void onUseExistingAccountButtonClick() {
-		Intent intent = new Intent(this, LoginActivity.class);
-		startActivityForResult(intent, LOGIN_REQUEST);
-	}
 
 }

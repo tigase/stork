@@ -8,13 +8,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.*;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnEditorAction;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -30,13 +25,9 @@ import java.util.ArrayList;
 public class EditContactActivity extends AppCompatActivity {
 
 	private final ArrayList accountsList = new ArrayList<>();
-	@Bind(R.id.contact_account)
 	Spinner mAccountSelector;
-	@Bind(R.id.contact_xmppid)
 	EditText mContactXMPPID;
-	@Bind(R.id.contact_display_name)
 	EditText mContactName;
-	@Bind(R.id.contact_progress)
 	ProgressBar progressBar;
 	private ArrayAdapter<Object> sa;
 	private XMPPService mService;
@@ -58,8 +49,7 @@ public class EditContactActivity extends AppCompatActivity {
 		}
 	};
 
-	@OnClick(R.id.contact_add_button)
-	void onAddButtonClick() {
+	private void onAddButtonClick() {
 		mContactXMPPID.setError(null);
 		BareJID jid;
 		try {
@@ -82,17 +72,28 @@ public class EditContactActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_contact);
-		ButterKnife.bind(this);
+
+		mAccountSelector = (Spinner) findViewById(R.id.contact_account);
+		mContactXMPPID = (EditText) findViewById(R.id.contact_xmppid);
+		mContactName = (EditText) findViewById(R.id.contact_display_name);
+		progressBar = (ProgressBar) findViewById(R.id.contact_progress);
+
+		mContactXMPPID.setOnEditorActionListener((textView, i, keyEvent) -> {
+			onAddButtonClick();
+			return false;
+		});
+		mContactName.setOnEditorActionListener((textView, i, keyEvent) -> {
+			onAddButtonClick();
+			return false;
+		});
+
+		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		contactAddButton.setOnClickListener(view -> onAddButtonClick());
 
 		this.sa = new ArrayAdapter<>(getBaseContext(), R.layout.account_list_item, R.id.account_name, accountsList);
 		mAccountSelector.setAdapter(sa);
 	}
 
-	@OnEditorAction({R.id.contact_xmppid, R.id.contact_display_name})
-	boolean onEditorAction(KeyEvent key) {
-		onAddButtonClick();
-		return true;
-	}
 
 	@Override
 	protected void onStart() {

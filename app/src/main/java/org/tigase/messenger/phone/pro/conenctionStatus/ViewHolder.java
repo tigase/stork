@@ -25,27 +25,25 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.R;
 
 public class ViewHolder extends RecyclerView.ViewHolder {
 
-	@Bind(R.id.server_name)
 	TextView mServerName;
 
-	@Bind(R.id.server_status_stage)
 	TextView mStage;
 
-	@Bind(R.id.server_status_connected)
 	TextView mConnected;
 
-	@Bind(R.id.server_status_sessionresumption)
 	TextView mResumption;
 
 	public ViewHolder(final View itemView) {
 		super(itemView);
-		ButterKnife.bind(this, itemView);
+
+		this.mServerName = (TextView) itemView.findViewById(R.id.server_name);
+		this.mStage = (TextView) itemView.findViewById(R.id.server_status_stage);
+		this.mConnected = (TextView) itemView.findViewById(R.id.server_status_connected);
+		this.mResumption = (TextView) itemView.findViewById(R.id.server_status_sessionresumption);
 	}
 
 	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {

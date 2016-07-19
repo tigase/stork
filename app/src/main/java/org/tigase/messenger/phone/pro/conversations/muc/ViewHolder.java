@@ -5,22 +5,19 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.R;
 
 public class ViewHolder extends RecyclerView.ViewHolder {
 
-	@Bind(R.id.content)
 	TextView mContentView;
-	@Bind(R.id.chat_timestamp)
 	TextView mTimestamp;
 	TextView mNickname;
 	ImageView mDeliveryStatus;
 
 	public ViewHolder(View itemView) {
 		super(itemView);
-		ButterKnife.bind(this, itemView);
+		mContentView = (TextView) itemView.findViewById(R.id.content);
+		mTimestamp = (TextView) itemView.findViewById(R.id.chat_timestamp);
 		mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
 		mNickname = (TextView) itemView.findViewById(R.id.nickname);
 	}

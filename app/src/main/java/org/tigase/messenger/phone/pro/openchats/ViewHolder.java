@@ -26,30 +26,28 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
 import org.tigase.messenger.phone.pro.R;
 
 public class ViewHolder extends RecyclerView.ViewHolder {
 
-	@Bind(R.id.contact_display_name)
 	TextView mContactName;
 
-	@Bind(R.id.last_message)
 	TextView mLastMessage;
 
-	@Bind(R.id.contact_avatar)
 	ImageView mContactAvatar;
 
-	@Bind(R.id.contact_presence)
 	ImageView mStatus;
 
-	@Bind(R.id.chat_delivery_status)
 	ImageView mDeliveryStatus;
 
 	public ViewHolder(View itemView) {
 		super(itemView);
-		ButterKnife.bind(this, itemView);
+
+		this.mContactName = (TextView) itemView.findViewById(R.id.contact_display_name);
+		this.mLastMessage = (TextView) itemView.findViewById(R.id.last_message);
+		this.mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+		this.mStatus = (ImageView) itemView.findViewById(R.id.contact_presence);
+		this.mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
 	}
 
 	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {

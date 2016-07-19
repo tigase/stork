@@ -47,9 +47,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
@@ -78,9 +75,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 	 */
 	private static final int REQUEST_READ_CONTACTS = 0;
 	private static final String TAG = "LoginActivity";
-	@Bind(R.id.account_active)
 	Switch mActiveView;
-	@Bind(R.id.email_sign_in_button)
 	Button mEmailSignInButton;
 	/**
 	 * Keep track of the login task to ensure we can cancel it if requested.
@@ -192,16 +187,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 		return password.length() > 4;
 	}
 
-	@OnClick(R.id.cancel_button)
-	void onCancelButton() {
-		finish();
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
-		ButterKnife.bind(this);
+
+		mActiveView = (Switch) findViewById(R.id.account_active);
+		mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+
+		Button cancelButton = (Button) findViewById(R.id.cancel_button);
+		cancelButton.setOnClickListener(view -> finish());
 
 		mAccountManager = AccountManager.get(this);
 

@@ -9,13 +9,7 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.Spinner;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
+import android.widget.*;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -31,14 +25,11 @@ public class JoinMucActivity extends AppCompatActivity {
 
 	private final ArrayList<BareJID> accountsList = new ArrayList<>();
 
-	@Bind(R.id.contact_account)
-	Spinner mAccountSelector;
+	private Spinner mAccountSelector;
 
-	@Bind(R.id.join_room_jid)
-	EditText mRoomJid;
+	private EditText mRoomJid;
 
-	@Bind(R.id.join_room_nickname)
-	EditText mNickname;
+	private EditText mNickname;
 
 	private ArrayAdapter<BareJID> sa;
 
@@ -72,8 +63,7 @@ public class JoinMucActivity extends AppCompatActivity {
 		}
 	}
 
-	@OnClick(R.id.contact_add_button)
-	void onClickJoin() {
+	private void onClickJoin() {
 		final BareJID account = BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString());
 		final BareJID jid = BareJID.bareJIDInstance(mRoomJid.getText().toString());
 		final String nickname = mNickname.getText().toString();
@@ -105,7 +95,13 @@ public class JoinMucActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_join_muc);
-		ButterKnife.bind(this);
+
+		mAccountSelector = (Spinner) findViewById(R.id.contact_account);
+		mRoomJid = (EditText) findViewById(R.id.join_room_jid);
+		mNickname = (EditText) findViewById(R.id.join_room_nickname);
+
+		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		contactAddButton.setOnClickListener(view -> onClickJoin());
 
 		this.sa = new ArrayAdapter<>(getBaseContext(), R.layout.account_list_item, R.id.account_name, accountsList);
 		mAccountSelector.setAdapter(sa);
