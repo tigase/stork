@@ -52,6 +52,7 @@ import java.util.Date;
 
 public class ChatItemFragment extends Fragment {
 
+	private static final String TAG = "ChatFragment";
 	RecyclerView recyclerView;
 	EditText message;
 	ImageView sendButton;
@@ -83,6 +84,7 @@ public class ChatItemFragment extends Fragment {
 	private Uri uri;
 	private BareJID mAccount;
 	private int mChatId;
+	private DBUpdateTask dbUpdateTask;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -203,7 +205,6 @@ public class ChatItemFragment extends Fragment {
 		};
 		recyclerView.setAdapter(adapter);
 
-		refreshChatHistory();
 		return root;
 	}
 
@@ -216,8 +217,22 @@ public class ChatItemFragment extends Fragment {
 		super.onDetach();
 	}
 
+	@Override
+	public void onResume() {
+		Log.v(TAG, "Resume view");
+		super.onResume();
+		Log.v(TAG, "Resumed view");
+
+		refreshChatHistory();
+	}
+
 	private void refreshChatHistory() {
-		(new DBUpdateTask()).execute();
+		Log.v(TAG, "Task: " + (dbUpdateTask == null ? "NONE" : dbUpdateTask.getStatus()));
+		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+			dbUpdateTask = new DBUpdateTask();
+			dbUpdateTask.execute();
+			Log.v(TAG, "Task executed");
+		}
 	}
 
 	private void send() {
@@ -291,10 +306,13 @@ public class ChatItemFragment extends Fragment {
 
 		@Override
 		protected Cursor doInBackground(Void... params) {
+			Log.d(TAG, "Querying for cursor ctx=" + (getContext() != null));
 			if (getContext() == null)
 				return null;
 			Cursor cursor = getContext().getContentResolver().query(uri, cols, null, null,
 					DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
+
+			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
 			return cursor;
 		}

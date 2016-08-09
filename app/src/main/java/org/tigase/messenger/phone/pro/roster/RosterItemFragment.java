@@ -83,6 +83,7 @@ public class RosterItemFragment extends Fragment {
 		}
 	};
 	private SharedPreferences sharedPref;
+	private DBUpdateTask dbUpdateTask;
 
 
 	/**
@@ -165,8 +166,6 @@ public class RosterItemFragment extends Fragment {
 
 		registerForContextMenu(recyclerView);
 
-		refreshRoster();
-
 		return root;
 	}
 
@@ -229,8 +228,17 @@ public class RosterItemFragment extends Fragment {
 		}
 	}
 
+	@Override
+	public void onResume() {
+		super.onResume();
+		refreshRoster();
+	}
+
 	private void refreshRoster() {
-		(new DBUpdateTask()).execute();
+		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+			dbUpdateTask = new DBUpdateTask();
+			dbUpdateTask.execute();
+		}
 	}
 
 
@@ -241,7 +249,6 @@ public class RosterItemFragment extends Fragment {
 
 	public interface OnRosterItemDeleteListener {
 		void onRosterItemDelete(int id, String account, String jid, String name);
-
 	}
 
 	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {

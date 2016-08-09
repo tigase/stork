@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
 import android.net.*;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -91,6 +90,8 @@ import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,19 +103,13 @@ public class XMPPService extends Service {
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
 
 	private final static String TAG = "XMPPService";
-
 	private static final StanzaExecutor executor = new StanzaExecutor();
-
 	protected final Timer timer = new Timer();
-
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
-
+	private final Executor taskExecutor = Executors.newFixedThreadPool(1);
 	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
-
 	private final IBinder mBinder = new LocalBinder();
-
 	private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
-
 	private final DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
 
 		@Override
@@ -161,23 +156,14 @@ public class XMPPService extends Service {
 		}
 
 	};
-
 	private AccountModifyReceiver accountModifyReceiver = new AccountModifyReceiver();
-
 	private CapabilitiesDBCache capsCache;
-
 	private org.tigase.messenger.jaxmpp.android.chat.ChatProvider chatProvider;
-
 	private ConnectivityManager connManager;
-
 	private DataRemover dataRemover;
-
 	private DatabaseHelper dbHelper;
-
 	private Integer focusedOnChatId = null;
-
 	private Integer focusedOnRoomId = null;
-
 	private final Application.ActivityLifecycleCallbacks mActivityCallbacks = new Application.ActivityLifecycleCallbacks() {
 		@Override
 		public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
@@ -238,15 +224,10 @@ public class XMPPService extends Service {
 			// sendAcks();
 		}
 	};
-
 	private long keepaliveInterval = 1000 * 60 * 3;
-
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
-
 	private MessageHandler messageHandler;
-
 	private MobileModeFeature mobileModeFeature;
-
 	private JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
 		@Override
 		public void onLoggedIn(SessionObject sessionObject) {
@@ -261,21 +242,15 @@ public class XMPPService extends Service {
 								.toString());
 			}
 
-			(new SendUnsentMessages(sessionObject)).execute();
-			(new RejoinToMucRooms(sessionObject)).execute();
+			taskExecutor.execute(new SendUnsentMessages(sessionObject));
+			taskExecutor.execute(new RejoinToMucRooms(sessionObject));
 		}
 	};
-
 	private MucHandler mucHandler;
-
 	private MessageNotification notificationHelper = new MessageNotification();
-
 	private OwnPresenceFactoryImpl ownPresenceStanzaFactory;
-
 	private PresenceHandler presenceHandler;
-
 	private RosterProviderExt rosterProvider;
-
 	private final PresenceModule.SubscribeRequestHandler subscribeHandler = new PresenceModule.SubscribeRequestHandler() {
 		@Override
 		public void onSubscribeRequest(SessionObject sessionObject, Presence stanza, BareJID jid) {
@@ -283,11 +258,8 @@ public class XMPPService extends Service {
 		}
 
 	};
-
 	private SSLSocketFactory sslSocketFactory;
-
 	private int usedNetworkType;
-
 	final BroadcastReceiver presenceChangedReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -299,7 +271,6 @@ public class XMPPService extends Service {
 			}
 		}
 	};
-
 	private final BroadcastReceiver connReceiver = new BroadcastReceiver() {
 
 		@Override
@@ -309,7 +280,6 @@ public class XMPPService extends Service {
 		}
 
 	};
-
 	private JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
 		@Override
 		public void onLoggedOut(SessionObject sessionObject) {
@@ -375,15 +345,15 @@ public class XMPPService extends Service {
 				int tmpNetworkType = getUsedNetworkType();
 				Log.v(TAG, "Network state is " + tmpNetworkType);
 				if (tmpNetworkType != -1) {
-					(new AsyncTask<Void, Void, Void>() {
+					taskExecutor.execute(new Runnable() {
 						@Override
-						protected Void doInBackground(Void... params) {
+						public void run() {
 							try {
 								if (jaxmpp.isConnected()) {
 									Log.v(TAG,
 											"cancelling connect for " + jaxmpp.getSessionObject()
 													.getUserBareJid() + " because it is connected already");
-									return null;
+									return;
 								}
 
 								final Connector.State state = jaxmpp.getSessionObject()
@@ -395,11 +365,11 @@ public class XMPPService extends Service {
 									Log.v(TAG,
 											"cancelling connect for " + jaxmpp.getSessionObject()
 													.getUserBareJid() + " because it state " + state);
-									return null;
+									return;
 								}
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
-								jaxmpp.login();
+								jaxmpp.login(false);
 							} catch (Exception e) {
 								if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
 									jaxmpp.getSessionObject().setProperty("CC:DISABLED", Boolean.TRUE);
@@ -413,9 +383,8 @@ public class XMPPService extends Service {
 
 							}
 
-							return null;
 						}
-					}).execute();
+					});
 
 
 				}
@@ -524,9 +493,9 @@ public class XMPPService extends Service {
 	}
 
 	private void disconnectJaxmpp(final Jaxmpp jaxmpp, final boolean cleaning) {
-		(new AsyncTask<Void, Void, Void>() {
+		taskExecutor.execute(new Runnable() {
 			@Override
-			protected Void doInBackground(Void... params) {
+			public void run() {
 				try {
 					// geolocationFeature.accountDisconnect(jaxmpp);
 					if (jaxmpp.isConnected()) jaxmpp.disconnect(false);
@@ -538,9 +507,8 @@ public class XMPPService extends Service {
 					Log.e(TAG, "cant; disconnect account " + jaxmpp.getSessionObject().getUserBareJid(), e);
 				}
 
-				return null;
 			}
-		}).execute();
+		});
 	}
 
 	private int getActiveNetworkType() {
@@ -587,9 +555,9 @@ public class XMPPService extends Service {
 	}
 
 	private void keepAlive() {
-		(new AsyncTask<Void, Void, Void>() {
+		taskExecutor.execute(new Runnable() {
 			@Override
-			protected Void doInBackground(Void... params) {
+			public void run() {
 				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
 					try {
 						if (jaxmpp.isConnected()) {
@@ -613,9 +581,8 @@ public class XMPPService extends Service {
 								ex);
 					}
 				}
-				return null;
 			}
-		}).execute();
+		});
 	}
 
 	private void lock(SessionObject sessionObject, boolean value) {
@@ -872,9 +839,9 @@ public class XMPPService extends Service {
 	}
 
 	void processPresenceUpdate() {
-		(new AsyncTask<Void, Void, Void>() {
+		taskExecutor.execute(new Runnable() {
 			@Override
-			protected Void doInBackground(Void... params) {
+			public void run() {
 				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
 					try {
 						if (!jaxmpp.isConnected()) {
@@ -886,9 +853,8 @@ public class XMPPService extends Service {
 						Log.e("TAG", "Can't update presence", e);
 					}
 				}
-				return null;
 			}
-		}).execute();
+		});
 	}
 
 	private void processSubscriptionRequest(final SessionObject sessionObject,
@@ -978,10 +944,9 @@ public class XMPPService extends Service {
 	}
 
 	private void sendAcks() {
-		(new AsyncTask<Void, Void, Void>() {
+		taskExecutor.execute(new Runnable() {
 			@Override
-			protected Void doInBackground(Void... params) {
-
+			public void run() {
 				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
 					try {
 						if (jaxmpp.isConnected()) {
@@ -994,9 +959,8 @@ public class XMPPService extends Service {
 								ex);
 					}
 				}
-				return null;
 			}
-		}).execute();
+		});
 	}
 
 	private void sendNotification(SessionObject sessionObject, Chat chat, Message msg) throws JaxmppException {
@@ -1228,9 +1192,9 @@ public class XMPPService extends Service {
 			final Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
 			if (jaxmpp != null) {
 				multiJaxmpp.remove(jaxmpp);
-				(new AsyncTask<Void, Void, Void>() {
+				taskExecutor.execute(new Runnable() {
 					@Override
-					protected Void doInBackground(Void... params) {
+					public void run() {
 						try {
 							jaxmpp.disconnect();
 							// clear presences for account?
@@ -1242,9 +1206,8 @@ public class XMPPService extends Service {
 							Log.e(TAG, "Can't disconnect", ex);
 						}
 
-						return null;
 					}
-				}).execute();
+				});
 			}
 		}
 
@@ -1537,7 +1500,7 @@ public class XMPPService extends Service {
 		public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
 			// TODO Auto-generated method stub
 			Log.v(TAG, "joined room " + room.getRoomJid() + " as " + asNickname);
-			(new SendUnsentGroupMessages(room)).execute();
+			taskExecutor.execute(new SendUnsentGroupMessages(room));
 
 		}
 
@@ -1636,7 +1599,7 @@ public class XMPPService extends Service {
 		}
 	}
 
-	private class RejoinToMucRooms extends AsyncTask<Void, Void, Void> {
+	private class RejoinToMucRooms implements Runnable {
 
 		private final SessionObject sessionObject;
 
@@ -1645,7 +1608,7 @@ public class XMPPService extends Service {
 		}
 
 		@Override
-		protected Void doInBackground(Void... params) {
+		public void run() {
 			Log.i(TAG, "Rejoining to MUC Rooms. Account=" + sessionObject.getUserBareJid());
 			try {
 				Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
@@ -1658,7 +1621,7 @@ public class XMPPService extends Service {
 
 						room.rejoin();
 					} else {
-						(new SendUnsentGroupMessages(room)).execute();
+						taskExecutor.execute(new SendUnsentGroupMessages(room));
 					}
 				}
 			} catch (JaxmppException e) {
@@ -1666,8 +1629,6 @@ public class XMPPService extends Service {
 						"Exception while rejoining to rooms on connect for account " + sessionObject.getUserBareJid()
 								.toString());
 			}
-
-			return null;
 		}
 	}
 
@@ -1688,7 +1649,7 @@ public class XMPPService extends Service {
 		}
 	}
 
-	private class SendUnsentGroupMessages extends AsyncTask<Void, Void, Void> {
+	private class SendUnsentGroupMessages implements Runnable {
 
 		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
@@ -1705,7 +1666,7 @@ public class XMPPService extends Service {
 		}
 
 		@Override
-		protected Void doInBackground(Void... params) {
+		public void run() {
 			Log.d("SendUnsentGroupMessages", "Sending unsent MUC " + room.getRoomJid() + " messages ");
 
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + room.getSessionObject().getUserBareJid());
@@ -1754,12 +1715,10 @@ public class XMPPService extends Service {
 					}
 				}
 			}
-
-			return null;
 		}
 	}
 
-	private class SendUnsentMessages extends AsyncTask<Void, Void, Void> {
+	private class SendUnsentMessages implements Runnable {
 
 		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
@@ -1776,7 +1735,7 @@ public class XMPPService extends Service {
 		}
 
 		@Override
-		protected Void doInBackground(Void... params) {
+		public void run() {
 			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + sessionObject.getUserBareJid());
 			try (Cursor c = getContentResolver().query(u,
 					cols,
@@ -1815,8 +1774,8 @@ public class XMPPService extends Service {
 					}
 				}
 			}
-
-			return null;
 		}
+
+
 	}
 }

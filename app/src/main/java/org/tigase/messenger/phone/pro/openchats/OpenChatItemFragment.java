@@ -60,18 +60,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
  */
 public class OpenChatItemFragment extends Fragment {
 
-	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
-
-		@Override
-		public boolean deliverSelfNotifications() {
-			return true;
-		}
-
-		@Override
-		public void onChange(boolean selfChange) {
-			refreshChatlist();
-		}
-	};
+	private static final String TAG = "OpenChats";
 	RecyclerView recyclerView;
 	private OnAddChatListener mAddChatListener;
 	private MyOpenChatItemRecyclerViewAdapter adapter;
@@ -108,6 +97,21 @@ public class OpenChatItemFragment extends Fragment {
 
 		}
 	};
+	private DBUpdateTask dbUpdateTask;
+
+	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
+
+		@Override
+		public boolean deliverSelfNotifications() {
+			return true;
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			Log.v(TAG, "Contact presence changed");
+			refreshChatlist();
+		}
+	};
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -116,9 +120,8 @@ public class OpenChatItemFragment extends Fragment {
 	public OpenChatItemFragment() {
 	}
 
-	// TODO: Customize parameter initialization
-	@SuppressWarnings("unused")
 	public static OpenChatItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
+		Log.v(TAG, "new instance");
 		OpenChatItemFragment fragment = new OpenChatItemFragment();
 		Bundle args = new Bundle();
 		fragment.setArguments(args);
@@ -165,6 +168,7 @@ public class OpenChatItemFragment extends Fragment {
 
 	@Override
 	public void onAttach(Context context) {
+		Log.v(TAG, "Attaching to context");
 		super.onAttach(context);
 		if (context instanceof MainActivity) {
 
@@ -183,7 +187,7 @@ public class OpenChatItemFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(false);
-
+		Log.v(TAG, "Fragment is created");
 	}
 
 	@Override
@@ -194,6 +198,7 @@ public class OpenChatItemFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		Log.v(TAG, "Creating view");
 		View root = inflater.inflate(R.layout.fragment_openchatitem_list, container, false);
 
 		FloatingActionButton rosterAddChat = (FloatingActionButton) root.findViewById(R.id.roster_add_chat);
@@ -205,17 +210,20 @@ public class OpenChatItemFragment extends Fragment {
 		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, mListener) {
 			@Override
 			protected void onContentChanged() {
+				Log.v(TAG, "Received content changed.");
+
 				refreshChatlist();
 			}
 		};
 		recyclerView.setAdapter(adapter);
 
-		refreshChatlist();
+		Log.v(TAG, "View created");
 		return root;
 	}
 
 	@Override
 	public void onDetach() {
+		Log.v(TAG, "Detaching from context");
 		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
@@ -229,16 +237,16 @@ public class OpenChatItemFragment extends Fragment {
 		new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				Log.i("OpenChat", "Leaving room " + roomJID);
+				Log.i(TAG, "Leaving room " + roomJID);
 				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
 				MucModule mucModule = jaxmpp.getModule(MucModule.class);
 				Room room = mucModule.getRoom(BareJID.bareJIDInstance(roomJID));
 				if (room != null) {
 					try {
-						Log.i("OpenChat", "Executing Leaving room  " + roomJID);
+						Log.i(TAG, "Executing Leaving room  " + roomJID);
 						mucModule.leave(room);
 					} catch (JaxmppException e) {
-						Log.e("OpenChat", "Cannot leave room", e);
+						Log.e(TAG, "Cannot leave room", e);
 					}
 				}
 				return null;
@@ -248,12 +256,22 @@ public class OpenChatItemFragment extends Fragment {
 
 	@Override
 	public void onResume() {
+		Log.v(TAG, "Resume view");
 		super.onResume();
+		Log.v(TAG, "Resumed view");
+
+		refreshChatlist();
+
 		MessageNotification.cancelSummaryNotification(getContext());
 	}
 
 	private void refreshChatlist() {
-		(new DBUpdateTask()).execute();
+		Log.v(TAG, "Task: " + (dbUpdateTask == null ? "NONE" : dbUpdateTask.getStatus()));
+		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+			dbUpdateTask = new DBUpdateTask();
+			dbUpdateTask.execute();
+			Log.v(TAG, "Task executed");
+		}
 	}
 
 	/**
@@ -287,10 +305,12 @@ public class OpenChatItemFragment extends Fragment {
 
 		@Override
 		protected Cursor doInBackground(Void... params) {
+			Log.d(TAG, "Querying for cursor ctx=" + (getContext() != null));
 			if (getContext() == null)
 				return null;
 			Cursor cursor = getContext().getContentResolver().query(ChatProvider.OPEN_CHATS_URI, cols, null, null,
 					ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
+			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
 			return cursor;
 		}
