@@ -16,8 +16,9 @@ allprojects {
     repositories {
         mavenLocal()
         jcenter()
-        maven { url "http://build.xmpp-test.net/maven/" }
-        maven { url "http://maven.tigase.org" }
+        maven { url "http://maven-repo.tigase.org/repository/release/" }
+        maven { url "http://maven-repo.tigase.org/repository/snapshot/" }
+        
     }
 }
 
