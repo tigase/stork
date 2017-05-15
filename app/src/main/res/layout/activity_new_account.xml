@@ -52,7 +52,6 @@
             android:text="Create new account"
             android:id="@+id/createNewAccountButton"
             android:layout_centerHorizontal="true"
-            android:visibility="gone"
             android:layout_marginTop="18dp"/>
 
     <TextView

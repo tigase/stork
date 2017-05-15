@@ -57,9 +57,9 @@
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
         <activity
-                android:screenOrientation="locked"
                 android:name=".account.LoginActivity"
-                android:label="@string/title_activity_login">
+                android:label="@string/title_activity_login"
+                android:screenOrientation="locked">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
@@ -153,6 +153,8 @@
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
+        </activity>
+        <activity android:name=".account.CreateAccountActivity">
         </activity>
     </application>
 

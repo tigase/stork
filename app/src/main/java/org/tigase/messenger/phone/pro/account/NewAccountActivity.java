@@ -13,6 +13,8 @@ public class NewAccountActivity extends AppCompatActivity {
 
 	public static final int LOGIN_REQUEST = 1;
 
+	public static final int CREATE_ACCOUNT_REQUEST = 2;
+
 	TextView tv;
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -32,6 +34,8 @@ public class NewAccountActivity extends AppCompatActivity {
 
 		Button createNewAccountButton = (Button) findViewById(R.id.createNewAccountButton);
 		createNewAccountButton.setOnClickListener(view -> {
+			Intent intent = new Intent(NewAccountActivity.this, CreateAccountActivity.class);
+			startActivityForResult(intent, CREATE_ACCOUNT_REQUEST);
 		});
 
 		Button useExistingAccountButton = (Button) findViewById(R.id.useExistingAccountButton);

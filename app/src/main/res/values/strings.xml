@@ -108,7 +108,7 @@
     <string name="about_activity_title">About</string>
     <string name="about_application_name">Tigase Messenger</string>
     <string name="about_version_name">Version %s</string>
-    <string name="about_copyright">ⓒ 2011–2016 Tigase Inc.</string>
+    <string name="about_copyright">ⓒ 2011–2017 Tigase Inc.</string>
     <string name="about_rights">All rights reserved.</string>
     <string name="main_menu_roster">Roster</string>
     <string name="main_menu_openchats">Chats</string>

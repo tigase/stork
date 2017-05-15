@@ -24,6 +24,8 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#0000FF</color>
 
+    <color name="review_green">#00ff00</color>
+
     <color name="black_overlay">#66000000</color>
 
 

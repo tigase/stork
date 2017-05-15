@@ -137,29 +137,32 @@
             </android.support.design.widget.TextInputLayout>
 
 
-            <LinearLayout android:layout_below="@+id/user_details_form"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_marginTop="16dp"
-                          android:orientation="horizontal">
-
-                <Button
-                        android:id="@+id/email_sign_in_button"
-                        style="?android:textAppearanceSmall"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" android:text="@string/action_sign_in"
-                        android:textStyle="bold"/>
-
-                <Button
-                        android:id="@+id/cancel_button"
-                        style="?android:textAppearanceSmall"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" android:text="@string/action_sign_in_cancel"/>
-            </LinearLayout>
-
-
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout android:layout_below="@+id/user_details_form"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="16dp"
+                  android:orientation="horizontal">
+
+        <Button
+                style="?android:attr/buttonBarButtonStyle"
+                android:background="@drawable/selectable_item_background"
+
+                android:id="@+id/email_sign_in_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="@string/action_sign_in"
+                android:textStyle="bold" android:textColor="@color/colorPrimary"/>
+
+        <Button style="?android:attr/buttonBarButtonStyle"
+                android:background="@drawable/selectable_item_background"
+                android:id="@+id/cancel_button"
+                android:layout_width="0dp" android:textColor="@color/colorPrimary"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="@string/action_sign_in_cancel"/>
+    </LinearLayout>
+
+
 </LinearLayout>
