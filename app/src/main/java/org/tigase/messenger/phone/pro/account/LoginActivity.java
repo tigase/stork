@@ -83,7 +83,6 @@ public class LoginActivity
 	private UserLoginTask mAuthTask = null;
 	private EditText mHostnameView;
 	//	private View mProgressView;
-	private View mLoginFormView;
 	private EditText mNicknameView;
 	private EditText mPasswordView;
 	private EditText mResourceView;
@@ -314,7 +313,6 @@ public class LoginActivity
 			}
 		});
 
-		mLoginFormView = findViewById(R.id.login_form);
 //		mProgressView = findViewById(R.id.login_progress);
 
 		if (getIntent().getStringExtra("account_name") != null) {

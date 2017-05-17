@@ -90,6 +90,11 @@ public class CreateAccountActivity
 	}
 
 	private void onNextButton() {
+		String t = mHostname.getText().toString();
+		if (t == null || t.isEmpty()) {
+			mHostname.setError("Cannot be empty");
+			return;
+		}
 		if (mAuthTask == null) {
 			startConnection(mHostname.getText().toString().trim());
 		} else {
@@ -107,6 +112,7 @@ public class CreateAccountActivity
 			mAuthTask.cancel(true);
 			mAuthTask = null;
 		}
+		mHostname.setError(null);
 		hostSelectorPanel.setVisibility(View.VISIBLE);
 		registrationFormPanel.setVisibility(View.GONE);
 		prevButton.setEnabled(false);
