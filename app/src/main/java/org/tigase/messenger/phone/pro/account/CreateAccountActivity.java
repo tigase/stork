@@ -187,8 +187,12 @@ public class CreateAccountActivity
 					LoginActivity.showInvalidCertificateDialog(CreateAccountActivity.this, chain,
 															   () -> startConnection(hostname));
 				} else {
+					String msg = accountCreator.getErrorMessage();
+					if (msg == null || msg.isEmpty()) {
+						msg = "Connection error.";
+					}
 					AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
-					builder.setMessage("Connection error.").setPositiveButton(android.R.string.ok, null).show();
+					builder.setMessage(msg).setPositiveButton(android.R.string.ok, null).show();
 				}
 				return;
 			}

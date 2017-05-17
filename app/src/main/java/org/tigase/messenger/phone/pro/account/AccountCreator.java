@@ -173,9 +173,9 @@ public class AccountCreator {
 
 		contact.getProperties()
 				.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers(context));
-		if (hostname != null && !hostname.trim().isEmpty()) {
-			contact.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
-		}
+//		if (hostname != null && !hostname.trim().isEmpty()) {
+//			contact.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+//		}
 
 		try {
 
