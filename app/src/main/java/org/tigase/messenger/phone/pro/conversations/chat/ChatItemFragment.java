@@ -40,23 +40,14 @@ import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
-import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 
-import java.util.Date;
-
-public class ChatItemFragment extends Fragment {
+public class ChatItemFragment
+		extends Fragment {
 
 	private static final String TAG = "ChatFragment";
-	RecyclerView recyclerView;
-	EditText message;
-	ImageView sendButton;
-	private Chat chat;
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -65,33 +56,28 @@ public class ChatItemFragment extends Fragment {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			setChat(null);
 			super.onServiceDisconnected(name);
 		}
 	};
+	EditText message;
+	RecyclerView recyclerView;
+	ImageView sendButton;
+	private MyChatItemRecyclerViewAdapter adapter;
+	private DBUpdateTask dbUpdateTask;
+	private BareJID mAccount;
+	private int mChatId;
 	private ChatItemIterationListener mListener = new ChatItemIterationListener() {
 
 		@Override
 		public void onCopyChatMessage(int id, String jid, String body) {
-			ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext().getSystemService(
-					Context.CLIPBOARD_SERVICE);
+			ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext()
+					.getSystemService(Context.CLIPBOARD_SERVICE);
 			ClipData clip = ClipData.newPlainText("Message from " + jid, body);
 
 			clipboard.setPrimaryClip(clip);
 		}
 	};
-	private MyChatItemRecyclerViewAdapter adapter;
 	private Uri uri;
-	private BareJID mAccount;
-	private int mChatId;
-	private DBUpdateTask dbUpdateTask;
-
-	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
-	 */
-	public ChatItemFragment() {
-	}
 
 	// TODO: Customize parameter initialization
 	@SuppressWarnings("unused")
@@ -102,35 +88,11 @@ public class ChatItemFragment extends Fragment {
 		return fragment;
 	}
 
-	private Chat getChat() {
-		if (this.chat != null)
-			return this.chat;
-
-		XMPPService service = mConnection.getService();
-
-		if (service == null) {
-			Log.w("ChatItemFragment", "Service is not binded");
-			return null;
-		}
-
-		Jaxmpp jaxmpp = service.getJaxmpp(mAccount);
-
-		if (jaxmpp == null) {
-			Log.w("ChatItemFragment", "There is no account " + mAccount);
-			return null;
-		}
-
-		for (Chat chat : jaxmpp.getModule(MessageModule.class).getChatManager().getChats()) {
-			if (chat.getId() == mChatId) {
-				setChat(chat);
-			}
-		}
-
-		return this.chat;
-	}
-
-	private void setChat(Chat chat) {
-		this.chat = chat;
+	/**
+	 * Mandatory empty constructor for the fragment manager to instantiate the
+	 * fragment (e.g. upon screen orientation changes).
+	 */
+	public ChatItemFragment() {
 	}
 
 	@Override
@@ -140,8 +102,8 @@ public class ChatItemFragment extends Fragment {
 		this.mAccount = ((ChatActivity) context).getAccount();
 		this.mChatId = ((ChatActivity) context).getOpenChatId();
 
-		this.uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + ((ChatActivity) getContext()).getAccount() + "/"
-				+ ((ChatActivity) getContext()).getJid());
+		this.uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + ((ChatActivity) getContext()).getAccount() + "/" +
+									 ((ChatActivity) getContext()).getJid());
 
 		Intent intent = new Intent(context, XMPPService.class);
 		getActivity().bindService(intent, mConnection, 0);
@@ -237,80 +199,48 @@ public class ChatItemFragment extends Fragment {
 
 	private void send() {
 		String body = this.message.getText().toString();
-		if (body == null || body.trim().isEmpty())
+		if (body == null || body.trim().isEmpty()) {
 			return;
+		}
+
+		Intent intent = new Intent();
+		intent.setAction(MessageSender.SEND_CHAT_MESSAGE);
+		intent.putExtra("body", body);
+		intent.putExtra("chatId", mChatId);
+		intent.putExtra("account", mAccount.toString());
 
 		this.message.getText().clear();
-		(new SendMessageTask()).execute(body);
+		getContext().sendBroadcast(intent);
 	}
 
 	public interface ChatItemIterationListener {
+
 		void onCopyChatMessage(int id, String jid, String body);
 	}
 
-	private class SendMessageTask extends AsyncTask<String, Void, Void> {
-		@Override
-		protected Void doInBackground(String... params) {
-			for (String param : params) {
-				int state;
-				Message msg;
-				String stanzaId = null;
-				try {
-					msg = getChat().createMessage(param);
-					stanzaId = msg.getId();
-
-					Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(getChat().getSessionObject().getUserBareJid());
-					MessageModule m = jaxmpp.getModule(
-							MessageModule.class);
-
-					if (jaxmpp.isConnected()) {
-						m.sendMessage(msg);
-						state = DatabaseContract.ChatHistory.STATE_OUT_SENT;
-					} else {
-						state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
-					}
-				} catch (Exception e) {
-					state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
-					Log.w("ChatItemFragment", "Cannot send message", e);
-				}
-
-				final JID recipient = getChat().getJid();
-
-				ContentValues values = new ContentValues();
-				values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, getChat().getSessionObject().getUserBareJid().toString());
-				values.put(DatabaseContract.ChatHistory.FIELD_JID, recipient.getBareJid().toString());
-				values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, new Date().getTime());
-				values.put(DatabaseContract.ChatHistory.FIELD_BODY, param);
-				values.put(DatabaseContract.ChatHistory.FIELD_THREAD_ID, getChat().getThreadId());
-				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, getChat().getSessionObject().getUserBareJid().toString());
-				values.put(DatabaseContract.ChatHistory.FIELD_STATE, state);
-				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
-				if (stanzaId != null)
-					values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, stanzaId);
-
-				getContext().getContentResolver().insert(uri, values);
-			}
-
-			return null;
-		}
-	}
-
-	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
+	private class DBUpdateTask
+			extends AsyncTask<Void, Void, Cursor> {
 
 		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
-				DatabaseContract.ChatHistory.FIELD_ACCOUNT, DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
-				DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
-				DatabaseContract.ChatHistory.FIELD_BODY, DatabaseContract.ChatHistory.FIELD_DATA,
-				DatabaseContract.ChatHistory.FIELD_JID, DatabaseContract.ChatHistory.FIELD_STATE,
-				DatabaseContract.ChatHistory.FIELD_THREAD_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
+												   DatabaseContract.ChatHistory.FIELD_ACCOUNT,
+												   DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
+												   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+												   DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
+												   DatabaseContract.ChatHistory.FIELD_BODY,
+												   DatabaseContract.ChatHistory.FIELD_DATA,
+												   DatabaseContract.ChatHistory.FIELD_JID,
+												   DatabaseContract.ChatHistory.FIELD_STATE,
+												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
+												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		@Override
 		protected Cursor doInBackground(Void... params) {
 			Log.d(TAG, "Querying for cursor ctx=" + (getContext() != null));
-			if (getContext() == null)
+			if (getContext() == null) {
 				return null;
-			Cursor cursor = getContext().getContentResolver().query(uri, cols, null, null,
-					DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
+			}
+			Cursor cursor = getContext().getContentResolver()
+					.query(uri, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
 
 			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
