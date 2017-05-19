@@ -38,13 +38,11 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import java.security.MessageDigest;
 import java.util.Date;
 
-public class RosterProviderExt extends org.tigase.messenger.jaxmpp.android.roster.RosterProvider {
+public class RosterProviderExt
+		extends org.tigase.messenger.jaxmpp.android.roster.RosterProvider {
 
-	private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-
-	public RosterProviderExt(Context context, SQLiteOpenHelper dbHelper, Listener listener, String versionKeyPrefix) {
-		super(context, dbHelper, listener, versionKeyPrefix);
-	}
+	private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
+										  'f'};
 
 	public static String encodeHex(byte[] data) {
 
@@ -60,13 +58,18 @@ public class RosterProviderExt extends org.tigase.messenger.jaxmpp.android.roste
 		return new String(out);
 	}
 
+	public RosterProviderExt(Context context, SQLiteOpenHelper dbHelper, Listener listener, String versionKeyPrefix) {
+		super(context, dbHelper, listener, versionKeyPrefix);
+	}
+
 	public boolean checkVCardHash(SessionObject sessionObject, BareJID jid, String hash) {
 		boolean ok = false;
-		Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.VCardsCache.TABLE_NAME,
-				new String[]{DatabaseContract.VCardsCache.FIELD_JID, DatabaseContract.VCardsCache.FIELD_DATA,
-						DatabaseContract.VCardsCache.FIELD_HASH},
-				DatabaseContract.VCardsCache.FIELD_JID + "=? AND " + DatabaseContract.VCardsCache.FIELD_HASH + "=?",
-				new String[]{jid.toString(), hash}, null, null, null);
+		Cursor c = dbHelper.getReadableDatabase()
+				.query(DatabaseContract.VCardsCache.TABLE_NAME,
+					   new String[]{DatabaseContract.VCardsCache.FIELD_JID, DatabaseContract.VCardsCache.FIELD_DATA,
+									DatabaseContract.VCardsCache.FIELD_HASH},
+					   DatabaseContract.VCardsCache.FIELD_JID + "=? AND " + DatabaseContract.VCardsCache.FIELD_HASH +
+							   "=?", new String[]{jid.toString(), hash}, null, null, null);
 		ok = c.moveToNext();
 		c.close();
 		return ok;
@@ -76,8 +79,9 @@ public class RosterProviderExt extends org.tigase.messenger.jaxmpp.android.roste
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(DatabaseContract.RosterItemsCache.FIELD_STATUS, CPresence.OFFLINE);
-		db.update(DatabaseContract.RosterItemsCache.TABLE_NAME, values, DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
-				new String[]{sessionObject.getUserBareJid().toString()});
+		db.update(DatabaseContract.RosterItemsCache.TABLE_NAME, values,
+				  DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
+				  new String[]{sessionObject.getUserBareJid().toString()});
 		if (listener != null) {
 			listener.onChange(null);
 		}
@@ -111,8 +115,8 @@ public class RosterProviderExt extends org.tigase.messenger.jaxmpp.android.roste
 			ContentValues values = new ContentValues();
 			values.put(DatabaseContract.RosterItemsCache.FIELD_STATUS, status);
 
-			db.update(DatabaseContract.RosterItemsCache.TABLE_NAME, values, DatabaseContract.RosterItemsCache.FIELD_ID + " = ?",
-					new String[]{String.valueOf(id)});
+			db.update(DatabaseContract.RosterItemsCache.TABLE_NAME, values,
+					  DatabaseContract.RosterItemsCache.FIELD_ID + " = ?", new String[]{String.valueOf(id)});
 			if (listener != null) {
 				listener.onChange(id);
 			}
@@ -127,8 +131,8 @@ public class RosterProviderExt extends org.tigase.messenger.jaxmpp.android.roste
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
-			db.execSQL("DELETE FROM " + DatabaseContract.VCardsCache.TABLE_NAME + " WHERE "
-					+ DatabaseContract.VCardsCache.FIELD_JID + "='" + jid + "'");
+			db.execSQL("DELETE FROM " + DatabaseContract.VCardsCache.TABLE_NAME + " WHERE " +
+							   DatabaseContract.VCardsCache.FIELD_JID + "='" + jid + "'");
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA1");
 				md.update(values.getAsByteArray(DatabaseContract.VCardsCache.FIELD_DATA));

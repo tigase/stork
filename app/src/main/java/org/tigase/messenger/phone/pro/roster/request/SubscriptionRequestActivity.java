@@ -28,14 +28,15 @@ import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
-public class SubscriptionRequestActivity extends AppCompatActivity {
+public class SubscriptionRequestActivity
+		extends AppCompatActivity {
 
-	EditText xmppId;
-	EditText mName;
 	ImageView avatar;
 	LinearLayout mDetailsForm;
-	private BareJID jid;
+	EditText mName;
+	EditText xmppId;
 	private String account;
+	private BareJID jid;
 	private BroadcastReceiver avatarUpdatedListener = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -100,7 +101,8 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 					presenceModule.subscribed(JID.jidInstance(SubscriptionRequestActivity.this.jid));
 					rosterModule.getRosterStore().add(SubscriptionRequestActivity.this.jid, name, new AsyncCallback() {
 						@Override
-						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+								throws JaxmppException {
 						}
 
 						@Override
@@ -199,47 +201,49 @@ public class SubscriptionRequestActivity extends AppCompatActivity {
 				final VCardModule module = mService.getJaxmpp(account).getModule(VCardModule.class);
 				try {
 					module.retrieveVCard(JID.jidInstance(SubscriptionRequestActivity.this.jid),
-							new VCardModule.VCardAsyncCallback() {
-								@Override
-								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-									runOnUiThread(new Runnable() {
-										public void run() {
-											try {
-												mDetailsForm.setVisibility(View.GONE);
-											} catch (Exception ex) {
-												ex.printStackTrace();
-											}
-										}
-									});
-								}
+										 new VCardModule.VCardAsyncCallback() {
+											 @Override
+											 public void onError(Stanza responseStanza,
+																 XMPPException.ErrorCondition error)
+													 throws JaxmppException {
+												 runOnUiThread(new Runnable() {
+													 public void run() {
+														 try {
+															 mDetailsForm.setVisibility(View.GONE);
+														 } catch (Exception ex) {
+															 ex.printStackTrace();
+														 }
+													 }
+												 });
+											 }
 
-								@Override
-								public void onTimeout() throws JaxmppException {
-									runOnUiThread(new Runnable() {
-										public void run() {
-											try {
-												mDetailsForm.setVisibility(View.GONE);
-											} catch (Exception ex) {
-												ex.printStackTrace();
-											}
-										}
-									});
-								}
+											 @Override
+											 public void onTimeout() throws JaxmppException {
+												 runOnUiThread(new Runnable() {
+													 public void run() {
+														 try {
+															 mDetailsForm.setVisibility(View.GONE);
+														 } catch (Exception ex) {
+															 ex.printStackTrace();
+														 }
+													 }
+												 });
+											 }
 
-								@Override
-								protected void onVCardReceived(final VCard vcard) throws XMLException {
-									runOnUiThread(new Runnable() {
-										public void run() {
-											try {
-												mDetailsForm.setVisibility(View.VISIBLE);
-												fillVCard(vcard);
-											} catch (Exception ex) {
-												ex.printStackTrace();
-											}
-										}
-									});
-								}
-							});
+											 @Override
+											 protected void onVCardReceived(final VCard vcard) throws XMLException {
+												 runOnUiThread(new Runnable() {
+													 public void run() {
+														 try {
+															 mDetailsForm.setVisibility(View.VISIBLE);
+															 fillVCard(vcard);
+														 } catch (Exception ex) {
+															 ex.printStackTrace();
+														 }
+													 }
+												 });
+											 }
+										 });
 				} catch (JaxmppException e) {
 					Log.e("SubscriptionRequest", "Cannot retrieve VCard", e);
 				}

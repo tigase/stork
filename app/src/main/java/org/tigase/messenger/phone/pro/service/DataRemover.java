@@ -16,7 +16,8 @@ import org.tigase.messenger.phone.pro.providers.RosterProvider;
 
 import java.util.ArrayList;
 
-public class DataRemover extends BroadcastReceiver {
+public class DataRemover
+		extends BroadcastReceiver {
 
 	private final DatabaseHelper dbHelper;
 
@@ -31,9 +32,7 @@ public class DataRemover extends BroadcastReceiver {
 			db.execSQL("DELETE FROM " + tableName + ";");
 		} else {
 			String args = TextUtils.join(", ", accounts);
-			db.execSQL(String.format("DELETE FROM "
-					+ tableName
-					+ " WHERE " + fieldName + " NOT IN (%s);", args));
+			db.execSQL(String.format("DELETE FROM " + tableName + " WHERE " + fieldName + " NOT IN (%s);", args));
 		}
 	}
 
@@ -55,9 +54,12 @@ public class DataRemover extends BroadcastReceiver {
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			db.beginTransaction();
 			try {
-				doDirtyJob(db, DatabaseContract.RosterItemsCache.TABLE_NAME, DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, accounts);
-				doDirtyJob(db, DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_ACCOUNT, accounts);
-				doDirtyJob(db, DatabaseContract.OpenChats.TABLE_NAME, DatabaseContract.OpenChats.FIELD_ACCOUNT, accounts);
+				doDirtyJob(db, DatabaseContract.RosterItemsCache.TABLE_NAME,
+						   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, accounts);
+				doDirtyJob(db, DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_ACCOUNT,
+						   accounts);
+				doDirtyJob(db, DatabaseContract.OpenChats.TABLE_NAME, DatabaseContract.OpenChats.FIELD_ACCOUNT,
+						   accounts);
 				db.setTransactionSuccessful();
 			} finally {
 				db.endTransaction();

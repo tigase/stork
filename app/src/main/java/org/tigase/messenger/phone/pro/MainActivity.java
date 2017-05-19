@@ -60,12 +60,15 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-		RosterItemFragment.OnRosterItemIteractionListener, OpenChatItemFragment.OnAddChatListener {
+public class MainActivity
+		extends AppCompatActivity
+		implements NavigationView.OnNavigationItemSelectedListener,
+				   RosterItemFragment.OnRosterItemIteractionListener,
+				   OpenChatItemFragment.OnAddChatListener {
 
 	Spinner statusSelector;
-	private Menu navigationMenu;
 	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
+	private Menu navigationMenu;
 
 	private void doPresenceChange(long presenceId) {
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -113,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
-				R.string.navigation_drawer_close);
+																 R.string.navigation_drawer_close);
 		drawer.setDrawerListener(toggle);
 		toggle.syncState();
 
@@ -151,7 +154,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 		});
 		statusSelector.setSelection(statusAdapter.getPosition(sharedPref.getLong("presence", CPresence.OFFLINE)));
-
 
 		final AccountManager am = AccountManager.get(this);
 		Account[] accounts = am.getAccountsByType(Authenticator.ACCOUNT_TYPE);
@@ -248,7 +250,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			case R.id.nav_connectionstatus: {
 				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(R.id.flContent, ConnectionStatusesFragment.newInstance()).commit();
+				fragmentManager.beginTransaction()
+						.replace(R.id.flContent, ConnectionStatusesFragment.newInstance())
+						.commit();
 
 				SharedPreferences.Editor editor = sharedPref.edit();
 				editor.putString("menu", "connectionstatus");
@@ -260,8 +264,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			case R.id.nav_roster: {
 				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(R.id.flContent,
-						RosterItemFragment.newInstance(mServiceConnection)).commit();
+				fragmentManager.beginTransaction()
+						.replace(R.id.flContent, RosterItemFragment.newInstance(mServiceConnection))
+						.commit();
 
 				SharedPreferences.Editor editor = sharedPref.edit();
 				editor.putString("menu", "roster");
@@ -273,8 +278,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			case R.id.nav_chats: {
 				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(R.id.flContent,
-						OpenChatItemFragment.newInstance(mServiceConnection)).commit();
+				fragmentManager.beginTransaction()
+						.replace(R.id.flContent, OpenChatItemFragment.newInstance(mServiceConnection))
+						.commit();
 
 				SharedPreferences.Editor editor = sharedPref.edit();
 				editor.putString("menu", "chats");
@@ -297,7 +303,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		}
 	}
 
-	public static class XMPPServiceConnection implements ServiceConnection {
+	public static class XMPPServiceConnection
+			implements ServiceConnection {
+
 		private XMPPService mService;
 
 		public XMPPServiceConnection() {

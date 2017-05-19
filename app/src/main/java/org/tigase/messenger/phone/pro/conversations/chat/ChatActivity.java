@@ -46,26 +46,29 @@ import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
-public class ChatActivity extends AbstractConversationActivity {
+public class ChatActivity
+		extends AbstractConversationActivity {
 
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	TextView mContactName;
 	ImageView mContactPresence;
-	private int openChatId;
 	private Uri contactUri;
-	private Integer rosterId;
 	private MarkAsRead markAsRead;
+	private int openChatId;
+	private Integer rosterId;
 
 	public int getOpenChatId() {
 		return openChatId;
 	}
 
 	private void loadContact() {
-		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_ACCOUNT,
-				DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME, ChatProvider.FIELD_UNREAD_COUNT,
-				DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE};
-		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols, null,
-				null, null);
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
+										   ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE,
+										   ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE};
+		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols,
+											  null, null, null);
 		try {
 			if (c.moveToNext()) {
 				String displayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
@@ -81,7 +84,8 @@ public class ChatActivity extends AbstractConversationActivity {
 
 	private Integer loadRosterID(BareJID account, BareJID jid) {
 		Uri u = Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid);
-		Cursor c = getContentResolver().query(u, new String[]{DatabaseContract.RosterItemsCache.FIELD_ID}, null, null, null);
+		Cursor c = getContentResolver().query(u, new String[]{DatabaseContract.RosterItemsCache.FIELD_ID}, null, null,
+											  null);
 		try {
 			if (c.moveToNext()) {
 				return c.getInt(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
@@ -93,10 +97,12 @@ public class ChatActivity extends AbstractConversationActivity {
 	}
 
 	private void loadUserPresence() {
-		if (contactUri == null)
+		if (contactUri == null) {
 			return;
+		}
 		Cursor contactCursor = getContentResolver().query(contactUri,
-				new String[]{DatabaseContract.RosterItemsCache.FIELD_STATUS}, null, null, null);
+														  new String[]{DatabaseContract.RosterItemsCache.FIELD_STATUS},
+														  null, null, null);
 		try {
 			if (contactCursor.moveToNext()) {
 				final int status = contactCursor.getInt(
@@ -110,7 +116,6 @@ public class ChatActivity extends AbstractConversationActivity {
 			contactCursor.close();
 		}
 	}
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -167,7 +172,9 @@ public class ChatActivity extends AbstractConversationActivity {
 		markAsRead.markChatAsRead(this.openChatId, this.getAccount(), this.getJid());
 	}
 
-	private class ContactPresenceChangeObserver extends ContentObserver {
+	private class ContactPresenceChangeObserver
+			extends ContentObserver {
+
 		public ContactPresenceChangeObserver() {
 			super(new Handler());
 		}

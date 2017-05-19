@@ -36,7 +36,8 @@ import tigase.jaxmpp.core.client.BareJID;
 
 //import tigase.jaxmpp.R;
 
-public class AvatarHelper extends ImageHelper {
+public class AvatarHelper
+		extends ImageHelper {
 
 	// private static LruCache<BareJID, Bitmap> avatarCache;
 
@@ -91,6 +92,24 @@ public class AvatarHelper extends ImageHelper {
 		memCache.remove(jid.toString());
 	}
 
+	public static Bitmap cropToSquare(Bitmap bitmap) {
+		if (bitmap == null) {
+			return null;
+		}
+
+		int width = bitmap.getWidth();
+		int height = bitmap.getHeight();
+		int newWidth = (height > width) ? width : height;
+		int newHeight = (height > width) ? height - (height - width) : height;
+		int cropW = (width - height) / 2;
+		cropW = (cropW < 0) ? 0 : cropW;
+		int cropH = (height - width) / 2;
+		cropH = (cropH < 0) ? 0 : cropH;
+		Bitmap cropImg = Bitmap.createBitmap(bitmap, cropW, cropH, newWidth, newHeight);
+
+		return cropImg;
+	}
+
 	public static Bitmap getAvatar(BareJID jid) {
 		return getAvatar(context, jid, false);
 	}
@@ -114,14 +133,41 @@ public class AvatarHelper extends ImageHelper {
 		return null;
 	}
 
+	public static Bitmap getCroppedBitmap(Bitmap bitmap) {
+		if (bitmap == null) {
+			return null;
+		}
+
+		bitmap = cropToSquare(bitmap);
+
+		Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+
+		Canvas canvas = new Canvas(output);
+
+		final int color = 0xff424242;
+		final Paint paint = new Paint();
+		final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+		paint.setAntiAlias(true);
+		canvas.drawARGB(0, 0, 0, 0);
+		paint.setColor(color);
+		// canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+		canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2, bitmap.getWidth() / 2, paint);
+		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+		canvas.drawBitmap(bitmap, rect, rect, paint);
+//		Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
+//		return _bmp;
+		return output;
+	}
+
 	public static void initilize(Context context_) {
 		if (mPlaceHolderBitmap == null) {
 			context = context_;
 
 			density = context.getResources().getDisplayMetrics().density;
 			int defaultAvatarSizeRoster = Math.round(density * 50);
-			int defaultAvatarSizeForChat = context.getResources().getDimensionPixelSize(
-					R.dimen.chat_item_layout_item_avatar_size);
+			int defaultAvatarSizeForChat = context.getResources()
+					.getDimensionPixelSize(R.dimen.chat_item_layout_item_avatar_size);
 			defaultAvatarSize = Math.max(defaultAvatarSizeRoster, defaultAvatarSizeForChat);
 
 			ImageHelper.initialize(context_);
@@ -164,13 +210,16 @@ public class AvatarHelper extends ImageHelper {
 			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 			options.inSampleSize = calculateSize(options, defaultAvatarSize, defaultAvatarSize);
 			options.inJustDecodeBounds = false;
-			mPlaceHolderBitmap = getCroppedBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.user_avatar, options));
+			mPlaceHolderBitmap = getCroppedBitmap(
+					BitmapFactory.decodeResource(context.getResources(), R.drawable.user_avatar, options));
 			ImageHelper.addPlaceHolder(mPlaceHolderBitmap);
 		}
 	}
 
 	protected static Bitmap loadAvatar(Context context, BareJID jid, boolean noCache) {
-		if (mPlaceHolderBitmap == null) return null;
+		if (mPlaceHolderBitmap == null) {
+			return null;
+		}
 		Bitmap bmp = loadAvatar(context, jid, defaultAvatarSize);
 		if (!noCache) {
 			if (bmp == null) {
@@ -182,58 +231,13 @@ public class AvatarHelper extends ImageHelper {
 		return bmp;
 	}
 
-	public static Bitmap cropToSquare(Bitmap bitmap) {
-		if (bitmap == null)
-			return null;
-
-		int width = bitmap.getWidth();
-		int height = bitmap.getHeight();
-		int newWidth = (height > width) ? width : height;
-		int newHeight = (height > width) ? height - (height - width) : height;
-		int cropW = (width - height) / 2;
-		cropW = (cropW < 0) ? 0 : cropW;
-		int cropH = (height - width) / 2;
-		cropH = (cropH < 0) ? 0 : cropH;
-		Bitmap cropImg = Bitmap.createBitmap(bitmap, cropW, cropH, newWidth, newHeight);
-
-		return cropImg;
-	}
-
-	public static Bitmap getCroppedBitmap(Bitmap bitmap) {
-		if (bitmap == null)
-			return null;
-
-		bitmap = cropToSquare(bitmap);
-
-		Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-
-		Canvas canvas = new Canvas(output);
-
-		final int color = 0xff424242;
-		final Paint paint = new Paint();
-		final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-		paint.setAntiAlias(true);
-		canvas.drawARGB(0, 0, 0, 0);
-		paint.setColor(color);
-		// canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
-		canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
-				bitmap.getWidth() / 2, paint);
-		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-		canvas.drawBitmap(bitmap, rect, rect, paint);
-//		Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
-//		return _bmp;
-		return output;
-	}
-
 	protected static Bitmap loadAvatar(Context context, BareJID jid, int size) {
 		Bitmap bmp = null;
 
 		Log.v(TAG, "loading avatar with size " + size);
 
-		Cursor cursor = context.getContentResolver().query(
-				Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
+		Cursor cursor = context.getContentResolver()
+				.query(Uri.parse(RosterProvider.VCARD_URI + "/" + Uri.encode(jid.toString())), null, null, null, null);
 		try {
 			if (cursor.moveToNext()) {
 				// we found avatar in our store

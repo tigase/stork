@@ -53,12 +53,13 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
  * Activities containing this fragment MUST implement the
  * {@link OnRosterItemIteractionListener} interface.
  */
-public class RosterItemFragment extends Fragment {
+public class RosterItemFragment
+		extends Fragment {
 
 	private static final boolean SHOW_OFFLINE_DEFAULT = true;
 	RecyclerView recyclerView;
-	private OnRosterItemIteractionListener mListener;
 	private MyRosterItemRecyclerViewAdapter adapter;
+	private DBUpdateTask dbUpdateTask;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
 	private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
 
@@ -69,7 +70,8 @@ public class RosterItemFragment extends Fragment {
 				public void onClick(DialogInterface dialog, int which) {
 					switch (which) {
 						case DialogInterface.BUTTON_POSITIVE:
-							(new RemoveContactTask(BareJID.bareJIDInstance(account), BareJID.bareJIDInstance(jid))).execute();
+							(new RemoveContactTask(BareJID.bareJIDInstance(account),
+												   BareJID.bareJIDInstance(jid))).execute();
 							break;
 					}
 				}
@@ -82,17 +84,8 @@ public class RosterItemFragment extends Fragment {
 					.show();
 		}
 	};
+	private OnRosterItemIteractionListener mListener;
 	private SharedPreferences sharedPref;
-	private DBUpdateTask dbUpdateTask;
-
-
-	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
-	 */
-	public RosterItemFragment() {
-		super();
-	}
 
 	// TODO: Customize parameter initialization
 	@SuppressWarnings("unused")
@@ -103,6 +96,13 @@ public class RosterItemFragment extends Fragment {
 		return fragment;
 	}
 
+	/**
+	 * Mandatory empty constructor for the fragment manager to instantiate the
+	 * fragment (e.g. upon screen orientation changes).
+	 */
+	public RosterItemFragment() {
+		super();
+	}
 
 	@Override
 	public void onAttach(Context context) {
@@ -119,7 +119,6 @@ public class RosterItemFragment extends Fragment {
 		Intent intent = new Intent(context, XMPPService.class);
 		getActivity().bindService(intent, mConnection, 0);
 	}
-
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -138,7 +137,6 @@ public class RosterItemFragment extends Fragment {
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.roster_fragment, menu);
 	}
-
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -241,17 +239,20 @@ public class RosterItemFragment extends Fragment {
 		}
 	}
 
+	public interface OnRosterItemDeleteListener {
+
+		void onRosterItemDelete(int id, String account, String jid, String name);
+	}
 
 	public interface OnRosterItemIteractionListener {
+
 		void onListFragmentInteraction(int id, String account, String jid);
 
 	}
 
-	public interface OnRosterItemDeleteListener {
-		void onRosterItemDelete(int id, String account, String jid, String name);
-	}
+	private class DBUpdateTask
+			extends AsyncTask<Void, Void, Cursor> {
 
-	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
 		@Override
 		protected Cursor doInBackground(Void... params) {
 			if (sharedPref == null) {
@@ -259,8 +260,10 @@ public class RosterItemFragment extends Fragment {
 				return null;
 			}
 			String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
-					DatabaseContract.RosterItemsCache.FIELD_ACCOUNT, DatabaseContract.RosterItemsCache.FIELD_JID,
-					DatabaseContract.RosterItemsCache.FIELD_NAME, DatabaseContract.RosterItemsCache.FIELD_STATUS};
+													DatabaseContract.RosterItemsCache.FIELD_ACCOUNT,
+													DatabaseContract.RosterItemsCache.FIELD_JID,
+													DatabaseContract.RosterItemsCache.FIELD_NAME,
+													DatabaseContract.RosterItemsCache.FIELD_STATUS};
 
 			boolean showOffline = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
 			String selection = "1=1 ";
@@ -279,14 +282,14 @@ public class RosterItemFragment extends Fragment {
 					sort = DatabaseContract.RosterItemsCache.FIELD_JID + " ASC";
 					break;
 				case "presence":
-					sort = DatabaseContract.RosterItemsCache.FIELD_STATUS + " DESC," + DatabaseContract.RosterItemsCache.FIELD_NAME
-							+ " COLLATE NOCASE ASC";
+					sort = DatabaseContract.RosterItemsCache.FIELD_STATUS + " DESC," +
+							DatabaseContract.RosterItemsCache.FIELD_NAME + " COLLATE NOCASE ASC";
 					break;
 				default:
 					sort = "";
 			}
-			Cursor cursor = getContext().getContentResolver().query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null,
-					sort);
+			Cursor cursor = getContext().getContentResolver()
+					.query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null, sort);
 
 			return cursor;
 		}
@@ -297,10 +300,11 @@ public class RosterItemFragment extends Fragment {
 		}
 	}
 
-	private class RemoveContactTask extends AsyncTask<Void, Void, Void> {
+	private class RemoveContactTask
+			extends AsyncTask<Void, Void, Void> {
 
-		private final BareJID jid;
 		private final BareJID account;
+		private final BareJID jid;
 
 		public RemoveContactTask(BareJID account, BareJID jid) {
 			this.jid = jid;
@@ -324,6 +328,5 @@ public class RosterItemFragment extends Fragment {
 			return null;
 		}
 	}
-
 
 }

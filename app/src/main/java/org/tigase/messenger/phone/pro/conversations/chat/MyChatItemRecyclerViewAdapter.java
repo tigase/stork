@@ -35,16 +35,17 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
-public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
+public class MyChatItemRecyclerViewAdapter
+		extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	public static final int ITEM_ERROR = 1;
 	public static final int ITEM_MESSAGE_IN = 20;
 	public static final int ITEM_MESSAGE_OUT = 30;
-
-	private final ChatItemFragment.ChatItemIterationListener mListener;
 	private final Context context;
+	private final ChatItemFragment.ChatItemIterationListener mListener;
 
-	public MyChatItemRecyclerViewAdapter(Context context, Cursor cursor, ChatItemFragment.ChatItemIterationListener listener) {
+	public MyChatItemRecyclerViewAdapter(Context context, Cursor cursor,
+										 ChatItemFragment.ChatItemIterationListener listener) {
 		super(cursor);
 		mListener = listener;
 		this.context = context;
@@ -67,8 +68,9 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 			case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
 				if (type == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
 					return ITEM_ERROR;
-				} else
+				} else {
 					return ITEM_MESSAGE_IN;
+				}
 			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
 			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
 			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
@@ -87,11 +89,9 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		final long timestampt = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
 		final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 
-
 		holder.mContentView.setText(body);
 		holder.mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
-				DateUtils.WEEK_IN_MILLIS, 0));
-
+																	  DateUtils.WEEK_IN_MILLIS, 0));
 
 		if (holder.mDeliveryStatus != null) {
 			switch (state) {
@@ -127,8 +127,9 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 				if (item.getItemId() == R.id.menu_chat_copytext) {
 					mListener.onCopyChatMessage(id, jid, body);
 					return true;
-				} else
+				} else {
 					return false;
+				}
 			}
 		});
 	}
@@ -138,13 +139,15 @@ public class MyChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<Vie
 		View view;
 		switch (viewType) {
 			case ITEM_MESSAGE_IN:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_received, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_chatitem_received, parent, false);
 				break;
 			case ITEM_MESSAGE_OUT:
 				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sent, parent, false);
 				break;
 			case ITEM_ERROR:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_chatitem_error, parent, false);
 				break;
 			default:
 				throw new RuntimeException("Unknown view type " + viewType);

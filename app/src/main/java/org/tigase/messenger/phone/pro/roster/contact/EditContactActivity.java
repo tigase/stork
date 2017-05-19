@@ -22,15 +22,16 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 import java.util.ArrayList;
 
-public class EditContactActivity extends AppCompatActivity {
+public class EditContactActivity
+		extends AppCompatActivity {
 
 	private final ArrayList accountsList = new ArrayList<>();
 	Spinner mAccountSelector;
-	EditText mContactXMPPID;
 	EditText mContactName;
+	EditText mContactXMPPID;
 	ProgressBar progressBar;
-	private ArrayAdapter<Object> sa;
 	private XMPPService mService;
+	private ArrayAdapter<Object> sa;
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -63,7 +64,9 @@ public class EditContactActivity extends AppCompatActivity {
 			return;
 		}
 		if (mService != null) {
-			AddContactTask task = new AddContactTask(BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString()), jid, mContactName.getText().toString());
+			AddContactTask task = new AddContactTask(
+					BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString()), jid,
+					mContactName.getText().toString());
 			task.execute();
 		}
 	}
@@ -94,7 +97,6 @@ public class EditContactActivity extends AppCompatActivity {
 		mAccountSelector.setAdapter(sa);
 	}
 
-
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -108,13 +110,14 @@ public class EditContactActivity extends AppCompatActivity {
 		unbindService(mServiceConnection);
 	}
 
-	private class AddContactTask extends AsyncTask<Void, Integer, Boolean> {
+	private class AddContactTask
+			extends AsyncTask<Void, Integer, Boolean> {
 
-		private final String name;
-		private final BareJID jid;
 		private final BareJID account;
-		private boolean result = false;
+		private final BareJID jid;
+		private final String name;
 		private XMPPException.ErrorCondition error = null;
+		private boolean result = false;
 
 		public AddContactTask(BareJID account, BareJID jid, String name) {
 			this.jid = jid;
@@ -129,7 +132,8 @@ public class EditContactActivity extends AppCompatActivity {
 				RosterStore rosterStore = RosterModule.getRosterStore(jaxmpp.getSessionObject());
 				rosterStore.add(jid, name, new AsyncCallback() {
 					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
 						error = error;
 						synchronized (AddContactTask.this) {
 							AddContactTask.this.notify();
@@ -158,7 +162,6 @@ public class EditContactActivity extends AppCompatActivity {
 				synchronized (AddContactTask.this) {
 					AddContactTask.this.wait();
 				}
-
 
 				return result;
 			} catch (Exception e) {

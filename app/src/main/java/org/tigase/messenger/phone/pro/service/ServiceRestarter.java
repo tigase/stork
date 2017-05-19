@@ -29,7 +29,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.db.CPresence;
 
-public class ServiceRestarter extends BroadcastReceiver {
+public class ServiceRestarter
+		extends BroadcastReceiver {
 
 	public static final String ACTION_NAME = "org.tigase.messenger.phone.pro.XMPP_SERVICE_DESTROYED";
 

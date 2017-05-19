@@ -31,7 +31,9 @@ import junit.framework.Assert;
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing
  * Fundamentals</a>
  */
-public class ApplicationTest extends ApplicationTestCase<Application> {
+public class ApplicationTest
+		extends ApplicationTestCase<Application> {
+
 	public ApplicationTest() {
 		super(Application.class);
 		final UriMatcher sUriMatcher = new UriMatcher(1);
@@ -44,9 +46,12 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
 		sUriMatcher.addURI(AUTHORITY, "roster/*/#", 5);
 
 		Assert.assertEquals(2, sUriMatcher.match(Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster")));
-		Assert.assertEquals(3, sUriMatcher.match(Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/1")));
-		Assert.assertEquals(4, sUriMatcher.match(Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/dupa")));
-		Assert.assertEquals(5, sUriMatcher.match(Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/dupa/1")));
+		Assert.assertEquals(3,
+							sUriMatcher.match(Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/1")));
+		Assert.assertEquals(4, sUriMatcher.match(
+				Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/dupa")));
+		Assert.assertEquals(5, sUriMatcher.match(
+				Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/dupa/1")));
 
 		Uri uri = Uri.parse("content://org.tigase.messenger.phone.pro.Roster/roster/dupa/1");
 		Assert.assertEquals("1", uri.getLastPathSegment());

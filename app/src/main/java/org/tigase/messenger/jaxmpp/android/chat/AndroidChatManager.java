@@ -28,7 +28,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AndroidChatManager extends AbstractChatManager {
+public class AndroidChatManager
+		extends AbstractChatManager {
 
 	private ChatProvider provider;
 
@@ -66,8 +67,9 @@ public class AndroidChatManager extends AbstractChatManager {
 	@Override
 	public Chat getChat(JID jid, String threadId) {
 		Object[] data = provider.getChat(context.getSessionObject(), jid, threadId);
-		if (data == null)
+		if (data == null) {
 			return null;
+		}
 		Chat chat = new Chat((Long) data[0], context);
 		chat.setThreadId((String) data[1]);
 		if (data[2] != null) {

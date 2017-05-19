@@ -29,8 +29,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CapabilitiesDBCache implements CapabilitiesCache {
-
+public class CapabilitiesDBCache
+		implements CapabilitiesCache {
 
 	private final SQLiteOpenHelper helper;
 
@@ -43,8 +43,8 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 		final Set<String> result = new HashSet<String>();
 		if (node != null) {
 			SQLiteDatabase db = this.helper.getReadableDatabase();
-			Cursor c = db.rawQuery("SELECT * FROM " + DatabaseContract.CapsFeatures.TABLE_NAME + " WHERE "
-					+ DatabaseContract.CapsFeatures.FIELD_NODE + "=?", new String[]{node});
+			Cursor c = db.rawQuery("SELECT * FROM " + DatabaseContract.CapsFeatures.TABLE_NAME + " WHERE " +
+										   DatabaseContract.CapsFeatures.FIELD_NODE + "=?", new String[]{node});
 			try {
 				while (c.moveToNext()) {
 					String f = c.getString(c.getColumnIndex(DatabaseContract.CapsFeatures.FIELD_FEATURE));
@@ -60,12 +60,13 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 
 	@Override
 	public Identity getIdentity(String node) {
-		if (node == null)
+		if (node == null) {
 			return null;
+		}
 
 		SQLiteDatabase db = this.helper.getReadableDatabase();
-		Cursor c = db.rawQuery("SELECT * FROM " + DatabaseContract.CapsIdentities.TABLE_NAME + " WHERE "
-				+ DatabaseContract.CapsIdentities.FIELD_NODE + "=?", new String[]{node});
+		Cursor c = db.rawQuery("SELECT * FROM " + DatabaseContract.CapsIdentities.TABLE_NAME + " WHERE " +
+									   DatabaseContract.CapsIdentities.FIELD_NODE + "=?", new String[]{node});
 		try {
 			if (c.moveToNext()) {
 				String name = c.getString(c.getColumnIndex(DatabaseContract.CapsIdentities.FIELD_NAME));
@@ -90,9 +91,9 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 		final Set<String> result = new HashSet<String>();
 		if (feature != null) {
 			SQLiteDatabase db = this.helper.getReadableDatabase();
-			Cursor c = db.rawQuery("SELECT distinct(" + DatabaseContract.CapsFeatures.FIELD_NODE + ") FROM "
-							+ DatabaseContract.CapsFeatures.TABLE_NAME + " WHERE " + DatabaseContract.CapsFeatures.FIELD_FEATURE + "=?",
-					new String[]{feature});
+			Cursor c = db.rawQuery("SELECT distinct(" + DatabaseContract.CapsFeatures.FIELD_NODE + ") FROM " +
+										   DatabaseContract.CapsFeatures.TABLE_NAME + " WHERE " +
+										   DatabaseContract.CapsFeatures.FIELD_FEATURE + "=?", new String[]{feature});
 			try {
 				while (c.moveToNext()) {
 					String f = c.getString(0);
@@ -115,8 +116,8 @@ public class CapabilitiesDBCache implements CapabilitiesCache {
 		}
 
 		SQLiteDatabase db = this.helper.getReadableDatabase();
-		Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + DatabaseContract.CapsIdentities.TABLE_NAME + " WHERE "
-				+ DatabaseContract.CapsIdentities.FIELD_NODE + "=?", new String[]{node});
+		Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + DatabaseContract.CapsIdentities.TABLE_NAME + " WHERE " +
+									   DatabaseContract.CapsIdentities.FIELD_NODE + "=?", new String[]{node});
 		try {
 			if (c.moveToNext()) {
 				int r = c.getInt(0);

@@ -6,20 +6,17 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 public class CapsDbHelper {
 
 	private static final String CREATE_CAPS_IDENTITIES_TABLE =
-			"CREATE TABLE " + DatabaseContract.CapsIdentities.TABLE_NAME + " ("
-					+ DatabaseContract.CapsIdentities.FIELD_ID + " INTEGER PRIMARY KEY, "
-					+ DatabaseContract.CapsIdentities.FIELD_NODE + " TEXT, "
-					+ DatabaseContract.CapsIdentities.FIELD_NAME + " TEXT, "
-					+ DatabaseContract.CapsIdentities.FIELD_CATEGORY + " TEXT, "
-					+ DatabaseContract.CapsIdentities.FIELD_TYPE + " TEXT"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.CapsIdentities.TABLE_NAME + " (" +
+					DatabaseContract.CapsIdentities.FIELD_ID + " INTEGER PRIMARY KEY, " +
+					DatabaseContract.CapsIdentities.FIELD_NODE + " TEXT, " +
+					DatabaseContract.CapsIdentities.FIELD_NAME + " TEXT, " +
+					DatabaseContract.CapsIdentities.FIELD_CATEGORY + " TEXT, " +
+					DatabaseContract.CapsIdentities.FIELD_TYPE + " TEXT" + ");";
 
 	private static final String CREATE_CAPS_FEATURES_TABLE =
-			"CREATE TABLE " + DatabaseContract.CapsFeatures.TABLE_NAME + " ("
-					+ DatabaseContract.CapsFeatures.FIELD_ID + " INTEGER PRIMARY KEY, "
-					+ DatabaseContract.CapsFeatures.FIELD_NODE + " TEXT, "
-					+ DatabaseContract.CapsFeatures.FIELD_FEATURE + " TEXT"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.CapsFeatures.TABLE_NAME + " (" + DatabaseContract.CapsFeatures.FIELD_ID +
+					" INTEGER PRIMARY KEY, " + DatabaseContract.CapsFeatures.FIELD_NODE + " TEXT, " +
+					DatabaseContract.CapsFeatures.FIELD_FEATURE + " TEXT" + ");";
 
 	public static void onCreate(SQLiteDatabase database) {
 		database.execSQL(CREATE_CAPS_IDENTITIES_TABLE);

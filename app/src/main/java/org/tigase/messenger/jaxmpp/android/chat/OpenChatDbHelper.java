@@ -23,18 +23,14 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 public class OpenChatDbHelper {
 
 	private static final String CREATE_OPEN_CHATS_TABLE =
-			"CREATE TABLE " + DatabaseContract.OpenChats.TABLE_NAME + " ("
-					+ DatabaseContract.OpenChats.FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+ DatabaseContract.OpenChats.FIELD_ACCOUNT + " TEXT, "
-					+ DatabaseContract.OpenChats.FIELD_JID + " TEXT, "
-					+ DatabaseContract.OpenChats.FIELD_TIMESTAMP + " DATETIME, "
-					+ DatabaseContract.OpenChats.FIELD_TYPE + " INTEGER, "
-					+ DatabaseContract.OpenChats.FIELD_THREAD_ID + " TEXT, "
-					+ DatabaseContract.OpenChats.FIELD_RESOURCE + " TEXT,"
-					+ DatabaseContract.OpenChats.FIELD_NICKNAME + " TEXT, "
-					+ DatabaseContract.OpenChats.FIELD_PASSWORD + " TEXT, "
-					+ DatabaseContract.OpenChats.FIELD_ROOM_STATE + " INTEGER"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.OpenChats.TABLE_NAME + " (" + DatabaseContract.OpenChats.FIELD_ID +
+					" INTEGER PRIMARY KEY AUTOINCREMENT, " + DatabaseContract.OpenChats.FIELD_ACCOUNT + " TEXT, " +
+					DatabaseContract.OpenChats.FIELD_JID + " TEXT, " + DatabaseContract.OpenChats.FIELD_TIMESTAMP +
+					" DATETIME, " + DatabaseContract.OpenChats.FIELD_TYPE + " INTEGER, " +
+					DatabaseContract.OpenChats.FIELD_THREAD_ID + " TEXT, " + DatabaseContract.OpenChats.FIELD_RESOURCE +
+					" TEXT," + DatabaseContract.OpenChats.FIELD_NICKNAME + " TEXT, " +
+					DatabaseContract.OpenChats.FIELD_PASSWORD + " TEXT, " +
+					DatabaseContract.OpenChats.FIELD_ROOM_STATE + " INTEGER" + ");";
 
 	public static void onCreate(SQLiteDatabase database) {
 		database.execSQL(CREATE_OPEN_CHATS_TABLE);

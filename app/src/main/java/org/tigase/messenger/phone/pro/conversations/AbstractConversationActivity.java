@@ -4,10 +4,11 @@ import android.support.v7.app.AppCompatActivity;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
-public class AbstractConversationActivity extends AppCompatActivity {
+public class AbstractConversationActivity
+		extends AppCompatActivity {
 
-	private JID jid;
 	private BareJID account;
+	private JID jid;
 
 	public BareJID getAccount() {
 		return account;

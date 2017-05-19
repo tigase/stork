@@ -14,18 +14,19 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 
-public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
+public class MucItemRecyclerViewAdapter
+		extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	public static final int ITEM_ERROR = 1;
 	public static final int ITEM_SYS_MSG = 2;
 	public static final int ITEM_MESSAGE_IN = 20;
 	public static final int ITEM_MESSAGE_OUT = 30;
-
-	private final MucItemFragment.ChatItemIterationListener mListener;
 	private final Context context;
+	private final MucItemFragment.ChatItemIterationListener mListener;
 	private String ownNickname;
 
-	public MucItemRecyclerViewAdapter(Context context, Cursor cursor, MucItemFragment.ChatItemIterationListener listener) {
+	public MucItemRecyclerViewAdapter(Context context, Cursor cursor,
+									  MucItemFragment.ChatItemIterationListener listener) {
 		super(cursor);
 		mListener = listener;
 		this.context = context;
@@ -92,7 +93,8 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 
 		final int state = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 		final int type = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE));
-		final String nickname = getCursor().getString(getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
+		final String nickname = getCursor().getString(
+				getCursor().getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 
 		switch (state) {
 			case DatabaseContract.ChatHistory.STATE_INCOMING:
@@ -127,13 +129,14 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
 		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-		final String nickname = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
+		final String nickname = cursor.getString(
+				cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 		final long timestampt = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
 		final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
 
 		holder.mContentView.setText(body);
 		holder.mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
-				DateUtils.WEEK_IN_MILLIS, 0));
+																	  DateUtils.WEEK_IN_MILLIS, 0));
 		if (holder.mNickname != null) {
 			holder.mNickname.setVisibility(View.VISIBLE);
 			int col = ContextCompat.getColor(context, getColor(nickname));
@@ -141,10 +144,9 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 			holder.mNickname.setText(nickname);
 		}
 
-		boolean mentioned = (state == DatabaseContract.ChatHistory.STATE_INCOMING || state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD)
-				&& body != null
-				&& ownNickname != null
-				&& body.toLowerCase().contains(ownNickname.toLowerCase());
+		boolean mentioned = (state == DatabaseContract.ChatHistory.STATE_INCOMING ||
+				state == DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD) && body != null && ownNickname != null &&
+				body.toLowerCase().contains(ownNickname.toLowerCase());
 		if (mentioned) {
 			holder.mContentView.setTypeface(Typeface.DEFAULT_BOLD);
 		} else {
@@ -183,8 +185,9 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 				if (item.getItemId() == R.id.menu_chat_copytext) {
 					mListener.onCopyChatMessage(id, jid, body);
 					return true;
-				} else
+				} else {
 					return false;
+				}
 			}
 		});
 	}
@@ -194,16 +197,20 @@ public class MucItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHo
 		View view;
 		switch (viewType) {
 			case ITEM_MESSAGE_IN:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_received, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_groupchatitem_received, parent, false);
 				break;
 			case ITEM_MESSAGE_OUT:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_groupchatitem_sent, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_groupchatitem_sent, parent, false);
 				break;
 			case ITEM_ERROR:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_error, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_chatitem_error, parent, false);
 				break;
 			case ITEM_SYS_MSG:
-				view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_sysmsg, parent, false);
+				view = LayoutInflater.from(parent.getContext())
+						.inflate(R.layout.fragment_chatitem_sysmsg, parent, false);
 				break;
 			default:
 				throw new RuntimeException("Unknown view type " + viewType);

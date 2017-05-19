@@ -25,7 +25,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class StanzaExecutor implements Executor {
+public class StanzaExecutor
+		implements Executor {
 
 	private static final int CORE_POOL_SIZE = 1;
 

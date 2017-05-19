@@ -28,16 +28,14 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 
+public class ViewHolder
+		extends RecyclerView.ViewHolder {
 
-public class ViewHolder extends RecyclerView.ViewHolder {
-
-	TextView mJidView;
-
+	ImageView mContactAvatar;
 	TextView mContactNameView;
 
 	ImageView mContactPresence;
-
-	ImageView mContactAvatar;
+	TextView mJidView;
 
 	public ViewHolder(final View itemView) {
 		super(itemView);

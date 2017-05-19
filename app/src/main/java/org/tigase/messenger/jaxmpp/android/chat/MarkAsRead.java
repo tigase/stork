@@ -29,9 +29,11 @@ public class MarkAsRead {
 				ContentValues values = new ContentValues();
 				values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
 
-				try (Cursor c = context.getContentResolver().query(uri,
-						new String[]{DatabaseContract.ChatHistory.FIELD_ID, DatabaseContract.ChatHistory.FIELD_STATE},
-						DatabaseContract.ChatHistory.FIELD_STATE + "=?", new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD}, null)) {
+				try (Cursor c = context.getContentResolver()
+						.query(uri, new String[]{DatabaseContract.ChatHistory.FIELD_ID,
+												 DatabaseContract.ChatHistory.FIELD_STATE},
+							   DatabaseContract.ChatHistory.FIELD_STATE + "=?",
+							   new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD}, null)) {
 					while (c.moveToNext()) {
 						final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 						Uri u = ContentUris.withAppendedId(uri, id);
@@ -43,8 +45,8 @@ public class MarkAsRead {
 					Log.e("MarkAsRead", "Can't mark as read acc=" + account + ", jid=" + jid.getBareJid(), e);
 				}
 
-				context.getContentResolver().notifyChange(
-						ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), null);
+				context.getContentResolver()
+						.notifyChange(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), null);
 
 				return null;
 			}

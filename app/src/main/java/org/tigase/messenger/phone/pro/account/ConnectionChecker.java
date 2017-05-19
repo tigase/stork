@@ -21,9 +21,9 @@ public class ConnectionChecker {
 
 	private static final String TAG = "ConnectionChecker";
 	private final Jaxmpp contact = new Jaxmpp();
+	private final String hostname;
 	private final BareJID jid;
 	private final String password;
-	private final String hostname;
 	protected String errorMessage;
 	protected Throwable exception;
 	private boolean passwordInvalid = false;
@@ -35,10 +35,12 @@ public class ConnectionChecker {
 
 		contact.getEventBus().addHandler(Connector.ErrorHandler.ErrorEvent.class, new Connector.ErrorHandler() {
 			@Override
-			public void onError(SessionObject sessionObject, StreamError condition, Throwable e) throws JaxmppException {
+			public void onError(SessionObject sessionObject, StreamError condition, Throwable e)
+					throws JaxmppException {
 				Log.w(TAG, "onError() " + condition + "   " + e);
-				if (exception == null)
+				if (exception == null) {
 					exception = e;
+				}
 			}
 		});
 
@@ -49,52 +51,58 @@ public class ConnectionChecker {
 				Log.i(TAG, "Event: " + event.getClass());
 			}
 		});
-		contact.getEventBus().addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class,
-				new AuthModule.AuthFailedHandler() {
+		contact.getEventBus()
+				.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
 
 					@Override
-					public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error) throws JaxmppException {
+					public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error)
+							throws JaxmppException {
 						Log.w(TAG, "AuthFailedEvent() " + error);
 						errorMessage = "Invalid username or password";
 						passwordInvalid = true;
 						// wakeup();
 					}
 				});
-		contact.getEventBus().addHandler(InBandRegistrationModule.NotSupportedErrorHandler.NotSupportedErrorEvent.class,
-				new InBandRegistrationModule.NotSupportedErrorHandler() {
+		contact.getEventBus()
+				.addHandler(InBandRegistrationModule.NotSupportedErrorHandler.NotSupportedErrorEvent.class,
+							new InBandRegistrationModule.NotSupportedErrorHandler() {
 
+								@Override
+								public void onNotSupportedError(SessionObject sessionObject) throws JaxmppException {
+									Log.w(TAG, "NotSupportedErrorHandler() ");
+									errorMessage = "Registration not supported.";
+									// wakeup();
+								}
+							});
+		contact.getEventBus()
+				.addHandler(InBandRegistrationModule.ReceivedErrorHandler.ReceivedErrorEvent.class,
+							new InBandRegistrationModule.ReceivedErrorHandler() {
+
+								@Override
+								public void onReceivedError(SessionObject sessionObject, IQ responseStanza,
+															XMPPException.ErrorCondition errorCondition)
+										throws JaxmppException {
+									errorMessage = "Error during registration.";
+									// wakeup();
+								}
+							});
+		contact.getEventBus()
+				.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, new JaxmppCore.LoggedInHandler() {
 					@Override
-					public void onNotSupportedError(SessionObject sessionObject) throws JaxmppException {
-						Log.w(TAG, "NotSupportedErrorHandler() ");
-						errorMessage = "Registration not supported.";
-						// wakeup();
+					public void onLoggedIn(SessionObject sessionObject) {
+						Log.w(TAG, "Jaxmpp connected");
+						wakeup();
 					}
 				});
-		contact.getEventBus().addHandler(InBandRegistrationModule.ReceivedErrorHandler.ReceivedErrorEvent.class,
-				new InBandRegistrationModule.ReceivedErrorHandler() {
+		contact.getEventBus()
+				.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, new JaxmppCore.LoggedOutHandler() {
 
 					@Override
-					public void onReceivedError(SessionObject sessionObject, IQ responseStanza,
-												XMPPException.ErrorCondition errorCondition) throws JaxmppException {
-						errorMessage = "Error during registration.";
-						// wakeup();
+					public void onLoggedOut(SessionObject sessionObject) {
+						Log.w(TAG, "Jaxmpp disconnected");
+						wakeup();
 					}
 				});
-		contact.getEventBus().addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, new JaxmppCore.LoggedInHandler() {
-			@Override
-			public void onLoggedIn(SessionObject sessionObject) {
-				Log.w(TAG, "Jaxmpp connected");
-				wakeup();
-			}
-		});
-		contact.getEventBus().addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, new JaxmppCore.LoggedOutHandler() {
-
-			@Override
-			public void onLoggedOut(SessionObject sessionObject) {
-				Log.w(TAG, "Jaxmpp disconnected");
-				wakeup();
-			}
-		});
 	}
 
 	public boolean check(Context context) {
@@ -102,23 +110,25 @@ public class ConnectionChecker {
 
 		contact.getProperties().setUserProperty(SessionObject.USER_BARE_JID, jid);
 		contact.getProperties().setUserProperty(SessionObject.PASSWORD, password);
-		contact.getProperties().setUserProperty(Connector.TRUST_MANAGERS_KEY,
-				SecureTrustManagerFactory.getTrustManagers(context));
-		if (hostname != null && !hostname.trim().isEmpty())
+		contact.getProperties()
+				.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers(context));
+		if (hostname != null && !hostname.trim().isEmpty()) {
 			contact.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+		}
 
 		try {
 
 			Log.d(TAG, "Login 1...");
 			contact.login(true);
 			synchronized (ConnectionChecker.this) {
-				if (!contact.isConnected())
+				if (!contact.isConnected()) {
 					this.wait(1000 * 30);
+				}
 			}
 			Log.d(TAG, "... done 1");
 
-			if (contact.getSessionObject().getProperty(SocketConnector.RECONNECTING_KEY) != null
-					&& (Boolean) contact.getSessionObject().getProperty(SocketConnector.RECONNECTING_KEY)) {
+			if (contact.getSessionObject().getProperty(SocketConnector.RECONNECTING_KEY) != null &&
+					(Boolean) contact.getSessionObject().getProperty(SocketConnector.RECONNECTING_KEY)) {
 				Log.d(TAG, "Login 2... because of see-other-host");
 				contact.login(true);
 				Log.d(TAG, "... done 2");
@@ -127,8 +137,9 @@ public class ConnectionChecker {
 			final JID bindedJID = ResourceBinderModule.getBindedJID(contact.getSessionObject());
 
 			Log.d(TAG, "Binded JID: " + bindedJID);
-			Log.d(TAG, "Czy jest error? " + contact.getSessionObject().getProperty(tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY)
-					+ "  " + (exception == null));
+			Log.d(TAG,
+				  "Czy jest error? " + contact.getSessionObject().getProperty(tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY) +
+						  "  " + (exception == null));
 			return exception == null && errorMessage == null && bindedJID != null;
 		} catch (JaxmppException e) {
 			Log.w(TAG, "Auth problem", e);

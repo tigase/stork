@@ -32,125 +32,39 @@ public final class DatabaseContract {
 	private DatabaseContract() {
 	}
 
+	public static class CapsFeatures
+			implements BaseColumns {
 
-	public static abstract class RosterItemsGroupsCache implements BaseColumns {
-		public static final String FIELD_ITEM = "item_id";
-		public static final String FIELD_GROUP = "group_id";
-		public static final String TABLE_NAME = "roster_items_groups";
-		private static final String CREATE_TABLE = "CREATE TABLE " + RosterItemsGroupsCache.TABLE_NAME + " ("
-				+ RosterItemsGroupsCache.FIELD_ITEM + " INTEGER, " + RosterItemsGroupsCache.FIELD_GROUP + " INTEGER, "
-				+ "FOREIGN KEY(" + RosterItemsGroupsCache.FIELD_ITEM + ") REFERENCES " + RosterItemsCache.TABLE_NAME + "("
-				+ RosterItemsCache.FIELD_ID + ")," + "FOREIGN KEY(" + RosterItemsGroupsCache.FIELD_GROUP + ") REFERENCES "
-				+ RosterGroupsCache.TABLE_NAME + "(" + RosterGroupsCache.FIELD_ID + ")" + ");";
-	}
-
-	public static abstract class RosterGroupsCache implements BaseColumns {
-		public static final String FIELD_ID = "_id";
-		public static final String FIELD_NAME = "name";
-		public static final String TABLE_NAME = "roster_groups";
-
-		private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID
-				+ " INTEGER PRIMARY KEY AUTOINCREMENT, " + FIELD_NAME + " TEXT NOT NULL" + ");";
-	}
-
-	public static abstract class VCardsCache implements BaseColumns {
-		public static final String FIELD_DATA = "data";
-		public static final String FIELD_HASH = "hash";
-		public static final String FIELD_ID = "_id";
-		public static final String FIELD_JID = "jid";
-		public static final String FIELD_TIMESTAMP = "subscription";
-		public static final String INDEX_JID = "vcards_cache_jid_index";
-		public static final String TABLE_NAME = "vcards_cache";
-
-		public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, "
-				+ FIELD_JID + " TEXT, " + FIELD_HASH + " TEXT, " + FIELD_DATA + " BLOB, " + FIELD_TIMESTAMP + " DATETIME"
-				+ ");";
-
-		public static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
-				+ FIELD_JID + ")";
-		public static final String VCARD_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.vcard";
-
-	}
-
-	public static abstract class RosterItemsCache implements BaseColumns {
-
-		public static final String FIELD_ACCOUNT = "account";
-
-		public static final String FIELD_ASK = "ask";
+		public static final String FIELD_FEATURE = "feature";
 
 		public static final String FIELD_ID = "_id";
 
-		public static final String FIELD_JID = "jid";
+		public static final String FIELD_NODE = "node";
+
+		public static final String TABLE_NAME = "caps_features";
+
+	}
+
+	public static class CapsIdentities
+			implements BaseColumns {
+
+		public static final String FIELD_CATEGORY = "category";
+
+		public static final String FIELD_ID = "_id";
 
 		public static final String FIELD_NAME = "name";
 
-		public static final String FIELD_SUBSCRIPTION = "subscription";
+		public static final String FIELD_NODE = "node";
 
-		public static final String FIELD_TIMESTAMP = "timestamp";
-
-		public static final String TABLE_NAME = "roster_items";
-
-		/**
-		 * Additional field to keep status of buddy from roster item to speed up
-		 * searches of online users
-		 * <ul>
-		 * <li><code>0</code> - unavailable</li>
-		 * <li><code>1</code> - error</li>
-		 * <li><code>5</code> - dnd</li>
-		 * <li><code>10</code> - xa</li>
-		 * <li><code>15</code> - away</li>
-		 * <li><code>20</code> - available</li>
-		 * <li><code>25</code> - chat</li>
-		 * </ul>
-		 */
-		public static final String FIELD_STATUS = "status";
-
-		public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, "
-				+ FIELD_ACCOUNT + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_NAME + " TEXT, " + FIELD_ASK + " BOOLEAN, "
-				+ FIELD_SUBSCRIPTION + " TEXT, " + FIELD_TIMESTAMP + " DATETIME" + FIELD_STATUS + " INTEGER, " + ");";
-
-		public static final String ROSTER_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.roster";
-		public static final String ROSTER_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.rosteritem";
-	}
-
-	public static abstract class OpenChats implements BaseColumns {
-
-		// common
-		public static final String FIELD_ACCOUNT = "account";
-		public static final String FIELD_ID = "_id";
-		public static final String FIELD_JID = "jid";
-
-		/**
-		 * <ul>
-		 * <li><code>0</code> - single user chat</li>
-		 * <li><code>1</code> - multi user chat</li>
-		 * </ul>
-		 */
 		public static final String FIELD_TYPE = "type";
 
-		// for chat
-		public static final String FIELD_RESOURCE = "resource";
-		public static final String FIELD_THREAD_ID = "thread_id";
+		public static final String TABLE_NAME = "caps_identities";
 
-		// for muc
-		public static final String FIELD_NICKNAME = "nickname";
-		public static final String FIELD_PASSWORD = "password";
-		public static final String FIELD_ROOM_STATE = "room_state";
-
-		// common
-		public static final String FIELD_TIMESTAMP = "timestamp";
-
-		public static final String TABLE_NAME = "open_chats";
-
-		public static final int TYPE_CHAT = 0;
-		public static final int TYPE_MUC = 1;
-
-
-		public static final String OPENCHATS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.openchats";
-		public static final String OPENCHAT_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.openchatitem";
 	}
 
-	public static abstract class ChatHistory implements BaseColumns {
+	public static abstract class ChatHistory
+			implements BaseColumns {
+
 		public static final String TABLE_NAME = "chat_history";
 		public static final String FIELD_ACCOUNT = "account";
 		public static final String FIELD_AUTHOR_JID = "author_jid";
@@ -224,51 +138,119 @@ public final class DatabaseContract {
 		public static final String INDEX_JID = "chat_history_jid_index";
 		public static final String INDEX_STATE = "chat_history_state_index";
 
-		public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, "
-				+ FIELD_ACCOUNT + " TEXT, " + FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, "
-				+ FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " + FIELD_ITEM_TYPE
-				+ " INTEGER, " + FIELD_DATA + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE + " INTEGER" + ");";
+		public static final String CREATE_TABLE =
+				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_ACCOUNT + " TEXT, " +
+						FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, " +
+						FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " +
+						FIELD_ITEM_TYPE + " INTEGER, " + FIELD_DATA + " TEXT, " + FIELD_STANZA_ID + " TEXT, " +
+						FIELD_STATE + " INTEGER" + ");";
 
-		public static final String CREATE_INDEX_JID = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
-				+ FIELD_ACCOUNT + ", " + FIELD_JID + ")";
+		public static final String CREATE_INDEX_JID =
+				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_ACCOUNT + ", " +
+						FIELD_JID + ")";
 
-		public static final String CREATE_INDEX_STATE = "CREATE INDEX IF NOT EXISTS " + INDEX_STATE + " ON " + TABLE_NAME + " ("
-				+ FIELD_STATE + ")";
+		public static final String CREATE_INDEX_STATE =
+				"CREATE INDEX IF NOT EXISTS " + INDEX_STATE + " ON " + TABLE_NAME + " (" + FIELD_STATE + ")";
 
 		public static final String CHATS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.chats";
 		public static final String CHATS_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.chatitem";
 
 	}
 
-	public static class CapsIdentities implements BaseColumns {
+	public static abstract class OpenChats
+			implements BaseColumns {
 
-		public static final String FIELD_CATEGORY = "category";
+		// common
+		public static final String FIELD_ACCOUNT = "account";
+		public static final String FIELD_ID = "_id";
+		public static final String FIELD_JID = "jid";
+
+		/**
+		 * <ul>
+		 * <li><code>0</code> - single user chat</li>
+		 * <li><code>1</code> - multi user chat</li>
+		 * </ul>
+		 */
+		public static final String FIELD_TYPE = "type";
+
+		// for chat
+		public static final String FIELD_RESOURCE = "resource";
+		public static final String FIELD_THREAD_ID = "thread_id";
+
+		// for muc
+		public static final String FIELD_NICKNAME = "nickname";
+		public static final String FIELD_PASSWORD = "password";
+		public static final String FIELD_ROOM_STATE = "room_state";
+
+		// common
+		public static final String FIELD_TIMESTAMP = "timestamp";
+
+		public static final String TABLE_NAME = "open_chats";
+
+		public static final int TYPE_CHAT = 0;
+		public static final int TYPE_MUC = 1;
+
+		public static final String OPENCHATS_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.openchats";
+		public static final String OPENCHAT_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.openchatitem";
+	}
+
+	public static abstract class RosterGroupsCache
+			implements BaseColumns {
 
 		public static final String FIELD_ID = "_id";
+		public static final String FIELD_NAME = "name";
+		public static final String TABLE_NAME = "roster_groups";
+
+		private static final String CREATE_TABLE =
+				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + FIELD_NAME +
+						" TEXT NOT NULL" + ");";
+	}
+
+	public static abstract class RosterItemsCache
+			implements BaseColumns {
+
+		public static final String FIELD_ACCOUNT = "account";
+
+		public static final String FIELD_ASK = "ask";
+
+		public static final String FIELD_ID = "_id";
+
+		public static final String FIELD_JID = "jid";
 
 		public static final String FIELD_NAME = "name";
 
-		public static final String FIELD_NODE = "node";
+		public static final String FIELD_SUBSCRIPTION = "subscription";
 
-		public static final String FIELD_TYPE = "type";
+		public static final String FIELD_TIMESTAMP = "timestamp";
 
-		public static final String TABLE_NAME = "caps_identities";
+		public static final String TABLE_NAME = "roster_items";
 
+		/**
+		 * Additional field to keep status of buddy from roster item to speed up
+		 * searches of online users
+		 * <ul>
+		 * <li><code>0</code> - unavailable</li>
+		 * <li><code>1</code> - error</li>
+		 * <li><code>5</code> - dnd</li>
+		 * <li><code>10</code> - xa</li>
+		 * <li><code>15</code> - away</li>
+		 * <li><code>20</code> - available</li>
+		 * <li><code>25</code> - chat</li>
+		 * </ul>
+		 */
+		public static final String FIELD_STATUS = "status";
+
+		public static final String CREATE_TABLE =
+				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_ACCOUNT + " TEXT, " +
+						FIELD_JID + " TEXT, " + FIELD_NAME + " TEXT, " + FIELD_ASK + " BOOLEAN, " + FIELD_SUBSCRIPTION +
+						" TEXT, " + FIELD_TIMESTAMP + " DATETIME" + FIELD_STATUS + " INTEGER, " + ");";
+
+		public static final String ROSTER_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.roster";
+		public static final String ROSTER_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.rosteritem";
 	}
 
-	public static class CapsFeatures implements BaseColumns {
-
-		public static final String FIELD_FEATURE = "feature";
-
-		public static final String FIELD_ID = "_id";
-
-		public static final String FIELD_NODE = "node";
-
-		public static final String TABLE_NAME = "caps_features";
-
-	}
-
-	public static class RosterItemsGroups implements BaseColumns {
+	public static class RosterItemsGroups
+			implements BaseColumns {
 
 		public static final String FIELD_ITEM = "item_id";
 
@@ -278,7 +260,44 @@ public final class DatabaseContract {
 
 	}
 
-	public class Geolocation implements BaseColumns {
+	public static abstract class RosterItemsGroupsCache
+			implements BaseColumns {
+
+		public static final String FIELD_ITEM = "item_id";
+		public static final String FIELD_GROUP = "group_id";
+		public static final String TABLE_NAME = "roster_items_groups";
+		private static final String CREATE_TABLE =
+				"CREATE TABLE " + RosterItemsGroupsCache.TABLE_NAME + " (" + RosterItemsGroupsCache.FIELD_ITEM +
+						" INTEGER, " + RosterItemsGroupsCache.FIELD_GROUP + " INTEGER, " + "FOREIGN KEY(" +
+						RosterItemsGroupsCache.FIELD_ITEM + ") REFERENCES " + RosterItemsCache.TABLE_NAME + "(" +
+						RosterItemsCache.FIELD_ID + ")," + "FOREIGN KEY(" + RosterItemsGroupsCache.FIELD_GROUP +
+						") REFERENCES " + RosterGroupsCache.TABLE_NAME + "(" + RosterGroupsCache.FIELD_ID + ")" + ");";
+	}
+
+	public static abstract class VCardsCache
+			implements BaseColumns {
+
+		public static final String FIELD_DATA = "data";
+		public static final String FIELD_HASH = "hash";
+		public static final String FIELD_ID = "_id";
+		public static final String FIELD_JID = "jid";
+		public static final String FIELD_TIMESTAMP = "subscription";
+		public static final String INDEX_JID = "vcards_cache_jid_index";
+		public static final String TABLE_NAME = "vcards_cache";
+
+		public static final String CREATE_TABLE =
+				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_JID + " TEXT, " +
+						FIELD_HASH + " TEXT, " + FIELD_DATA + " BLOB, " + FIELD_TIMESTAMP + " DATETIME" + ");";
+
+		public static final String CREATE_INDEX =
+				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_JID + ")";
+		public static final String VCARD_ITEM_TYPE = "vnd.android.cursor.item/vnd.mobilemessenger.vcard";
+
+	}
+
+	public class Geolocation
+			implements BaseColumns {
+
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.mobilemessenger.geoloc";
 		public static final String FIELD_ALT = "alt";
 		public static final String FIELD_COUNTRY = "country";
@@ -291,11 +310,12 @@ public final class DatabaseContract {
 		public static final String INDEX_JID = "geolocation_jid_index";
 		public static final String TABLE_NAME = "geolocation";
 
-		public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, "
-				+ FIELD_JID + " TEXT, " + FIELD_LON + " REAL, " + FIELD_LAT + " REAL, " + FIELD_ALT + " REAL, " + FIELD_COUNTRY
-				+ " TEXT, " + FIELD_LOCALITY + " TEXT, " + FIELD_STREET + " TEXT " + ");";
+		public static final String CREATE_TABLE =
+				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_JID + " TEXT, " +
+						FIELD_LON + " REAL, " + FIELD_LAT + " REAL, " + FIELD_ALT + " REAL, " + FIELD_COUNTRY +
+						" TEXT, " + FIELD_LOCALITY + " TEXT, " + FIELD_STREET + " TEXT " + ");";
 
-		public static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " ("
-				+ FIELD_JID + ")";
+		public static final String CREATE_INDEX =
+				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_JID + ")";
 	}
 }

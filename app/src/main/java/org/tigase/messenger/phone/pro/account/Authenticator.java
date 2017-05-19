@@ -26,7 +26,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-public class Authenticator extends AbstractAccountAuthenticator {
+public class Authenticator
+		extends AbstractAccountAuthenticator {
 
 	public static final String ACCOUNT_TYPE = "org.tigase.messenger";
 	private final Context context;
@@ -58,8 +59,8 @@ public class Authenticator extends AbstractAccountAuthenticator {
 	}
 
 	@Override
-	public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options)
-			throws NetworkErrorException {
+	public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType,
+							   Bundle options) throws NetworkErrorException {
 		final AccountManager am = AccountManager.get(context);
 		final String password = am.getPassword(account);
 

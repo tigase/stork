@@ -7,12 +7,13 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 
-public class ViewHolder extends RecyclerView.ViewHolder {
+public class ViewHolder
+		extends RecyclerView.ViewHolder {
 
-	TextView mContentView;
-	TextView mTimestamp;
-	ImageView mDeliveryStatus;
 	ImageView mAvatar;
+	TextView mContentView;
+	ImageView mDeliveryStatus;
+	TextView mTimestamp;
 
 	public ViewHolder(View itemView) {
 		super(itemView);

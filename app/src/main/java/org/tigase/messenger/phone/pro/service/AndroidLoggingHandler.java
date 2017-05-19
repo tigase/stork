@@ -28,16 +28,8 @@ import java.util.logging.*;
 /**
  * Make JUL work on Android.
  */
-public class AndroidLoggingHandler extends Handler {
-
-	public static void reset(Handler rootHandler) {
-		Logger rootLogger = LogManager.getLogManager().getLogger("");
-		Handler[] handlers = rootLogger.getHandlers();
-		for (Handler handler : handlers) {
-			rootLogger.removeHandler(handler);
-		}
-		LogManager.getLogManager().getLogger("").addHandler(rootHandler);
-	}
+public class AndroidLoggingHandler
+		extends Handler {
 
 	static int getAndroidLevel(Level level) {
 		int value = level.intValue();
@@ -52,6 +44,15 @@ public class AndroidLoggingHandler extends Handler {
 		}
 	}
 
+	public static void reset(Handler rootHandler) {
+		Logger rootLogger = LogManager.getLogManager().getLogger("");
+		Handler[] handlers = rootLogger.getHandlers();
+		for (Handler handler : handlers) {
+			rootLogger.removeHandler(handler);
+		}
+		LogManager.getLogManager().getLogger("").addHandler(rootHandler);
+	}
+
 	@Override
 	public void close() {
 	}
@@ -62,8 +63,9 @@ public class AndroidLoggingHandler extends Handler {
 
 	@Override
 	public void publish(LogRecord record) {
-		if (!super.isLoggable(record))
+		if (!super.isLoggable(record)) {
 			return;
+		}
 
 		String name = record.getLoggerName();
 		int maxLength = 30;

@@ -35,13 +35,13 @@ import java.util.concurrent.*;
 
 public abstract class DiskLruCache<T> {
 
-	private final ExecutorService executorService = new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<Runnable>());
-	private final LinkedHashMap<String, Entry> entries = new LinkedHashMap<String, Entry>(0, 0.75f, true);
 	private final Object cacheLock = new Object();
+	private final LinkedHashMap<String, Entry> entries = new LinkedHashMap<String, Entry>(0, 0.75f, true);
+	private final ExecutorService executorService = new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS,
+																		   new LinkedBlockingQueue<Runnable>());
 	private File cacheDir;
-	private int size;
 	private int maxSize;
+	private int size;
 	private final Callable<Void> cleanupCallable = new Callable<Void>() {
 		@Override
 		public Void call() throws Exception {
@@ -53,9 +53,6 @@ public abstract class DiskLruCache<T> {
 	};
 	private String type;
 
-	public DiskLruCache() {
-	}
-
 	// Creates a unique subdirectory of the designated app cache directory.
 	// Tries to use external
 	// but if not mounted, falls back on internal storage.
@@ -64,9 +61,10 @@ public abstract class DiskLruCache<T> {
 		// external cache dir
 		// otherwise use internal cache dir
 		File cache = null;
-		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
-				|| !Environment.isExternalStorageRemovable())
+		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
+				!Environment.isExternalStorageRemovable()) {
 			cache = getExternalCacheDir(context);
+		}
 		if (cache == null) {
 			cache = context.getCacheDir();
 		}
@@ -78,6 +76,9 @@ public abstract class DiskLruCache<T> {
 		return context.getExternalCacheDir();
 	}
 
+	public DiskLruCache() {
+	}
+
 	protected abstract T decode(Entry e);
 
 	protected abstract void encode(Entry e, T value);
@@ -86,8 +87,9 @@ public abstract class DiskLruCache<T> {
 		Entry e;
 		synchronized (cacheLock) {
 			e = entries.get(key);
-			if (e == null)
+			if (e == null) {
 				return null;
+			}
 			entries.put(key, e);
 			return decode(e);
 		}
@@ -95,12 +97,14 @@ public abstract class DiskLruCache<T> {
 
 	public void initialize(Context context, String type, int size) {
 		synchronized (cacheLock) {
-			if (cacheDir != null)
+			if (cacheDir != null) {
 				return;
+			}
 			this.type = type;
 			cacheDir = getDiskCacheDir(context, type);
-			if (!cacheDir.exists())
+			if (!cacheDir.exists()) {
 				cacheDir.mkdirs();
+			}
 
 			(new AsyncTask<Void, Void, Void>() {
 				@Override
@@ -147,8 +151,9 @@ public abstract class DiskLruCache<T> {
 	public void remove(String key) {
 		synchronized (cacheLock) {
 			Entry e = entries.remove(key);
-			if (e == null)
+			if (e == null) {
 				return;
+			}
 			size -= e.size;
 		}
 	}
@@ -162,6 +167,7 @@ public abstract class DiskLruCache<T> {
 	}
 
 	public class Entry {
+
 		protected File file = null;
 		private String key;
 		private int size = 0;

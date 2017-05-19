@@ -9,7 +9,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 
-public class NewAccountActivity extends AppCompatActivity {
+public class NewAccountActivity
+		extends AppCompatActivity {
 
 	public static final int LOGIN_REQUEST = 1;
 
@@ -50,6 +51,5 @@ public class NewAccountActivity extends AppCompatActivity {
 		} catch (Exception e) {
 		}
 	}
-
 
 }

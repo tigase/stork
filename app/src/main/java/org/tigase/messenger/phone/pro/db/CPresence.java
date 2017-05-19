@@ -29,7 +29,8 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 /**
  * Client side presence
  */
-public class CPresence implements Parcelable {
+public class CPresence
+		implements Parcelable {
 
 	public static final int OFFLINE = 0;
 	public static final int ERROR = 1;
@@ -47,18 +48,30 @@ public class CPresence implements Parcelable {
 			return new CPresence[size];
 		}
 	};
-	private final String resource;
-	private final Integer priority;
-	private final int status;
 	private final String description;
+	private final Integer priority;
+	private final String resource;
+	private final int status;
+
+	public static int getStatusFromPresence(Presence p) throws XMLException {
+		int status = p.getType() == null ? Presence.Show.online.ordinal() : 0;
+		if (status > 0) {
+			status = p.getShow().getWeight();
+		}
+		if (p.getType() == StanzaType.error) {
+			status = 1;
+		}
+		return status * 5;
+	}
 
 	private CPresence(Parcel in) {
 		resource = in.readString();
 		int priority = in.readInt();
-		if (priority < -1000)
+		if (priority < -1000) {
 			this.priority = 0;
-		else
+		} else {
 			this.priority = priority;
+		}
 		status = in.readInt();
 		description = in.readString();
 	}
@@ -75,17 +88,6 @@ public class CPresence implements Parcelable {
 		this.priority = p.getPriority();
 		this.status = getStatusFromPresence(p);
 		this.description = p.getStatus();
-	}
-
-	public static int getStatusFromPresence(Presence p) throws XMLException {
-		int status = p.getType() == null ? Presence.Show.online.ordinal() : 0;
-		if (status > 0) {
-			status = p.getShow().getWeight();
-		}
-		if (p.getType() == StanzaType.error) {
-			status = 1;
-		}
-		return status * 5;
 	}
 
 	@Override

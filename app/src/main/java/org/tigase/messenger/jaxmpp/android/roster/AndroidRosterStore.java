@@ -26,7 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AndroidRosterStore extends RosterStore {
+public class AndroidRosterStore
+		extends RosterStore {
 
 	private final RosterProvider provider;
 

@@ -9,7 +9,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
 import java.util.List;
 
-public class AndroidRoomsManager extends AbstractRoomsManager {
+public class AndroidRoomsManager
+		extends AbstractRoomsManager {
 
 	private final ChatProvider provider;
 
@@ -18,8 +19,7 @@ public class AndroidRoomsManager extends AbstractRoomsManager {
 	}
 
 	@Override
-	protected Room createRoomInstance(BareJID roomJid, String nickname,
-									  String password) {
+	protected Room createRoomInstance(BareJID roomJid, String nickname, String password) {
 		long roomId = provider.createMuc(sessionObject, JID.jidInstance(roomJid), nickname, password);
 		Room room = new Room(roomId, context, roomJid, nickname);
 		room.setPassword(password);

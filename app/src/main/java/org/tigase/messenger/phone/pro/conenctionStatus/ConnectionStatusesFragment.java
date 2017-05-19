@@ -30,22 +30,11 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
-public class ConnectionStatusesFragment extends Fragment {
+public class ConnectionStatusesFragment
+		extends Fragment {
 
 	RecyclerView recyclerView;
 	private StatusesRecyclerViewAdapter adapter;
-	private Runnable refreshRun = new Runnable() {
-		@Override
-		public void run() {
-			adapter.notifyDataSetChanged();
-		}
-	};
-	private final EventListener listener = new EventListener() {
-		@Override
-		public void onEvent(Event<? extends EventHandler> event) {
-			refresh();
-		}
-	};
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -106,6 +95,18 @@ public class ConnectionStatusesFragment extends Fragment {
 					return null;
 				}
 			}).execute();
+		}
+	};
+	private Runnable refreshRun = new Runnable() {
+		@Override
+		public void run() {
+			adapter.notifyDataSetChanged();
+		}
+	};
+	private final EventListener listener = new EventListener() {
+		@Override
+		public void onEvent(Event<? extends EventHandler> event) {
+			refresh();
 		}
 	};
 

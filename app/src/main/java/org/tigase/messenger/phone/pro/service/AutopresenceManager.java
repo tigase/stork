@@ -10,8 +10,8 @@ import java.util.TimerTask;
 
 public class AutopresenceManager {
 
-	private final XMPPService service;
 	private final String TAG = "Autopresence";
+	private final XMPPService service;
 	private final Timer tm = new Timer("AutopresenceTimer");
 	private TimerTask currentPendingIntent;
 
@@ -94,8 +94,9 @@ public class AutopresenceManager {
 
 		Log.d(TAG, "Received autopresence update: " + presenceId);
 
-		if (presenceId == -1)
+		if (presenceId == -1) {
 			return;
+		}
 
 		setAutoPresenceValue(presenceId);
 		service.processPresenceUpdate();

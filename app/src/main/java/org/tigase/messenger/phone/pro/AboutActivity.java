@@ -27,7 +27,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-public class AboutActivity extends AppCompatActivity {
+public class AboutActivity
+		extends AppCompatActivity {
 
 	TextView tv;
 

@@ -58,12 +58,27 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
  * Activities containing this fragment MUST implement the
  * {@link OnListFragmentInteractionListener} interface.
  */
-public class OpenChatItemFragment extends Fragment {
+public class OpenChatItemFragment
+		extends Fragment {
 
 	private static final String TAG = "OpenChats";
 	RecyclerView recyclerView;
-	private OnAddChatListener mAddChatListener;
 	private MyOpenChatItemRecyclerViewAdapter adapter;
+	private DBUpdateTask dbUpdateTask;
+	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
+
+		@Override
+		public boolean deliverSelfNotifications() {
+			return true;
+		}
+
+		@Override
+		public void onChange(boolean selfChange) {
+			Log.v(TAG, "Contact presence changed");
+			refreshChatlist();
+		}
+	};
+	private OnAddChatListener mAddChatListener;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
 	private OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
 		@Override
@@ -97,28 +112,6 @@ public class OpenChatItemFragment extends Fragment {
 
 		}
 	};
-	private DBUpdateTask dbUpdateTask;
-
-	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
-
-		@Override
-		public boolean deliverSelfNotifications() {
-			return true;
-		}
-
-		@Override
-		public void onChange(boolean selfChange) {
-			Log.v(TAG, "Contact presence changed");
-			refreshChatlist();
-		}
-	};
-
-	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
-	 */
-	public OpenChatItemFragment() {
-	}
 
 	public static OpenChatItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
 		Log.v(TAG, "new instance");
@@ -126,6 +119,13 @@ public class OpenChatItemFragment extends Fragment {
 		Bundle args = new Bundle();
 		fragment.setArguments(args);
 		return fragment;
+	}
+
+	/**
+	 * Mandatory empty constructor for the fragment manager to instantiate the
+	 * fragment (e.g. upon screen orientation changes).
+	 */
+	public OpenChatItemFragment() {
 	}
 
 	private void onArchiveChat(final int chatId, String jid, final String account) {
@@ -173,14 +173,15 @@ public class OpenChatItemFragment extends Fragment {
 		if (context instanceof MainActivity) {
 
 		}
-		if (context instanceof OnAddChatListener)
+		if (context instanceof OnAddChatListener) {
 			mAddChatListener = (OnAddChatListener) context;
+		}
 
 		Intent intent = new Intent(context, XMPPService.class);
 		getActivity().bindService(intent, mConnection, 0);
 
-		getContext().getContentResolver().registerContentObserver(RosterProvider.ROSTER_URI, true,
-				contactPresenceChangeObserver);
+		getContext().getContentResolver()
+				.registerContentObserver(RosterProvider.ROSTER_URI, true, contactPresenceChangeObserver);
 	}
 
 	@Override
@@ -274,6 +275,12 @@ public class OpenChatItemFragment extends Fragment {
 		}
 	}
 
+	public interface OnAddChatListener {
+
+		// TODO: Update argument type and name
+		void onAddChatClick();
+	}
+
 	/**
 	 * This interface must be implemented by activities that contain this
 	 * fragment to allow an interaction in this fragment to be communicated to
@@ -284,6 +291,7 @@ public class OpenChatItemFragment extends Fragment {
 	 * >Communicating with Other Fragments</a> for more information.
 	 */
 	public interface OnListFragmentInteractionListener {
+
 		void onArchiveChat(int chatId, String jid, String account);
 
 		void onEnterToChat(int type, int openChatId, String jid, String account);
@@ -291,25 +299,27 @@ public class OpenChatItemFragment extends Fragment {
 		void onLeaveMucRoom(int chatId, String roomJID, String account);
 	}
 
-	public interface OnAddChatListener {
-		// TODO: Update argument type and name
-		void onAddChatClick();
-	}
-
-	private class DBUpdateTask extends AsyncTask<Void, Void, Cursor> {
+	private class DBUpdateTask
+			extends AsyncTask<Void, Void, Cursor> {
 
 		private final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
-				DatabaseContract.OpenChats.FIELD_ACCOUNT, DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
-				ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE, ChatProvider.FIELD_CONTACT_PRESENCE,
-				ChatProvider.FIELD_LAST_MESSAGE, ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP, ChatProvider.FIELD_LAST_MESSAGE_STATE};
+												   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+												   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
+												   ChatProvider.FIELD_UNREAD_COUNT,
+												   DatabaseContract.OpenChats.FIELD_TYPE,
+												   ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE,
+												   ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP,
+												   ChatProvider.FIELD_LAST_MESSAGE_STATE};
 
 		@Override
 		protected Cursor doInBackground(Void... params) {
 			Log.d(TAG, "Querying for cursor ctx=" + (getContext() != null));
-			if (getContext() == null)
+			if (getContext() == null) {
 				return null;
-			Cursor cursor = getContext().getContentResolver().query(ChatProvider.OPEN_CHATS_URI, cols, null, null,
-					ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
+			}
+			Cursor cursor = getContext().getContentResolver()
+					.query(ChatProvider.OPEN_CHATS_URI, cols, null, null,
+						   ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
 			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
 			return cursor;

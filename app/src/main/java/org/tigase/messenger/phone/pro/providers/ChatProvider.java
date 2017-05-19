@@ -35,7 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChatProvider extends ContentProvider {
+public class ChatProvider
+		extends ContentProvider {
 
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_UNREAD_COUNT = "unread";
@@ -55,54 +56,60 @@ public class ChatProvider extends ContentProvider {
 		private static final long serialVersionUID = 1L;
 
 		{
-			put(DatabaseContract.OpenChats.FIELD_ACCOUNT, "open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT + " as "
-					+ DatabaseContract.OpenChats.FIELD_ACCOUNT);
+			put(DatabaseContract.OpenChats.FIELD_ACCOUNT,
+				"open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT + " as " +
+						DatabaseContract.OpenChats.FIELD_ACCOUNT);
 			put(DatabaseContract.OpenChats.FIELD_ID,
-					"open_chats." + DatabaseContract.OpenChats.FIELD_ID + " as " + DatabaseContract.OpenChats.FIELD_ID);
+				"open_chats." + DatabaseContract.OpenChats.FIELD_ID + " as " + DatabaseContract.OpenChats.FIELD_ID);
 			put(DatabaseContract.OpenChats.FIELD_JID,
-					"open_chats." + DatabaseContract.OpenChats.FIELD_JID + " as " + DatabaseContract.OpenChats.FIELD_JID);
+				"open_chats." + DatabaseContract.OpenChats.FIELD_JID + " as " + DatabaseContract.OpenChats.FIELD_JID);
 			put(ChatProvider.FIELD_NAME,
-					"CASE WHEN recipient." + DatabaseContract.RosterItemsCache.FIELD_NAME + " IS NULL THEN " + " open_chats."
-							+ DatabaseContract.OpenChats.FIELD_JID + " ELSE recipient."
-							+ DatabaseContract.RosterItemsCache.FIELD_NAME + " END as " + ChatProvider.FIELD_NAME);
-			put(ChatProvider.FIELD_UNREAD_COUNT, "(SELECT COUNT(" + DatabaseContract.ChatHistory.TABLE_NAME + "."
-					+ DatabaseContract.ChatHistory.FIELD_ID + ") from " + DatabaseContract.ChatHistory.TABLE_NAME + " WHERE "
-					+ DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT
-					+ " AND " + DatabaseContract.ChatHistory.FIELD_JID + " = open_chats." + DatabaseContract.OpenChats.FIELD_JID
-					+ " AND " + DatabaseContract.ChatHistory.FIELD_STATE + " = "
-					+ DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD + ") as " + ChatProvider.FIELD_UNREAD_COUNT);
+				"CASE WHEN recipient." + DatabaseContract.RosterItemsCache.FIELD_NAME + " IS NULL THEN " +
+						" open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ELSE recipient." +
+						DatabaseContract.RosterItemsCache.FIELD_NAME + " END as " + ChatProvider.FIELD_NAME);
+			put(ChatProvider.FIELD_UNREAD_COUNT, "(SELECT COUNT(" + DatabaseContract.ChatHistory.TABLE_NAME + "." +
+					DatabaseContract.ChatHistory.FIELD_ID + ") from " + DatabaseContract.ChatHistory.TABLE_NAME +
+					" WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." +
+					DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID +
+					" = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " AND " +
+					DatabaseContract.ChatHistory.FIELD_STATE + " = " +
+					DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD + ") as " + ChatProvider.FIELD_UNREAD_COUNT);
 			put(DatabaseContract.OpenChats.FIELD_TYPE,
-					"open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " as " + DatabaseContract.OpenChats.FIELD_TYPE);
+				"open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " as " + DatabaseContract.OpenChats.FIELD_TYPE);
 			put(ChatProvider.FIELD_CONTACT_PRESENCE,
-					"CASE WHEN open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " = "
-							+ DatabaseContract.OpenChats.TYPE_MUC + " THEN " + " open_chats."
-							+ DatabaseContract.OpenChats.FIELD_ROOM_STATE + " ELSE recipient."
-							+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " END as " + ChatProvider.FIELD_CONTACT_PRESENCE);
-			put(ChatProvider.FIELD_LAST_MESSAGE,
-					"(SELECT " + DatabaseContract.ChatHistory.FIELD_BODY + " FROM " + DatabaseContract.ChatHistory.TABLE_NAME
-							+ " WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats."
-							+ DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID
-							+ " = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY "
-							+ DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as "
-							+ ChatProvider.FIELD_LAST_MESSAGE);
+				"CASE WHEN open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " = " +
+						DatabaseContract.OpenChats.TYPE_MUC + " THEN " + " open_chats." +
+						DatabaseContract.OpenChats.FIELD_ROOM_STATE + " ELSE recipient." +
+						DatabaseContract.RosterItemsCache.FIELD_STATUS + " END as " +
+						ChatProvider.FIELD_CONTACT_PRESENCE);
+			put(ChatProvider.FIELD_LAST_MESSAGE, "(SELECT " + DatabaseContract.ChatHistory.FIELD_BODY + " FROM " +
+					DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT +
+					" = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " +
+					DatabaseContract.ChatHistory.FIELD_JID + " = open_chats." + DatabaseContract.OpenChats.FIELD_JID +
+					" ORDER BY " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as " +
+					ChatProvider.FIELD_LAST_MESSAGE);
 			put(ChatProvider.FIELD_LAST_MESSAGE_STATE,
-					"(SELECT " + DatabaseContract.ChatHistory.FIELD_STATE + " FROM " + DatabaseContract.ChatHistory.TABLE_NAME
-							+ " WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats."
-							+ DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID
-							+ " = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY "
-							+ DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as "
-							+ ChatProvider.FIELD_LAST_MESSAGE_STATE);
+				"(SELECT " + DatabaseContract.ChatHistory.FIELD_STATE + " FROM " +
+						DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " +
+						DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." +
+						DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID +
+						" = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY " +
+						DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as " +
+						ChatProvider.FIELD_LAST_MESSAGE_STATE);
 			put(ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP,
-					"(SELECT " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " FROM "
-							+ DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " + DatabaseContract.ChatHistory.FIELD_ACCOUNT
-							+ " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND "
-							+ DatabaseContract.ChatHistory.FIELD_JID + " = open_chats." + DatabaseContract.OpenChats.FIELD_JID
-							+ " ORDER BY " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as "
-							+ ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP);
-			put(DatabaseContract.OpenChats.FIELD_THREAD_ID, "open_chats." + DatabaseContract.OpenChats.FIELD_THREAD_ID + " as "
-					+ DatabaseContract.OpenChats.FIELD_THREAD_ID);
-			put(DatabaseContract.OpenChats.FIELD_NICKNAME, "open_chats." + DatabaseContract.OpenChats.FIELD_NICKNAME + " as "
-					+ DatabaseContract.OpenChats.FIELD_NICKNAME);
+				"(SELECT " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " FROM " +
+						DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " +
+						DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." +
+						DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID +
+						" = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY " +
+						DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as " +
+						ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP);
+			put(DatabaseContract.OpenChats.FIELD_THREAD_ID,
+				"open_chats." + DatabaseContract.OpenChats.FIELD_THREAD_ID + " as " +
+						DatabaseContract.OpenChats.FIELD_THREAD_ID);
+			put(DatabaseContract.OpenChats.FIELD_NICKNAME,
+				"open_chats." + DatabaseContract.OpenChats.FIELD_NICKNAME + " as " +
+						DatabaseContract.OpenChats.FIELD_NICKNAME);
 		}
 	};
 
@@ -169,32 +176,37 @@ public class ChatProvider extends ContentProvider {
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 				Long mId = isGroupChatMessageAddedAlready(values);
-				if (mId != null && values.getAsInteger(
-						DatabaseContract.ChatHistory.FIELD_STATE) == DatabaseContract.ChatHistory.STATE_OUT_DELIVERED) {
+				if (mId != null && values.getAsInteger(DatabaseContract.ChatHistory.FIELD_STATE) ==
+						DatabaseContract.ChatHistory.STATE_OUT_DELIVERED) {
 					// send, but not confirmed!
 					SQLiteDatabase db = dbHelper.getWritableDatabase();
 
 					ContentValues v = new ContentValues();
 					v.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_DELIVERED);
 					db.update(DatabaseContract.ChatHistory.TABLE_NAME, v, DatabaseContract.ChatHistory.FIELD_ID + "=?",
-							new String[]{mId.toString()});
+							  new String[]{mId.toString()});
 
 					Uri u = ContentUris.withAppendedId(uri, mId);
-					if (context != null)
+					if (context != null) {
 						context.getContentResolver().notifyChange(u, null);
+					}
 					return null;
 				} else if (mId != null) {
-					Log.d("ChatProvider", "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
+					Log.d("ChatProvider",
+						  "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
 					return null;
 				}
 			case URI_INDICATOR_CHATS_ACCOUNT:
 				SQLiteDatabase db = dbHelper.getWritableDatabase();
-				long rowId = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_JID, values);
-				Log.d("ChatProvider", "Inserted id=" + rowId + " message to " + DatabaseContract.ChatHistory.TABLE_NAME);
+				long rowId = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_JID,
+									   values);
+				Log.d("ChatProvider",
+					  "Inserted id=" + rowId + " message to " + DatabaseContract.ChatHistory.TABLE_NAME);
 				if (rowId > 0) {
 					Uri insertedItem = ContentUris.withAppendedId(uri, rowId);
-					if (context != null)
+					if (context != null) {
 						context.getContentResolver().notifyChange(insertedItem, null);
+					}
 					return insertedItem;
 				} else {
 					throw new RuntimeException("Cannot insert message!");
@@ -206,7 +218,8 @@ public class ChatProvider extends ContentProvider {
 
 	private Long isGroupChatMessageAddedAlready(final ContentValues values) {
 		final String[] columns = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
-				DatabaseContract.ChatHistory.FIELD_STANZA_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
+											  DatabaseContract.ChatHistory.FIELD_STANZA_ID,
+											  DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
 		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
@@ -216,8 +229,9 @@ public class ChatProvider extends ContentProvider {
 		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
 		final int itemType = values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE);
 
-		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE)
+		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE) {
 			return null;
+		}
 
 		ArrayList<String> selectionArgs = new ArrayList<>();
 
@@ -243,8 +257,9 @@ public class ChatProvider extends ContentProvider {
 		selectionArgs.add(String.valueOf(timestamp - dt));
 		selectionArgs.add(String.valueOf(timestamp + dt));
 
-		try (Cursor c = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
-				selectionArgs.toArray(new String[]{}), null, null, null)) {
+		try (Cursor c = dbHelper.getReadableDatabase()
+				.query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
+					   selectionArgs.toArray(new String[]{}), null, null, null)) {
 			if (c.moveToNext()) {
 				return c.getLong(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 			} else {
@@ -260,7 +275,8 @@ public class ChatProvider extends ContentProvider {
 	}
 
 	@Override
-	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs,
+						String sortOrder) {
 		Cursor cursor;
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_OPENCHATS:
@@ -268,11 +284,11 @@ public class ChatProvider extends ContentProvider {
 				break;
 			case URI_INDICATOR_OPENCHAT_BY_ID:
 				cursor = queryOpenChats(projection, "open_chats." + DatabaseContract.OpenChats.FIELD_ID + "=?",
-						new String[]{uri.getLastPathSegment()}, sortOrder);
+										new String[]{uri.getLastPathSegment()}, sortOrder);
 				break;
 			case URI_INDICATOR_OPENCHAT_BY_JID:
 				cursor = queryOpenChats(projection, DatabaseContract.OpenChats.FIELD_JID + "=?",
-						new String[]{uri.getLastPathSegment()}, sortOrder);
+										new String[]{uri.getLastPathSegment()}, sortOrder);
 				break;
 			case URI_INDICATOR_UNSENT: {
 				final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
@@ -286,18 +302,20 @@ public class ChatProvider extends ContentProvider {
 				qb.appendWhere(DatabaseContract.ChatHistory.FIELD_STATE + "=");
 				qb.appendWhereEscapeString("" + DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT);
 
-				cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null, sortOrder);
+				cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null,
+								  sortOrder);
 				break;
 			}
 			case URI_INDICATOR_CHAT_ITEM:
 			case URI_INDICATOR_GROUP_CHAT_ITEM:
 				// String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, projection,
-						// DatabaseContract.ChatHistory.FIELD_JID + "=? AND " +
-						// DatabaseContract.ChatHistory.FIELD_ID + "=?", new
-						// String[]{jid, uri.getLastPathSegment()},
-						DatabaseContract.ChatHistory.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()}, null, null,
-						sortOrder);
+															  // DatabaseContract.ChatHistory.FIELD_JID + "=? AND " +
+															  // DatabaseContract.ChatHistory.FIELD_ID + "=?", new
+															  // String[]{jid, uri.getLastPathSegment()},
+															  DatabaseContract.ChatHistory.FIELD_ID + "=?",
+															  new String[]{uri.getLastPathSegment()}, null, null,
+															  sortOrder);
 				break;
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 			case URI_INDICATOR_CHATS_ACCOUNT: {
@@ -315,7 +333,8 @@ public class ChatProvider extends ContentProvider {
 				qb.appendWhere(DatabaseContract.ChatHistory.FIELD_JID + "=");
 				qb.appendWhereEscapeString(jid);
 
-				cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null, sortOrder);
+				cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null,
+								  sortOrder);
 
 //				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.ChatHistory.TABLE_NAME, projection,
 //						// DatabaseContract.ChatHistory.FIELD_JID + "=? AND " +
@@ -330,8 +349,9 @@ public class ChatProvider extends ContentProvider {
 		}
 
 		Context context = getContext();
-		if (context != null)
+		if (context != null) {
 			cursor.setNotificationUri(context.getContentResolver(), uri);
+		}
 		return cursor;
 	}
 
@@ -339,11 +359,12 @@ public class ChatProvider extends ContentProvider {
 		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
 		qb.setProjectionMap(openChatsProjectionMap);
-		qb.setTables(DatabaseContract.OpenChats.TABLE_NAME + " open_chats LEFT JOIN "
-				+ DatabaseContract.RosterItemsCache.TABLE_NAME + " recipient ON recipient."
-				+ DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." + DatabaseContract.OpenChats.FIELD_ACCOUNT
-				+ " AND recipient." + DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats."
-				+ DatabaseContract.OpenChats.FIELD_JID);
+		qb.setTables(DatabaseContract.OpenChats.TABLE_NAME + " open_chats LEFT JOIN " +
+							 DatabaseContract.RosterItemsCache.TABLE_NAME + " recipient ON recipient." +
+							 DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." +
+							 DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND recipient." +
+							 DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats." +
+							 DatabaseContract.OpenChats.FIELD_JID);
 
 		// may be removed later on production build - left to make tests easier
 		qb.appendWhere("open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " IS NOT NULL");
@@ -362,12 +383,13 @@ public class ChatProvider extends ContentProvider {
 				final String jid = uri.getLastPathSegment();
 
 				int updated = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values,
-						DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND "
-								+ DatabaseContract.ChatHistory.FIELD_JID + "=?",
-						new String[]{account, jid});
+										DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " +
+												DatabaseContract.ChatHistory.FIELD_JID + "=?",
+										new String[]{account, jid});
 
-				if (context != null)
+				if (context != null) {
 					context.getContentResolver().notifyChange(uri, null);
+				}
 				return updated;
 			}
 			case URI_INDICATOR_CHAT_ITEM:
@@ -376,10 +398,12 @@ public class ChatProvider extends ContentProvider {
 				// DatabaseContract.ChatHistory.FIELD_JID, values);
 
 				int updated = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values,
-						DatabaseContract.ChatHistory.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()});
+										DatabaseContract.ChatHistory.FIELD_ID + "=?",
+										new String[]{uri.getLastPathSegment()});
 				if (updated > 0) {
-					if (context != null)
+					if (context != null) {
 						context.getContentResolver().notifyChange(uri, null);
+					}
 					return updated;
 				} else {
 					throw new RuntimeException("Cannot update message!");

@@ -27,15 +27,13 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 
-public class ViewHolder extends RecyclerView.ViewHolder {
-
-	TextView mServerName;
-
-	TextView mStage;
+public class ViewHolder
+		extends RecyclerView.ViewHolder {
 
 	TextView mConnected;
-
 	TextView mResumption;
+	TextView mServerName;
+	TextView mStage;
 
 	public ViewHolder(final View itemView) {
 		super(itemView);

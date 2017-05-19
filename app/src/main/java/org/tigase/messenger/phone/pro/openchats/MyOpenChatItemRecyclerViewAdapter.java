@@ -37,12 +37,14 @@ import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
-public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
+public class MyOpenChatItemRecyclerViewAdapter
+		extends CursorRecyclerViewAdapter<ViewHolder> {
 
-	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 	private final Context context;
+	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
-	public MyOpenChatItemRecyclerViewAdapter(Context context, Cursor cursor, OpenChatItemFragment.OnListFragmentInteractionListener listener) {
+	public MyOpenChatItemRecyclerViewAdapter(Context context, Cursor cursor,
+											 OpenChatItemFragment.OnListFragmentInteractionListener listener) {
 		super(cursor);
 		mListener = listener;
 		this.context = context;
@@ -134,8 +136,9 @@ public class MyOpenChatItemRecyclerViewAdapter extends CursorRecyclerViewAdapter
 				} else if (item.getItemId() == R.id.menu_chat_leaveroom) {
 					mListener.onLeaveMucRoom(id, jid, account);
 					return true;
-				} else
+				} else {
 					return false;
+				}
 			}
 		};
 

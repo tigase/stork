@@ -23,31 +23,29 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 public class RosterDbHelper {
 
 	private static final String CREATE_ITEMS_TABLE =
-			"CREATE TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " ("
-					+ DatabaseContract.RosterItemsCache.FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-					+ DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " TEXT, "
-					+ DatabaseContract.RosterItemsCache.FIELD_JID + " TEXT, "
-					+ DatabaseContract.RosterItemsCache.FIELD_NAME + " TEXT, "
-					+ DatabaseContract.RosterItemsCache.FIELD_ASK + " BOOLEAN, "
-					+ DatabaseContract.RosterItemsCache.FIELD_SUBSCRIPTION + " TEXT, "
-					+ DatabaseContract.RosterItemsCache.FIELD_TIMESTAMP + " DATETIME"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " (" +
+					DatabaseContract.RosterItemsCache.FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+					DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " TEXT, " +
+					DatabaseContract.RosterItemsCache.FIELD_JID + " TEXT, " +
+					DatabaseContract.RosterItemsCache.FIELD_NAME + " TEXT, " +
+					DatabaseContract.RosterItemsCache.FIELD_ASK + " BOOLEAN, " +
+					DatabaseContract.RosterItemsCache.FIELD_SUBSCRIPTION + " TEXT, " +
+					DatabaseContract.RosterItemsCache.FIELD_TIMESTAMP + " DATETIME" + ");";
 
 	private static final String CREATE_GROUPS_TABLE =
-			"CREATE TABLE " + DatabaseContract.RosterGroupsCache.TABLE_NAME + " ("
-					+ DatabaseContract.RosterGroupsCache.FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+ DatabaseContract.RosterGroupsCache.FIELD_NAME + " TEXT NOT NULL"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.RosterGroupsCache.TABLE_NAME + " (" +
+					DatabaseContract.RosterGroupsCache.FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+					DatabaseContract.RosterGroupsCache.FIELD_NAME + " TEXT NOT NULL" + ");";
 
 	private static final String CREATE_ITEMS_GROUPS_TABLE =
-			"CREATE TABLE " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " ("
-					+ DatabaseContract.RosterItemsGroups.FIELD_ITEM + " INTEGER, "
-					+ DatabaseContract.RosterItemsGroups.FIELD_GROUP + " INTEGER, "
-					+ "FOREIGN KEY(" + DatabaseContract.RosterItemsGroups.FIELD_ITEM + ") REFERENCES "
-					+ DatabaseContract.RosterItemsCache.TABLE_NAME + "(" + DatabaseContract.RosterItemsCache.FIELD_ID + "),"
-					+ "FOREIGN KEY(" + DatabaseContract.RosterItemsGroups.FIELD_GROUP + ") REFERENCES "
-					+ DatabaseContract.RosterGroupsCache.TABLE_NAME + "(" + DatabaseContract.RosterGroupsCache.FIELD_ID + ")"
-					+ ");";
+			"CREATE TABLE " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " (" +
+					DatabaseContract.RosterItemsGroups.FIELD_ITEM + " INTEGER, " +
+					DatabaseContract.RosterItemsGroups.FIELD_GROUP + " INTEGER, " + "FOREIGN KEY(" +
+					DatabaseContract.RosterItemsGroups.FIELD_ITEM + ") REFERENCES " +
+					DatabaseContract.RosterItemsCache.TABLE_NAME + "(" + DatabaseContract.RosterItemsCache.FIELD_ID +
+					")," + "FOREIGN KEY(" + DatabaseContract.RosterItemsGroups.FIELD_GROUP + ") REFERENCES " +
+					DatabaseContract.RosterGroupsCache.TABLE_NAME + "(" + DatabaseContract.RosterGroupsCache.FIELD_ID +
+					")" + ");";
 
 	public static void onCreate(SQLiteDatabase database) {
 		database.execSQL(CREATE_ITEMS_TABLE);

@@ -29,13 +29,10 @@ import org.tigase.messenger.jaxmpp.android.caps.CapsDbHelper;
 import org.tigase.messenger.jaxmpp.android.chat.OpenChatDbHelper;
 import org.tigase.messenger.jaxmpp.android.roster.RosterDbHelper;
 
-public class DatabaseHelper extends SQLiteOpenHelper {
+public class DatabaseHelper
+		extends SQLiteOpenHelper {
 
 	private static DatabaseHelper sInstance;
-
-	private DatabaseHelper(Context context) {
-		super(context, DatabaseContract.DATABASE_NAME, null, DatabaseContract.DATABASE_VERSION);
-	}
 
 	public static synchronized DatabaseHelper getInstance(Context context) {
 		// Use the application context, which will ensure that you
@@ -47,6 +44,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return sInstance;
 	}
 
+	private DatabaseHelper(Context context) {
+		super(context, DatabaseContract.DATABASE_NAME, null, DatabaseContract.DATABASE_VERSION);
+	}
+
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		Log.i("DatabaseHelper", "Create database");
@@ -55,8 +56,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 		CapsDbHelper.onCreate(db);
 
-		db.execSQL("ALTER TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " ADD COLUMN "
-				+ DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
+		db.execSQL("ALTER TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " ADD COLUMN " +
+						   DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
 
 		db.execSQL(DatabaseContract.ChatHistory.CREATE_TABLE);
 		db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_JID);

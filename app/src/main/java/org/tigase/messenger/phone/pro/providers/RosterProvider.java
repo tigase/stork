@@ -32,7 +32,8 @@ import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 
-public class RosterProvider extends ContentProvider {
+public class RosterProvider
+		extends ContentProvider {
 
 	private static final String AUTHORITY = "org.tigase.messenger.phone.pro.Roster";
 	private static final String SCHEME = "content://";
@@ -99,50 +100,58 @@ public class RosterProvider extends ContentProvider {
 	}
 
 	@Override
-	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs,
+						String sortOrder) {
 
 		Cursor cursor;
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_ROSTER:
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection, selection,
-						selectionArgs, null, null, sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection, selection, selectionArgs, null,
+							   null, sortOrder);
 				break;
 			case URI_INDICATOR_ROSTERITEM_ID:
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection,
-						DatabaseContract.RosterItemsCache.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()}, null, null,
-						sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection,
+							   DatabaseContract.RosterItemsCache.FIELD_ID + "=?",
+							   new String[]{uri.getLastPathSegment()}, null, null, sortOrder);
 				break;
 			case URI_INDICATOR_ROSTERITEM_JID:
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection,
-						DatabaseContract.RosterItemsCache.FIELD_JID + "=?", new String[]{uri.getLastPathSegment()}, null, null,
-						sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection,
+							   DatabaseContract.RosterItemsCache.FIELD_JID + "=?",
+							   new String[]{uri.getLastPathSegment()}, null, null, sortOrder);
 				break;
 			case URI_INDICATOR_ROSTERITEM_ACCOUNT_JID:
 				String account = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 				String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.RosterItemsCache.TABLE_NAME,
-						projection, DatabaseContract.RosterItemsCache.FIELD_JID + "=? AND "
-								+ DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + "=?",
-						new String[]{jid, account}, null, null, sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.RosterItemsCache.TABLE_NAME, projection,
+							   DatabaseContract.RosterItemsCache.FIELD_JID + "=? AND " +
+									   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + "=?",
+							   new String[]{jid, account}, null, null, sortOrder);
 				break;
 
 			case URI_INDICATOR_VCARDITEM_ID:
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.VCardsCache.TABLE_NAME, projection,
-						DatabaseContract.VCardsCache.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()}, null, null,
-						sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.VCardsCache.TABLE_NAME, projection,
+							   DatabaseContract.VCardsCache.FIELD_ID + "=?", new String[]{uri.getLastPathSegment()},
+							   null, null, sortOrder);
 				break;
 			case URI_INDICATOR_VCARDITEM_JID:
-				cursor = dbHelper.getReadableDatabase().query(DatabaseContract.VCardsCache.TABLE_NAME, projection,
-						DatabaseContract.VCardsCache.FIELD_JID + "=?", new String[]{uri.getLastPathSegment()}, null, null,
-						sortOrder);
+				cursor = dbHelper.getReadableDatabase()
+						.query(DatabaseContract.VCardsCache.TABLE_NAME, projection,
+							   DatabaseContract.VCardsCache.FIELD_JID + "=?", new String[]{uri.getLastPathSegment()},
+							   null, null, sortOrder);
 				break;
 			default:
 				throw new UnsupportedOperationException("Unrecognized URI " + uri);
 		}
 
 		Context context = getContext();
-		if (context != null)
+		if (context != null) {
 			cursor.setNotificationUri(context.getContentResolver(), uri);
+		}
 		Log.i("RosterProvider", "Setting notificationUri=" + cursor.getNotificationUri());
 
 		return cursor;

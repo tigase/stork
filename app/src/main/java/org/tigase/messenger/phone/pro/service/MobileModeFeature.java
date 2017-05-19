@@ -49,16 +49,16 @@ public class MobileModeFeature {
 	private boolean mobileModeEnabled = false;
 	private TimerTask setMobileModeTask;
 
-	public MobileModeFeature(XMPPService service) {
-		jaxmppService = service;
-	}
-
 	public static void updateSettings(Account account, JaxmppCore jaxmpp, Context context) {
 		AccountManager accountManager = AccountManager.get(context);
 		String valueStr = accountManager.getUserData(account, MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED);
 		boolean mobileOptimizations = (valueStr == null || Boolean.parseBoolean(valueStr));
 		SessionObject sessionObject = jaxmpp.getSessionObject();
 		sessionObject.setUserProperty(MobileModeFeature.MOBILE_OPTIMIZATIONS_ENABLED, mobileOptimizations);
+	}
+
+	public MobileModeFeature(XMPPService service) {
+		jaxmppService = service;
 	}
 
 	public void accountConnected(JaxmppCore jaxmpp) throws JaxmppException {
@@ -113,8 +113,9 @@ public class MobileModeFeature {
 	protected void setMobileMode(JaxmppCore jaxmpp, boolean enable) throws JaxmppException {
 		if (jaxmpp.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) == Connector.State.connected) {
 			final Element sf = StreamFeaturesModule.getStreamFeatures(jaxmpp.getSessionObject());
-			if (sf == null)
+			if (sf == null) {
 				return;
+			}
 
 			String xmlns = null;
 			Element m = sf.getChildrenNS("mobile", Features.MOBILE_V3);
@@ -131,8 +132,10 @@ public class MobileModeFeature {
 					}
 				}
 			}
-			if (xmlns == null || (enable && !((Boolean) jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_ENABLED))))
+			if (xmlns == null ||
+					(enable && !((Boolean) jaxmpp.getSessionObject().getProperty(MOBILE_OPTIMIZATIONS_ENABLED)))) {
 				return;
+			}
 
 			IQ iq = IQ.create();
 			iq.setType(StanzaType.set);

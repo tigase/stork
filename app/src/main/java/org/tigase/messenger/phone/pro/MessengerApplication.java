@@ -29,7 +29,8 @@ import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 /**
  * Created by bmalkow on 16.03.16.
  */
-public class MessengerApplication extends Application {
+public class MessengerApplication
+		extends Application {
 
 	@Override
 	public void onCreate() {

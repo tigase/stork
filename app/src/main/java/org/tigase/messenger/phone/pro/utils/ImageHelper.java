@@ -55,8 +55,48 @@ public class ImageHelper {
 
 	public static float density = 1;
 	protected static LruCache<String, Bitmap> memCache = null;
-	private static Set<Bitmap> placeHolders = new HashSet<Bitmap>();
 	private static ConcurrentHashMap<String, BitmapDiskLruCache> diskCaches = new ConcurrentHashMap<String, BitmapDiskLruCache>();
+	private static Set<Bitmap> placeHolders = new HashSet<Bitmap>();
+
+	protected static void addPlaceHolder(Bitmap placeHolder) {
+		placeHolders.add(placeHolder);
+	}
+
+	private static String bytesToHexString(byte[] bytes) {
+		// http://stackoverflow.com/questions/332079
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < bytes.length; i++) {
+			String hex = Integer.toHexString(0xFF & bytes[i]);
+			if (hex.length() == 1) {
+				sb.append('0');
+			}
+			sb.append(hex);
+		}
+		return sb.toString();
+	}
+
+	public static Bitmap get(String type, String key) {
+		Bitmap value = memCache.get(key);
+		if (value == null) {
+			BitmapDiskLruCache diskCache = diskCaches.get(type);
+			if (diskCache != null) {
+				value = diskCache.get(key);
+			}
+		}
+		return value;
+	}
+
+	public static String hashKey(String key) {
+		String cacheKey;
+		try {
+			final MessageDigest mDigest = MessageDigest.getInstance("MD5");
+			mDigest.update(key.getBytes());
+			cacheKey = bytesToHexString(mDigest.digest());
+		} catch (NoSuchAlgorithmException e) {
+			cacheKey = String.valueOf(key.hashCode());
+		}
+		return cacheKey;
+	}
 
 	protected static void initialize(Context context) {
 		if (memCache == null) {
@@ -102,10 +142,6 @@ public class ImageHelper {
 		}
 	}
 
-	protected static void addPlaceHolder(Bitmap placeHolder) {
-		placeHolders.add(placeHolder);
-	}
-
 	@SuppressLint("NewApi")
 	public static void onTrimMemory(int level) {
 		int count = 0;
@@ -114,8 +150,9 @@ public class ImageHelper {
 			if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
 				count = 0;
 			}
-		} else
+		} else {
 			return;
+		}
 
 		int size = 0;
 		if (count > 0) {
@@ -125,8 +162,9 @@ public class ImageHelper {
 		}
 
 		int trimSize = placeHolders.size() == 0 ? 0 : ((count * size) / placeHolders.size());
-		Log.v(TAG, "trim image cache from " + memCache.size() + " to " + trimSize + " to reduce memory usage, max size "
-				+ memCache.maxSize());
+		Log.v(TAG,
+			  "trim image cache from " + memCache.size() + " to " + trimSize + " to reduce memory usage, max size " +
+					  memCache.maxSize());
 		memCache.trimToSize(trimSize);
 	}
 
@@ -138,43 +176,8 @@ public class ImageHelper {
 		}
 	}
 
-	public static Bitmap get(String type, String key) {
-		Bitmap value = memCache.get(key);
-		if (value == null) {
-			BitmapDiskLruCache diskCache = diskCaches.get(type);
-			if (diskCache != null) {
-				value = diskCache.get(key);
-			}
-		}
-		return value;
-	}
-
-	public static String hashKey(String key) {
-		String cacheKey;
-		try {
-			final MessageDigest mDigest = MessageDigest.getInstance("MD5");
-			mDigest.update(key.getBytes());
-			cacheKey = bytesToHexString(mDigest.digest());
-		} catch (NoSuchAlgorithmException e) {
-			cacheKey = String.valueOf(key.hashCode());
-		}
-		return cacheKey;
-	}
-
-	private static String bytesToHexString(byte[] bytes) {
-		// http://stackoverflow.com/questions/332079
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < bytes.length; i++) {
-			String hex = Integer.toHexString(0xFF & bytes[i]);
-			if (hex.length() == 1) {
-				sb.append('0');
-			}
-			sb.append(hex);
-		}
-		return sb.toString();
-	}
-
-	public static class BitmapDiskLruCache extends DiskLruCache<Bitmap> {
+	public static class BitmapDiskLruCache
+			extends DiskLruCache<Bitmap> {
 
 		@Override
 		protected Bitmap decode(org.tigase.messenger.phone.pro.utils.DiskLruCache.Entry e) {

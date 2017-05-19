@@ -34,7 +34,8 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
-public class MyRosterItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<ViewHolder> {
+public class MyRosterItemRecyclerViewAdapter
+		extends CursorRecyclerViewAdapter<ViewHolder> {
 
 	private final RosterItemFragment.OnRosterItemIteractionListener mListener;
 
@@ -74,8 +75,9 @@ public class MyRosterItemRecyclerViewAdapter extends CursorRecyclerViewAdapter<V
 				if (item.getItemId() == R.id.menu_roster_delete) {
 					mLongClickListener.onRosterItemDelete(id, account, jid, name);
 					return true;
-				} else
+				} else {
 					return false;
+				}
 			}
 		});
 		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);

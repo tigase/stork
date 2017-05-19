@@ -26,7 +26,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-public class AuthenticatorService extends Service {
+public class AuthenticatorService
+		extends Service {
 
 	@Nullable
 	@Override

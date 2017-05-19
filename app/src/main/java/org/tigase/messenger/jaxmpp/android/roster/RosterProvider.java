@@ -35,7 +35,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
 
 import java.util.*;
 
-public class RosterProvider implements RosterCacheProvider {
+public class RosterProvider
+		implements RosterCacheProvider {
 
 	protected final Context context;
 	protected final SQLiteOpenHelper dbHelper;
@@ -68,12 +69,13 @@ public class RosterProvider implements RosterCacheProvider {
 			// in most of cases we will already have this record
 			if (rosterItem.getId() == -1) {
 				long id = db.insertWithOnConflict(DatabaseContract.RosterItemsCache.TABLE_NAME, null, v,
-						SQLiteDatabase.CONFLICT_REPLACE); // CONFLICT_REPLACE?
+												  SQLiteDatabase.CONFLICT_REPLACE); // CONFLICT_REPLACE?
 				Log.d("RosterProvider", "Added item " + rosterItem.getJid().toString() + " with id=" + id);
 				rosterItem.setData(RosterItem.ID_KEY, id);
 			} else {
 				int updated = db.update(DatabaseContract.RosterItemsCache.TABLE_NAME, v,
-						DatabaseContract.RosterItemsCache.FIELD_ID + " = ?", new String[]{String.valueOf(rosterItem.getId())});
+										DatabaseContract.RosterItemsCache.FIELD_ID + " = ?",
+										new String[]{String.valueOf(rosterItem.getId())});
 			}
 			addedGroups = updateRosterItemGroups(db, rosterItem);
 
@@ -98,10 +100,10 @@ public class RosterProvider implements RosterCacheProvider {
 
 	public int getCount(SessionObject sessionObject) {
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor c = db.rawQuery(
-				"SELECT count(" + DatabaseContract.RosterItemsCache.FIELD_ID + ") FROM " + DatabaseContract.RosterItemsCache.TABLE_NAME
-						+ " WHERE " + DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
-				new String[]{sessionObject.getUserBareJid().toString()});
+		Cursor c = db.rawQuery("SELECT count(" + DatabaseContract.RosterItemsCache.FIELD_ID + ") FROM " +
+									   DatabaseContract.RosterItemsCache.TABLE_NAME + " WHERE " +
+									   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
+							   new String[]{sessionObject.getUserBareJid().toString()});
 		try {
 			if (c.moveToNext()) {
 				return c.getInt(0);
@@ -116,15 +118,16 @@ public class RosterProvider implements RosterCacheProvider {
 
 	public Collection<? extends String> getGroups(SessionObject sessionObject) {
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor c = db.rawQuery(
-				"SELECT DISTINCT g." + DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM "
-						+ DatabaseContract.RosterGroupsCache.TABLE_NAME + " g " + " INNER JOIN "
-						+ DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + " ON g."
-						+ DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." + DatabaseContract.RosterItemsGroups.FIELD_GROUP
-						+ " INNER JOIN " + DatabaseContract.RosterItemsCache.TABLE_NAME + " i " + " ON i."
-						+ DatabaseContract.RosterItemsCache.FIELD_ID + " = gi." + DatabaseContract.RosterItemsGroups.FIELD_ITEM
-						+ " WHERE i." + DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
-				new String[]{sessionObject.getUserBareJid().toString()});
+		Cursor c = db.rawQuery("SELECT DISTINCT g." + DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " +
+									   DatabaseContract.RosterGroupsCache.TABLE_NAME + " g " + " INNER JOIN " +
+									   DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + " ON g." +
+									   DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." +
+									   DatabaseContract.RosterItemsGroups.FIELD_GROUP + " INNER JOIN " +
+									   DatabaseContract.RosterItemsCache.TABLE_NAME + " i " + " ON i." +
+									   DatabaseContract.RosterItemsCache.FIELD_ID + " = gi." +
+									   DatabaseContract.RosterItemsGroups.FIELD_ITEM + " WHERE i." +
+									   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
+							   new String[]{sessionObject.getUserBareJid().toString()});
 		try {
 			List<String> groups = new ArrayList<String>();
 			while (c.moveToNext()) {
@@ -139,11 +142,14 @@ public class RosterProvider implements RosterCacheProvider {
 	public RosterItem getItem(SessionObject sessionObject, BareJID jid) {
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = db.query(DatabaseContract.RosterItemsCache.TABLE_NAME,
-				new String[]{DatabaseContract.RosterItemsCache.FIELD_ID, DatabaseContract.RosterItemsCache.FIELD_NAME,
-						DatabaseContract.RosterItemsCache.FIELD_SUBSCRIPTION, DatabaseContract.RosterItemsCache.FIELD_ASK,
-						DatabaseContract.RosterItemsCache.FIELD_TIMESTAMP},
-				DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ? and " + DatabaseContract.RosterItemsCache.FIELD_JID + " = ?",
-				new String[]{sessionObject.getUserBareJid().toString(), jid.toString()}, null, null, null);
+							new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
+										 DatabaseContract.RosterItemsCache.FIELD_NAME,
+										 DatabaseContract.RosterItemsCache.FIELD_SUBSCRIPTION,
+										 DatabaseContract.RosterItemsCache.FIELD_ASK,
+										 DatabaseContract.RosterItemsCache.FIELD_TIMESTAMP},
+							DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ? and " +
+									DatabaseContract.RosterItemsCache.FIELD_JID + " = ?",
+							new String[]{sessionObject.getUserBareJid().toString(), jid.toString()}, null, null, null);
 
 		// if (c.getCount() == 0) {
 		// c.close();
@@ -185,12 +191,14 @@ public class RosterProvider implements RosterCacheProvider {
 				c.close();
 
 				List<String> groups = rosterItem.getGroups();
-				c = db.rawQuery("SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", "
-								+ DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " + DatabaseContract.RosterGroupsCache.TABLE_NAME
-								+ " g " + " INNER JOIN " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + "ON g."
-								+ DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." + DatabaseContract.RosterItemsGroups.FIELD_GROUP
-								+ " WHERE gi." + DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
-						new String[]{String.valueOf(rosterItem.getId())});
+				c = db.rawQuery("SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", " +
+										DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " +
+										DatabaseContract.RosterGroupsCache.TABLE_NAME + " g " + " INNER JOIN " +
+										DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + "ON g." +
+										DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." +
+										DatabaseContract.RosterItemsGroups.FIELD_GROUP + " WHERE gi." +
+										DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
+								new String[]{String.valueOf(rosterItem.getId())});
 
 				while (c.moveToNext()) {
 					groups.add(c.getString(1));
@@ -201,8 +209,9 @@ public class RosterProvider implements RosterCacheProvider {
 				return null;
 			}
 		} finally {
-			if (c != null && !c.isClosed())
+			if (c != null && !c.isClosed()) {
 				c.close();
+			}
 		}
 
 	}
@@ -222,14 +231,15 @@ public class RosterProvider implements RosterCacheProvider {
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
-			db.execSQL(
-					"DELETE FROM " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " WHERE "
-							+ DatabaseContract.RosterItemsGroups.FIELD_ITEM + " IN (" + "SELECT "
-							+ DatabaseContract.RosterItemsCache.FIELD_ID + " FROM " + DatabaseContract.RosterItemsCache.TABLE_NAME
-							+ " WHERE " + DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?" + ")",
-					new String[]{sessionObject.getUserBareJid().toString()});
-			db.delete(DatabaseContract.RosterItemsCache.TABLE_NAME, DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
-					new String[]{sessionObject.getUserBareJid().toString()});
+			db.execSQL("DELETE FROM " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " WHERE " +
+							   DatabaseContract.RosterItemsGroups.FIELD_ITEM + " IN (" + "SELECT " +
+							   DatabaseContract.RosterItemsCache.FIELD_ID + " FROM " +
+							   DatabaseContract.RosterItemsCache.TABLE_NAME + " WHERE " +
+							   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?" + ")",
+					   new String[]{sessionObject.getUserBareJid().toString()});
+			db.delete(DatabaseContract.RosterItemsCache.TABLE_NAME,
+					  DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = ?",
+					  new String[]{sessionObject.getUserBareJid().toString()});
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
@@ -242,20 +252,20 @@ public class RosterProvider implements RosterCacheProvider {
 
 	private void removeEmptyGroups(SQLiteDatabase db) {
 		db.delete(DatabaseContract.RosterGroupsCache.TABLE_NAME,
-				DatabaseContract.RosterGroupsCache.FIELD_ID + " NOT IN (" + "SELECT "
-						+ DatabaseContract.RosterItemsGroups.FIELD_GROUP + " FROM "
-						+ DatabaseContract.RosterItemsGroups.FIELD_GROUP + ")",
-				new String[0]);
+				  DatabaseContract.RosterGroupsCache.FIELD_ID + " NOT IN (" + "SELECT " +
+						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + " FROM " +
+						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + ")", new String[0]);
 	}
 
 	public void removeItem(SessionObject sessionObject, RosterItem rosterItem) {
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
-			db.delete(DatabaseContract.RosterItemsGroups.TABLE_NAME, DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
-					new String[]{String.valueOf(rosterItem.getId())});
+			db.delete(DatabaseContract.RosterItemsGroups.TABLE_NAME,
+					  DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
+					  new String[]{String.valueOf(rosterItem.getId())});
 			db.delete(DatabaseContract.RosterItemsCache.TABLE_NAME, DatabaseContract.RosterItemsCache.FIELD_ID + " = ?",
-					new String[]{String.valueOf(rosterItem.getId())});
+					  new String[]{String.valueOf(rosterItem.getId())});
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
@@ -274,13 +284,14 @@ public class RosterProvider implements RosterCacheProvider {
 		Map<String, Long> groupIds = new HashMap<String, Long>();
 
 		// retrieve current groups
-		Cursor c = db.rawQuery(
-				"SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", " + DatabaseContract.RosterGroupsCache.FIELD_NAME
-						+ " FROM " + DatabaseContract.RosterGroupsCache.TABLE_NAME + " g " + " INNER JOIN "
-						+ DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + " ON g."
-						+ DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." + DatabaseContract.RosterItemsGroups.FIELD_GROUP
-						+ " WHERE gi." + DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
-				new String[]{String.valueOf(rosterItem.getId())});
+		Cursor c = db.rawQuery("SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", " +
+									   DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " +
+									   DatabaseContract.RosterGroupsCache.TABLE_NAME + " g " + " INNER JOIN " +
+									   DatabaseContract.RosterItemsGroups.TABLE_NAME + " gi " + " ON g." +
+									   DatabaseContract.RosterGroupsCache.FIELD_ID + " = gi." +
+									   DatabaseContract.RosterItemsGroups.FIELD_GROUP + " WHERE gi." +
+									   DatabaseContract.RosterItemsGroups.FIELD_ITEM + " = ?",
+							   new String[]{String.valueOf(rosterItem.getId())});
 
 		try {
 			while (c.moveToNext()) {
@@ -299,11 +310,10 @@ public class RosterProvider implements RosterCacheProvider {
 					groupsToRemove.append(groupIds.get(group));
 				}
 
-				db.execSQL(
-						"DELETE FROM " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " WHERE "
-								+ DatabaseContract.RosterItemsGroups.FIELD_ITEM + " =  ? " + " AND "
-								+ DatabaseContract.RosterItemsGroups.FIELD_GROUP + " IN (?)",
-						new String[]{String.valueOf(rosterItem.getId()), groupsToRemove.toString()});
+				db.execSQL("DELETE FROM " + DatabaseContract.RosterItemsGroups.TABLE_NAME + " WHERE " +
+								   DatabaseContract.RosterItemsGroups.FIELD_ITEM + " =  ? " + " AND " +
+								   DatabaseContract.RosterItemsGroups.FIELD_GROUP + " IN (?)",
+						   new String[]{String.valueOf(rosterItem.getId()), groupsToRemove.toString()});
 			}
 
 			Set<String> addedGroups = new HashSet<String>();
@@ -323,9 +333,10 @@ public class RosterProvider implements RosterCacheProvider {
 					}
 
 					// query for ids of existing groups
-					c = db.rawQuery("SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", "
-							+ DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " + DatabaseContract.RosterGroupsCache.TABLE_NAME
-							+ " g WHERE g.name IN (" + toAddAll.toString() + ")", null);
+					c = db.rawQuery("SELECT " + DatabaseContract.RosterGroupsCache.FIELD_ID + ", " +
+											DatabaseContract.RosterGroupsCache.FIELD_NAME + " FROM " +
+											DatabaseContract.RosterGroupsCache.TABLE_NAME + " g WHERE g.name IN (" +
+											toAddAll.toString() + ")", null);
 					List<Long> toAddIds = new ArrayList<Long>();
 					while (c.moveToNext()) {
 						toAddIds.add(c.getLong(0));
@@ -353,12 +364,14 @@ public class RosterProvider implements RosterCacheProvider {
 			}
 			return addedGroups;
 		} finally {
-			if (c != null && !c.isClosed())
+			if (c != null && !c.isClosed()) {
 				c.close();
+			}
 		}
 	}
 
 	public interface Listener {
+
 		void onChange(Long rosterItemId);
 	}
 }

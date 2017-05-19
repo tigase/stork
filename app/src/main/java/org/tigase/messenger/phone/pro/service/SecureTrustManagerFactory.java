@@ -49,19 +49,6 @@ public class SecureTrustManagerFactory {
 	private X509TrustManager defaultTrustManager;
 	private File keyStoreFile;
 
-	private SecureTrustManagerFactory() throws KeyStoreException, NoSuchAlgorithmException {
-		String ksType = KeyStore.getDefaultType();
-		String mfAlg = TrustManagerFactory.getDefaultAlgorithm();
-		Log.d(TAG, "Creating Factory with KeyStore type " + ksType + " and TrustManagert algoritm  " + mfAlg);
-		keyStore = KeyStore.getInstance(ksType);
-		factory = TrustManagerFactory.getInstance(mfAlg);
-	}
-
-	public static TrustManager[] getTrustManagers(Context ctx) {
-		initIfRequired(ctx);
-		return instance.getManagers(ctx);
-	}
-
 	public static void addCertificate(Context ctx, X509Certificate crt) {
 		initIfRequired(ctx);
 		try {
@@ -71,9 +58,15 @@ public class SecureTrustManagerFactory {
 		}
 	}
 
+	public static TrustManager[] getTrustManagers(Context ctx) {
+		initIfRequired(ctx);
+		return instance.getManagers(ctx);
+	}
+
 	private static void initIfRequired(Context ctx) {
-		if (instance != null)
+		if (instance != null) {
 			return;
+		}
 
 		try {
 			instance = new SecureTrustManagerFactory();
@@ -82,6 +75,14 @@ public class SecureTrustManagerFactory {
 			Log.e(TAG, "Can't initialize TrustManagerFactory!", e);
 		}
 
+	}
+
+	private SecureTrustManagerFactory() throws KeyStoreException, NoSuchAlgorithmException {
+		String ksType = KeyStore.getDefaultType();
+		String mfAlg = TrustManagerFactory.getDefaultAlgorithm();
+		Log.d(TAG, "Creating Factory with KeyStore type " + ksType + " and TrustManagert algoritm  " + mfAlg);
+		keyStore = KeyStore.getInstance(ksType);
+		factory = TrustManagerFactory.getInstance(mfAlg);
 	}
 
 	private void addTrustKey(X509Certificate[] chain) throws KeyStoreException {
@@ -113,11 +114,13 @@ public class SecureTrustManagerFactory {
 		}
 	}
 
-	private void init(Context ctx) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+	private void init(Context ctx)
+			throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		loadKeystore(ctx.getResources().openRawResource(R.raw.trust_store_bks), null);
 		loadKeystore(System.getProperty("javax.net.ssl.trustStore"));
 		this.keyStoreFile = new File(
-				ctx.getApplicationContext().getDir("TrustStore", Context.MODE_PRIVATE) + File.separator + "TrustStore.bks");
+				ctx.getApplicationContext().getDir("TrustStore", Context.MODE_PRIVATE) + File.separator +
+						"TrustStore.bks");
 		loadKeystore(keyStoreFile, DEFAULT_PASSWORD);
 
 		factory.init(keyStore);
@@ -178,7 +181,8 @@ public class SecureTrustManagerFactory {
 
 	}
 
-	public static class DataCertificateException extends CertificateException {
+	public static class DataCertificateException
+			extends CertificateException {
 
 		private static final long serialVersionUID = 1L;
 
@@ -200,7 +204,8 @@ public class SecureTrustManagerFactory {
 
 	}
 
-	private class TrustManagerWrapper implements X509TrustManager {
+	private class TrustManagerWrapper
+			implements X509TrustManager {
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] chain, String authType) throws DataCertificateException {

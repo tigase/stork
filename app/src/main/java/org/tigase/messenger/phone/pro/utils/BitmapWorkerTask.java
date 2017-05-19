@@ -28,7 +28,8 @@ import tigase.jaxmpp.core.client.BareJID;
 
 import java.lang.ref.WeakReference;
 
-public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
+public class BitmapWorkerTask
+		extends AsyncTask<BareJID, Void, Bitmap> {
 
 	private final Context context;
 	private final WeakReference<ImageView> imageViewReference;
@@ -46,7 +47,9 @@ public class BitmapWorkerTask extends AsyncTask<BareJID, Void, Bitmap> {
 	@Override
 	protected Bitmap doInBackground(BareJID... params) {
 		data = params[0];
-		return size == null ? AvatarHelper.loadAvatar(context, data, false) : AvatarHelper.loadAvatar(context, data, size);
+		return size == null
+			   ? AvatarHelper.loadAvatar(context, data, false)
+			   : AvatarHelper.loadAvatar(context, data, size);
 	}
 
 	// Once complete, see if ImageView is still around and set bitmap.

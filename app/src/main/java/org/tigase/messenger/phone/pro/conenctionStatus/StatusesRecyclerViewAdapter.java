@@ -14,11 +14,12 @@ import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 
 import java.util.ArrayList;
 
-public class StatusesRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder> {
+public class StatusesRecyclerViewAdapter
+		extends RecyclerView.Adapter<ViewHolder> {
 
 	private final ConnectionStatusesFragment.OnListFragmentInteractionListener listener;
-	private MultiJaxmpp multiJaxmpp;
 	private ArrayList<JaxmppCore> jaxmpps;
+	private MultiJaxmpp multiJaxmpp;
 
 	public StatusesRecyclerViewAdapter(ConnectionStatusesFragment.OnListFragmentInteractionListener mListener) {
 		this.listener = mListener;
@@ -26,8 +27,9 @@ public class StatusesRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder
 
 	@Override
 	public int getItemCount() {
-		if (jaxmpps == null)
+		if (jaxmpps == null) {
 			return 0;
+		}
 		return jaxmpps.size();
 	}
 
@@ -62,8 +64,9 @@ public class StatusesRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder
 					if (item.getItemId() == R.id.menu_connectionstatus_ping) {
 						listener.onPingServer(j.getSessionObject().getUserBareJid().toString());
 						return true;
-					} else
+					} else {
 						return false;
+					}
 				}
 			};
 
@@ -73,7 +76,8 @@ public class StatusesRecyclerViewAdapter extends RecyclerView.Adapter<ViewHolder
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_connectionstatusitem, parent, false);
+		View view = LayoutInflater.from(parent.getContext())
+				.inflate(R.layout.fragment_connectionstatusitem, parent, false);
 		return new ViewHolder(view);
 	}
 

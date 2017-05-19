@@ -21,19 +21,16 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 
 import java.util.ArrayList;
 
-public class JoinMucActivity extends AppCompatActivity {
+public class JoinMucActivity
+		extends AppCompatActivity {
 
 	private final ArrayList<BareJID> accountsList = new ArrayList<>();
 
 	private Spinner mAccountSelector;
-
-	private EditText mRoomJid;
-
 	private EditText mNickname;
-
-	private ArrayAdapter<BareJID> sa;
-
+	private EditText mRoomJid;
 	private XMPPService mService;
+	private ArrayAdapter<BareJID> sa;
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -131,7 +128,8 @@ public class JoinMucActivity extends AppCompatActivity {
 		unbindService(mServiceConnection);
 	}
 
-	private class JoinToRoomTask extends AsyncTask<Void, Void, Boolean> {
+	private class JoinToRoomTask
+			extends AsyncTask<Void, Void, Boolean> {
 
 		private final Jaxmpp jaxmpp;
 

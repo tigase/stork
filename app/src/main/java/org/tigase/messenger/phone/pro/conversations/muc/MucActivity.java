@@ -12,11 +12,12 @@ import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
-public class MucActivity extends AbstractConversationActivity {
+public class MucActivity
+		extends AbstractConversationActivity {
 
 	TextView mContactName;
-	private int openChatId;
 	private MarkAsRead markAsRead;
+	private int openChatId;
 
 	public int getOpenChatId() {
 		return openChatId;
