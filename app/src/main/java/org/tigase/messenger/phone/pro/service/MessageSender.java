@@ -111,7 +111,7 @@ public class MessageSender
 			values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, stanzaId);
 		}
 
-		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + recipient);
+		Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + recipient.getBareJid());
 		context.getContentResolver().insert(uri, values);
 	}
 
