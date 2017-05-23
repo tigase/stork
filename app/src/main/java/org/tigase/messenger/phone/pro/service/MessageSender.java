@@ -6,11 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.AbstractChatManager;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
@@ -44,9 +46,15 @@ public class MessageSender
 			return null;
 		}
 
-		for (Chat chat : jaxmpp.getModule(MessageModule.class).getChatManager().getChats()) {
-			if (chat.getId() == chatId) {
-				return chat;
+		AbstractChatManager chatManager = jaxmpp.getModule(MessageModule.class).getChatManager();
+
+		if (chatManager instanceof AndroidChatManager) {
+			return ((AndroidChatManager) chatManager).getChat(chatId);
+		} else {
+			for (Chat chat : chatManager.getChats()) {
+				if (chat.getId() == chatId) {
+					return chat;
+				}
 			}
 		}
 

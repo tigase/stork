@@ -28,6 +28,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
 import java.util.ArrayList;
@@ -154,63 +155,57 @@ public class ChatProvider {
 	 * @param jid
 	 * @param threadId
 	 *
-	 * @return Array of objects { Long id, String threadId, String resourceId }
+	 * @return Cursor
 	 */
-	public Object[] getChat(SessionObject sessionObject, JID jid, String threadId) {
+	public Cursor getChat(SessionObject sessionObject, JID jid, String threadId) {
+		String[] columns = new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_JID,
+										DatabaseContract.OpenChats.FIELD_THREAD_ID,
+										DatabaseContract.OpenChats.FIELD_RESOURCE};
+
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		if (threadId != null) {
-			Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, new String[]{DatabaseContract.OpenChats.FIELD_ID,
-																					DatabaseContract.OpenChats.FIELD_RESOURCE},
-								DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
-										DatabaseContract.OpenChats.FIELD_JID + " = ? and " +
-										DatabaseContract.OpenChats.FIELD_TYPE + " = " +
-										DatabaseContract.OpenChats.TYPE_CHAT + " and " +
-										DatabaseContract.OpenChats.FIELD_THREAD_ID + " = ?",
-								new String[]{sessionObject.getUserBareJid().toString(), jid.getBareJid().toString(),
-											 threadId}, null, null, null, null);
-			try {
-				if (c.moveToNext()) {
-					return new Object[]{c.getLong(0), threadId, c.getString(1)};
-				}
-			} finally {
-				c.close();
-			}
-		}
-		if (jid.getResource() != null) {
-			Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, new String[]{DatabaseContract.OpenChats.FIELD_ID,
-																					DatabaseContract.OpenChats.FIELD_THREAD_ID},
-								DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
-										DatabaseContract.OpenChats.FIELD_JID + " = ? and " +
-										DatabaseContract.OpenChats.FIELD_TYPE + " = " +
-										DatabaseContract.OpenChats.TYPE_CHAT + " and " +
-										DatabaseContract.OpenChats.FIELD_RESOURCE + " = ?",
-								new String[]{sessionObject.getUserBareJid().toString(), jid.getBareJid().toString(),
-											 jid.getResource()}, null, null, null, null);
-			try {
-				if (c.moveToNext()) {
-					return new Object[]{c.getLong(0), c.getString(1), jid.getResource()};
-				}
-			} finally {
-				c.close();
-			}
-		}
-		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, new String[]{DatabaseContract.OpenChats.FIELD_ID,
-																				DatabaseContract.OpenChats.FIELD_THREAD_ID,
-																				DatabaseContract.OpenChats.FIELD_RESOURCE},
+//		if (threadId != null) {
+//			Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, columns,
+//								DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
+//										DatabaseContract.OpenChats.FIELD_JID + " = ? and " +
+//										DatabaseContract.OpenChats.FIELD_TYPE + " = " +
+//										DatabaseContract.OpenChats.TYPE_CHAT + " and " +
+//										DatabaseContract.OpenChats.FIELD_THREAD_ID + " = ?",
+//								new String[]{sessionObject.getUserBareJid().toString(), jid.getBareJid().toString(),
+//											 threadId}, null, null, null, null);
+//			return c;
+//		}
+//		if (jid.getResource() != null) {
+//			Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, columns,
+//								DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
+//										DatabaseContract.OpenChats.FIELD_JID + " = ? and " +
+//										DatabaseContract.OpenChats.FIELD_TYPE + " = " +
+//										DatabaseContract.OpenChats.TYPE_CHAT + " and " +
+//										DatabaseContract.OpenChats.FIELD_RESOURCE + " = ?",
+//								new String[]{sessionObject.getUserBareJid().toString(), jid.getBareJid().toString(),
+//											 jid.getResource()}, null, null, null, null);
+//			return c;
+//		}
+		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, columns,
 							DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
 									DatabaseContract.OpenChats.FIELD_JID + " = ? and " +
 									DatabaseContract.OpenChats.FIELD_TYPE + " = " +
 									DatabaseContract.OpenChats.TYPE_CHAT,
 							new String[]{sessionObject.getUserBareJid().toString(), jid.getBareJid().toString()}, null,
 							null, null, null);
-		try {
-			if (c.moveToNext()) {
-				return new Object[]{c.getLong(0), c.getString(1), c.getString(2)};
-			}
-		} finally {
-			c.close();
-		}
-		return null;
+		return c;
+	}
+
+	public Cursor getChat(final SessionObject sessionObject, final int chatId) {
+		String[] columns = new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_JID,
+										DatabaseContract.OpenChats.FIELD_THREAD_ID,
+										DatabaseContract.OpenChats.FIELD_RESOURCE};
+		final SQLiteDatabase db = dbHelper.getReadableDatabase();
+		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, columns,
+							DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
+									DatabaseContract.OpenChats.FIELD_ID + " = ?",
+							new String[]{sessionObject.getUserBareJid().toString(), String.valueOf(chatId)}, null, null,
+							null, null);
+		return c;
 	}
 
 	/**
@@ -218,28 +213,19 @@ public class ChatProvider {
 	 *
 	 * @param sessionObject
 	 *
-	 * @return List of arrays of objects { Long id, BareJID jid, String threadId, String resourceId }
+	 * @return Cursor
 	 */
-	public List<Object[]> getChats(SessionObject sessionObject) {
+	public Cursor getChats(SessionObject sessionObject) {
+		String[] columns = new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_JID,
+										DatabaseContract.OpenChats.FIELD_THREAD_ID,
+										DatabaseContract.OpenChats.FIELD_RESOURCE};
 		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		List<Object[]> chats = new ArrayList<Object[]>();
-		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME,
-							new String[]{DatabaseContract.OpenChats.FIELD_ID, DatabaseContract.OpenChats.FIELD_JID,
-										 DatabaseContract.OpenChats.FIELD_THREAD_ID,
-										 DatabaseContract.OpenChats.FIELD_RESOURCE},
+		Cursor c = db.query(DatabaseContract.OpenChats.TABLE_NAME, columns,
 							DatabaseContract.OpenChats.FIELD_ACCOUNT + " = ? and " +
 									DatabaseContract.OpenChats.FIELD_TYPE + " = " +
 									DatabaseContract.OpenChats.TYPE_CHAT,
 							new String[]{sessionObject.getUserBareJid().toString()}, null, null, null, null);
-		try {
-			while (c.moveToNext()) {
-				chats.add(new Object[]{c.getLong(0), BareJID.bareJIDInstance(c.getString(1)), c.getString(2),
-									   c.getString(3)});
-			}
-		} finally {
-			c.close();
-		}
-		return chats;
+		return c;
 	}
 
 	public List<Room> getRooms(SessionObject sessionObject, tigase.jaxmpp.core.client.Context context) {
@@ -328,6 +314,20 @@ public class ChatProvider {
 		if (listener != null) {
 			listener.onChange(null);
 		}
+	}
+
+	public void updateChat(final Chat chat) {
+		final SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+		final ContentValues values = new ContentValues();
+		values.put(DatabaseContract.OpenChats.FIELD_JID, chat.getJid().getBareJid().toString());
+		values.put(DatabaseContract.OpenChats.FIELD_THREAD_ID, chat.getThreadId());
+		values.put(DatabaseContract.OpenChats.FIELD_RESOURCE, chat.getJid().getResource());
+
+		long result = db.update(DatabaseContract.OpenChats.TABLE_NAME, values,
+								DatabaseContract.OpenChats.FIELD_ID + " = ?",
+								new String[]{String.valueOf(chat.getId())});
+
 	}
 
 	public void updateRoomState(SessionObject sessionObject, BareJID room, int state) {

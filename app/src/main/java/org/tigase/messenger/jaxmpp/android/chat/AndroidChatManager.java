@@ -17,6 +17,8 @@
  */
 package org.tigase.messenger.jaxmpp.android.chat;
 
+import android.database.Cursor;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -64,31 +66,47 @@ public class AndroidChatManager
 		return chat;
 	}
 
-	@Override
-	public Chat getChat(JID jid, String threadId) {
-		Object[] data = provider.getChat(context.getSessionObject(), jid, threadId);
-		if (data == null) {
-			return null;
-		}
-		Chat chat = new Chat((Long) data[0], context);
-		chat.setThreadId((String) data[1]);
-		if (data[2] != null) {
-			chat.setJid(JID.jidInstance(jid.getBareJid(), (String) data[2]));
+	private Chat createChat(final Cursor c) {
+		final long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+		Chat chat = new Chat(id, context);
+		BareJID jid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID)));
+		chat.setThreadId(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_THREAD_ID)));
+		final String resource = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_RESOURCE));
+
+		if (resource != null && !resource.isEmpty()) {
+			chat.setJid(JID.jidInstance(jid, resource));
 		} else {
-			chat.setJid(jid);
+			chat.setJid(JID.jidInstance(jid));
 		}
 		return chat;
 	}
 
 	@Override
+	public Chat getChat(JID jid, String threadId) {
+		try (Cursor c = provider.getChat(context.getSessionObject(), jid, threadId)) {
+			if (c.moveToNext()) {
+				return createChat(c);
+			}
+		}
+		return null;
+	}
+
+	public Chat getChat(final int chatId) {
+		try (Cursor c = provider.getChat(context.getSessionObject(), chatId)) {
+			if (c.moveToNext()) {
+				return createChat(c);
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public List<Chat> getChats() {
-		List<Object[]> datas = provider.getChats(context.getSessionObject());
-		List<Chat> chats = new ArrayList<Chat>(datas.size());
-		for (Object[] data : datas) {
-			Chat chat = new Chat((Long) data[0], context);
-			chat.setJid(JID.jidInstance((BareJID) data[1], (String) data[3]));
-			chat.setThreadId((String) data[2]);
-			chats.add(chat);
+		List<Chat> chats = new ArrayList<>();
+		try (Cursor c = provider.getChats(context.getSessionObject())) {
+			while (c.moveToNext()) {
+				chats.add(createChat(c));
+			}
 		}
 		return chats;
 	}

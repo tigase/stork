@@ -664,6 +664,8 @@ public class XMPPService
 		messageSenderIntentFilter.addAction(MessageSender.SEND_GROUPCHAT_MESSAGE);
 		registerReceiver(messageSender, messageSenderIntentFilter);
 
+		multiJaxmpp.addHandler(MessageModule.ChatUpdatedHandler.ChatUpdatedEvent.class,
+							   (so, chat) -> chatProvider.updateChat(chat));
 		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
 							   new StreamManagementModule.StreamManagementFailedHandler() {
 								   @Override
