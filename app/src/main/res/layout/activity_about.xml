@@ -52,7 +52,7 @@
                 android:text="@string/about_version_name"/>
 
         <ImageView
-                android:id="@+id/imageView3"
+                android:id="@+id/app_logo"
                 android:layout_width="128dp"
                 android:layout_height="128dp"
                 android:layout_centerHorizontal="true"

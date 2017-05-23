@@ -162,12 +162,6 @@ public class MainActivity
 			startActivity(intent);
 		}
 	}
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// // Inflate the menu; this adds items to the action bar if it is present.
-	// getMenuInflater().inflate(R.menu.main, menu);
-	// return true;
-	// }
 
 	@Override
 	public void onListFragmentInteraction(int id, String account, String jid) {
@@ -195,6 +189,12 @@ public class MainActivity
 			e.printStackTrace();
 		}
 	}
+	// @Override
+	// public boolean onCreateOptionsMenu(Menu menu) {
+	// // Inflate the menu; this adds items to the action bar if it is present.
+	// getMenuInflater().inflate(R.menu.main, menu);
+	// return true;
+	// }
 
 	@SuppressWarnings("StatementWithEmptyBody")
 	@Override
@@ -207,6 +207,17 @@ public class MainActivity
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
 		return true;
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		boolean itemVisible = sharedPref.getBoolean("nav_connectionstatus", false);
+
+		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
+		conStat.setVisible(itemVisible);
 	}
 
 	// @Override
