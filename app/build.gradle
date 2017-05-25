@@ -22,61 +22,61 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+	compileSdkVersion 25
+	buildToolsVersion "25.0.3"
 
-    defaultConfig {
-        applicationId "org.tigase.messenger.phone.pro"
-        minSdkVersion 19
-        targetSdkVersion 25
-        versionCode 39
-        versionName "3.0.0 RC9"
-        jackOptions {
-            enabled true
-        }
-    }
-    signingConfigs {
-        release {
-            storeFile file(RELEASE_STORE_FILE)
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
-        }
-    }
+	defaultConfig {
+		applicationId "org.tigase.messenger.phone.pro"
+		minSdkVersion 19
+		targetSdkVersion 25
+		versionCode 39
+		versionName "3.0.0 RC9"
+		jackOptions {
+			enabled true
+		}
+	}
+	signingConfigs {
+		release {
+			storeFile file(RELEASE_STORE_FILE)
+			storePassword RELEASE_STORE_PASSWORD
+			keyAlias RELEASE_KEY_ALIAS
+			keyPassword RELEASE_KEY_PASSWORD
+		}
+	}
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			signingConfig signingConfigs.release
+		}
+	}
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
+	}
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'tigase:jaxmpp-android:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-muc:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-chat:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-presence:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-roster:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-registration:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-vcard:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-filetransfer:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-jingle:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-socks5:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-pubsub:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-im:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-core:3.2.0-SNAPSHOT'
-    compile 'tigase:jaxmpp-j2se:3.2.0-SNAPSHOT'
-    compile 'tigase:tigase-xmltools:3.4.5'
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.android.support:recyclerview-v7:25.3.1'
+	compile fileTree(include: ['*.jar'], dir: 'libs')
+	testCompile 'junit:junit:4.12'
+	compile 'tigase:jaxmpp-android:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-muc:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-chat:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-presence:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-roster:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-registration:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-vcard:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-filetransfer:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-jingle:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-socks5:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-pubsub:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-im:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-core:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-j2se:3.2.0-SNAPSHOT'
+	compile 'tigase:tigase-xmltools:3.4.5'
+	compile 'com.android.support:appcompat-v7:25.3.1'
+	compile 'com.android.support:design:25.3.1'
+	compile 'com.android.support:support-v4:25.3.1'
+	compile 'com.android.support:recyclerview-v7:25.3.1'
 }
