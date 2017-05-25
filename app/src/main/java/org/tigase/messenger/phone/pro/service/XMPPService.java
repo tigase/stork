@@ -1385,6 +1385,7 @@ public class XMPPService
 				boolean notify = false;
 
 				if (msg.getType() == StanzaType.error) {
+					notify = true;
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_INCOMING);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
 							   DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
@@ -1651,13 +1652,13 @@ public class XMPPService
 				MucModule mucModule = jaxmpp.getModule(MucModule.class);
 				for (Room room : mucModule.getRooms()) {
 					Log.d(TAG, "Room " + room.getRoomJid() + " is in state " + room.getState());
-					if (room.getState() != Room.State.joined) {
-						Log.d(TAG, "Rejoinning to " + room.getRoomJid());
-
-						room.rejoin();
-					} else {
-						taskExecutor.execute(new SendUnsentGroupMessages(room));
-					}
+//					if (room.getState() != Room.State.joined) {
+//						Log.d(TAG, "Rejoinning to " + room.getRoomJid());
+//
+//					} else {
+//						taskExecutor.execute(new SendUnsentGroupMessages(room));
+//					}
+					room.rejoin();
 				}
 			} catch (JaxmppException e) {
 				Log.e(TAG, "Exception while rejoining to rooms on connect for account " +
