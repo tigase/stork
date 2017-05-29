@@ -23,6 +23,7 @@ package org.tigase.messenger.phone.pro;
 
 import android.app.Application;
 import android.content.Intent;
+import org.tigase.messenger.phone.pro.service.ServiceRestarter;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
@@ -42,4 +43,9 @@ public class MessengerApplication
 		startService(ssIntent);
 	}
 
+	@Override
+	public void onTerminate() {
+		sendBroadcast(new Intent(ServiceRestarter.ACTION_NAME));
+		super.onTerminate();
+	}
 }
