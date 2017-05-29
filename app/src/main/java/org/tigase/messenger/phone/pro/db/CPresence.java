@@ -54,14 +54,26 @@ public class CPresence
 	private final int status;
 
 	public static int getStatusFromPresence(Presence p) throws XMLException {
-		int status = p.getType() == null ? Presence.Show.online.ordinal() : 0;
-		if (status > 0) {
-			status = p.getShow().getWeight();
-		}
 		if (p.getType() == StanzaType.error) {
-			status = 1;
+			return ERROR;
+		} else {
+			switch (p.getShow()) {
+				case online:
+					return ONLINE;
+				case xa:
+					return XA;
+				case away:
+					return AWAY;
+				case chat:
+					return CHAT;
+				case dnd:
+					return DND;
+				case offline:
+					return OFFLINE;
+				default:
+					return OFFLINE;
+			}
 		}
-		return status * 5;
 	}
 
 	private CPresence(Parcel in) {
