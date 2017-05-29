@@ -30,10 +30,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
@@ -62,32 +62,7 @@ public class MyOpenChatItemRecyclerViewAdapter
 		final int type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
 		final int unreadCount = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_UNREAD_COUNT));
 
-		int presenceIconResource;
-		switch (presence) {
-			case CPresence.OFFLINE:
-				presenceIconResource = R.drawable.presence_offline;
-				break;
-			case CPresence.ERROR:
-				presenceIconResource = R.drawable.presence_error;
-				break;
-			case CPresence.DND:
-				presenceIconResource = R.drawable.presence_dnd;
-				break;
-			case CPresence.XA:
-				presenceIconResource = R.drawable.presence_xa;
-				break;
-			case CPresence.AWAY:
-				presenceIconResource = R.drawable.presence_away;
-				break;
-			case CPresence.ONLINE:
-				presenceIconResource = R.drawable.presence_online;
-				break;
-			case CPresence.CHAT: // chat
-				presenceIconResource = R.drawable.presence_chat;
-				break;
-			default:
-				presenceIconResource = R.drawable.presence_unknown;
-		}
+		int presenceIconResource = PresenceIconMapper.getPresenceResource(presence);
 
 		holder.mLastMessage.setText(lastMessage);
 
