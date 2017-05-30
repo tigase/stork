@@ -3,7 +3,10 @@ package org.tigase.messenger.phone.pro.account;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
 import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.*;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.SessionObject;
+import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.connector.StreamError;
 import tigase.jaxmpp.core.client.eventbus.Event;
 import tigase.jaxmpp.core.client.eventbus.EventBus;
@@ -12,7 +15,6 @@ import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
@@ -32,6 +34,7 @@ public class AccountCreator {
 	protected String errorMessage;
 	protected Throwable exception;
 	private boolean passwordInvalid = false;
+	private boolean success = false;
 
 	public AccountCreator(String mHostname) {
 		this.hostname = mHostname;
@@ -180,7 +183,7 @@ public class AccountCreator {
 		try {
 
 			Log.d(TAG, "Login 1...");
-			contact.login(true);
+			contact.login(false);
 			synchronized (AccountCreator.this) {
 				while (!stopped) {
 					if (!contact.isConnected()) {
@@ -197,13 +200,10 @@ public class AccountCreator {
 				Log.d(TAG, "... done 2");
 			}
 
-			final JID bindedJID = ResourceBinderModule.getBindedJID(contact.getSessionObject());
-
-			Log.d(TAG, "Binded JID: " + bindedJID);
 			Log.d(TAG,
 				  "Czy jest error? " + contact.getSessionObject().getProperty(tigase.jaxmpp.j2se.Jaxmpp.EXCEPTION_KEY) +
 						  "  " + (exception == null));
-			return exception == null && errorMessage == null && bindedJID != null;
+			return exception == null && errorMessage == null && success;
 		} catch (JaxmppException e) {
 			Log.w(TAG, "Auth problem", e);
 			exception = e;
@@ -218,6 +218,11 @@ public class AccountCreator {
 				Log.e(TAG, "Disconnect problem on password check", e);
 			}
 		}
+	}
+
+	public void success() {
+		this.success = true;
+		wakeup();
 	}
 
 	protected void wakeup() {

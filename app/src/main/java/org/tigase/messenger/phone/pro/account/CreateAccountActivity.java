@@ -23,7 +23,6 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.TextPrivateField;
 import tigase.jaxmpp.core.client.xmpp.forms.TextSingleField;
 import tigase.jaxmpp.core.client.xmpp.modules.registration.InBandRegistrationModule;
@@ -91,7 +90,7 @@ public class CreateAccountActivity
 
 	private void onNextButton() {
 		String t = mHostname.getText().toString();
-		if (t == null || t.isEmpty()) {
+		if (mAuthTask == null && (t == null || t.isEmpty())) {
 			mHostname.setError("Cannot be empty");
 			return;
 		}
@@ -156,7 +155,7 @@ public class CreateAccountActivity
 											showPage2();
 											dynamicForm.setJabberDataElement(unifiedRegistrationForm);
 											if (progress != null) {
-												progress.hide();
+												progress.dismiss();
 												progress = null;
 											}
 
@@ -168,15 +167,14 @@ public class CreateAccountActivity
 		}
 
 		@Override
-		protected void onPostExecute(Boolean aBoolean) {
-			super.onPostExecute(aBoolean);
-			Log.i(TAG, "Registration status= " + aBoolean);
+		protected void onPostExecute(Boolean success) {
+			Log.i(TAG, "Registration status= " + success);
 			if (progress != null) {
-				progress.hide();
+				progress.dismiss();
 				progress = null;
 			}
 
-			if (!aBoolean) {
+			if (!success) {
 				showPage1();
 
 				SecureTrustManagerFactory.DataCertificateException deepException = LoginActivity.getCertException(
@@ -234,12 +232,10 @@ public class CreateAccountActivity
 				i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
 				i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
 				sendBroadcast(i);
-			} catch (XMLException e) {
-				e.printStackTrace();
 			} catch (Exception e) {
 				Log.e("LoginActivity", "Can't add account", e);
 			}
-
+			finish();
 		}
 
 		@Override
@@ -248,12 +244,14 @@ public class CreateAccountActivity
 		}
 
 		private void showProgress(String msg) {
-			this.progress = new ProgressDialog(CreateAccountActivity.this);
-			progress.setMessage(msg);
-			progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progress.setIndeterminate(true);
-			progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-			progress.show();
+			if (this.progress == null) {
+				this.progress = new ProgressDialog(CreateAccountActivity.this);
+				progress.setMessage(msg);
+				progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+				progress.setIndeterminate(true);
+				progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+				progress.show();
+			}
 		}
 
 		public void useForm(UnifiedRegistrationForm jabberDataElement) throws JaxmppException {
@@ -269,7 +267,8 @@ public class CreateAccountActivity
 						Log.e(TAG, "Error: " + errorCondition);
 
 						runOnUiThread(() -> {
-							progress.hide();
+							progress.dismiss();
+							progress = null;
 							AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
 							builder.setMessage("Registration error: " + errorCondition)
 									.setPositiveButton(android.R.string.ok, null)
@@ -281,13 +280,14 @@ public class CreateAccountActivity
 					@Override
 					public void onSuccess(Stanza stanza) throws JaxmppException {
 						Log.e(TAG, "Success ");
-						accountCreator.wakeup();
+						accountCreator.success();
 					}
 
 					@Override
 					public void onTimeout() throws JaxmppException {
 						runOnUiThread(() -> {
-							progress.hide();
+							progress.dismiss();
+							progress = null;
 							AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
 							builder.setMessage("No server response")
 									.setPositiveButton(android.R.string.ok, null)

@@ -23,6 +23,8 @@ public class NewAccountActivity
 		// Check which request we're responding to
 		if (requestCode == LOGIN_REQUEST) {
 			finish();
+		} else if (requestCode == CREATE_ACCOUNT_REQUEST) {
+			finish();
 		}
 	}
 
