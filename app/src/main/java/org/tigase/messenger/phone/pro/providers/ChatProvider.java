@@ -148,8 +148,24 @@ public class ChatProvider
 
 	@Override
 	public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-		// Implement this to handle requests to delete one or more rows.
-		throw new UnsupportedOperationException("Not yet implemented");
+		final Context context = getContext();
+		final SQLiteDatabase db = dbHelper.getWritableDatabase();
+		switch (sUriMatcher.match(uri)) {
+			case URI_INDICATOR_CHATS_ACCOUNT:
+				final String account = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
+				final String jid = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
+
+				int r = db.delete(DatabaseContract.ChatHistory.TABLE_NAME,
+								  DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " +
+										  DatabaseContract.ChatHistory.FIELD_JID + "=?", new String[]{account, jid});
+				if (context != null) {
+					context.getContentResolver().notifyChange(uri, null);
+				}
+				return r;
+			default:
+				throw new IllegalArgumentException("Unsupported URI " + uri);
+		}
+
 	}
 
 	@Override

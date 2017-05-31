@@ -25,11 +25,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -87,6 +89,11 @@ public class OpenChatItemFragment
 		}
 
 		@Override
+		public void onDeleteChat(int chatId, String jid, String account) {
+			OpenChatItemFragment.this.onDeleteChat(chatId, jid, account);
+		}
+
+		@Override
 		public void onEnterToChat(final int type, final int openChatId, final String jid, final String account) {
 			Intent intent;
 			switch (type) {
@@ -126,6 +133,44 @@ public class OpenChatItemFragment
 	 * fragment (e.g. upon screen orientation changes).
 	 */
 	public OpenChatItemFragment() {
+	}
+
+	private void doDeleteChat(final int chatId, final String jid, final String account) {
+		XMPPService service = mConnection.getService();
+		if (service == null) {
+			Log.w("OpenChatItemFragment", "Service is not binded");
+			return;
+		}
+
+		final Jaxmpp jaxmpp = service.getJaxmpp(account);
+
+		if (jaxmpp == null) {
+			Log.w("OpenChatItemFragment", "There is no account " + account);
+			return;
+		}
+
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				Chat chat = null;
+				for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+					if (c.getId() == chatId) {
+						chat = c;
+						break;
+					}
+				}
+				if (chat != null) {
+					try {
+						jaxmpp.getModule(MessageModule.class).close(chat);
+						Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + jid);
+						getContext().getContentResolver().delete(chatHistoryUri, null, null);
+					} catch (Exception e) {
+						Log.e("OpenChat", "Cannot delete chat", e);
+					}
+				}
+				return null;
+			}
+		}.execute();
 	}
 
 	private void onArchiveChat(final int chatId, String jid, final String account) {
@@ -222,6 +267,13 @@ public class OpenChatItemFragment
 		return root;
 	}
 
+	private void onDeleteChat(final int chatId, String jid, final String account) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		builder.setMessage(R.string.delete_chat_history_question).setPositiveButton(R.string.yes, (dialog, which) -> {
+			doDeleteChat(chatId, jid, account);
+		}).setNegativeButton(R.string.no, null).show();
+	}
+
 	@Override
 	public void onDetach() {
 		Log.v(TAG, "Detaching from context");
@@ -293,6 +345,8 @@ public class OpenChatItemFragment
 	public interface OnListFragmentInteractionListener {
 
 		void onArchiveChat(int chatId, String jid, String account);
+
+		void onDeleteChat(int chatId, String jid, String account);
 
 		void onEnterToChat(int type, int openChatId, String jid, String account);
 

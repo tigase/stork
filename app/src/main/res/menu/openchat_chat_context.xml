@@ -4,4 +4,9 @@
             android:id="@+id/menu_chat_archive"
             android:orderInCategory="100"
             android:title="@string/menu_chat_archive"/>
+    <item
+            android:id="@+id/menu_chat_delete"
+            android:orderInCategory="100"
+            android:title="@string/menu_chat_delete"/>
+
 </menu>

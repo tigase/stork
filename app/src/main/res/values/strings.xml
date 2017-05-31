@@ -169,6 +169,8 @@
     <string name="contact_vcard_position">Position</string>
     <string name="join">Join</string>
     <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="join_room_address">Room address</string>
     <string name="join_room_nickname">Nickname</string>
     <string name="main_menu_joinroom">Join chat room</string>
@@ -195,4 +197,6 @@
     <string name="login_password_valid">Password valid</string>
     <string name="login_password_invalid">Password invalid</string>
     <string name="login_successful">Connection successful</string>
+    <string name="menu_chat_delete">Delete chat history</string>
+    <string name="delete_chat_history_question">Do you want to delete chat history? It cannot be undone.</string>
 </resources>

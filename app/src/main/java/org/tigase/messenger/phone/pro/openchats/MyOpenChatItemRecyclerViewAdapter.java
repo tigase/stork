@@ -105,7 +105,10 @@ public class MyOpenChatItemRecyclerViewAdapter
 		PopupMenu.OnMenuItemClickListener menuListener = new PopupMenu.OnMenuItemClickListener() {
 			@Override
 			public boolean onMenuItemClick(MenuItem item) {
-				if (item.getItemId() == R.id.menu_chat_archive) {
+				if (item.getItemId() == R.id.menu_chat_delete) {
+					mListener.onDeleteChat(id, jid, account);
+					return true;
+				} else if (item.getItemId() == R.id.menu_chat_archive) {
 					mListener.onArchiveChat(id, jid, account);
 					return true;
 				} else if (item.getItemId() == R.id.menu_chat_leaveroom) {
