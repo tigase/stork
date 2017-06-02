@@ -41,7 +41,7 @@
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="I have XMPP account"
+            android:text="@string/new_account_login"
             android:id="@+id/useExistingAccountButton"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="68dp"/>
@@ -49,7 +49,7 @@
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create new account"
+            android:text="@string/new_account_create"
             android:id="@+id/createNewAccountButton"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="18dp"/>

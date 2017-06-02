@@ -205,4 +205,6 @@
     <string name="account_status_connected">Connected</string>
     <string name="account_status_disabled">Account disabled</string>
     <string name="account_status_unknown">Unknown account status</string>
+    <string name="new_account_login">I have an XMPP account</string>
+    <string name="new_account_create">Create new account</string>
 </resources>
