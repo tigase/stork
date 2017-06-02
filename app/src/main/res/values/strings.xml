@@ -199,4 +199,10 @@
     <string name="login_successful">Connection successful</string>
     <string name="menu_chat_delete">Delete chat history</string>
     <string name="delete_chat_history_question">Do you want to delete chat history? It cannot be undone.</string>
+    <string name="account_status_disconnected">Disconnected</string>
+    <string name="account_status_disconnecting">Disconnecting</string>
+    <string name="account_status_connecting">Connecting</string>
+    <string name="account_status_connected">Connected</string>
+    <string name="account_status_disabled">Account disabled</string>
+    <string name="account_status_unknown">Unknown account status</string>
 </resources>

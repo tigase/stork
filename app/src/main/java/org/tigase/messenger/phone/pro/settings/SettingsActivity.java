@@ -24,6 +24,7 @@ package org.tigase.messenger.phone.pro.settings;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.TargetApi;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -32,15 +33,26 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.*;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.BaseAdapter;
+import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
+import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.eventbus.DefaultEventBus;
+import tigase.jaxmpp.core.client.eventbus.EventBus;
+import tigase.jaxmpp.core.client.eventbus.EventListener;
 
 import java.util.List;
 
@@ -63,47 +75,59 @@ public class SettingsActivity
 	 * A preference value change listener that updates the preference's summary
 	 * to reflect its new value.
 	 */
-	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-		@Override
-		public boolean onPreferenceChange(Preference preference, Object value) {
-			String stringValue = value.toString();
+	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = (preference, value) -> {
+		String stringValue = value.toString();
 
-			if (preference instanceof ListPreference) {
-				// For list preferences, look up the correct display value in
-				// the preference's 'entries' list.
-				ListPreference listPreference = (ListPreference) preference;
-				int index = listPreference.findIndexOfValue(stringValue);
+		if (preference instanceof ListPreference) {
+			// For list preferences, look up the correct display value in
+			// the preference's 'entries' list.
+			ListPreference listPreference = (ListPreference) preference;
+			int index = listPreference.findIndexOfValue(stringValue);
 
-				// Set the summary to reflect the new value.
-				preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+			// Set the summary to reflect the new value.
+			preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
-			} else if (preference instanceof RingtonePreference) {
-				// For ringtone preferences, look up the correct display value
-				// using RingtoneManager.
-				if (TextUtils.isEmpty(stringValue)) {
-					// Empty values correspond to 'silent' (no ringtone).
-					preference.setSummary(R.string.pref_ringtone_silent);
-
-				} else {
-					Ringtone ringtone = RingtoneManager.getRingtone(preference.getContext(), Uri.parse(stringValue));
-
-					if (ringtone == null) {
-						// Clear the summary if there was a lookup error.
-						preference.setSummary(null);
-					} else {
-						// Set the summary to reflect the new ringtone display
-						// name.
-						String name = ringtone.getTitle(preference.getContext());
-						preference.setSummary(name);
-					}
-				}
+		} else if (preference instanceof RingtonePreference) {
+			// For ringtone preferences, look up the correct display value
+			// using RingtoneManager.
+			if (TextUtils.isEmpty(stringValue)) {
+				// Empty values correspond to 'silent' (no ringtone).
+				preference.setSummary(R.string.pref_ringtone_silent);
 
 			} else {
-				// For all other preferences, set the summary to the value's
-				// simple string representation.
-				preference.setSummary(stringValue);
+				Ringtone ringtone = RingtoneManager.getRingtone(preference.getContext(), Uri.parse(stringValue));
+
+				if (ringtone == null) {
+					// Clear the summary if there was a lookup error.
+					preference.setSummary(null);
+				} else {
+					// Set the summary to reflect the new ringtone display
+					// name.
+					String name = ringtone.getTitle(preference.getContext());
+					preference.setSummary(name);
+				}
 			}
-			return true;
+
+		} else {
+			// For all other preferences, set the summary to the value's
+			// simple string representation.
+			preference.setSummary(stringValue);
+		}
+		return true;
+	};
+	private final DefaultEventBus d = new DefaultEventBus();
+	private final EventListener eventsRepeater = SettingsActivity.this.d::fire;
+	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			getService().getMultiJaxmpp().addListener(eventsRepeater);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			getService().getMultiJaxmpp().remove(eventsRepeater);
+			super.onServiceDisconnected(name);
 		}
 	};
 
@@ -135,6 +159,19 @@ public class SettingsActivity
 	private static boolean isXLargeTablet(Context context) {
 		return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >=
 				Configuration.SCREENLAYOUT_SIZE_XLARGE;
+	}
+
+	private EventBus getEventBus() {
+		return d;
+	}
+
+	Connector.State getState(String account) {
+		XMPPService s = mConnection.getService();
+		if (s != null) {
+			Connector.State r = s.getJaxmpp(account).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+			return r == null ? Connector.State.disconnected : r;
+		}
+		return null;
 	}
 
 	/**
@@ -184,6 +221,19 @@ public class SettingsActivity
 		return super.onMenuItemSelected(featureId, item);
 	}
 
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Intent service = new Intent(getApplicationContext(), XMPPService.class);
+		bindService(service, mConnection, 0);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		unbindService(mConnection);
+	}
+
 	/**
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
 	 */
@@ -193,6 +243,60 @@ public class SettingsActivity
 			// Show the Up button in the action bar.
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+	}
+
+	private static class AccountCat
+			extends Preference {
+
+		private final String account;
+		private final boolean active;
+		private final SettingsActivity activity;
+
+		AccountCat(Context context, String account, boolean active, SettingsActivity activity) {
+			super(context);
+			setTitle(account);
+			this.activity = activity;
+			this.account = account;
+			this.active = active;
+		}
+
+		@Override
+		protected void onBindView(View view) {
+			try {
+				if (!active) {
+					setSummary(R.string.account_status_disabled);
+					setIcon(R.drawable.ic_account_disconnected);
+				} else {
+					final Connector.State state = activity.getState(account);
+					switch (state) {
+						case connected:
+							setSummary(R.string.account_status_connected);
+							setIcon(R.drawable.ic_account_connected);
+							break;
+						case connecting:
+							setSummary(R.string.account_status_connecting);
+							setIcon(R.drawable.ic_account_connected);
+							break;
+						case disconnecting:
+							setSummary(R.string.account_status_disconnecting);
+							setIcon(R.drawable.ic_account_disconnected);
+							break;
+						default:
+						case disconnected:
+							setSummary(R.string.account_status_disconnected);
+							setIcon(R.drawable.ic_account_disconnected);
+							break;
+
+					}
+				}
+			} catch (Exception e) {
+				Log.wtf("SettingsActivity", e);
+				setSummary(R.string.account_status_unknown);
+				setIcon(R.drawable.ic_account_disconnected);
+			}
+			super.onBindView(view);
+		}
+
 	}
 
 	/**
@@ -210,6 +314,11 @@ public class SettingsActivity
 			super.onCreate(savedInstanceState);
 			addPreferencesFromResource(R.xml.pref_accounts_list);
 			this.screen = this.getPreferenceScreen();
+			((SettingsActivity) getActivity()).getEventBus()
+					.addListener(Connector.StateChangedHandler.StateChangedEvent.class, event -> {
+						BaseAdapter adapter = (BaseAdapter) screen.getRootAdapter();
+						getActivity().runOnUiThread(adapter::notifyDataSetChanged);
+					});
 		}
 
 		@Override
@@ -238,12 +347,13 @@ public class SettingsActivity
 			screen.addPreference(addAccountPref);
 
 			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-				Preference category = new Preference(screen.getContext());
+				boolean active = Boolean.parseBoolean(am.getUserData(account, AccountsConstants.FIELD_ACTIVE));
+
+				AccountCat category = new AccountCat(screen.getContext(), account.name, active,
+													 (SettingsActivity) getActivity());
 				Intent x = new Intent(screen.getContext(), LoginActivity.class);
 				x.putExtra("account_name", account.name);
 				category.setIntent(x);
-
-				category.setTitle(account.name);
 				screen.addPreference(category);
 			}
 		}
