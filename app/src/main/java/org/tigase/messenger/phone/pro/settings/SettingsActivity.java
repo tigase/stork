@@ -28,6 +28,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -42,6 +45,8 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
@@ -49,12 +54,17 @@ import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.utils.AsyncDrawable;
+import org.tigase.messenger.phone.pro.utils.BitmapWorkerTask;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.eventbus.DefaultEventBus;
 import tigase.jaxmpp.core.client.eventbus.EventBus;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 
 import java.util.List;
+
+import static org.tigase.messenger.phone.pro.utils.AvatarHelper.getCroppedBitmap;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -251,6 +261,7 @@ public class SettingsActivity
 		private final String account;
 		private final boolean active;
 		private final SettingsActivity activity;
+		private final Bitmap mPlaceHolderBitmap;
 
 		AccountCat(Context context, String account, boolean active, SettingsActivity activity) {
 			super(context);
@@ -258,6 +269,15 @@ public class SettingsActivity
 			this.activity = activity;
 			this.account = account;
 			this.active = active;
+			setLayoutResource(R.layout.preference_account_item);
+
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inJustDecodeBounds = true;
+			BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher, options);
+			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+			options.inJustDecodeBounds = false;
+			this.mPlaceHolderBitmap = getCroppedBitmap(
+					BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher, options));
 		}
 
 		@Override
@@ -286,15 +306,62 @@ public class SettingsActivity
 							setSummary(R.string.account_status_disconnected);
 							setIcon(R.drawable.ic_account_disconnected);
 							break;
-
 					}
 				}
+
+				final TextView titleView = (TextView) view.findViewById(R.id.account_name);
+				if (titleView != null) {
+					final CharSequence title = getTitle();
+					if (!TextUtils.isEmpty(title)) {
+						titleView.setText(title);
+						titleView.setVisibility(View.VISIBLE);
+					} else {
+						titleView.setVisibility(View.GONE);
+					}
+				}
+
+				final TextView summaryView = (TextView) view.findViewById(R.id.summary);
+				if (summaryView != null) {
+					final CharSequence summary = getSummary();
+					if (!TextUtils.isEmpty(summary)) {
+						summaryView.setText(summary);
+						summaryView.setVisibility(View.VISIBLE);
+					} else {
+						summaryView.setVisibility(View.GONE);
+					}
+				}
+
+				ImageView statusView = (ImageView) view.findViewById(R.id.account_status);
+				if (statusView != null) {
+					Drawable ic = getIcon();
+					if (ic != null) {
+						statusView.setImageDrawable(ic);
+						statusView.setVisibility(View.VISIBLE);
+					} else {
+						statusView.setVisibility(View.GONE);
+					}
+				}
+
+				ImageView avatarView = (ImageView) view.findViewById(R.id.contact_avatar);
+				if (avatarView != null) {
+					final BitmapWorkerTask task = new BitmapWorkerTask(getContext(), avatarView, null);
+
+					final AsyncDrawable asyncDrawable = new AsyncDrawable(getContext().getResources(),
+																		  mPlaceHolderBitmap, task);
+					avatarView.setImageDrawable(asyncDrawable);
+					try {
+						task.execute(BareJID.bareJIDInstance(getTitle().toString()));
+					} catch (java.util.concurrent.RejectedExecutionException e) {
+						// ignoring: probably avatar big as cow
+						Log.e("Settings", "Cannot load avatar for account " + getTitle(), e);
+					}
+				}
+
 			} catch (Exception e) {
 				Log.wtf("SettingsActivity", e);
 				setSummary(R.string.account_status_unknown);
 				setIcon(R.drawable.ic_account_disconnected);
 			}
-			super.onBindView(view);
 		}
 
 	}

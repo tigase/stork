@@ -17,54 +17,56 @@
 <!-- Layout for a Preference in a PreferenceActivity. The
      Preference is able to place a specific widget for its particular
      type in the "widget_frame" layout. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:minHeight="?android:attr/listPreferredItemHeight"
-              android:gravity="center_vertical"
-              android:paddingEnd="?android:attr/scrollbarSize"
-              android:background="?android:attr/selectableItemBackground">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:padding="8dp">
 
-    <ImageView
-            android:id="@+id/icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-    />
-
-    <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="15dip"
-            android:layout_marginEnd="6dip"
-            android:layout_marginTop="6dip"
-            android:layout_marginBottom="6dip"
-            android:layout_weight="1">
-
-        <TextView android:id="@+id/title"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:singleLine="true"
-                  android:textAppearance="?android:attr/textAppearanceLarge"
-                  android:ellipsize="marquee"
-                  android:fadingEdge="horizontal"/>
-
-        <TextView android:id="@+id/summary"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_below="@android:id/title"
-                  android:layout_alignStart="@android:id/title"
-                  android:textAppearance="?android:attr/textAppearanceSmall"
-                  android:textColor="?android:attr/textColorSecondary"
-                  android:maxLines="4"/>
-
+    <RelativeLayout android:id="@+id/contact_avatar_frame" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+        <ImageView
+                android:id="@+id/contact_avatar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentLeft="true"
+                android:scaleType="fitStart"
+                android:src="@drawable/ic_launcher"/>
+        <ImageView
+                android:id="@+id/account_status"
+                android:layout_width="17sp"
+                android:layout_marginRight="3dp"
+                android:layout_height="17sp"
+                android:layout_marginLeft="-17sp"
+                android:src="@drawable/presence_unknown"
+                android:layout_alignBottom="@id/contact_avatar"
+                android:layout_toRightOf="@id/contact_avatar"/>
     </RelativeLayout>
-
-    <!-- Preference should place its actual preference widget here. -->
-    <LinearLayout android:id="@+id/widget_frame"
-                  android:layout_width="wrap_content"
-                  android:layout_height="match_parent"
-                  android:gravity="center_vertical"
-                  android:orientation="vertical"/>
-
-</LinearLayout>
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/contact_avatar_frame"
+            android:orientation="vertical"
+            android:paddingLeft="5dp" android:layout_alignParentEnd="true">
+        <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView
+                    android:id="@+id/account_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Contact"
+                    android:textColor="#000000"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif"
+            />
+        </RelativeLayout>
+        <TextView
+                android:id="@+id/summary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="Contact"
+                android:textSize="12sp"/>
+    </LinearLayout>
+</RelativeLayout>
