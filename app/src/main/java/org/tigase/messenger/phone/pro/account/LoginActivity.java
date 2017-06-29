@@ -42,7 +42,6 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Switch;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
@@ -68,13 +67,14 @@ public class LoginActivity
 		implements LoaderCallbacks<Cursor> {
 
 	public static final String ACCOUNT_MODIFIED_MSG = "org.tigase.messenger.phone.pro.ACCOUNT_MODIFIED_MSG";
+	public static final String KEY_FORCE_DISCONNECT = "KEY_FORCE_DISCONNECT";
+	public static final String KEY_ACCOUNT_NAME = "KEY_ACCOUNT_NAME";
 
 	/**
 	 * Id to identity READ_CONTACTS permission request.
 	 */
 	private static final int REQUEST_READ_CONTACTS = 0;
 	private static final String TAG = "LoginActivity";
-	Switch mActiveView;
 	Button mEmailSignInButton;
 	private AccountManager mAccountManager;
 	/**
@@ -204,7 +204,7 @@ public class LoginActivity
 		String hostname = mHostnameView.getText().toString();
 		String nickname = mNicknameView.getText().toString();
 		String resource = mResourceView.getText().toString();
-		boolean active = this.mActiveView.isChecked();
+		boolean active = true;//this.mActiveView.isChecked();
 
 		boolean cancel = false;
 		View focusView = null;
@@ -254,6 +254,20 @@ public class LoginActivity
 		return null;
 	}
 
+	private String getAccountName(Intent intent) {
+		if (intent == null) {
+			return null;
+		}
+		if (intent.getStringExtra("account_name") != null) {
+			return intent.getStringExtra("account_name");
+		}
+		if (intent != null) {
+			Account account = intent.getParcelableExtra("account");
+			return account == null ? null : account.name;
+		}
+		return null;
+	}
+
 	private boolean isEmailValid(String email) {
 		// TODO: Replace this with your own logic
 		return email.contains("@");
@@ -269,7 +283,7 @@ public class LoginActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
 
-		mActiveView = (Switch) findViewById(R.id.account_active);
+//		mActiveView = (Switch) findViewById(R.id.account_active);
 		mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
 
 		Button cancelButton = (Button) findViewById(R.id.cancel_button);
@@ -315,15 +329,16 @@ public class LoginActivity
 
 //		mProgressView = findViewById(R.id.login_progress);
 
-		if (getIntent().getStringExtra("account_name") != null) {
+		final String accountName = getAccountName(getIntent());
+		if (accountName != null) {
 			// edit existing account mode
-			Account account = getAccount(getIntent().getStringExtra("account_name"));
+			Account account = getAccount(accountName);
 			mXMPPIDView.setEnabled(false);
 			mUpdateAccountMode = true;
 			mXMPPIDView.setText(account.name);
 			String tmp = mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE);
 			Log.i("LoginActivity", AccountsConstants.FIELD_ACTIVE + " = " + tmp);
-			mActiveView.setChecked(Boolean.parseBoolean(tmp == null ? "true" : tmp));
+//			mActiveView.setChecked(Boolean.parseBoolean(tmp == null ? "true" : tmp));
 			mPasswordView.setText(mAccountManager.getPassword(account));
 			mHostnameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
 			mNicknameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME));

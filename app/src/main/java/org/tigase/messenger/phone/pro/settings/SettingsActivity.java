@@ -49,9 +49,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.account.AccountProperties;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
-import org.tigase.messenger.phone.pro.account.LoginActivity;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AsyncDrawable;
@@ -418,7 +418,7 @@ public class SettingsActivity
 
 				AccountCat category = new AccountCat(screen.getContext(), account.name, active,
 													 (SettingsActivity) getActivity());
-				Intent x = new Intent(screen.getContext(), LoginActivity.class);
+				Intent x = new Intent(screen.getContext(), AccountProperties.class);
 				x.putExtra("account_name", account.name);
 				category.setIntent(x);
 				screen.addPreference(category);

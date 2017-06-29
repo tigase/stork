@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceScreen
+            android:key="accountPreferences"
+            android:title="Account settings">
+        <intent android:action="android.intent.action.EDIT"
+                android:targetPackage="org.tigase.messenger.phone.pro"
+                android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"/>
+    </PreferenceScreen>
+</PreferenceScreen>

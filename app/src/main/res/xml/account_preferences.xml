@@ -1,34 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-  ~ account_preferences.xml
-  ~
-  ~ Tigase Android Messenger
-  ~ Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License,
-  ~ or (at your option) any later version.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU Affero General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program. Look for COPYING file in the top folder.
-  ~ If not, see http://www.gnu.org/licenses/.
-  -->
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+            android:title="Connection"
+            android:key="pref_account_connection">
+        <EditTextPreference android:key="account_id"
+                            android:editable="false"
+                            android:enabled="false"
+                            android:title="bmalkow@malkowscy.net"
+                            android:summary="XMPP ID"/>
+        <SwitchPreference android:key="accountEnabled" android:title="Account active"/>
 
-<PreferenceScreen>
-    <!--
-    <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-        android:enabled="true"
-        android:key="auth"
-        android:title="Title?">
-        <intent
-            android:action="android.intent.action.EDIT"
-            android:targetPackage="org.tigase.messenger.phone.pro"
-            android:targetClass="org.tigase.messenger.phone.pro.account.LoginActivity" />
-    </PreferenceScreen>
-    -->
+
+        <EditTextPreference android:key="account_password"
+                            android:password="true"
+                            android:title="Password"/>
+
+        <EditTextPreference android:key="account_hostname"
+                            android:inputType="textUri"
+                            android:title="Hostname"
+                            android:summary="(default)"/>
+
+        <EditTextPreference android:key="account_resource"
+                            android:title="Resource"
+                            android:summary="TigaseMessenger"/>
+
+        <SwitchPreference android:key="account_priorites_enabled" android:title="Automatic priorities"/>
+        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                          android:key="account_priorites_screen"
+                          android:enabled="true"
+                          android:title="Custom resource priorities">
+            <intent
+                    android:action="PRIORITIES_SCREEN"
+                    android:targetPackage="org.tigase.messenger.phone.pro"
+                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"/>
+        </PreferenceScreen>
+
+
+        <!--<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--android:key="loginDetails"-->
+        <!--android:enabled="true"-->
+        <!--android:title="Login details">-->
+        <!--<intent-->
+        <!--android:action="android.intent.action.EDIT"-->
+        <!--android:targetPackage="org.tigase.messenger.phone.pro"-->
+        <!--android:targetClass="org.tigase.messenger.phone.pro.account.LoginActivity"/>-->
+        <!--</PreferenceScreen>-->
+    </PreferenceCategory>
+    <PreferenceCategory
+            android:title="Others"
+            android:key="pref_account_others">
+
+        <EditTextPreference android:key="account_nickname"
+                            android:title="Nickname"/>
+
+    </PreferenceCategory>
 </PreferenceScreen>

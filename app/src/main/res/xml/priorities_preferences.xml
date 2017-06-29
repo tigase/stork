@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <org.tigase.messenger.phone.pro.account.NumberPickerPreference
+            android:key="pr_chat"
+            android:title="@string/status_chat"
+            android:defaultValue="5"/>
+    <org.tigase.messenger.phone.pro.account.NumberPickerPreference
+            android:key="pr_online"
+            android:title="@string/status_online"
+            android:defaultValue="4"/>
+    <org.tigase.messenger.phone.pro.account.NumberPickerPreference
+            android:key="pr_away"
+            android:title="@string/status_away"
+            android:defaultValue="3"/>
+    <org.tigase.messenger.phone.pro.account.NumberPickerPreference
+            android:key="pr_xa"
+            android:title="@string/status_xa"
+            android:defaultValue="2"/>
+    <org.tigase.messenger.phone.pro.account.NumberPickerPreference
+            android:key="pr_dnd"
+            android:title="@string/status_dnd"
+            android:defaultValue="1"/>
+</PreferenceScreen>

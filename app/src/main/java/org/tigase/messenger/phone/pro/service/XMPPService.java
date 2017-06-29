@@ -45,6 +45,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.LoginActivity;
+import org.tigase.messenger.phone.pro.account.PrioritiesEntity;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
@@ -100,9 +101,8 @@ public class XMPPService
 		extends Service {
 
 	public static final String CLIENT_PRESENCE_CHANGED_ACTION = "org.tigase.messenger.phone.pro.PRESENCE_CHANGED";
-
+	public static final String CUSTOM_PRIORITIES_ENTITY_KEY = "CUSTOM_PRIORITIES_ENTITY_KEY";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
-
 	private final static String TAG = "XMPPService";
 	private static final StanzaExecutor executor = new StanzaExecutor();
 	protected final Timer timer = new Timer();
@@ -222,6 +222,7 @@ public class XMPPService
 	};
 	private long keepaliveInterval = 1000 * 60 * 3;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
+	private AccountManager mAccountManager;
 	private MessageHandler messageHandler;
 	private MessageSender messageSender;
 	private MobileModeFeature mobileModeFeature;
@@ -601,6 +602,8 @@ public class XMPPService
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		this.mAccountManager = AccountManager.get(this);
+
 		Log.i("XMPPService", "Service started");
 
 		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
@@ -1160,8 +1163,7 @@ public class XMPPService
 			accountsJids.add(jaxmpp.getSessionObject().getUserBareJid());
 		}
 
-		final AccountManager am = AccountManager.get(this);
-		for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+		for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 			BareJID accountJid = BareJID.bareJIDInstance(account.name);
 			Jaxmpp jaxmpp = multiJaxmpp.get(accountJid);
 			if (jaxmpp == null) {
@@ -1172,10 +1174,20 @@ public class XMPPService
 			// workaround for unknown certificate error
 			jaxmpp.getSessionObject().setProperty("jaxmpp#ThrowedException", null);
 
-			String password = am.getPassword(account);
-			String nickname = am.getUserData(account, AccountsConstants.FIELD_NICKNAME);
-			String hostname = am.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
-			String resource = am.getUserData(account, AccountsConstants.FIELD_RESOURCE);
+			String tmp = mAccountManager.getUserData(account, AccountsConstants.AUTOMATIC_PRIORITIES);
+			final boolean automaticPriorities = tmp == null ? true : Boolean.parseBoolean(tmp);
+			if (automaticPriorities) {
+				jaxmpp.getSessionObject().setUserProperty(CUSTOM_PRIORITIES_ENTITY_KEY, new PrioritiesEntity());
+			} else {
+				PrioritiesEntity pr = PrioritiesEntity.instance(
+						mAccountManager.getUserData(account, AccountsConstants.CUSTOM_PRIORITIES));
+				jaxmpp.getSessionObject().setUserProperty(CUSTOM_PRIORITIES_ENTITY_KEY, pr);
+			}
+
+			String password = mAccountManager.getPassword(account);
+			String nickname = mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME);
+			String hostname = mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
+			String resource = mAccountManager.getUserData(account, AccountsConstants.FIELD_RESOURCE);
 			hostname = hostname == null ? null : hostname.trim();
 
 			jaxmpp.getSessionObject().setUserProperty(SessionObject.PASSWORD, password);
@@ -1192,7 +1204,8 @@ public class XMPPService
 
 			MobileModeFeature.updateSettings(account, jaxmpp, this);
 
-			boolean disabled = !Boolean.parseBoolean(am.getUserData(account, AccountsConstants.FIELD_ACTIVE));
+			boolean disabled = !Boolean.parseBoolean(
+					mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));
 			jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", disabled);
 
 			if (disabled) {
@@ -1270,11 +1283,29 @@ public class XMPPService
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Log.i("XMPPService", "Updating accounts !" + intent.getAction());
+
+			String account = intent.getStringExtra(LoginActivity.KEY_ACCOUNT_NAME);
+			boolean forceDisconnect = intent.getBooleanExtra(LoginActivity.KEY_FORCE_DISCONNECT, false);
+
+			if (account != null && forceDisconnect) {
+				try {
+					multiJaxmpp.get(BareJID.bareJIDInstance(account)).disconnect();
+				} catch (JaxmppException e) {
+					Log.i("XMPPService", "Problem during disconnecting!", e);
+				}
+			}
+
 			updateJaxmppInstances();
 			for (JaxmppCore j : multiJaxmpp.get()) {
 				Connector.State st = getState(j.getSessionObject());
 				if (st == Connector.State.disconnected || st == null) {
 					connectJaxmpp((Jaxmpp) j, (Long) null);
+				} else {
+					try {
+						j.getModule(PresenceModule.class).sendInitialPresence();
+					} catch (JaxmppException e) {
+						Log.e("XMPPService", "Cannot resend initial presence", e);
+					}
 				}
 			}
 		}
@@ -1558,6 +1589,11 @@ public class XMPPService
 				int defaultPresence = Long.valueOf(sharedPref.getLong("presence", CPresence.ONLINE)).intValue();
 				int presenceId = Long.valueOf(sharedPref.getLong("auto_presence", defaultPresence)).intValue();
 
+				PrioritiesEntity custPrio = sessionObject.getUserProperty(CUSTOM_PRIORITIES_ENTITY_KEY);
+				if (custPrio == null) {
+					custPrio = new PrioritiesEntity();
+				}
+
 				Log.d(TAG, "Before presence send. defaultPresence=" + defaultPresence + "; presenceId=" + presenceId);
 
 				switch (presenceId) {
@@ -1565,18 +1601,23 @@ public class XMPPService
 						presence.setType(StanzaType.unavailable);
 						break;
 					case CPresence.DND:
+						presence.setPriority(custPrio.getDnd());
 						presence.setShow(Presence.Show.dnd);
 						break;
 					case CPresence.XA:
+						presence.setPriority(custPrio.getXa());
 						presence.setShow(Presence.Show.xa);
 						break;
 					case CPresence.AWAY:
+						presence.setPriority(custPrio.getAway());
 						presence.setShow(Presence.Show.away);
 						break;
 					case CPresence.ONLINE:
+						presence.setPriority(custPrio.getOnline());
 						presence.setShow(Presence.Show.online);
 						break;
 					case CPresence.CHAT:
+						presence.setPriority(custPrio.getChat());
 						presence.setShow(Presence.Show.chat);
 						break;
 				}
