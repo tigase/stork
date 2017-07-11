@@ -14,3 +14,5 @@ Tigase Team <team@tigase.net>
 include::text/Tigase_Tigase_Android_Messenger-General_overview.asciidoc[]
 
 include::text/Tigase_Tigase_Android_Messenger-User_guide.asciidoc[]
+
+include::text/Advanced_settings.asciidoc[]
