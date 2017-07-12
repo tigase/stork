@@ -42,10 +42,7 @@ import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.jaxmpp.android.muc.AndroidRoomsManager;
 import org.tigase.messenger.jaxmpp.android.roster.AndroidRosterStore;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.account.AccountsConstants;
-import org.tigase.messenger.phone.pro.account.Authenticator;
-import org.tigase.messenger.phone.pro.account.LoginActivity;
-import org.tigase.messenger.phone.pro.account.PrioritiesEntity;
+import org.tigase.messenger.phone.pro.account.*;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
@@ -777,7 +774,7 @@ public class XMPPService
 								 jaxmpp.getSessionObject().getUserBareJid().toString());
 		String text = getString(R.string.notification_certificate_error_text);
 
-		Intent resultIntent = new Intent(this, LoginActivity.class);
+		Intent resultIntent = new Intent(this, AccountProperties.class);
 		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
 
 		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
@@ -818,7 +815,7 @@ public class XMPPService
 								 jaxmpp.getSessionObject().getUserBareJid().toString());
 		String text = getString(R.string.notification_certificate_error_text);
 
-		Intent resultIntent = new Intent(this, LoginActivity.class);
+		Intent resultIntent = new Intent(this, AccountProperties.class);
 		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
 
 		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
