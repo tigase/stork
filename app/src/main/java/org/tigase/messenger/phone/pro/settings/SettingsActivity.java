@@ -140,6 +140,7 @@ public class SettingsActivity
 			super.onServiceDisconnected(name);
 		}
 	};
+	private AccountManager mAccountManager;
 
 	/**
 	 * Binds a preference's summary to its value. More specifically, when the
@@ -162,6 +163,16 @@ public class SettingsActivity
 																		 .getString(preference.getKey(), ""));
 	}
 
+	public static String getDisconnectedCauseMessage(Context c, final XMPPService.DisconnectionCauses cause) {
+		if (cause == XMPPService.DisconnectionCauses.AUTHENTICATION) {
+			return "Disconnected. Invalid username or password.";
+		} else if (cause == XMPPService.DisconnectionCauses.CERTIFICATE_ERROR) {
+			return "Disconnected. Invalid certificate.";
+		} else {
+			return c.getString(R.string.account_status_disconnected);
+		}
+	}
+
 	/**
 	 * Helper method to determine if the device has an extra-large screen. For
 	 * example, 10" tablets are extra-large.
@@ -169,6 +180,15 @@ public class SettingsActivity
 	private static boolean isXLargeTablet(Context context) {
 		return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >=
 				Configuration.SCREENLAYOUT_SIZE_XLARGE;
+	}
+
+	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
+		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
+		if (tmp == null) {
+			return null;
+		} else {
+			return XMPPService.DisconnectionCauses.valueOf(tmp);
+		}
 	}
 
 	private EventBus getEventBus() {
@@ -182,6 +202,10 @@ public class SettingsActivity
 			return r == null ? Connector.State.disconnected : r;
 		}
 		return null;
+	}
+
+	private boolean isAccountActive(Account account) {
+		return Boolean.parseBoolean(mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));
 	}
 
 	/**
@@ -208,6 +232,7 @@ public class SettingsActivity
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.mAccountManager = AccountManager.get(this);
 		setupActionBar();
 	}
 
@@ -258,17 +283,15 @@ public class SettingsActivity
 	private static class AccountCat
 			extends Preference {
 
-		private final String account;
-		private final boolean active;
+		private final Account account;
 		private final SettingsActivity activity;
 		private final Bitmap mPlaceHolderBitmap;
 
-		AccountCat(Context context, String account, boolean active, SettingsActivity activity) {
+		AccountCat(Context context, Account account, SettingsActivity activity) {
 			super(context);
-			setTitle(account);
+			setTitle(account.name);
 			this.activity = activity;
 			this.account = account;
-			this.active = active;
 			setLayoutResource(R.layout.preference_account_item);
 
 			BitmapFactory.Options options = new BitmapFactory.Options();
@@ -283,11 +306,14 @@ public class SettingsActivity
 		@Override
 		protected void onBindView(View view) {
 			try {
+				boolean active = activity.isAccountActive(account);
+
 				if (!active) {
 					setSummary(R.string.account_status_disabled);
 					setIcon(R.drawable.ic_account_disconnected);
 				} else {
-					final Connector.State state = activity.getState(account);
+					final Connector.State state = activity.getState(account.name);
+					XMPPService.DisconnectionCauses cause = activity.getDisconectionProblemDescription(account);
 					switch (state) {
 						case connected:
 							setSummary(R.string.account_status_connected);
@@ -303,7 +329,7 @@ public class SettingsActivity
 							break;
 						default:
 						case disconnected:
-							setSummary(R.string.account_status_disconnected);
+							setSummary(getDisconnectedCauseMessage(getContext(), cause));
 							setIcon(R.drawable.ic_account_disconnected);
 							break;
 					}
@@ -414,10 +440,7 @@ public class SettingsActivity
 			screen.addPreference(addAccountPref);
 
 			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-				boolean active = Boolean.parseBoolean(am.getUserData(account, AccountsConstants.FIELD_ACTIVE));
-
-				AccountCat category = new AccountCat(screen.getContext(), account.name, active,
-													 (SettingsActivity) getActivity());
+				AccountCat category = new AccountCat(screen.getContext(), account, (SettingsActivity) getActivity());
 				Intent x = new Intent(screen.getContext(), AccountProperties.class);
 				x.putExtra("account_name", account.name);
 				category.setIntent(x);

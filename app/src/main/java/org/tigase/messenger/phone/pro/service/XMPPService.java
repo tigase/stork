@@ -111,9 +111,17 @@ public class XMPPService
 	public static final String PUSH_NOTIFICATION_CHANGED = "org.tigase.messenger.phone.pro.PUSH_NOTIFICATION_CHANGED";
 	public static final String CONNECT_ALL = "connect-all";
 	public static final String CONNECT_SINGLE = "connect-single";
+	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
 	private final static String TAG = "XMPPService";
 	private static final StanzaExecutor executor = new StanzaExecutor();
+	private static final String ACCOUNT_ID = "ID";
+
+	public static enum DisconnectionCauses {
+		CERTIFICATE_ERROR,
+		AUTHENTICATION
+	}
+
 	protected final Timer timer = new Timer();
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
 	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
@@ -382,10 +390,11 @@ public class XMPPService
 								}
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
+								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
 								jaxmpp.login(false);
 							} catch (Exception e) {
 								if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
-									jaxmpp.getSessionObject().setProperty("CC:DISABLED", Boolean.TRUE);
+									jaxmpp.getSessionObject().setProperty(ACCOUNT_TMP_DISABLED_KEY, Boolean.TRUE);
 									processCertificateError(jaxmpp,
 															(SecureTrustManagerFactory.DataCertificateException) e.getCause());
 								} else {
@@ -443,7 +452,7 @@ public class XMPPService
 		sessionObject.setUserProperty(DiscoveryModule.IDENTITY_TYPE_KEY, "phone");
 		sessionObject.setUserProperty(CapabilitiesModule.NODE_NAME_KEY, "http://tigase.org/messenger");
 
-		sessionObject.setUserProperty("ID", (long) accountId);
+		sessionObject.setUserProperty(ACCOUNT_ID, (long) accountId);
 		sessionObject.setUserProperty(SocketConnector.SERVER_PORT, 5222);
 		sessionObject.setUserProperty(tigase.jaxmpp.j2se.Jaxmpp.CONNECTOR_TYPE, "socket");
 		sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
@@ -598,6 +607,15 @@ public class XMPPService
 		return info.getType();
 	}
 
+	DisconnectionCauses getDisconectionProblemDescription(Account accout) {
+		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
+		if (tmp == null) {
+			return null;
+		} else {
+			return DisconnectionCauses.valueOf(tmp);
+		}
+	}
+
 	public Jaxmpp getJaxmpp(String account) {
 		return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
 	}
@@ -624,7 +642,7 @@ public class XMPPService
 	}
 
 	public boolean isDisabled(SessionObject sessionObject) {
-		Boolean x = sessionObject.getProperty("CC:DISABLED");
+		Boolean x = sessionObject.getProperty(ACCOUNT_TMP_DISABLED_KEY);
 		return x == null ? false : x;
 	}
 
@@ -883,7 +901,9 @@ public class XMPPService
 
 	private void processAuthenticationError(final Jaxmpp jaxmpp) {
 		Log.e(TAG, "Invalid credentials of account " + jaxmpp.getSessionObject().getUserBareJid());
-		jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", true);
+		jaxmpp.getSessionObject().setUserProperty(ACCOUNT_TMP_DISABLED_KEY, true);
+
+		setDisconnectionProblemDescription(jaxmpp.getSessionObject(), DisconnectionCauses.AUTHENTICATION);
 
 		String title = getString(R.string.notification_credentials_error_title,
 								 jaxmpp.getSessionObject().getUserBareJid().toString());
@@ -924,7 +944,10 @@ public class XMPPService
 										 final SecureTrustManagerFactory.DataCertificateException cause) {
 		Log.e(TAG, "Invalid certificate of account " + jaxmpp.getSessionObject().getUserBareJid() + ": " +
 				cause.getMessage());
-		jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", true);
+
+		setDisconnectionProblemDescription(jaxmpp.getSessionObject(), DisconnectionCauses.CERTIFICATE_ERROR);
+
+		jaxmpp.getSessionObject().setUserProperty(ACCOUNT_TMP_DISABLED_KEY, true);
 
 		String title = getString(R.string.notification_certificate_error_title,
 								 jaxmpp.getSessionObject().getUserBareJid().toString());
@@ -1158,6 +1181,15 @@ public class XMPPService
 		notificationHelper.show(this, room, msg);
 	}
 
+	void setDisconnectionProblemDescription(SessionObject sessionObject, DisconnectionCauses cause) {
+		setDisconnectionProblemDescription(getAccount(sessionObject.getUserBareJid().toString()), cause);
+	}
+
+	void setDisconnectionProblemDescription(Account accout, DisconnectionCauses cause) {
+		mAccountManager.setUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY,
+									cause == null ? null : cause.name());
+	}
+
 	private void startKeepAlive() {
 		Intent i = new Intent();
 		i.setClass(this, XMPPService.class);
@@ -1388,7 +1420,7 @@ public class XMPPService
 
 			boolean disabled = !Boolean.parseBoolean(
 					mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));
-			jaxmpp.getSessionObject().setUserProperty("CC:DISABLED", disabled);
+			jaxmpp.getSessionObject().setUserProperty(ACCOUNT_TMP_DISABLED_KEY, disabled);
 
 			if (disabled) {
 				if (jaxmpp.isConnected()) {

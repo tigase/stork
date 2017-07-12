@@ -141,7 +141,7 @@ public class ConnectionStatusesFragment
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(root.getContext()));
 
-		this.adapter = new StatusesRecyclerViewAdapter(this.mListener);
+		this.adapter = new StatusesRecyclerViewAdapter(getContext(), this.mListener);
 		recyclerView.setAdapter(adapter);
 
 		if (mConnection != null && mConnection.getService() != null) {
