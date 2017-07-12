@@ -210,8 +210,8 @@ public class LoginActivity
 		View focusView = null;
 
 		// Check for a valid password, if the user entered one.
-		if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-			mPasswordView.setError(getString(R.string.error_invalid_password));
+		if (TextUtils.isEmpty(password)) {
+			mPasswordView.setError(getString(R.string.error_field_required));
 			focusView = mPasswordView;
 			cancel = true;
 		}
@@ -271,11 +271,6 @@ public class LoginActivity
 	private boolean isEmailValid(String email) {
 		// TODO: Replace this with your own logic
 		return email.contains("@");
-	}
-
-	private boolean isPasswordValid(String password) {
-		// TODO: Replace this with your own logic
-		return password.length() > 4;
 	}
 
 	@Override
