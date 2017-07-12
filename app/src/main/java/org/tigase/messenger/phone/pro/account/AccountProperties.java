@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.preference.*;
 import android.support.v7.app.ActionBar;
+import android.view.Menu;
 import android.view.MenuItem;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
@@ -17,6 +18,7 @@ public class AccountProperties
 
 	private Account account;
 	private AccountManager mAccountManager;
+	private Fragment settingsFragment;
 
 	static String getAccountName(Intent intent) {
 		if (intent == null) {
@@ -57,20 +59,29 @@ public class AccountProperties
 		final String accountName = getAccountName(getIntent());
 		this.account = getAccount(accountName);
 
-		Fragment settingsFragment;
 		String title;
 		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
 			case "PRIORITIES_SCREEN":
-				settingsFragment = new PrioritiesFragment();
+				this.settingsFragment = new PrioritiesFragment();
 				title = "Priorities";
 				break;
 			default:
-				settingsFragment = new SettingsFragment();
+				this.settingsFragment = new SettingsFragment();
 				title = null;
 		}
 
 		setupActionBar(title);
 		getFragmentManager().beginTransaction().replace(android.R.id.content, settingsFragment).commit();
+	}
+
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		if (item.getItemId() == R.id.remove_account) {
+			showRemoveAccountDialog();
+			return true;
+		} else {
+			return super.onMenuItemSelected(featureId, item);
+		}
 	}
 
 	@Override
@@ -81,6 +92,15 @@ public class AccountProperties
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		menu.clear();
+		if (this.settingsFragment instanceof SettingsFragment) {
+			getMenuInflater().inflate(R.menu.menu_account_pref, menu);
+		}
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	/**
@@ -97,6 +117,28 @@ public class AccountProperties
 				actionBar.setTitle(title);
 			}
 		}
+	}
+
+	private void showRemoveAccountDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Remove account");
+		builder.setMessage("Account " + account.name + " will be removed. Are you sure?");
+
+		builder.setNegativeButton(R.string.no, (dialog, which) -> {
+		});
+		builder.setPositiveButton(R.string.yes, (dialog, which) -> {
+			Intent i = new Intent();
+			i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
+			i.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
+
+			mAccountManager.removeAccount(account, null, null);
+
+			sendBroadcast(i);
+
+			AccountProperties.this.finish();
+		});
+
+		builder.create().show();
 	}
 
 	public static class PrioritiesFragment
