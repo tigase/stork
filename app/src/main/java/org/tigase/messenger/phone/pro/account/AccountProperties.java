@@ -2,6 +2,7 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -311,6 +312,21 @@ public class AccountProperties
 					modified = true;
 					return true;
 				}
+			});
+
+			Preference reconnectPreference = findPreference("account_force_reconnect");
+			reconnectPreference.setOnPreferenceClickListener(preference -> {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Are you sure you want to reconnect this account now?").setTitle("Force reconnect");
+
+				builder.setPositiveButton(R.string.yes, (dialog, which) -> sendBroadcast(true));
+				builder.setNegativeButton(R.string.no, (dialog, which) -> {
+				});
+
+				AlertDialog dialog = builder.create();
+				dialog.show();
+
+				return true;
 			});
 		}
 

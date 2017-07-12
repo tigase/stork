@@ -35,6 +35,9 @@
                     android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"/>
         </PreferenceScreen>
 
+        <Preference android:title="Force reconnect"
+                    android:key="account_force_reconnect"
+                    android:summary="Force connect or reconnect this account"/>
 
         <!--<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"-->
         <!--android:key="loginDetails"-->
