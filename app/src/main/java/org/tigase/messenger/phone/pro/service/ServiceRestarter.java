@@ -42,7 +42,8 @@ public class ServiceRestarter
 		if (presenceId != CPresence.OFFLINE) {
 			Log.i("ServiceRestarter", "Starting service!");
 			Intent ssIntent = new Intent(context, XMPPService.class);
-			ssIntent.setAction("connect-all");
+			ssIntent.setAction(XMPPService.CONNECT_ALL);
+			ssIntent.putExtra("destroyed", true);
 			context.startService(ssIntent);
 		} else {
 			Log.i("ServiceRestarter", "Service not started, because presence is set to OFFLINE");

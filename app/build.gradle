@@ -29,8 +29,8 @@ android {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 19
 		targetSdkVersion 25
-		versionCode 45
-		versionName "3.0.0 RC15"
+		versionCode 46
+		versionName "3.0.0 RC16"
 		jackOptions {
 			enabled true
 		}
@@ -74,9 +74,14 @@ dependencies {
 	compile 'tigase:jaxmpp-im:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-core:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-j2se:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-adhoc:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-push:3.2.0-SNAPSHOT'
 	compile 'tigase:tigase-xmltools:3.4.5'
 	compile 'com.android.support:appcompat-v7:25.3.1'
 	compile 'com.android.support:design:25.3.1'
 	compile 'com.android.support:support-v4:25.3.1'
 	compile 'com.android.support:recyclerview-v7:25.3.1'
+	compile 'com.google.firebase:firebase-messaging:10.2.6'
 }
+
+apply plugin: 'com.google.gms.google-services'

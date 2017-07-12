@@ -36,6 +36,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import com.google.firebase.iid.FirebaseInstanceId;
 import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
 import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
@@ -58,9 +59,14 @@ import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.forms.JabberDataElement;
+import tigase.jaxmpp.core.client.xmpp.forms.TextSingleField;
+import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.EntityTimeModule;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
+import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
+import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
@@ -76,6 +82,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.XMucUserElement;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
+import tigase.jaxmpp.core.client.xmpp.modules.push.PushNotificationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
@@ -99,6 +106,11 @@ public class XMPPService
 
 	public static final String CLIENT_PRESENCE_CHANGED_ACTION = "org.tigase.messenger.phone.pro.PRESENCE_CHANGED";
 	public static final String CUSTOM_PRIORITIES_ENTITY_KEY = "CUSTOM_PRIORITIES_ENTITY_KEY";
+	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.org");
+	//	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.org");
+	public static final String PUSH_NOTIFICATION_CHANGED = "org.tigase.messenger.phone.pro.PUSH_NOTIFICATION_CHANGED";
+	public static final String CONNECT_ALL = "connect-all";
+	public static final String CONNECT_SINGLE = "connect-single";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
 	private final static String TAG = "XMPPService";
 	private static final StanzaExecutor executor = new StanzaExecutor();
@@ -220,6 +232,14 @@ public class XMPPService
 	private long keepaliveInterval = 1000 * 60 * 3;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private AccountManager mAccountManager;
+	final BroadcastReceiver pushNotificationChangeReceived = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Account account = intent.getParcelableExtra("account");
+			Boolean pushEnabled = intent.getBooleanExtra("state", Boolean.FALSE);
+			onNotificationServiceStateChanges(account, pushEnabled);
+		}
+	};
 	private MessageHandler messageHandler;
 	private MessageSender messageSender;
 	private MobileModeFeature mobileModeFeature;
@@ -251,6 +271,12 @@ public class XMPPService
 			XMPPService.this.processSubscriptionRequest(sessionObject, stanza, jid);
 		}
 
+	};
+	private DiscoveryModule.ServerFeaturesReceivedHandler serverFeaturesReceivedHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
+		@Override
+		public void onServerFeaturesReceived(SessionObject sessionObject, IQ iq, String[] strings) {
+			taskExecutor.execute(new CheckPushNotificationStatus(sessionObject));
+		}
 	};
 	private SSLSocketFactory sslSocketFactory;
 	private int usedNetworkType;
@@ -304,12 +330,6 @@ public class XMPPService
 		for (final JaxmppCore jaxmpp : multiJaxmpp.get()) {
 			Log.v(TAG, "connecting account " + jaxmpp.getSessionObject().getUserBareJid());
 			connectJaxmpp((Jaxmpp) jaxmpp, delay);
-		}
-	}
-
-	private void connectAllJaxmpp() {
-		for (final JaxmppCore jaxmpp : multiJaxmpp.get()) {
-			connectJaxmpp((Jaxmpp) jaxmpp, (Long) null);
 		}
 	}
 
@@ -445,6 +465,8 @@ public class XMPPService
 		PresenceModule.setPresenceStore(sessionObject, new J2SEPresenceStore());
 		jaxmpp.getModulesManager().register(new PresenceModule());
 		jaxmpp.getModulesManager().register(new VCardModule());
+		jaxmpp.getModulesManager().register(new AdHocCommansModule());
+		jaxmpp.getModulesManager().register(new PushNotificationModule());
 
 		AndroidChatManager chatManager = new AndroidChatManager(this.chatProvider);
 		MessageModule messageModule = new MessageModule(chatManager);
@@ -467,6 +489,32 @@ public class XMPPService
 		}
 
 		return jaxmpp;
+	}
+
+	private void disablePushService(Account account) throws JaxmppException {
+		final PushNotificationModule pm = getJaxmpp(account.name).getModule(PushNotificationModule.class);
+		if (!pm.isSupportedByServer()) {
+			Log.i(TAG, "Notification Push is not supported by server.");
+			return;
+		}
+		String pushServiceNode = mAccountManager.getUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY);
+
+		pm.disable(PUSH_SERVICE_JID, pushServiceNode, new AsyncCallback() {
+			@Override
+			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+				Log.e(TAG, "Cannot disable Push Service: " + errorCondition);
+			}
+
+			@Override
+			public void onSuccess(Stanza stanza) throws JaxmppException {
+				Log.i(TAG, "Push Service is disabled");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				Log.e(TAG, "Cannot disable Push Service: timeout");
+			}
+		});
 	}
 
 	private void disconnectAllJaxmpp(final boolean cleaning) {
@@ -502,6 +550,41 @@ public class XMPPService
 
 			}
 		});
+	}
+
+	private void enablePushService(Account account) throws JaxmppException {
+		final PushNotificationModule pm = getJaxmpp(account.name).getModule(PushNotificationModule.class);
+		if (!pm.isSupportedByServer()) {
+			Log.i(TAG, "Notification Push is not supported by server.");
+			return;
+		}
+		String pushServiceNode = mAccountManager.getUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY);
+
+		pm.enable(PUSH_SERVICE_JID, pushServiceNode, new AsyncCallback() {
+			@Override
+			public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
+				Log.e(TAG, "Cannot enable Push Service: " + errorCondition);
+			}
+
+			@Override
+			public void onSuccess(Stanza stanza) throws JaxmppException {
+				Log.i(TAG, "Push Service is enabled");
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				Log.e(TAG, "Cannot enable Push Service: timeout");
+			}
+		});
+	}
+
+	private Account getAccount(String name) {
+		for (Account account : mAccountManager.getAccounts()) {
+			if (account.name.equals(name)) {
+				return account;
+			}
+		}
+		return null;
 	}
 
 	private int getActiveNetworkType() {
@@ -656,6 +739,7 @@ public class XMPPService
 		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
 
 		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
+		registerReceiver(pushNotificationChangeReceived, new IntentFilter(PUSH_NOTIFICATION_CHANGED));
 
 		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 
@@ -679,6 +763,8 @@ public class XMPPService
 		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
 							   streamHandler);
 		multiJaxmpp.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, jaxmppConnectedHandler);
+		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
+							   serverFeaturesReceivedHandler);
 		multiJaxmpp.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, jaxmppDisconnectedHandler);
 		// multiJaxmpp.addHandler(SocketConnector.ErrorHandler.ErrorEvent.class,
 		// );
@@ -736,6 +822,7 @@ public class XMPPService
 		unregisterReceiver(presenceChangedReceiver);
 		unregisterReceiver(accountModifyReceiver);
 		unregisterReceiver(messageSender);
+		unregisterReceiver(pushNotificationChangeReceived);
 
 		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
 
@@ -755,10 +842,38 @@ public class XMPPService
 		}
 	}
 
+	private void onNotificationServiceStateChanges(final Account account, final Boolean pushEnabled) {
+		try {
+			Jaxmpp jaxmpp = getJaxmpp(account.name);
+
+			if (jaxmpp.isConnected()) {
+				if (pushEnabled) {
+					registerInPushService(account);
+				} else if (!pushEnabled) {
+					unregisterInPushService(account);
+				}
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot enable or disable Push Service", e);
+		}
+	}
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null && "connect-all".equals(intent.getAction())) {
-			connectAllJaxmpp();
+		if (intent != null && CONNECT_ALL.equals(intent.getAction())) {
+			final boolean destroyed = intent.getBooleanExtra("destroyed", false);
+			for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
+				boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
+				if (destroyed && !pushEnabled || !destroyed) {
+					Jaxmpp jaxmpp = getJaxmpp(account.name);
+					connectJaxmpp(jaxmpp, (Date) null);
+				}
+			}
+		} else if (intent != null && CONNECT_SINGLE.equals(intent.getAction())) {
+			String ac = intent.getStringExtra("account");
+			Jaxmpp jaxmpp = getJaxmpp(ac);
+			connectJaxmpp(jaxmpp, (Date) null);
 		} else if (intent != null && KEEPALIVE_ACTION.equals(intent.getAction())) {
 			keepAlive();
 		}
@@ -904,6 +1019,42 @@ public class XMPPService
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(("request:" + sessionObject.getUserBareJid().toString() + ":" + jid).hashCode(),
 									builder.build());
+	}
+
+	void registerInPushService(final Account account) throws JaxmppException {
+		final AdHocCommansModule ah = getJaxmpp(account.name).getModule(AdHocCommansModule.class);
+
+		final String deviceToken = FirebaseInstanceId.getInstance().getToken();
+
+		final JabberDataElement fields = new JabberDataElement(XDataType.submit);
+		fields.addListSingleField("provider", "fcm-xmpp-api");
+		fields.addTextSingleField("device-token", deviceToken);
+
+		ah.execute(PUSH_SERVICE_JID, "register-device", null, fields,
+				   new AdHocCommansModule.AdHocCommansAsyncCallback() {
+					   @Override
+					   public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							   throws JaxmppException {
+						   Log.e(TAG, "Error on registration in Push Service: " + errorCondition);
+					   }
+
+					   @Override
+					   protected void onResponseReceived(String sessionid, String node, State status,
+														 JabberDataElement data) throws JaxmppException {
+
+						   TextSingleField nodeField = data.getField("node");
+						   String pushServiceNode = nodeField.getFieldValue();
+						   mAccountManager.setUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY,
+													   pushServiceNode);
+
+						   enablePushService(account);
+					   }
+
+					   @Override
+					   public void onTimeout() throws JaxmppException {
+						   Log.e(TAG, "Registration in Push Service timeouted");
+					   }
+				   });
 	}
 
 	private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
@@ -1154,6 +1305,40 @@ public class XMPPService
 
 	}
 
+	private void unregisterInPushService(final Account account) throws JaxmppException {
+		disablePushService(account);
+
+		final AdHocCommansModule ah = getJaxmpp(account.name).getModule(AdHocCommansModule.class);
+
+		final String deviceToken = FirebaseInstanceId.getInstance().getToken();
+
+		final JabberDataElement fields = new JabberDataElement(XDataType.submit);
+		fields.addListSingleField("provider", "fcm-xmpp-api");
+		fields.addTextSingleField("device-token", deviceToken);
+
+		ah.execute(PUSH_SERVICE_JID, "unregister-device", null, fields,
+				   new AdHocCommansModule.AdHocCommansAsyncCallback() {
+					   @Override
+					   public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							   throws JaxmppException {
+						   Log.e(TAG, "Error during unregistration from Push Service: " + errorCondition);
+					   }
+
+					   @Override
+					   protected void onResponseReceived(String sessionid, String node, State status,
+														 JabberDataElement data) throws JaxmppException {
+						   Log.i(TAG, "Device deregistered from Push Service");
+					   }
+
+					   @Override
+					   public void onTimeout() throws JaxmppException {
+						   Log.e(TAG, "Error during unregistration from Push Service: timeout");
+					   }
+				   });
+
+		mAccountManager.setUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY, null);
+	}
+
 	private final void updateJaxmppInstances() {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
@@ -1304,6 +1489,36 @@ public class XMPPService
 						Log.e("XMPPService", "Cannot resend initial presence", e);
 					}
 				}
+			}
+		}
+
+	}
+
+	private class CheckPushNotificationStatus
+			implements Runnable {
+
+		private final SessionObject sessionObject;
+
+		public CheckPushNotificationStatus(SessionObject sessionObject) {
+			this.sessionObject = sessionObject;
+		}
+
+		@Override
+		public void run() {
+			try {
+				Account account = getAccount(sessionObject.getUserBareJid().toString());
+				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
+				final String pushNodeKey = mAccountManager.getUserData(account,
+																	   AccountsConstants.PUSH_SERVICE_NODE_KEY);
+				final boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
+
+				if (pushEnabled && pushNodeKey == null) {
+					registerInPushService(account);
+				} else if (!pushEnabled && pushNodeKey != null) {
+					unregisterInPushService(account);
+				}
+			} catch (Exception e) {
+				Log.e(TAG, "Cannot register/unregister in Push Service", e);
 			}
 		}
 

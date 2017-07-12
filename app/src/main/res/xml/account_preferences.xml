@@ -34,7 +34,7 @@
                     android:targetPackage="org.tigase.messenger.phone.pro"
                     android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"/>
         </PreferenceScreen>
-
+        <SwitchPreference android:key="account_push_notification" android:title="Push notifications"/>
         <Preference android:title="Force reconnect"
                     android:key="account_force_reconnect"
                     android:summary="Force connect or reconnect this account"/>

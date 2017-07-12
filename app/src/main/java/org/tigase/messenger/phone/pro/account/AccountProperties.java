@@ -11,6 +11,7 @@ import android.support.v7.app.ActionBar;
 import android.view.Menu;
 import android.view.MenuItem;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
 
 public class AccountProperties
@@ -20,7 +21,7 @@ public class AccountProperties
 	private AccountManager mAccountManager;
 	private Fragment settingsFragment;
 
-	static String getAccountName(Intent intent) {
+	public static String getAccountName(Intent intent) {
 		if (intent == null) {
 			return null;
 		}
@@ -352,6 +353,25 @@ public class AccountProperties
 					mAccountManager.setUserData(account, AccountsConstants.FIELD_NICKNAME, x);
 
 					modified = true;
+					return true;
+				}
+			});
+
+			SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference(
+					"account_push_notification");
+			tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
+			pushNotificationPreference.setChecked(tmp == null ? false : Boolean.parseBoolean(tmp));
+			pushNotificationPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					mAccountManager.setUserData(account, AccountsConstants.PUSH_NOTIFICATION,
+												Boolean.toString((Boolean) newValue));
+
+					Intent action = new Intent(XMPPService.PUSH_NOTIFICATION_CHANGED);
+					action.putExtra("account", account);
+					action.putExtra("state", (Boolean) newValue);
+					getActivity().sendBroadcast(action);
+
 					return true;
 				}
 			});

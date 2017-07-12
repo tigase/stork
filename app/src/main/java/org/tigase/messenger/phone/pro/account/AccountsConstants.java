@@ -34,5 +34,6 @@ public class AccountsConstants {
 	public static final String FIELD_ROSTER_VERSION = "roster_version";
 	public static final String CUSTOM_PRIORITIES = "custom_priorities";
 	public static final String AUTOMATIC_PRIORITIES = "automatic_priorities";
-
+	public static final String PUSH_NOTIFICATION = "push_notifications";
+	public static final String PUSH_SERVICE_NODE_KEY = "push_service_node_key";
 }

@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "537329829796",
+    "firebase_url": "https://tigase-messenger.firebaseio.com",
+    "project_id": "tigase-messenger",
+    "storage_bucket": "tigase-messenger.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537329829796:android:3fbc1d67bd377d3e",
+        "android_client_info": {
+          "package_name": "org.tigase.messenger.phone.pro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "537329829796-od2om5kgpjsvgc9gnocicba56v1ccfrj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.tigase.messenger.phone.pro",
+            "certificate_hash": "d8b65cd92705adf4eb98d0e61dff1f1b9fdd0d28"
+          }
+        },
+        {
+          "client_id": "537329829796-4kqo8tuuqald5vbn1np9e4mfh59pgmbu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.tigase.messenger.phone.pro",
+            "certificate_hash": "5ec2f57ca9365caf18e0a717bb082f42acc3d31c"
+          }
+        },
+        {
+          "client_id": "537329829796-q6bnptbd7pfflgff24f0db0a09eu3hct.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsXJKOLnrqDHJpYcLNGF_R-GRby_28QSw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "537329829796-q6bnptbd7pfflgff24f0db0a09eu3hct.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

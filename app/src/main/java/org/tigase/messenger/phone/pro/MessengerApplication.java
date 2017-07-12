@@ -27,6 +27,8 @@ import org.tigase.messenger.phone.pro.service.ServiceRestarter;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
+import static org.tigase.messenger.phone.pro.service.XMPPService.CONNECT_ALL;
+
 /**
  * Created by bmalkow on 16.03.16.
  */
@@ -39,7 +41,7 @@ public class MessengerApplication
 		AvatarHelper.initilize(this);
 
 		Intent ssIntent = new Intent(this, XMPPService.class);
-		ssIntent.setAction("connect-all");
+		ssIntent.setAction(CONNECT_ALL);
 		startService(ssIntent);
 	}
 
