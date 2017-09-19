@@ -4,15 +4,27 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.*;
 import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
+import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.XMPPException;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+
+import java.util.List;
 
 public class AccountProperties
 		extends AppCompatPreferenceActivity {
@@ -20,6 +32,16 @@ public class AccountProperties
 	private Account account;
 	private AccountManager mAccountManager;
 	private Fragment settingsFragment;
+	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			if (AccountProperties.this.settingsFragment instanceof SettingsFragment) {
+				((SettingsFragment) settingsFragment).checkMAM();
+			}
+		}
+
+	};
 
 	public static String getAccountName(Intent intent) {
 		if (intent == null) {
@@ -48,8 +70,19 @@ public class AccountProperties
 		return null;
 	}
 
+	public Jaxmpp getJaxmpp() {
+		return mConnection.getService().getJaxmpp(account.name);
+	}
+
 	AccountManager getmAccountManager() {
 		return mAccountManager;
+	}
+
+	@Override
+	public void onAttachFragment(Fragment fragment) {
+		super.onAttachFragment(fragment);
+		Intent intent = new Intent(getApplicationContext(), XMPPService.class);
+		bindService(intent, mConnection, 0);
 	}
 
 	@Override
@@ -73,6 +106,12 @@ public class AccountProperties
 
 		setupActionBar(title);
 		getFragmentManager().beginTransaction().replace(android.R.id.content, settingsFragment).commit();
+	}
+
+	@Override
+	public void onDetachedFromWindow() {
+		unbindService(mConnection);
+		super.onDetachedFromWindow();
 	}
 
 	@Override
@@ -238,6 +277,33 @@ public class AccountProperties
 		private Account account;
 		private boolean modified = false;
 
+		public void checkMAM() {
+			try {
+				Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
+				MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
+				mam.retrieveSettings(new MessageArchiveManagementModule.SettingsCallback() {
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+					}
+
+					@Override
+					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+										  List<JID> never) throws JaxmppException {
+						setMamSwitch(true, defValue);
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+					}
+				});
+			} catch (Exception e) {
+				Log.e("AccountProperties", "Cannot check MAM status", e);
+			}
+		}
+
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
@@ -376,6 +442,16 @@ public class AccountProperties
 				}
 			});
 
+			ListPreference accountMamPreference = (ListPreference) findPreference("account_mam_type");
+			accountMamPreference.setEnabled(false);
+			accountMamPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					updateMAM(newValue.toString());
+					return true;
+				}
+			});
+
 			Preference reconnectPreference = findPreference("account_force_reconnect");
 			reconnectPreference.setOnPreferenceClickListener(preference -> {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -407,6 +483,62 @@ public class AccountProperties
 			i.putExtra(LoginActivity.KEY_FORCE_DISCONNECT, forceDisconnect);
 			getActivity().sendBroadcast(i);
 			this.modified = false;
+		}
+
+		private void setMamSwitch(final boolean enabled, final MessageArchiveManagementModule.DefaultValue value) {
+
+			final String[] vs = getResources().getStringArray(R.array.account_mam_values);
+			final String[] ls = getResources().getStringArray(R.array.account_mam_labels);
+
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					ListPreference accountMamPreference = (ListPreference) findPreference("account_mam_type");
+					accountMamPreference.setEnabled(enabled);
+					accountMamPreference.setValue(value.name());
+
+					int p = 0;
+					if (value != null) {
+						for (int i = 0; i < vs.length; i++) {
+							if (vs[i].equals(value.name())) {
+								p = i;
+							}
+						}
+					}
+
+					accountMamPreference.setSummary(ls[p]);
+				}
+			});
+		}
+
+		private void updateMAM(String stringValue) {
+			MessageArchiveManagementModule.DefaultValue v = MessageArchiveManagementModule.DefaultValue.valueOf(
+					stringValue);
+			try {
+				Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
+				MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
+				mam.updateSetttings(v, null, null, new MessageArchiveManagementModule.SettingsCallback() {
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						checkMAM();
+					}
+
+					@Override
+					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+										  List<JID> never) throws JaxmppException {
+						checkMAM();
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						checkMAM();
+
+					}
+				});
+			} catch (Exception e) {
+				Log.e("AccountProperties", "Cannot update MAM status", e);
+			}
 		}
 	}
 

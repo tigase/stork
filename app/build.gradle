@@ -76,6 +76,8 @@ dependencies {
 	compile 'tigase:jaxmpp-j2se:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-adhoc:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-push:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-xep0136:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-mam:3.2.0-SNAPSHOT'
 	compile 'tigase:tigase-xmltools:3.4.5'
 	compile 'com.android.support:appcompat-v7:25.3.1'
 	compile 'com.android.support:design:25.3.1'

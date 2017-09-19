@@ -58,6 +58,16 @@
         <item>90</item>
         <item>120</item>
     </string-array>
+    <string-array name="account_mam_values">
+        <item>never</item>
+        <item>roster</item>
+        <item>always</item>
+    </string-array>
+    <string-array name="account_mam_labels">
+        <item>Disabled</item>
+        <item>Roster contacts only</item>
+        <item>Everything</item>
+    </string-array>
 
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Data &amp; sync</string>
@@ -206,4 +216,5 @@
     <string name="account_status_unknown">Unknown account status</string>
     <string name="new_account_login">I have an XMPP account</string>
     <string name="new_account_create">Create new account</string>
+    <string name="account_mam_title">Archiving messages</string>
 </resources>

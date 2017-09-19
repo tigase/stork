@@ -25,6 +25,7 @@ public class AccountsConstants {
 
 	public static final String FIELD_ACTIVE = "mActiveView";
 	public static final String FIELD_HOSTNAME = "hostname";
+	public static final String FIELD_LAST_ACTIVITY = "last_activity";
 	public static final String FIELD_ID = "_id";
 	public static final String FIELD_JID = "jid";
 	public static final String FIELD_NICKNAME = "nickname";

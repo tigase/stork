@@ -35,6 +35,15 @@
                     android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"/>
         </PreferenceScreen>
         <SwitchPreference android:key="account_push_notification" android:title="Push notifications"/>
+        <ListPreference
+                android:key="account_mam_type"
+                android:persistent="false"
+                android:entries="@array/account_mam_labels"
+                android:entryValues="@array/account_mam_values"
+                android:negativeButtonText="@null"
+                android:positiveButtonText="@null"
+                android:title="@string/account_mam_title"/>
+
         <Preference android:title="Force reconnect"
                     android:key="account_force_reconnect"
                     android:summary="Force connect or reconnect this account"/>

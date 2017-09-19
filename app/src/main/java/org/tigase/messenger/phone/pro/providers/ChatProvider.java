@@ -128,6 +128,7 @@ public class ChatProvider
 	 * List of chat messages by /account/destinationBareJID
 	 */
 	private static final int URI_INDICATOR_CHATS_ACCOUNT = 8;
+	private static final int URI_INDICATOR_CHATS_ALL = 11;
 	private static final int URI_INDICATOR_GROUP_CHATS_ACCOUNT = 9;
 
 	static {
@@ -137,6 +138,7 @@ public class ChatProvider
 		sUriMatcher.addURI(AUTHORITY, "openchat/*", URI_INDICATOR_OPENCHAT_BY_JID);
 		sUriMatcher.addURI(AUTHORITY, "chat/*/*/#", URI_INDICATOR_CHAT_ITEM);
 		sUriMatcher.addURI(AUTHORITY, "chat/*/*", URI_INDICATOR_CHATS_ACCOUNT);
+		sUriMatcher.addURI(AUTHORITY, "chat", URI_INDICATOR_CHATS_ALL);
 		sUriMatcher.addURI(AUTHORITY, "muc/*/*/#", URI_INDICATOR_GROUP_CHAT_ITEM);
 		sUriMatcher.addURI(AUTHORITY, "muc/*/*", URI_INDICATOR_GROUP_CHATS_ACCOUNT);
 	}
@@ -177,6 +179,7 @@ public class ChatProvider
 			case URI_INDICATOR_OPENCHAT_BY_JID:
 				return DatabaseContract.OpenChats.OPENCHAT_ITEM_TYPE;
 			case URI_INDICATOR_CHATS_ACCOUNT:
+			case URI_INDICATOR_CHATS_ALL:
 			case URI_INDICATOR_UNSENT:
 				return DatabaseContract.ChatHistory.CHATS_TYPE;
 			case URI_INDICATOR_CHAT_ITEM:
@@ -191,7 +194,7 @@ public class ChatProvider
 		final Context context = getContext();
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
-				Long mId = isGroupChatMessageAddedAlready(values);
+				Long mId = isChatMessageAddedAlready(values);
 				if (mId != null && values.getAsInteger(DatabaseContract.ChatHistory.FIELD_STATE) ==
 						DatabaseContract.ChatHistory.STATE_OUT_DELIVERED) {
 					// send, but not confirmed!
@@ -213,6 +216,13 @@ public class ChatProvider
 					return null;
 				}
 			case URI_INDICATOR_CHATS_ACCOUNT:
+				Long msId = isChatMessageAddedAlready(values);
+				if (msId != null) {
+					Log.d("ChatProvider",
+						  "Message '" + values.get(DatabaseContract.ChatHistory.FIELD_BODY) + "' already in db.");
+					return null;
+				}
+
 				SQLiteDatabase db = dbHelper.getWritableDatabase();
 				long rowId = db.insert(DatabaseContract.ChatHistory.TABLE_NAME, DatabaseContract.ChatHistory.FIELD_JID,
 									   values);
@@ -232,14 +242,14 @@ public class ChatProvider
 		}
 	}
 
-	private Long isGroupChatMessageAddedAlready(final ContentValues values) {
+	private Long isChatMessageAddedAlready(final ContentValues values) {
 		final String[] columns = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 											  DatabaseContract.ChatHistory.FIELD_STANZA_ID,
 											  DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
 		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
-		/* final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY); */
+		final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY);
 		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
 		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
 		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
@@ -260,6 +270,11 @@ public class ChatProvider
 		if (nickname != null) {
 			selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
 			selectionArgs.add(nickname);
+		}
+
+		if (body != null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_BODY + "=? ";
+			selectionArgs.add(body);
 		}
 
 		long dt = 1000 * 60 * 5;
@@ -358,6 +373,13 @@ public class ChatProvider
 //						// String[]{jid, uri.getLastPathSegment()},
 //						DatabaseContract.ChatHistory.FIELD_JID + "=? AND " + DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=?",
 //						new String[]{jid, account}, null, null, sortOrder);
+				break;
+			}
+			case URI_INDICATOR_CHATS_ALL: {
+				final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+				qb.setTables(DatabaseContract.ChatHistory.TABLE_NAME);
+				cursor = qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null,
+								  sortOrder);
 				break;
 			}
 			default:

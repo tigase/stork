@@ -76,6 +76,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatStateExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
+import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
@@ -87,6 +88,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
+import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.utils.delay.XmppDelay;
 import tigase.jaxmpp.j2se.J2SEPresenceStore;
@@ -105,15 +107,22 @@ public class XMPPService
 		extends Service {
 
 	public static final String CLIENT_PRESENCE_CHANGED_ACTION = "org.tigase.messenger.phone.pro.PRESENCE_CHANGED";
+
 	public static final String CUSTOM_PRIORITIES_ENTITY_KEY = "CUSTOM_PRIORITIES_ENTITY_KEY";
+
 	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.org");
+
 	//	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.org");
 	public static final String PUSH_NOTIFICATION_CHANGED = "org.tigase.messenger.phone.pro.PUSH_NOTIFICATION_CHANGED";
+
 	public static final String CONNECT_ALL = "connect-all";
+
 	public static final String CONNECT_SINGLE = "connect-single";
+
 	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
-	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.JaxmppService.KEEP_ALIVE";
-	private final static String TAG = "XMPPService";
+	public static final String LAST_ACCOUNT_ACTIVITY = "org.tigase.messenger.phone.pro.service.XMPPService.LAST_ACCOUNT_ACTIVITY";
+	final static String TAG = "XMPPService";
+	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.KEEP_ALIVE";
 	private static final StanzaExecutor executor = new StanzaExecutor();
 	private static final String ACCOUNT_ID = "ID";
 
@@ -123,10 +132,10 @@ public class XMPPService
 	}
 
 	protected final Timer timer = new Timer();
+	final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
 	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
 	private final IBinder mBinder = new LocalBinder();
-	private final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
 	private final DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
 
 		@Override
@@ -240,6 +249,13 @@ public class XMPPService
 	private long keepaliveInterval = 1000 * 60 * 3;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private AccountManager mAccountManager;
+	private final BroadcastReceiver lastAccountActivityReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String account = intent.getStringExtra("account");
+			onLastAccountActivityReceived(account);
+		}
+	};
 	final BroadcastReceiver pushNotificationChangeReceived = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -248,6 +264,7 @@ public class XMPPService
 			onNotificationServiceStateChanges(account, pushEnabled);
 		}
 	};
+	private MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler mamHandler;
 	private MessageHandler messageHandler;
 	private MessageSender messageSender;
 	private MobileModeFeature mobileModeFeature;
@@ -266,6 +283,7 @@ public class XMPPService
 
 			taskExecutor.execute(new SendUnsentMessages(sessionObject));
 			taskExecutor.execute(new RejoinToMucRooms(sessionObject));
+			taskExecutor.execute(new FetchMessageArchiveMAM(XMPPService.this, sessionObject));
 		}
 	};
 	private MucHandler mucHandler;
@@ -467,6 +485,8 @@ public class XMPPService
 		// sslSocketFactory);
 
 		final Jaxmpp jaxmpp = new Jaxmpp(sessionObject);
+		jaxmpp.getSessionObject()
+				.setProperty(SessionObject.Scope.user, SocketConnector.USE_BOUNCYCASTLE_KEY, Boolean.FALSE);
 		jaxmpp.setExecutor(executor);
 
 		RosterModule.setRosterStore(sessionObject, new AndroidRosterStore(this.rosterProvider));
@@ -476,6 +496,8 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new VCardModule());
 		jaxmpp.getModulesManager().register(new AdHocCommansModule());
 		jaxmpp.getModulesManager().register(new PushNotificationModule());
+		jaxmpp.getModulesManager().register(new MessageArchivingModule());
+		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
 
 		AndroidChatManager chatManager = new AndroidChatManager(this.chatProvider);
 		MessageModule messageModule = new MessageModule(chatManager);
@@ -587,7 +609,7 @@ public class XMPPService
 		});
 	}
 
-	private Account getAccount(String name) {
+	Account getAccount(String name) {
 		for (Account account : mAccountManager.getAccounts()) {
 			if (account.name.equals(name)) {
 				return account;
@@ -733,6 +755,7 @@ public class XMPPService
 
 		this.presenceHandler = new PresenceHandler(this);
 		this.messageHandler = new MessageHandler(this);
+		this.mamHandler = new MAMHandler(this);
 		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
 																					  new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
 																						  @Override
@@ -756,6 +779,7 @@ public class XMPPService
 		screenStateReceiverFilter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
 
+		registerReceiver(lastAccountActivityReceiver, new IntentFilter(LAST_ACCOUNT_ACTIVITY));
 		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
 		registerReceiver(pushNotificationChangeReceived, new IntentFilter(PUSH_NOTIFICATION_CHANGED));
 
@@ -803,6 +827,9 @@ public class XMPPService
 		multiJaxmpp.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscribeHandler);
 
 		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
+		multiJaxmpp.addHandler(
+				MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+				mamHandler);
 		multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(ChatStateExtension.ChatStateChangedHandler.ChatStateChangedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
@@ -835,6 +862,7 @@ public class XMPPService
 	public void onDestroy() {
 		Log.i("XMPPService", "Service destroyed");
 
+		unregisterReceiver(lastAccountActivityReceiver);
 		unregisterReceiver(screenStateReceiver);
 		unregisterReceiver(connReceiver);
 		unregisterReceiver(presenceChangedReceiver);
@@ -850,6 +878,18 @@ public class XMPPService
 		mobileModeFeature = null;
 
 		sendBroadcast(new Intent(ServiceRestarter.ACTION_NAME));
+	}
+
+	private void onLastAccountActivityReceived(final String accountName) {
+		final long t = System.currentTimeMillis();
+
+		Jaxmpp jaxmpp = getJaxmpp(accountName);
+		if (jaxmpp == null || !jaxmpp.isConnected()) {
+			return;
+		}
+
+		Account account = getAccount(accountName);
+		mAccountManager.setUserData(account, AccountsConstants.FIELD_LAST_ACTIVITY, "" + t);
 	}
 
 	private void onNetworkChange(final NetworkInfo netInfo) {
@@ -1212,6 +1252,14 @@ public class XMPPService
 
 	private boolean storeMessage(SessionObject sessionObject, Chat chat,
 								 tigase.jaxmpp.core.client.xmpp.stanzas.Message msg) throws XMLException {
+		XmppDelay delay = XmppDelay.extract(msg);
+		Date t = ((delay == null || delay.getStamp() == null) ? new Date() : delay.getStamp());
+		return storeMessage(sessionObject, chat, msg, t);
+	}
+
+	private boolean storeMessage(SessionObject sessionObject, Chat chat,
+								 tigase.jaxmpp.core.client.xmpp.stanzas.Message msg, Date timeStamp)
+			throws XMLException {
 		// for now let's ignore messages without body element
 		if (msg.getBody() == null && msg.getType() != StanzaType.error) {
 			return false;
@@ -1229,9 +1277,7 @@ public class XMPPService
 		values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, author);
 		values.put(DatabaseContract.ChatHistory.FIELD_JID, jid);
 
-		XmppDelay delay = XmppDelay.extract(msg);
-		values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP,
-				   ((delay == null || delay.getStamp() == null) ? new Date() : delay.getStamp()).getTime());
+		values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timeStamp.getTime());
 
 		if (msg.getType() == StanzaType.error) {
 
@@ -1566,6 +1612,58 @@ public class XMPPService
 		}
 	}
 
+	private class MAMHandler
+			implements MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler {
+
+		private final Context context;
+
+		public MAMHandler(XMPPService xmppService) {
+			this.context = xmppService.getApplicationContext();
+		}
+
+		@Override
+		public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp,
+										  Message message) throws JaxmppException {
+			String queryId = sessionObject.getProperty(FetchMessageArchiveMAM.LAST_MAM_ID);
+
+			if (queryId == null) {
+				Log.d(TAG, "Skip processing MAM message: no query id");
+				return;
+			}
+
+			if (!queryId.equals(queryid)) {
+				Log.d(TAG, "Skip processing MAM message: different query id");
+				return;
+			}
+
+			final BareJID myJID = sessionObject.getUserBareJid();
+			final JID msgFrom = message.getFrom();
+			final JID msgTo = message.getTo();
+
+			final JID chatJID;
+
+			if (!myJID.equals(msgFrom.getBareJid())) {
+				chatJID = msgFrom;
+			} else if (!myJID.equals(msgTo.getBareJid())) {
+				chatJID = msgTo;
+			} else {
+				Log.i(TAG, "Cannot process MAM message: " + message.getAsString());
+				return;
+			}
+
+			Chat chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class).
+					getChatManager().getChat(chatJID, message.getThread());
+
+			if (chat == null) {
+				Log.d(TAG, "No chat found!");
+				chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class)
+						.createChat(message.getFrom());
+			}
+
+			boolean stored = storeMessage(sessionObject, chat, message, timestamp);
+		}
+	}
+
 	private class MessageHandler
 			implements MessageModule.MessageReceivedHandler,
 					   MessageCarbonsModule.CarbonReceivedHandler,
@@ -1591,6 +1689,10 @@ public class XMPPService
 			} catch (Exception ex) {
 				Log.e(TAG, "Exception handling received carbon message", ex);
 			}
+
+			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
+			i.putExtra("account", sessionObject.getUserBareJid().toString());
+			context.sendBroadcast(i);
 		}
 
 		@Override
@@ -1618,6 +1720,10 @@ public class XMPPService
 			} catch (Exception ex) {
 				Log.e(TAG, "Exception handling received message", ex);
 			}
+
+			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
+			i.putExtra("account", sessionObject.getUserBareJid().toString());
+			context.sendBroadcast(i);
 		}
 	}
 
