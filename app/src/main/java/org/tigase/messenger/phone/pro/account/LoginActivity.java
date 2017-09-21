@@ -46,6 +46,7 @@ import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.core.client.eventbus.Event;
 import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
@@ -185,9 +186,8 @@ public class LoginActivity
 	}
 
 	/**
-	 * Attempts to sign in or register the account specified by the login form.
-	 * If there are form errors (invalid email, missing fields, etc.), the
-	 * errors are presented and no actual login attempt is made.
+	 * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
+	 * missing fields, etc.), the errors are presented and no actual login attempt is made.
 	 */
 	private void attemptLogin() {
 		if (mAuthTask != null) {
@@ -233,7 +233,7 @@ public class LoginActivity
 			focusView.requestFocus();
 		} else {
 			boolean skipLoginTest = !active;
-			Account account = getAccount(xmppID);
+			Account account = AccountHelper.getAccount(mAccountManager, xmppID);
 			if (account != null) {
 				skipLoginTest &= password.equals(mAccountManager.getPassword(account));
 				skipLoginTest &= hostname.equals(
@@ -243,15 +243,6 @@ public class LoginActivity
 			mAuthTask = new UserLoginTask(skipLoginTest, xmppID, password, hostname, resource, nickname, active);
 			mAuthTask.execute((Void) null);
 		}
-	}
-
-	private Account getAccount(String name) {
-		for (Account account : mAccountManager.getAccounts()) {
-			if (account.name.equals(name)) {
-				return account;
-			}
-		}
-		return null;
 	}
 
 	private String getAccountName(Intent intent) {
@@ -327,7 +318,7 @@ public class LoginActivity
 		final String accountName = getAccountName(getIntent());
 		if (accountName != null) {
 			// edit existing account mode
-			Account account = getAccount(accountName);
+			Account account = AccountHelper.getAccount(mAccountManager, accountName);
 			mXMPPIDView.setEnabled(false);
 			mUpdateAccountMode = true;
 			mXMPPIDView.setText(account.name);
@@ -388,8 +379,7 @@ public class LoginActivity
 	}
 
 	/**
-	 * Represents an asynchronous login/registration task used to authenticate
-	 * the user.
+	 * Represents an asynchronous login/registration task used to authenticate the user.
 	 */
 	public class UserLoginTask
 			extends AsyncTask<Void, Integer, Boolean> {
@@ -454,7 +444,7 @@ public class LoginActivity
 
 			if (success) {
 				try {
-					Account account = getAccount(mXmppId);
+					Account account = AccountHelper.getAccount(mAccountManager, mXmppId);
 					if (account == null) {
 						account = new Account(mXmppId, Authenticator.ACCOUNT_TYPE);
 						Log.d(TAG, "Adding account " + mXmppId + ":" + mPassword);

@@ -1,9 +1,11 @@
 package org.tigase.messenger.phone.pro.conversations.muc;
 
+import android.app.AlertDialog;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -11,14 +13,13 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.EditText;
 import android.widget.ImageView;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.service.MessageSender;
@@ -83,6 +84,17 @@ public class MucItemFragment
 		getActivity().bindService(intent, mConnection, 0);
 	}
 
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.chatitem_fragment, menu);
+	}
+
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -121,6 +133,33 @@ public class MucItemFragment
 		super.onDetach();
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.send_file:
+				if (!MainActivity.hasPermissions(getContext(), MainActivity.STORAGE_PERMISSIONS)) {
+					AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+					builder.setTitle(R.string.warning).setMessage(R.string.no_permissions).create().show();
+
+					return true;
+				}
+				Intent intent = new Intent();
+				if (Build.VERSION.SDK_INT < 19) {
+					intent.setAction(Intent.ACTION_GET_CONTENT);
+				} else {
+					//KitKat 4.4 o superior
+					intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+					intent.addCategory(Intent.CATEGORY_OPENABLE);
+				}
+				intent.setType("image/*");
+				getActivity().startActivityForResult(intent, ChatActivity.FILE_UPLOAD_REQUEST_CODE);
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
 	private void refreshChatHistory() {
 		(new MucItemFragment.DBUpdateTask()).execute();
 	}
@@ -131,15 +170,14 @@ public class MucItemFragment
 			return;
 		}
 
-		Intent intent = new Intent();
-		intent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE);
-		intent.putExtra("body", body);
-		intent.putExtra("roomJID", room.getRoomJid().toString());
-		intent.putExtra("roomId", room.getId());
-		intent.putExtra("account", room.getSessionObject().getUserBareJid().toString());
+		Intent intent = new Intent(getContext(), XMPPService.class);
+		intent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION);
+		intent.putExtra(MessageSender.BODY, body);
+		intent.putExtra(MessageSender.ROOM_JID, room.getRoomJid().toString());
+		intent.putExtra(MessageSender.ACCOUNT, room.getSessionObject().getUserBareJid().toString());
 
 		this.message.getText().clear();
-		getContext().sendBroadcast(intent);
+		getContext().startService(intent);
 	}
 
 	private void setRoom(Room room) {
@@ -167,6 +205,7 @@ public class MucItemFragment
 												   DatabaseContract.ChatHistory.FIELD_DATA,
 												   DatabaseContract.ChatHistory.FIELD_JID,
 												   DatabaseContract.ChatHistory.FIELD_STATE,
+												   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI,
 												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
 												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 

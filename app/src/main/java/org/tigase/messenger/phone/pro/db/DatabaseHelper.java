@@ -78,7 +78,37 @@ public class DatabaseHelper
 
 			db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_JID);
 			db.execSQL(DatabaseContract.ChatHistory.CREATE_INDEX_STATE);
-
 		}
+
+		if (oldVersion <= 7) {
+			db.execSQL("ALTER TABLE " + DatabaseContract.ChatHistory.TABLE_NAME + " ADD " +
+							   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI + " TEXT");
+		}
+
+		if (oldVersion <= 8) {
+			db.execSQL("ALTER TABLE " + DatabaseContract.ChatHistory.TABLE_NAME + " ADD " +
+							   DatabaseContract.ChatHistory.FIELD_CHAT_TYPE + " INTEGER");
+
+			db.execSQL("UPDATE " + DatabaseContract.ChatHistory.TABLE_NAME + " SET " +
+							   DatabaseContract.ChatHistory.FIELD_CHAT_TYPE + "=" +
+							   DatabaseContract.ChatHistory.CHAT_TYPE_P2P + " WHERE " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "<>6");
+
+			db.execSQL("UPDATE " + DatabaseContract.ChatHistory.TABLE_NAME + " SET " +
+							   DatabaseContract.ChatHistory.FIELD_CHAT_TYPE + "=" +
+							   DatabaseContract.ChatHistory.CHAT_TYPE_MUC + " WHERE " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=6");
+
+			db.execSQL("UPDATE " + DatabaseContract.ChatHistory.TABLE_NAME + " SET " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=" +
+							   DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE + " WHERE " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=6");
+
+			db.execSQL("UPDATE " + DatabaseContract.ChatHistory.TABLE_NAME + " SET " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=" +
+							   DatabaseContract.ChatHistory.ITEM_TYPE_ERROR + " WHERE " +
+							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=7");
+		}
+
 	}
 }

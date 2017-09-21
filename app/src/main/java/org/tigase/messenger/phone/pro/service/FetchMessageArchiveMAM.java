@@ -7,6 +7,7 @@ import android.util.Log;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.UIDGenerator;
@@ -153,8 +154,8 @@ public class FetchMessageArchiveMAM
 	}
 
 	private long getLastMessageDateFromAccount() {
-		Account ac = xmppService.getAccount(sessionObject.getUserBareJid().toString());
 		AccountManager mAccountManager = AccountManager.get(xmppService);
+		Account ac = AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString());
 
 		String tmp = mAccountManager.getUserData(ac, AccountsConstants.FIELD_LAST_ACTIVITY);
 		if (tmp == null) {
@@ -164,7 +165,8 @@ public class FetchMessageArchiveMAM
 	}
 
 	private long getLastMessageDateFromDB() {
-		final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID, DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
+		final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
+										   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		try (Cursor cursor = xmppService.getContentResolver()
 				.query(ChatProvider.CHAT_HISTORY_URI, cols, null, null,

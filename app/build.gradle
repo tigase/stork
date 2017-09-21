@@ -30,7 +30,7 @@ android {
 		minSdkVersion 19
 		targetSdkVersion 25
 		versionCode 48
-		versionName "3.0.0 RC18"
+		versionName "3.0.0 RC19"
 		jackOptions {
 			enabled true
 		}
@@ -78,6 +78,7 @@ dependencies {
 	compile 'tigase:jaxmpp-push:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-xep0136:3.2.0-SNAPSHOT'
 	compile 'tigase:jaxmpp-mam:3.2.0-SNAPSHOT'
+	compile 'tigase:jaxmpp-httpfileupload:3.2.0-SNAPSHOT'
 	compile 'tigase:tigase-xmltools:3.4.5'
 	compile 'com.android.support:appcompat-v7:25.3.1'
 	compile 'com.android.support:design:25.3.1'

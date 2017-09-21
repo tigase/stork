@@ -21,10 +21,12 @@
 
 package org.tigase.messenger.phone.pro.conversations.chat;
 
+import android.app.AlertDialog;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
@@ -89,8 +91,8 @@ public class ChatItemFragment
 	}
 
 	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
+	 * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon screen orientation
+	 * changes).
 	 */
 	public ChatItemFragment() {
 	}
@@ -112,17 +114,12 @@ public class ChatItemFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// setHasOptionsMenu(true);
-
-		// if (getArguments() != null) {
-		// mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-		// }
+		setHasOptionsMenu(true);
 	}
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		// TODO
-		inflater.inflate(R.menu.openchat_fragment, menu);
+		inflater.inflate(R.menu.chatitem_fragment, menu);
 	}
 
 	@Override
@@ -180,6 +177,36 @@ public class ChatItemFragment
 	}
 
 	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.send_file:
+
+				if (!MainActivity.hasPermissions(getContext(), MainActivity.STORAGE_PERMISSIONS)) {
+					AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+					builder.setTitle(R.string.warning).setMessage(R.string.no_permissions).create().show();
+
+					return true;
+				}
+
+
+				Intent intent = new Intent();
+				if (Build.VERSION.SDK_INT < 19) {
+					intent.setAction(Intent.ACTION_GET_CONTENT);
+				} else {
+					//KitKat 4.4 o superior
+					intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+					intent.addCategory(Intent.CATEGORY_OPENABLE);
+				}
+				intent.setType("image/*");
+				getActivity().startActivityForResult(intent, ChatActivity.FILE_UPLOAD_REQUEST_CODE);
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
 	public void onResume() {
 		Log.v(TAG, "Resume view");
 		super.onResume();
@@ -203,14 +230,14 @@ public class ChatItemFragment
 			return;
 		}
 
-		Intent intent = new Intent();
-		intent.setAction(MessageSender.SEND_CHAT_MESSAGE);
-		intent.putExtra("body", body);
-		intent.putExtra("chatId", mChatId);
-		intent.putExtra("account", mAccount.toString());
+		Intent intent = new Intent(getContext(), XMPPService.class);
+		intent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
+		intent.putExtra(MessageSender.BODY, body);
+		intent.putExtra(MessageSender.CHAT_ID, mChatId);
+		intent.putExtra(MessageSender.ACCOUNT, mAccount.toString());
 
 		this.message.getText().clear();
-		getContext().sendBroadcast(intent);
+		getContext().startService(intent);
 	}
 
 	public interface ChatItemIterationListener {
@@ -231,6 +258,7 @@ public class ChatItemFragment
 												   DatabaseContract.ChatHistory.FIELD_JID,
 												   DatabaseContract.ChatHistory.FIELD_STATE,
 												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
+												   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI,
 												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		@Override

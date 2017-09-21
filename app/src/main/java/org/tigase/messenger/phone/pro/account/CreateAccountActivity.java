@@ -18,6 +18,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.dynaform.DynamicForm;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -47,15 +48,6 @@ public class CreateAccountActivity
 	private Button prevButton;
 	private View registrationFormPanel;
 	private ListView trustedServers;
-
-	private Account getAccount(String name) {
-		for (Account account : mAccountManager.getAccounts()) {
-			if (account.name.equals(name)) {
-				return account;
-			}
-		}
-		return null;
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -206,7 +198,7 @@ public class CreateAccountActivity
 						.getSessionObject()
 						.getProperty(SessionObject.DOMAIN_NAME)).toString();
 
-				Account account = getAccount(mXmppId);
+				Account account = AccountHelper.getAccount(mAccountManager, mXmppId);
 				if (account == null) {
 					account = new Account(mXmppId, Authenticator.ACCOUNT_TYPE);
 					Log.d(TAG, "Adding account " + mXmppId + ":" + mPassword);

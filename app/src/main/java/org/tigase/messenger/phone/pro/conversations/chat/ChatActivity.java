@@ -21,9 +21,11 @@
 
 package org.tigase.messenger.phone.pro.conversations.chat;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -43,6 +45,8 @@ import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
+import org.tigase.messenger.phone.pro.service.MessageSender;
+import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
@@ -56,6 +60,16 @@ public class ChatActivity
 	private MarkAsRead markAsRead;
 	private int openChatId;
 	private Integer rosterId;
+
+	private void doUploadFile(Intent data, int resultCode) {
+		Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
+		ssIntent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
+		ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
+		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
+		ssIntent.putExtra(MessageSender.CHAT_ID, openChatId);
+
+		getApplicationContext().startService(ssIntent);
+	}
 
 	public int getOpenChatId() {
 		return openChatId;
@@ -114,6 +128,15 @@ public class ChatActivity
 			}
 		} finally {
 			contactCursor.close();
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			doUploadFile(data, resultCode);
+		} else {
+			super.onActivityResult(requestCode, resultCode, data);
 		}
 	}
 

@@ -246,7 +246,7 @@ public class OpenChatItemFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		// TODO
-		inflater.inflate(R.menu.openchat_fragment, menu);
+		inflater.inflate(R.menu.chatitem_fragment, menu);
 	}
 
 	@Override

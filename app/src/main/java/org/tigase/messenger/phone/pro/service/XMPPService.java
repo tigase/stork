@@ -27,7 +27,6 @@ import android.app.*;
 import android.content.*;
 import android.content.Context;
 import android.content.pm.PackageInfo;
-import android.database.Cursor;
 import android.net.*;
 import android.os.Binder;
 import android.os.Bundle;
@@ -54,6 +53,7 @@ import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -76,6 +76,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatStateExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
+import tigase.jaxmpp.core.client.xmpp.modules.httpfileupload.HttpFileUploadModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
@@ -121,6 +122,7 @@ public class XMPPService
 
 	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
 	public static final String LAST_ACCOUNT_ACTIVITY = "org.tigase.messenger.phone.pro.service.XMPPService.LAST_ACCOUNT_ACTIVITY";
+	public static final String SEND_FILE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.SEND_FILE_ACTION";
 	final static String TAG = "XMPPService";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.KEEP_ALIVE";
 	private static final StanzaExecutor executor = new StanzaExecutor();
@@ -281,7 +283,7 @@ public class XMPPService
 						sessionObject.getUserBareJid().toString());
 			}
 
-			taskExecutor.execute(new SendUnsentMessages(sessionObject));
+			taskExecutor.execute(new SendUnsentMessages(XMPPService.this, jaxmpp));
 			taskExecutor.execute(new RejoinToMucRooms(sessionObject));
 			taskExecutor.execute(new FetchMessageArchiveMAM(XMPPService.this, sessionObject));
 		}
@@ -498,6 +500,7 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new PushNotificationModule());
 		jaxmpp.getModulesManager().register(new MessageArchivingModule());
 		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
+		jaxmpp.getModulesManager().register(new HttpFileUploadModule());
 
 		AndroidChatManager chatManager = new AndroidChatManager(this.chatProvider);
 		MessageModule messageModule = new MessageModule(chatManager);
@@ -607,15 +610,6 @@ public class XMPPService
 				Log.e(TAG, "Cannot enable Push Service: timeout");
 			}
 		});
-	}
-
-	Account getAccount(String name) {
-		for (Account account : mAccountManager.getAccounts()) {
-			if (account.name.equals(name)) {
-				return account;
-			}
-		}
-		return null;
 	}
 
 	private int getActiveNetworkType() {
@@ -785,11 +779,6 @@ public class XMPPService
 
 		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 
-		IntentFilter messageSenderIntentFilter = new IntentFilter();
-		messageSenderIntentFilter.addAction(MessageSender.SEND_CHAT_MESSAGE);
-		messageSenderIntentFilter.addAction(MessageSender.SEND_GROUPCHAT_MESSAGE);
-		registerReceiver(messageSender, messageSenderIntentFilter);
-
 		multiJaxmpp.addHandler(MessageModule.ChatUpdatedHandler.ChatUpdatedEvent.class,
 							   (so, chat) -> chatProvider.updateChat(chat));
 		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
@@ -867,7 +856,6 @@ public class XMPPService
 		unregisterReceiver(connReceiver);
 		unregisterReceiver(presenceChangedReceiver);
 		unregisterReceiver(accountModifyReceiver);
-		unregisterReceiver(messageSender);
 		unregisterReceiver(pushNotificationChangeReceived);
 
 		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
@@ -888,7 +876,7 @@ public class XMPPService
 			return;
 		}
 
-		Account account = getAccount(accountName);
+		Account account = AccountHelper.getAccount(mAccountManager, accountName);
 		mAccountManager.setUserData(account, AccountsConstants.FIELD_LAST_ACTIVITY, "" + t);
 	}
 
@@ -918,7 +906,20 @@ public class XMPPService
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null && CONNECT_ALL.equals(intent.getAction())) {
+		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
+				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
+			messageSender.process(this, intent);
+//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
+//			String account = intent.getStringExtra("account");
+//			Uri content = intent.getParcelableExtra("content");
+//			String roomJid = intent.getStringExtra("roomJID");
+//			int chatId = intent.getIntExtra("chatId", Integer.MIN_VALUE);
+//			if (roomJid != null) {
+//				uploadFileAndSend(account, content, BareJID.bareJIDInstance(roomJid));
+//			} else if (chatId != Integer.MIN_VALUE) {
+//				uploadFileAndSend(account, content, chatId);
+//			}
+		} else if (intent != null && CONNECT_ALL.equals(intent.getAction())) {
 			final boolean destroyed = intent.getBooleanExtra("destroyed", false);
 			for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
@@ -1222,7 +1223,8 @@ public class XMPPService
 	}
 
 	void setDisconnectionProblemDescription(SessionObject sessionObject, DisconnectionCauses cause) {
-		setDisconnectionProblemDescription(getAccount(sessionObject.getUserBareJid().toString()), cause);
+		setDisconnectionProblemDescription(
+				AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString()), cause);
 	}
 
 	void setDisconnectionProblemDescription(Account accout, DisconnectionCauses cause) {
@@ -1279,6 +1281,8 @@ public class XMPPService
 
 		values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timeStamp.getTime());
 
+		FileDownloaderTask fileDownloaderTask = null;
+
 		if (msg.getType() == StanzaType.error) {
 
 			if (chat == null) {
@@ -1308,7 +1312,25 @@ public class XMPPService
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, msg.getBody());
 
 			Element geoloc = msg.getChildrenNS("geoloc", "http://jabber.org/protocol/geoloc");
-			if (geoloc != null) {
+			Element oobData = msg.getChildrenNS("x", "jabber:x:oob");
+			if (oobData != null) {
+				Element url = oobData.getFirstChild("url");
+				if (url != null) {
+					values.put(DatabaseContract.ChatHistory.FIELD_DATA, url.getAsString());
+					String mimeType = FileUploaderTask.guessMimeType(url.getValue());
+					if (mimeType != null && mimeType.startsWith("image/")) {
+						values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+								   DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE);
+					} else if (mimeType != null && mimeType.startsWith("video/")) {
+						values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+								   DatabaseContract.ChatHistory.ITEM_TYPE_VIDEO);
+					} else {
+						values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+								   DatabaseContract.ChatHistory.ITEM_TYPE_FILE);
+					}
+					fileDownloaderTask = new FileDownloaderTask(XMPPService.this, url.getValue(), mimeType);
+				}
+			} else if (geoloc != null) {
 				values.put(DatabaseContract.ChatHistory.FIELD_DATA, geoloc.getAsString());
 				values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
 						   DatabaseContract.ChatHistory.ITEM_TYPE_LOCALITY);
@@ -1341,6 +1363,10 @@ public class XMPPService
 		getApplicationContext().getContentResolver()
 				.notifyChange(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chat.getId()), null);
 
+		if (fileDownloaderTask != null) {
+			fileDownloaderTask.execute(uri);
+		}
+
 //		getApplicationContext().getContentResolver().notifyChange(uri, null);
 		// context.getContentResolver().insert(uri, values);
 
@@ -1368,8 +1394,9 @@ public class XMPPService
 					   focusedOnRoomId != null && room.getId() == focusedOnRoomId
 					   ? DatabaseContract.ChatHistory.STATE_INCOMING
 					   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
-			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
-					   DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE);
+			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
+			values.put(DatabaseContract.ChatHistory.FIELD_CHAT_TYPE, DatabaseContract.ChatHistory.CHAT_TYPE_MUC);
+
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 
 			values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
@@ -1537,6 +1564,30 @@ public class XMPPService
 		// sessionObject.getUserBareJid(), from, bestPresence);
 	}
 
+//	private void uploadFileAndSend(final String account, final Uri content, int chatId) {
+//		Jaxmpp jaxmpp = getJaxmpp(account);
+//
+//		Intent intent = new Intent();
+//		intent.setAction(MessageSender.SEND_CHAT_MESSAGE);
+//		intent.putExtra("chatId", chatId);
+//		intent.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+//
+//		FileUploaderTask task = new FileUploaderTask(getApplicationContext(), jaxmpp, content, intent);
+//		task.start();
+//	}
+//
+//	private void uploadFileAndSend(final String account, final Uri content, final BareJID roomJid) {
+//		Jaxmpp jaxmpp = getJaxmpp(account);
+//
+//		Intent intent = new Intent();
+//		intent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE);
+//		intent.putExtra("roomJID", roomJid.toString());
+//		intent.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+//
+//		FileUploaderTask task = new FileUploaderTask(getApplicationContext(), jaxmpp, content, intent);
+//		task.start();
+//	}
+
 	private class AccountModifyReceiver
 			extends BroadcastReceiver {
 
@@ -1584,7 +1635,7 @@ public class XMPPService
 		@Override
 		public void run() {
 			try {
-				Account account = getAccount(sessionObject.getUserBareJid().toString());
+				Account account = AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString());
 				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
 				final String pushNodeKey = mAccountManager.getUserData(account,
 																	   AccountsConstants.PUSH_SERVICE_NODE_KEY);
@@ -1762,6 +1813,7 @@ public class XMPPService
 				values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME, nickname);
 				values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, timestamp.getTime());
 				values.put(DatabaseContract.ChatHistory.FIELD_STANZA_ID, msg.getId());
+				values.put(DatabaseContract.ChatHistory.FIELD_CHAT_TYPE, DatabaseContract.ChatHistory.CHAT_TYPE_MUC);
 
 				boolean notify = false;
 
@@ -1793,7 +1845,7 @@ public class XMPPService
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE,
 							   DatabaseContract.ChatHistory.STATE_OUT_DELIVERED);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
-							   DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
+							   DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				} else if (nickname != null) {
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE,
@@ -1801,7 +1853,7 @@ public class XMPPService
 							   ? DatabaseContract.ChatHistory.STATE_INCOMING
 							   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
-							   DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE);
+							   DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE);
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 					notify = true;
 				} else {
@@ -1814,14 +1866,51 @@ public class XMPPService
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				}
 
+				// ---
+				FileDownloaderTask fileDownloaderTask = null;
+				if (values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE) !=
+						DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
+					Element geoloc = msg.getChildrenNS("geoloc", "http://jabber.org/protocol/geoloc");
+					Element oobData = msg.getChildrenNS("x", "jabber:x:oob");
+					if (oobData != null) {
+						Element url = oobData.getFirstChild("url");
+						if (url != null) {
+							values.put(DatabaseContract.ChatHistory.FIELD_DATA, url.getAsString());
+							String mimeType = FileUploaderTask.guessMimeType(url.getValue());
+							if (mimeType != null && mimeType.startsWith("image/")) {
+								values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+										   DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE);
+							} else if (mimeType != null && mimeType.startsWith("video/")) {
+								values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+										   DatabaseContract.ChatHistory.ITEM_TYPE_VIDEO);
+							} else {
+								values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+										   DatabaseContract.ChatHistory.ITEM_TYPE_FILE);
+							}
+							fileDownloaderTask = new FileDownloaderTask(XMPPService.this, url.getValue(), mimeType);
+						}
+					} else if (geoloc != null) {
+						values.put(DatabaseContract.ChatHistory.FIELD_DATA, geoloc.getAsString());
+						values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
+								   DatabaseContract.ChatHistory.ITEM_TYPE_LOCALITY);
+					}
+				}
+				// ---
+
 				values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 
 				Uri uri = Uri.parse(ChatProvider.MUC_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
 											Uri.encode(room.getRoomJid().toString()));
-				Uri x = getContentResolver().insert(uri, values);
+				Uri msgUri = getContentResolver().insert(uri, values);
 
-				if (notify && x != null) {
+				if (notify && msgUri != null) {
 					sendNotification(sessionObject, room, msg);
+				}
+
+				if (msgUri != null && fileDownloaderTask != null) {
+					if (!FileDownloaderTask.isContentDownloaded(XMPPService.this, msgUri)) {
+						fileDownloaderTask.execute(msgUri);
+					}
 				}
 
 				// if (activeChatJid == null ||
@@ -1920,7 +2009,8 @@ public class XMPPService
 		public void onYouJoined(SessionObject sessionObject, Room room, String asNickname) {
 			// TODO Auto-generated method stub
 			Log.v(TAG, "joined room " + room.getRoomJid() + " as " + asNickname);
-			taskExecutor.execute(new SendUnsentGroupMessages(room));
+			taskExecutor.execute(
+					new SendUnsentGroupMessages(XMPPService.this, getJaxmpp(sessionObject.getUserBareJid()), room));
 
 		}
 
@@ -2074,147 +2164,5 @@ public class XMPPService
 				mobileModeFeature.setMobileMode(screenOff);
 			}
 		}
-	}
-
-	private class SendUnsentGroupMessages
-			implements Runnable {
-
-		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
-												   DatabaseContract.ChatHistory.FIELD_ACCOUNT,
-												   DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
-												   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
-												   DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
-												   DatabaseContract.ChatHistory.FIELD_BODY,
-												   DatabaseContract.ChatHistory.FIELD_DATA,
-												   DatabaseContract.ChatHistory.FIELD_JID,
-												   DatabaseContract.ChatHistory.FIELD_STATE,
-												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
-												   DatabaseContract.ChatHistory.FIELD_STANZA_ID,
-												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
-
-		private final Room room;
-
-		public SendUnsentGroupMessages(Room room) {
-			this.room = room;
-		}
-
-		@Override
-		public void run() {
-			Log.d("SendUnsentGroupMessages", "Sending unsent MUC " + room.getRoomJid() + " messages ");
-
-			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + room.getSessionObject().getUserBareJid());
-
-			try (Cursor c = getContentResolver().query(u, cols,
-													   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "==? AND " +
-															   DatabaseContract.ChatHistory.FIELD_JID + "=?",
-													   new String[]{"" +
-																			DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE,
-																	room.getRoomJid().toString()},
-													   DatabaseContract.ChatHistory.FIELD_TIMESTAMP)) {
-				while (c.moveToNext()) {
-					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
-					final JID toJid = JID.jidInstance(
-							c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
-					final String threadId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_THREAD_ID));
-					final String body = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-					final String stanzaId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STANZA_ID));
-
-					Log.d("SendUnsentGroupMessages", "Preparing " + id + ": " + body);
-
-					JaxmppCore jaxmpp = getJaxmpp(room.getSessionObject().getUserBareJid());
-
-					if (jaxmpp.isConnected()) {
-						try {
-							Message msg = Message.create();
-							msg.setTo(toJid);
-							msg.setType(StanzaType.groupchat);
-							msg.setThread(threadId);
-							msg.setBody(body);
-							msg.setId(stanzaId);
-
-							room.sendMessage(msg);
-
-							ContentValues values = new ContentValues();
-							values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-									   DatabaseContract.ChatHistory.STATE_OUT_SENT);
-							values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, System.currentTimeMillis());
-							getContentResolver().update(Uri.parse(
-									ChatProvider.MUC_HISTORY_URI + "/" + room.getSessionObject().getUserBareJid() +
-											"/" + toJid.getBareJid() + "/" + id), values, null, null);
-						} catch (JaxmppException e) {
-							Log.w("XMPPService", "Cannot send unsent message", e);
-						}
-					} else {
-						Log.w("XMPPService", "Can't find chat object for message");
-					}
-				}
-			}
-		}
-	}
-
-	private class SendUnsentMessages
-			implements Runnable {
-
-		private final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
-												   DatabaseContract.ChatHistory.FIELD_ACCOUNT,
-												   DatabaseContract.ChatHistory.FIELD_AUTHOR_JID,
-												   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
-												   DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME,
-												   DatabaseContract.ChatHistory.FIELD_BODY,
-												   DatabaseContract.ChatHistory.FIELD_DATA,
-												   DatabaseContract.ChatHistory.FIELD_JID,
-												   DatabaseContract.ChatHistory.FIELD_STATE,
-												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
-												   DatabaseContract.ChatHistory.FIELD_STANZA_ID,
-												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
-
-		private final SessionObject sessionObject;
-
-		public SendUnsentMessages(SessionObject sessionObject) {
-			this.sessionObject = sessionObject;
-		}
-
-		@Override
-		public void run() {
-			Uri u = Uri.parse(ChatProvider.UNSENT_MESSAGES_URI + "/" + sessionObject.getUserBareJid());
-			try (Cursor c = getContentResolver().query(u, cols, DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "!=?",
-													   new String[]{"" +
-																			DatabaseContract.ChatHistory.ITEM_TYPE_GROUPCHAT_MESSAGE},
-													   DatabaseContract.ChatHistory.FIELD_TIMESTAMP)) {
-				while (c.moveToNext()) {
-					final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
-					final JID toJid = JID.jidInstance(
-							c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
-					final String threadId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_THREAD_ID));
-					final String body = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-					final String stanzaId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STANZA_ID));
-
-					JaxmppCore jaxmpp = getJaxmpp(sessionObject.getUserBareJid());
-					MessageModule messageModule = jaxmpp.getModule(MessageModule.class);
-					if (jaxmpp.isConnected()) {
-						try {
-							Message msg = Message.create();
-							msg.setTo(toJid);
-							msg.setType(StanzaType.chat);
-							msg.setThread(threadId);
-							msg.setBody(body);
-							msg.setId(stanzaId);
-							messageModule.sendMessage(msg);
-							ContentValues values = new ContentValues();
-							values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-									   DatabaseContract.ChatHistory.STATE_OUT_SENT);
-							getContentResolver().update(Uri.parse(
-									ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
-											toJid.getBareJid() + "/" + id), values, null, null);
-						} catch (JaxmppException e) {
-							Log.w("XMPPService", "Cannot send unsent message", e);
-						}
-					} else {
-						Log.w("XMPPService", "Can't find chat object for message");
-					}
-				}
-			}
-		}
-
 	}
 }

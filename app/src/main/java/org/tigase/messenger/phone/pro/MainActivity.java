@@ -21,16 +21,17 @@
 
 package org.tigase.messenger.phone.pro;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
+import android.content.*;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -66,9 +67,23 @@ public class MainActivity
 				   RosterItemFragment.OnRosterItemIteractionListener,
 				   OpenChatItemFragment.OnAddChatListener {
 
+	static final int STORAGE_ACCESS_REQUEST = 112;
+	public static String[] STORAGE_PERMISSIONS = {android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+												  Manifest.permission.READ_EXTERNAL_STORAGE};
 	Spinner statusSelector;
 	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
 	private Menu navigationMenu;
+
+	public static boolean hasPermissions(Context context, String... permissions) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+			for (String permission : permissions) {
+				if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	private void doPresenceChange(long presenceId) {
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -85,6 +100,12 @@ public class MainActivity
 	public void onAddChatClick() {
 		switchMainFragment(R.id.nav_roster);
 	}
+	// @Override
+	// public boolean onCreateOptionsMenu(Menu menu) {
+	// // Inflate the menu; this adds items to the action bar if it is present.
+	// getMenuInflater().inflate(R.menu.main, menu);
+	// return true;
+	// }
 
 	@Override
 	public void onBackPressed() {
@@ -161,6 +182,16 @@ public class MainActivity
 			Intent intent = new Intent(this, NewAccountActivity.class);
 			startActivity(intent);
 		}
+
+		if (Build.VERSION.SDK_INT >= 23) {
+			if (!hasPermissions(this, STORAGE_PERMISSIONS)) {
+				ActivityCompat.requestPermissions(this, STORAGE_PERMISSIONS, STORAGE_ACCESS_REQUEST);
+			} else {
+				//do here
+			}
+		} else {
+			//do here
+		}
 	}
 
 	@Override
@@ -189,12 +220,6 @@ public class MainActivity
 			e.printStackTrace();
 		}
 	}
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// // Inflate the menu; this adds items to the action bar if it is present.
-	// getMenuInflater().inflate(R.menu.main, menu);
-	// return true;
-	// }
 
 	@SuppressWarnings("StatementWithEmptyBody")
 	@Override
@@ -207,6 +232,16 @@ public class MainActivity
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
 		return true;
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		switch (requestCode) {
+			case STORAGE_ACCESS_REQUEST: {
+
+			}
+		}
 	}
 
 	@Override

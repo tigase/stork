@@ -25,7 +25,7 @@ import android.provider.BaseColumns;
 
 public final class DatabaseContract {
 
-	public static final int DATABASE_VERSION = 7;
+	public static final int DATABASE_VERSION = 9;
 
 	public static final String DATABASE_NAME = "mobile_messenger2.db";
 
@@ -71,17 +71,13 @@ public final class DatabaseContract {
 		public static final String FIELD_AUTHOR_NICKNAME = "author_nickname";
 		public static final String FIELD_BODY = "body";
 		public static final String FIELD_DATA = "data";
+		public static final String FIELD_INTERNAL_CONTENT_URI = "content_uri";
 		public static final String FIELD_ID = "_id";
 		public static final String FIELD_JID = "jid";
 		/**
-		 * Description of values for FIELD_CONTACT_PRESENCE (state)
-		 * <ul>
-		 * <li><code>0</code> - incoming</li>
-		 * <li><code>1</code> - outgoing, sent</li>
-		 * <li><code>2</code> - incoming unread</li>
-		 * <li><code>3</code> - outgoing, not sent</li>
-		 * <li><code>4</code> - outgoing, delivered</li>
-		 * </ul>
+		 * Description of values for FIELD_CONTACT_PRESENCE (state) <ul> <li><code>0</code> - incoming</li>
+		 * <li><code>1</code> - outgoing, sent</li> <li><code>2</code> - incoming unread</li> <li><code>3</code> -
+		 * outgoing, not sent</li> <li><code>4</code> - outgoing, delivered</li> </ul>
 		 */
 		public static final String FIELD_STATE = "state";
 		public static final String FIELD_THREAD_ID = "thread_id";
@@ -89,16 +85,9 @@ public final class DatabaseContract {
 		public static final String FIELD_TIMESTAMP = "timestamp";
 
 		/**
-		 * Description of values for FIELD_ITEM_TYPE (item_type)
-		 * <ul>
-		 * <li><code>0</code> - message</li>
-		 * <li><code>1</code> - locality</li>
-		 * <li><code>2</code> - file</li>
-		 * <li><code>3</code> - image</li>
-		 * <li><code>4</code> - video</li>
-		 * <li><code>5</code> - error message</li>
-		 * <li><code>6</code> - groupchat message</li>
-		 * </ul>
+		 * Description of values for FIELD_ITEM_TYPE (item_type) <ul> <li><code>0</code> - message</li>
+		 * <li><code>1</code> - locality</li> <li><code>2</code> - file</li> <li><code>3</code> - image</li>
+		 * <li><code>4</code> - video</li> <li><code>5</code> - error message</li></ul>
 		 */
 		public static final String FIELD_ITEM_TYPE = "item_type";
 
@@ -108,8 +97,15 @@ public final class DatabaseContract {
 		public final static int ITEM_TYPE_IMAGE = 3;
 		public final static int ITEM_TYPE_VIDEO = 4;
 		public final static int ITEM_TYPE_ERROR = 5;
-		public final static int ITEM_TYPE_GROUPCHAT_MESSAGE = 6;
-		public final static int ITEM_TYPE_SYSTEM_MESSAGE = 7;
+
+		public static final String FIELD_CHAT_TYPE = "chat_type";
+
+		/**
+		 * One-to-one chat.
+		 */
+		public final static int CHAT_TYPE_P2P = 0;
+		public final static int CHAT_TYPE_MUC = 1;
+		public final static int CHAT_TYPE_MIX = 2;
 
 		/**
 		 * Incoming message or object.
@@ -142,8 +138,8 @@ public final class DatabaseContract {
 				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_ACCOUNT + " TEXT, " +
 						FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, " +
 						FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " +
-						FIELD_ITEM_TYPE + " INTEGER, " + FIELD_DATA + " TEXT, " + FIELD_STANZA_ID + " TEXT, " +
-						FIELD_STATE + " INTEGER" + ");";
+						FIELD_ITEM_TYPE + " INTEGER, " + FIELD_CHAT_TYPE + " INTEGER, " + FIELD_DATA + " TEXT, " +
+						FIELD_INTERNAL_CONTENT_URI + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE + " INTEGER" + ");";
 
 		public static final String CREATE_INDEX_JID =
 				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_ACCOUNT + ", " +
@@ -166,10 +162,7 @@ public final class DatabaseContract {
 		public static final String FIELD_JID = "jid";
 
 		/**
-		 * <ul>
-		 * <li><code>0</code> - single user chat</li>
-		 * <li><code>1</code> - multi user chat</li>
-		 * </ul>
+		 * <ul> <li><code>0</code> - single user chat</li> <li><code>1</code> - multi user chat</li> </ul>
 		 */
 		public static final String FIELD_TYPE = "type";
 
@@ -226,17 +219,10 @@ public final class DatabaseContract {
 		public static final String TABLE_NAME = "roster_items";
 
 		/**
-		 * Additional field to keep status of buddy from roster item to speed up
-		 * searches of online users
-		 * <ul>
-		 * <li><code>0</code> - unavailable</li>
-		 * <li><code>1</code> - error</li>
-		 * <li><code>5</code> - dnd</li>
-		 * <li><code>10</code> - xa</li>
-		 * <li><code>15</code> - away</li>
-		 * <li><code>20</code> - available</li>
-		 * <li><code>25</code> - chat</li>
-		 * </ul>
+		 * Additional field to keep status of buddy from roster item to speed up searches of online users <ul>
+		 * <li><code>0</code> - unavailable</li> <li><code>1</code> - error</li> <li><code>5</code> - dnd</li>
+		 * <li><code>10</code> - xa</li> <li><code>15</code> - away</li> <li><code>20</code> - available</li>
+		 * <li><code>25</code> - chat</li> </ul>
 		 */
 		public static final String FIELD_STATUS = "status";
 

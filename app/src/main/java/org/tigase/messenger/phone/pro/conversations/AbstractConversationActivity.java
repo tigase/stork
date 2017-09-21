@@ -7,6 +7,8 @@ import tigase.jaxmpp.core.client.JID;
 public class AbstractConversationActivity
 		extends AppCompatActivity {
 
+	public static final int FILE_UPLOAD_REQUEST_CODE = 109;
+
 	private BareJID account;
 	private JID jid;
 

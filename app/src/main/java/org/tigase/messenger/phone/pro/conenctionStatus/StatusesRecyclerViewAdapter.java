@@ -13,6 +13,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.SettingsActivity;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
@@ -35,15 +36,6 @@ public class StatusesRecyclerViewAdapter
 		this.context = context;
 
 		this.mAccountManager = AccountManager.get(context);
-	}
-
-	private Account getAccount(String name) {
-		for (Account account : mAccountManager.getAccounts()) {
-			if (account.name.equals(name)) {
-				return account;
-			}
-		}
-		return null;
 	}
 
 	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
@@ -76,7 +68,8 @@ public class StatusesRecyclerViewAdapter
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position) {
 		final JaxmppCore j = this.jaxmpps.get(position);
-		final Account account = getAccount(j.getSessionObject().getUserBareJid().toString());
+		final Account account = AccountHelper.getAccount(mAccountManager,
+														 j.getSessionObject().getUserBareJid().toString());
 		if (j == null) {
 			holder.mServerName.setText("?");
 			holder.mStage.setText("?");

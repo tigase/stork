@@ -255,7 +255,7 @@ public class ChatProvider
 		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
 		final int itemType = values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE);
 
-		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_SYSTEM_MESSAGE) {
+		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
 			return null;
 		}
 
@@ -272,7 +272,7 @@ public class ChatProvider
 			selectionArgs.add(nickname);
 		}
 
-		if (body != null) {
+		if (body != null && stanzaId == null) {
 			selection += " AND " + DatabaseContract.ChatHistory.FIELD_BODY + "=? ";
 			selectionArgs.add(body);
 		}

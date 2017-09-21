@@ -17,6 +17,7 @@ import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
+import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -61,15 +62,6 @@ public class AccountProperties
 		return account;
 	}
 
-	private Account getAccount(String name) {
-		for (Account account : mAccountManager.getAccounts()) {
-			if (account.name.equals(name)) {
-				return account;
-			}
-		}
-		return null;
-	}
-
 	public Jaxmpp getJaxmpp() {
 		return mConnection.getService().getJaxmpp(account.name);
 	}
@@ -91,7 +83,7 @@ public class AccountProperties
 		mAccountManager = AccountManager.get(this);
 
 		final String accountName = getAccountName(getIntent());
-		this.account = getAccount(accountName);
+		this.account = AccountHelper.getAccount(mAccountManager, accountName);
 
 		String title;
 		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
