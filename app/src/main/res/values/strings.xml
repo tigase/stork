@@ -219,4 +219,7 @@
     <string name="account_mam_title">Archiving messages</string>
     <string name="warning">Warning</string>
     <string name="no_permissions">Aplication has no granted permisions to do that.</string>
+    <string name="action_archive_chat">Archive</string>
+    <string name="action_delete_chat">Delete</string>
+    <string name="action_leave_room">Leave room</string>
 </resources>

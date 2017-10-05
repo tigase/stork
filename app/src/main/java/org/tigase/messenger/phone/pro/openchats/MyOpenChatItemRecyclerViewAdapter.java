@@ -22,125 +22,167 @@
 package org.tigase.messenger.phone.pro.openchats;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.PopupMenu;
+import android.widget.ImageView;
+import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
+import org.tigase.messenger.phone.pro.selectionview.CursorMultiSelectViewAdapter;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class MyOpenChatItemRecyclerViewAdapter
-		extends CursorRecyclerViewAdapter<ViewHolder> {
+		extends CursorMultiSelectViewAdapter<MyOpenChatItemRecyclerViewAdapter.ViewHolder> {
 
 	private final Context context;
-	private final OpenChatItemFragment.OnListFragmentInteractionListener mListener;
 
 	public MyOpenChatItemRecyclerViewAdapter(Context context, Cursor cursor,
-											 OpenChatItemFragment.OnListFragmentInteractionListener listener) {
-		super(cursor);
-		mListener = listener;
+											 OpenChatItemFragment openChatItemFragment) {
+		super(cursor, openChatItemFragment);
 		this.context = context;
 	}
 
 	@Override
+	public int getItemViewType(int position) {
+		if (!isDataValid()) {
+			throw new IllegalStateException("this should only be called when the cursor is valid");
+		}
+		if (!getCursor().moveToPosition(position)) {
+			throw new IllegalStateException("couldn't move cursor to position " + position);
+		}
+
+		final int type = getCursor().getInt(getCursor().getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
+
+		return type;
+	}
+
+	@Override
 	public void onBindViewHolderCursor(final ViewHolder holder, Cursor cursor) {
-		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
-		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
-		final String account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
-		final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
-		final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
-		final int presence = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_CONTACT_PRESENCE));
-		final int lastMessageState = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE_STATE));
-		final int type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
-		final int unreadCount = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_UNREAD_COUNT));
-
-		int presenceIconResource = PresenceIconMapper.getPresenceResource(presence);
-
-		holder.mLastMessage.setText(lastMessage);
-
-		if (unreadCount > 0) {
-			holder.mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
-		} else {
-			holder.mLastMessage.setTypeface(Typeface.DEFAULT);
-		}
-
-		switch (lastMessageState) {
-			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
-				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
-				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-				holder.mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
-				holder.mDeliveryStatus.setVisibility(View.VISIBLE);
-				break;
-			default:
-				holder.mDeliveryStatus.setVisibility(View.GONE);
-		}
-
-		holder.itemView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (null != mListener) {
-					// Notify the active callbacks interface (the activity, if
-					// the
-					// fragment is attached to one) that an item has been
-					// selected.
-					mListener.onEnterToChat(type, id, jid, account);
-				}
-			}
-		});
-
-		PopupMenu.OnMenuItemClickListener menuListener = new PopupMenu.OnMenuItemClickListener() {
-			@Override
-			public boolean onMenuItemClick(MenuItem item) {
-				if (item.getItemId() == R.id.menu_chat_delete) {
-					mListener.onDeleteChat(id, jid, account);
-					return true;
-				} else if (item.getItemId() == R.id.menu_chat_archive) {
-					mListener.onArchiveChat(id, jid, account);
-					return true;
-				} else if (item.getItemId() == R.id.menu_chat_leaveroom) {
-					mListener.onLeaveMucRoom(id, jid, account);
-					return true;
-				} else {
-					return false;
-				}
-			}
-		};
-
-		switch (type) {
-			case DatabaseContract.OpenChats.TYPE_MUC:
-				holder.mStatus.setVisibility(View.GONE);
-				holder.mContactName.setText(context.getString(R.string.openchats_room, name));
-				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
-				holder.mContactAvatar.setImageResource(R.drawable.ic_groupchat_24dp);
-				break;
-			case DatabaseContract.OpenChats.TYPE_CHAT:
-				holder.mStatus.setImageResource(presenceIconResource);
-				holder.mStatus.setVisibility(View.VISIBLE);
-				holder.mContactName.setText(context.getString(R.string.openchats_chat, name));
-				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
-				AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), holder.mContactAvatar);
-				break;
-		}
+		holder.bind(cursor);
 	}
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_openchatitem, parent, false);
 		return new ViewHolder(view);
+	}
+
+	public void onEnterToChat(final int type, final int openChatId, final String jid, final String account) {
+		Intent intent;
+		switch (type) {
+			case DatabaseContract.OpenChats.TYPE_CHAT:
+				intent = new Intent(context, ChatActivity.class);
+				break;
+			case DatabaseContract.OpenChats.TYPE_MUC:
+				intent = new Intent(context, MucActivity.class);
+				break;
+			default:
+				throw new RuntimeException("Unrecognized open_chat type = " + type);
+		}
+		intent.putExtra("openChatId", openChatId);
+		intent.putExtra("jid", jid);
+		intent.putExtra("account", account);
+
+		context.startActivity(intent);
+	}
+
+	class ViewHolder
+			extends MultiSelectViewHolder {
+
+		private String account;
+		private int id;
+		private String jid;
+		private ImageView mContactAvatar;
+		private TextView mContactName;
+		private ImageView mDeliveryStatus;
+		private TextView mLastMessage;
+		private ImageView mStatus;
+		private int type;
+
+		public ViewHolder(View itemView) {
+			super(itemView, MyOpenChatItemRecyclerViewAdapter.this.getFragment());
+			itemView.setLongClickable(true);
+			itemView.setOnLongClickListener(this);
+			itemView.setClickable(true);
+			itemView.setOnClickListener(this);
+
+			this.mContactName = (TextView) itemView.findViewById(R.id.contact_display_name);
+			this.mLastMessage = (TextView) itemView.findViewById(R.id.last_message);
+			this.mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+			this.mStatus = (ImageView) itemView.findViewById(R.id.contact_presence);
+			this.mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
+		}
+
+		public void bind(Cursor cursor) {
+			this.id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+			this.jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+			this.account = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+			this.type = cursor.getInt(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_TYPE));
+			final String name = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_NAME));
+			final String lastMessage = cursor.getString(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE));
+			final int presence = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_CONTACT_PRESENCE));
+			final int lastMessageState = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_LAST_MESSAGE_STATE));
+			final int unreadCount = cursor.getInt(cursor.getColumnIndex(ChatProvider.FIELD_UNREAD_COUNT));
+
+			int presenceIconResource = PresenceIconMapper.getPresenceResource(presence);
+
+			mLastMessage.setText(lastMessage);
+
+			if (unreadCount > 0) {
+				mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
+			} else {
+				mLastMessage.setTypeface(Typeface.DEFAULT);
+			}
+
+			switch (lastMessageState) {
+				case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+					mDeliveryStatus.setImageResource(R.drawable.ic_message_not_sent_24dp);
+					mDeliveryStatus.setVisibility(View.VISIBLE);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+					mDeliveryStatus.setImageResource(R.drawable.ic_message_sent_24dp);
+					mDeliveryStatus.setVisibility(View.VISIBLE);
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+					mDeliveryStatus.setImageResource(R.drawable.ic_message_delivered_24dp);
+					mDeliveryStatus.setVisibility(View.VISIBLE);
+					break;
+				default:
+					mDeliveryStatus.setVisibility(View.GONE);
+			}
+
+			switch (type) {
+				case DatabaseContract.OpenChats.TYPE_MUC:
+					mStatus.setVisibility(View.GONE);
+					mContactName.setText(context.getString(R.string.openchats_room, name));
+//				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
+					mContactAvatar.setImageResource(R.drawable.ic_groupchat_24dp);
+					break;
+				case DatabaseContract.OpenChats.TYPE_CHAT:
+					mStatus.setImageResource(presenceIconResource);
+					mStatus.setVisibility(View.VISIBLE);
+					mContactName.setText(context.getString(R.string.openchats_chat, name));
+//				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
+					AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
+					break;
+			}
+		}
+
+		@Override
+		protected void onItemClick(View v) {
+			onEnterToChat(this.type, this.id, this.jid, this.account);
+		}
+
 	}
 
 }

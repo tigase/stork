@@ -21,6 +21,7 @@
 
 package org.tigase.messenger.phone.pro.openchats;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -30,8 +31,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -39,12 +40,11 @@ import android.view.*;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
-import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
@@ -54,13 +54,14 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * A fragment representing a list of Items.
- * <p/>
- * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener} interface.
  */
 public class OpenChatItemFragment
-		extends Fragment {
+		extends MultiSelectFragment {
 
 	private static final String TAG = "OpenChats";
 	RecyclerView recyclerView;
@@ -81,43 +82,7 @@ public class OpenChatItemFragment
 	};
 	private OnAddChatListener mAddChatListener;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
-	private OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
-		@Override
-		public void onArchiveChat(int chatId, String jid, String account) {
-			OpenChatItemFragment.this.onArchiveChat(chatId, jid, account);
-		}
-
-		@Override
-		public void onDeleteChat(int chatId, String jid, String account) {
-			OpenChatItemFragment.this.onDeleteChat(chatId, jid, account);
-		}
-
-		@Override
-		public void onEnterToChat(final int type, final int openChatId, final String jid, final String account) {
-			Intent intent;
-			switch (type) {
-				case DatabaseContract.OpenChats.TYPE_CHAT:
-					intent = new Intent(OpenChatItemFragment.this.getContext(), ChatActivity.class);
-					break;
-				case DatabaseContract.OpenChats.TYPE_MUC:
-					intent = new Intent(OpenChatItemFragment.this.getContext(), MucActivity.class);
-					break;
-				default:
-					throw new RuntimeException("Unrecognized open_chat type = " + type);
-			}
-			intent.putExtra("openChatId", openChatId);
-			intent.putExtra("jid", jid);
-			intent.putExtra("account", account);
-
-			startActivity(intent);
-		}
-
-		@Override
-		public void onLeaveMucRoom(int chatId, String roomJID, String account) {
-			OpenChatItemFragment.this.onLeaveRoom(chatId, roomJID, account);
-
-		}
-	};
+//
 
 	public static OpenChatItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
 		Log.v(TAG, "new instance");
@@ -134,49 +99,102 @@ public class OpenChatItemFragment
 	public OpenChatItemFragment() {
 	}
 
-	private void doDeleteChat(final int chatId, final String jid, final String account) {
+	private void doDeleteChat(final Collection<Long> chatsId) {
 		XMPPService service = mConnection.getService();
 		if (service == null) {
 			Log.w("OpenChatItemFragment", "Service is not binded");
 			return;
 		}
 
-		final Jaxmpp jaxmpp = service.getJaxmpp(account);
-
-		if (jaxmpp == null) {
-			Log.w("OpenChatItemFragment", "There is no account " + account);
-			return;
-		}
-
-		Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-		i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
-		service.sendBroadcast(i);
-
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				Chat chat = null;
-				for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
-					if (c.getId() == chatId) {
-						chat = c;
-						break;
-					}
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+										   DatabaseContract.OpenChats.FIELD_JID};
+		for (long chatId : chatsId) {
+			String account;
+			try (Cursor c = getContext().getContentResolver()
+					.query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), cols, null, null, null)) {
+				if (c.moveToNext()) {
+					account = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+				} else {
+					continue;
 				}
-				if (chat != null) {
-					try {
-						jaxmpp.getModule(MessageModule.class).close(chat);
-						Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + jid);
-						getContext().getContentResolver().delete(chatHistoryUri, null, null);
-					} catch (Exception e) {
-						Log.e("OpenChat", "Cannot delete chat", e);
-					}
-				}
-				return null;
 			}
-		}.execute();
+
+			final Jaxmpp jaxmpp = service.getJaxmpp(account);
+
+			if (jaxmpp == null) {
+				Log.w("OpenChatItemFragment", "There is no account " + account);
+				return;
+			}
+
+			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
+			i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+			service.sendBroadcast(i);
+
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+
+					Chat chat = null;
+					for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+						if (c.getId() == chatId) {
+							chat = c;
+							break;
+						}
+					}
+					if (chat != null) {
+						try {
+							jaxmpp.getModule(MessageModule.class).close(chat);
+							Uri chatHistoryUri = Uri.parse(
+									ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chat.getJid().getBareJid());
+							getContext().getContentResolver().delete(chatHistoryUri, null, null);
+						} catch (Exception e) {
+							Log.e("OpenChat", "Cannot delete chat", e);
+						}
+
+					}
+					return null;
+				}
+			}.execute();
+		}
 	}
 
-	private void onArchiveChat(final int chatId, String jid, final String account) {
+	public Collection<Long> getSelectedIds() {
+		ArrayList<Long> result = new ArrayList<>();
+		for (int pos : mMultiSelector.getSelectedPositions()) {
+			result.add(adapter.getItemId(pos));
+		}
+		return result;
+	}
+
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage(R.string.delete_chat_history_question)
+						.setPositiveButton(R.string.yes, (dialog, which) -> {
+							doDeleteChat(getSelectedIds());
+							stopActionMode();
+						})
+						.setNegativeButton(R.string.no, null)
+						.show();
+
+				return true;
+			case R.id.ac_archive:
+				onArchiveChat(getSelectedIds());
+				stopActionMode();
+				return true;
+			case R.id.ac_leavemuc:
+				onLeaveRoom(getSelectedIds());
+				stopActionMode();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private void onArchiveChat(Collection<Long> chatsId) {
 		XMPPService service = mConnection.getService();
 
 		if (service == null) {
@@ -184,38 +202,52 @@ public class OpenChatItemFragment
 			return;
 		}
 
-		final Jaxmpp jaxmpp = service.getJaxmpp(account);
-
-		if (jaxmpp == null) {
-			Log.w("OpenChatItemFragment", "There is no account " + account);
-			return;
-		}
-
-		Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-		i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
-		service.sendBroadcast(i);
-
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				Chat chat = null;
-				for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
-					if (c.getId() == chatId) {
-						chat = c;
-						break;
-					}
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+										   DatabaseContract.OpenChats.FIELD_JID};
+		for (long chatId : chatsId) {
+			String account;
+			try (Cursor c = getContext().getContentResolver()
+					.query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), cols, null, null, null)) {
+				if (c.moveToNext()) {
+					account = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+				} else {
+					continue;
 				}
-				if (chat != null) {
-					try {
-						jaxmpp.getModule(MessageModule.class).close(chat);
-					} catch (JaxmppException e) {
-						Log.e("OpenChat", "Cannot close chat", e);
-					}
-				}
-				return null;
 			}
-		}.execute();
 
+			final Jaxmpp jaxmpp = service.getJaxmpp(account);
+
+			if (jaxmpp == null) {
+				Log.w("OpenChatItemFragment", "There is no account " + account);
+				return;
+			}
+
+			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
+			i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
+			service.sendBroadcast(i);
+
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					Chat chat = null;
+					for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+						if (c.getId() == chatId) {
+							chat = c;
+							break;
+						}
+					}
+					if (chat != null) {
+						try {
+							jaxmpp.getModule(MessageModule.class).close(chat);
+						} catch (JaxmppException e) {
+							Log.e("OpenChat", "Cannot close chat", e);
+						}
+					}
+					return null;
+				}
+			}.execute();
+		}
 	}
 
 	@Override
@@ -244,6 +276,12 @@ public class OpenChatItemFragment
 	}
 
 	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.openchats_action, menu);
+		return true;
+	}
+
+	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		// TODO
 		inflater.inflate(R.menu.chatitem_fragment, menu);
@@ -260,7 +298,7 @@ public class OpenChatItemFragment
 		recyclerView = (RecyclerView) root.findViewById(R.id.openchats_list);
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, mListener) {
+		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, OpenChatItemFragment.this) {
 			@Override
 			protected void onContentChanged() {
 				Log.v(TAG, "Received content changed.");
@@ -271,14 +309,8 @@ public class OpenChatItemFragment
 		recyclerView.setAdapter(adapter);
 
 		Log.v(TAG, "View created");
-		return root;
-	}
 
-	private void onDeleteChat(final int chatId, String jid, final String account) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-		builder.setMessage(R.string.delete_chat_history_question).setPositiveButton(R.string.yes, (dialog, which) -> {
-			doDeleteChat(chatId, jid, account);
-		}).setNegativeButton(R.string.no, null).show();
+		return root;
 	}
 
 	@Override
@@ -288,30 +320,47 @@ public class OpenChatItemFragment
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
 		getActivity().unbindService(mConnection);
-		mListener = null;
 		mAddChatListener = null;
 		super.onDetach();
 	}
 
-	private void onLeaveRoom(final int chatId, final String roomJID, final String account) {
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				Log.i(TAG, "Leaving room " + roomJID);
-				Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
-				MucModule mucModule = jaxmpp.getModule(MucModule.class);
-				Room room = mucModule.getRoom(BareJID.bareJIDInstance(roomJID));
-				if (room != null) {
-					try {
-						Log.i(TAG, "Executing Leaving room  " + roomJID);
-						mucModule.leave(room);
-					} catch (JaxmppException e) {
-						Log.e(TAG, "Cannot leave room", e);
-					}
+	private void onLeaveRoom(Collection<Long> chatsId) {
+
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+										   DatabaseContract.OpenChats.FIELD_JID};
+		for (long chatId : chatsId) {
+			String account;
+			String roomJID;
+			try (Cursor c = getContext().getContentResolver()
+					.query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chatId), cols, null, null, null)) {
+				if (c.moveToNext()) {
+					account = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+					roomJID = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+				} else {
+					continue;
 				}
-				return null;
 			}
-		}.execute();
+
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					Log.i(TAG, "Leaving room " + roomJID);
+					Jaxmpp jaxmpp = mConnection.getService().getJaxmpp(account);
+					MucModule mucModule = jaxmpp.getModule(MucModule.class);
+					Room room = mucModule.getRoom(BareJID.bareJIDInstance(roomJID));
+					if (room != null) {
+						try {
+							Log.i(TAG, "Executing Leaving room  " + roomJID);
+							mucModule.leave(room);
+						} catch (JaxmppException e) {
+							Log.e(TAG, "Cannot leave room", e);
+						}
+					}
+					return null;
+				}
+			}.execute();
+		}
 	}
 
 	@Override
@@ -334,28 +383,47 @@ public class OpenChatItemFragment
 		}
 	}
 
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+
+		if (count == 0) {
+			stopActionMode();
+			return;
+		}
+
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.chat_selected, count, count));
+
+		boolean selectedChats = false;
+		boolean selectedMuc = false;
+		for (int pos : mMultiSelector.getSelectedPositions()) {
+			switch (adapter.getItemViewType(pos)) {
+				case DatabaseContract.OpenChats.TYPE_CHAT:
+					selectedChats = true;
+					break;
+				case DatabaseContract.OpenChats.TYPE_MUC:
+					selectedMuc = true;
+					break;
+			}
+		}
+
+		MenuItem miArchive = actionMode.getMenu().findItem(R.id.ac_archive);
+		MenuItem miDelete = actionMode.getMenu().findItem(R.id.ac_delete);
+		MenuItem miLeaveMuc = actionMode.getMenu().findItem(R.id.ac_leavemuc);
+
+		miArchive.setEnabled(count > 0);
+		miDelete.setEnabled(count > 0);
+		miLeaveMuc.setEnabled(count > 0);
+
+		miDelete.setVisible(count == 0 || (selectedChats & !selectedMuc));
+		miArchive.setVisible(count == 0 || (selectedChats & !selectedMuc));
+		miLeaveMuc.setVisible(count == 0 || (!selectedChats & selectedMuc));
+	}
+
 	public interface OnAddChatListener {
 
 		// TODO: Update argument type and name
 		void onAddChatClick();
-	}
-
-	/**
-	 * This interface must be implemented by activities that contain this fragment to allow an interaction in this
-	 * fragment to be communicated to the activity and potentially other fragments contained in that activity.
-	 * <p/>
-	 * See the Android Training lesson <a href= "http://developer.android.com/training/basics/fragments/communicating.html"
-	 * >Communicating with Other Fragments</a> for more information.
-	 */
-	public interface OnListFragmentInteractionListener {
-
-		void onArchiveChat(int chatId, String jid, String account);
-
-		void onDeleteChat(int chatId, String jid, String account);
-
-		void onEnterToChat(int type, int openChatId, String jid, String account);
-
-		void onLeaveMucRoom(int chatId, String roomJID, String account);
 	}
 
 	private class DBUpdateTask

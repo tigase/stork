@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+            android:id="@+id/ac_archive"
+            android:icon="@drawable/ic_action_archive"
+            android:title="@string/action_archive_chat"/>
+    <item
+            android:id="@+id/ac_delete"
+            android:icon="@drawable/ic_action_delete"
+            android:title="@string/action_delete_chat"/>
+
+    <item
+            android:id="@+id/ac_leavemuc"
+            android:title="@string/action_leave_room"
+            app:showAsAction="never"/>
+</menu>

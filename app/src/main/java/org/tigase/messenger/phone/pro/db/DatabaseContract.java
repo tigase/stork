@@ -139,7 +139,8 @@ public final class DatabaseContract {
 						FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, " +
 						FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " +
 						FIELD_ITEM_TYPE + " INTEGER, " + FIELD_CHAT_TYPE + " INTEGER, " + FIELD_DATA + " TEXT, " +
-						FIELD_INTERNAL_CONTENT_URI + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE + " INTEGER" + ");";
+						FIELD_INTERNAL_CONTENT_URI + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE +
+						" INTEGER" + ");";
 
 		public static final String CREATE_INDEX_JID =
 				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_ACCOUNT + ", " +

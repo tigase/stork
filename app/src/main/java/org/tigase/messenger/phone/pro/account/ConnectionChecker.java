@@ -32,7 +32,7 @@ public class ConnectionChecker {
 		this.jid = BareJID.bareJIDInstance(mXmppId);
 		this.password = mPassword;
 		this.hostname = mHostname;
-//		contact.getSessionObject().setProperty("bouncycastle", Boolean.FALSE);
+		contact.getSessionObject().setProperty(SocketConnector.USE_BOUNCYCASTLE_KEY, Boolean.FALSE);
 		contact.getEventBus().addHandler(Connector.ErrorHandler.ErrorEvent.class, new Connector.ErrorHandler() {
 			@Override
 			public void onError(SessionObject sessionObject, StreamError condition, Throwable e)

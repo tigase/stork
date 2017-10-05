@@ -70,6 +70,7 @@ public class MainActivity
 	static final int STORAGE_ACCESS_REQUEST = 112;
 	public static String[] STORAGE_PERMISSIONS = {android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
 												  Manifest.permission.READ_EXTERNAL_STORAGE};
+	public Toolbar toolbar;
 	Spinner statusSelector;
 	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
 	private Menu navigationMenu;
@@ -122,7 +123,7 @@ public class MainActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		this.toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		/*

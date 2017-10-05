@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals
+            name="chat_selected">
+        <item quantity="zero">None</item>
+        <item quantity="one">1 chat selected</item>
+        <item quantity="other">%d chats selected</item>
+    </plurals>
+</resources>
