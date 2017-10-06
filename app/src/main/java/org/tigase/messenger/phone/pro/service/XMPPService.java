@@ -1363,7 +1363,7 @@ public class XMPPService
 		getApplicationContext().getContentResolver()
 				.notifyChange(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, chat.getId()), null);
 
-		if (fileDownloaderTask != null) {
+		if (fileDownloaderTask != null && uri != null) {
 			fileDownloaderTask.execute(uri);
 		}
 
