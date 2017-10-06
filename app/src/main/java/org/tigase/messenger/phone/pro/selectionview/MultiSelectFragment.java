@@ -1,11 +1,11 @@
 package org.tigase.messenger.phone.pro.selectionview;
 
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import com.bignerdranch.android.multiselector.ModalMultiSelectorCallback;
 import com.bignerdranch.android.multiselector.MultiSelector;
-import org.tigase.messenger.phone.pro.MainActivity;
 
 public abstract class MultiSelectFragment
 		extends android.support.v4.app.Fragment {
@@ -46,7 +46,7 @@ public abstract class MultiSelectFragment
 	protected abstract boolean onCreateActionMode(ActionMode actionMode, Menu menu);
 
 	public void startActionMode() {
-		((MainActivity) getActivity()).startSupportActionMode(mActionModeCallback);
+		((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
 
 	}
 
@@ -58,7 +58,9 @@ public abstract class MultiSelectFragment
 	}
 
 	void updateAction() {
-		if (actionMode != null) {
+		if (mMultiSelector.getSelectedPositions().isEmpty()) {
+			stopActionMode();
+		} else if (actionMode != null) {
 			updateActionMode(actionMode);
 		}
 	}

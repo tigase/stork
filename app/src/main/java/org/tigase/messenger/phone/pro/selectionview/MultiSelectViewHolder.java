@@ -12,6 +12,10 @@ public abstract class MultiSelectViewHolder
 	public MultiSelectViewHolder(View itemView, MultiSelectFragment multiSelectFragment) {
 		super(itemView, multiSelectFragment.getMultiSelector());
 		this.fragment = multiSelectFragment;
+		itemView.setLongClickable(true);
+		itemView.setOnLongClickListener(this);
+		itemView.setClickable(true);
+		itemView.setOnClickListener(this);
 	}
 
 	@Override

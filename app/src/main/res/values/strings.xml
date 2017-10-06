@@ -132,7 +132,7 @@
     <string name="contact_name">Contact name</string>
     <string name="contact_add_button">Add</string>
     <string name="menu_roster_delete_contact">Delete</string>
-    <string name="roster_delete_contact">Delete contact %2$s (%1$s)</string>
+    <string name="roster_delete_contact">Do you want to delete contacts? It cannot be undone.</string>
     <string name="contact_xmppid_invalid">Invalid XMPP ID</string>
     <string name="status_chat">Free for chat</string>
     <string name="status_online">Online</string>
@@ -222,4 +222,7 @@
     <string name="action_archive_chat">Archive</string>
     <string name="action_delete_chat">Delete</string>
     <string name="action_leave_room">Leave room</string>
+    <string name="action_history_copy">Copy</string>
+    <string name="action_history_delete">Delete</string>
+    <string name="delete_chat_item_question">Do you want to delete messages? It cannot be undone.</string>
 </resources>

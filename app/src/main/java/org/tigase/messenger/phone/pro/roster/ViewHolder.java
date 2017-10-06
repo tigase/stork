@@ -21,24 +21,35 @@
 
 package org.tigase.messenger.phone.pro.roster;
 
-import android.support.v7.widget.RecyclerView;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
+import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
+import org.tigase.messenger.phone.pro.utils.AvatarHelper;
+import tigase.jaxmpp.core.client.BareJID;
 
 public class ViewHolder
-		extends RecyclerView.ViewHolder {
+		extends MultiSelectViewHolder {
 
+	private final Context context;
 	ImageView mContactAvatar;
 	TextView mContactNameView;
 
 	ImageView mContactPresence;
 	TextView mJidView;
+	private String account;
+	private String jid;
 
-	public ViewHolder(final View itemView) {
-		super(itemView);
+	public ViewHolder(final Context context, final View itemView, MultiSelectFragment fragment) {
+		super(itemView, fragment);
+		this.context = context;
 
 		mJidView = (TextView) itemView.findViewById(R.id.contact_jid);
 		mContactNameView = (TextView) itemView.findViewById(R.id.contact_display_name);
@@ -46,19 +57,43 @@ public class ViewHolder
 		mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
 	}
 
-	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {
-		itemView.setOnLongClickListener(new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				PopupMenu popup = new PopupMenu(itemView.getContext(), itemView);
-				popup.inflate(menuId);
-				popup.setOnMenuItemClickListener(menuClick);
-				popup.show();
-				return true;
-			}
-		});
+	public void bind(final Cursor cursor) {
+		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
+		this.jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_JID));
+		this.account = cursor.getString(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ACCOUNT));
+		final String name = cursor.getString(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_NAME));
+		int status = cursor.getInt(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_STATUS));
+
+		mContactNameView.setText(name);
+		mContactPresence.setImageResource(PresenceIconMapper.getPresenceResource(status));
+		mJidView.setText(jid);
+
+		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
 
 	}
+
+	@Override
+	protected void onItemClick(View v) {
+		Intent intent = new Intent(context, ChatActivity.class);
+		intent.putExtra("jid", jid);
+		intent.putExtra("account", account);
+		context.startActivity(intent);
+	}
+
+//	@Deprecated
+//	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {
+//		itemView.setOnLongClickListener(new View.OnLongClickListener() {
+//			@Override
+//			public boolean onLongClick(View v) {
+//				PopupMenu popup = new PopupMenu(itemView.getContext(), itemView);
+//				popup.inflate(menuId);
+//				popup.setOnMenuItemClickListener(menuClick);
+//				popup.show();
+//				return true;
+//			}
+//		});
+//
+//	}
 
 	@Override
 	public String toString() {

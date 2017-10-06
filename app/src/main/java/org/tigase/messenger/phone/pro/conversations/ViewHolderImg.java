@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.ImageView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 
 public class ViewHolderImg
@@ -17,8 +18,8 @@ public class ViewHolderImg
 	private final Context context;
 	ImageView mImage;
 
-	public ViewHolderImg(Context contex, View itemView) {
-		super(itemView);
+	public ViewHolderImg(Context contex, View itemView, MultiSelectFragment fragment) {
+		super(itemView, fragment);
 		this.context = contex;
 		mImage = (ImageView) itemView.findViewById(R.id.image);
 	}

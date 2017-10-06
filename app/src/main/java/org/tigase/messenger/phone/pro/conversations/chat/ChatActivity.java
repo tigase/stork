@@ -23,6 +23,7 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -38,6 +40,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
+import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -47,18 +50,32 @@ import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 
 public class ChatActivity
 		extends AbstractConversationActivity {
 
+	public static final String ACCOUNT_KEY = "account";
+	public static final String JID_KEY = "jid";
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	TextView mContactName;
 	ImageView mContactPresence;
 	private Uri contactUri;
 	private MarkAsRead markAsRead;
 	private int openChatId;
+	private MainActivity.XMPPServiceConnection mServiceConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			Chat chat = findOrCreateChat(getAccount(), getJid());
+			ChatActivity.this.openChatId = (int) chat.getId();
+		}
+	};
 	private Integer rosterId;
 
 	private void doUploadFile(Intent data, int resultCode) {
@@ -71,29 +88,50 @@ public class ChatActivity
 		getApplicationContext().startService(ssIntent);
 	}
 
-	public int getOpenChatId() {
-		return openChatId;
+	private Chat findOrCreateChat(BareJID account, JID jid) {
+		try {
+			Jaxmpp jaxmpp = mServiceConnection.getService().getJaxmpp(account);
+			final BareJID bareJID = jid.getBareJid();
+			Chat chat = null;
+			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+				if (c.getJid().getBareJid().equals(bareJID)) {
+					chat = c;
+					break;
+				}
+			}
+			if (chat == null) {
+				chat = jaxmpp.getModule(MessageModule.class).createChat(jid);
+			}
+			return chat;
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Cannot get Chat instance");
+		}
 	}
 
-	private void loadContact() {
+	String getContactName() {
 		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
 										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
 										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
 										   ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE,
 										   ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE};
-		Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId), cols,
-											  null, null, null);
-		try {
-			if (c.moveToNext()) {
-				String displayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
 
-				mContactName.setText(displayName);
+		try (Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId),
+												   cols, null, null, null)) {
+			if (c.moveToNext()) {
+				return c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
 			} else {
-				mContactName.setText(getJid().getBareJid().toString());
+				return getJid().getBareJid().toString();
 			}
-		} finally {
-			c.close();
 		}
+	}
+
+	public int getOpenChatId() {
+		return openChatId;
+	}
+
+	private void loadContact() {
+		mContactName.setText(getContactName());
 	}
 
 	private Integer loadRosterID(BareJID account, BareJID jid) {
@@ -142,9 +180,10 @@ public class ChatActivity
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		this.openChatId = getIntent().getIntExtra("openChatId", Integer.MIN_VALUE);
-		setJid(JID.jidInstance(getIntent().getStringExtra("jid")));
-		setAccount(BareJID.bareJIDInstance(getIntent().getStringExtra("account")));
+		final String account = getIntent().getStringExtra(ACCOUNT_KEY);
+		final String jid = getIntent().getStringExtra(JID_KEY);
+		setJid(JID.jidInstance(jid));
+		setAccount(BareJID.bareJIDInstance(account));
 		this.rosterId = loadRosterID(getAccount(), getJid().getBareJid());
 
 		this.contactUri = rosterId == null ? null : ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterId);
@@ -193,6 +232,19 @@ public class ChatActivity
 		loadUserPresence();
 
 		markAsRead.markChatAsRead(this.openChatId, this.getAccount(), this.getJid());
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Intent service = new Intent(getApplicationContext(), XMPPService.class);
+		bindService(service, mServiceConnection, 0);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		unbindService(mServiceConnection);
 	}
 
 	private class ContactPresenceChangeObserver

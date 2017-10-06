@@ -40,13 +40,11 @@
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:supportsRtl="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-    >
+            android:theme="@style/myActivityTheme">
         <activity
                 android:name=".MainActivity"
                 android:configChanges="orientation|keyboardHidden|screenSize"
-                android:label="@string/app_name"
-                android:theme="@style/myActivityTheme">
+                android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -56,6 +54,7 @@
         <activity
                 android:name=".settings.SettingsActivity"
                 android:label="@string/title_activity_settings"
+                android:theme="@style/mySettingsTheme"
                 android:parentActivityName=".MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -63,6 +62,7 @@
         </activity>
         <activity
                 android:name=".account.AccountProperties"
+                android:theme="@style/mySettingsTheme"
                 android:label="Account properties">
         </activity>
         <activity
@@ -154,8 +154,7 @@
         <activity
                 android:name=".conversations.chat.ChatActivity"
                 android:label="@string/title_activity_chat"
-                android:parentActivityName=".MainActivity"
-                android:theme="@style/AppTheme.NoActionBar">
+                android:parentActivityName=".MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
@@ -165,8 +164,7 @@
         <activity
                 android:name=".conversations.muc.MucActivity"
                 android:label="@string/title_activity_muc"
-                android:parentActivityName=".MainActivity"
-                android:theme="@style/AppTheme.NoActionBar">
+                android:parentActivityName=".MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>

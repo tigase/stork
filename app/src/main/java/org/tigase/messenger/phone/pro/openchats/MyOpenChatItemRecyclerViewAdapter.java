@@ -111,10 +111,6 @@ public class MyOpenChatItemRecyclerViewAdapter
 
 		public ViewHolder(View itemView) {
 			super(itemView, MyOpenChatItemRecyclerViewAdapter.this.getFragment());
-			itemView.setLongClickable(true);
-			itemView.setOnLongClickListener(this);
-			itemView.setClickable(true);
-			itemView.setOnClickListener(this);
 
 			this.mContactName = (TextView) itemView.findViewById(R.id.contact_display_name);
 			this.mLastMessage = (TextView) itemView.findViewById(R.id.last_message);

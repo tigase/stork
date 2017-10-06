@@ -387,11 +387,6 @@ public class OpenChatItemFragment
 	protected void updateActionMode(ActionMode actionMode) {
 		final int count = mMultiSelector.getSelectedPositions().size();
 
-		if (count == 0) {
-			stopActionMode();
-			return;
-		}
-
 		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.chat_selected, count, count));
 
 		boolean selectedChats = false;

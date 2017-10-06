@@ -187,8 +187,8 @@ public class XMPPService
 	private ConnectivityManager connManager;
 	private DataRemover dataRemover;
 	private DatabaseHelper dbHelper;
-	private Integer focusedOnChatId = null;
-	private Integer focusedOnRoomId = null;
+	private ChatActivity focusedOnChatId = null;
+	private MucActivity focusedOnRoomId = null;
 	private final Application.ActivityLifecycleCallbacks mActivityCallbacks = new Application.ActivityLifecycleCallbacks() {
 		@Override
 		public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
@@ -217,15 +217,17 @@ public class XMPPService
 		public void onActivityResumed(Activity activity) {
 			Log.i("ActivityLifecycle", "onActivityResumed " + activity);
 			if (activity instanceof ChatActivity) {
-				int v = ((ChatActivity) activity).getOpenChatId();
-				XMPPService.this.focusedOnChatId = v;
+				XMPPService.this.focusedOnChatId = (ChatActivity) activity;
 
-				Log.i("ActivityLifecycle", "focusedOnChatId = " + v + "; " + ((ChatActivity) activity).getAccount());
+				Log.i("ActivityLifecycle",
+					  "focusedOnChatId = " + XMPPService.this.focusedOnChatId.getOpenChatId() + "; " +
+							  ((ChatActivity) activity).getAccount());
 			}
 			if (activity instanceof MucActivity) {
-				int v = ((MucActivity) activity).getOpenChatId();
-				XMPPService.this.focusedOnRoomId = v;
-				Log.i("ActivityLifecycle", "focusedOnRoomId = " + v + "; " + ((MucActivity) activity).getAccount());
+				XMPPService.this.focusedOnRoomId = (MucActivity) activity;
+				Log.i("ActivityLifecycle",
+					  "focusedOnRoomId = " + XMPPService.this.focusedOnRoomId.getOpenChatId() + "; " +
+							  ((MucActivity) activity).getAccount());
 			}
 			autopresenceManager.stop();
 		}
@@ -1190,7 +1192,7 @@ public class XMPPService
 	private void sendNotification(SessionObject sessionObject, Chat chat, Message msg) throws JaxmppException {
 		Log.i("ActivityLifecycle", "focused=" + focusedOnChatId + "; chatId=" + chat.getId());
 
-		if (this.focusedOnChatId != null && chat.getId() == this.focusedOnChatId) {
+		if (this.focusedOnChatId != null && chat.getId() == this.focusedOnChatId.getOpenChatId()) {
 			return;
 		}
 
@@ -1206,7 +1208,7 @@ public class XMPPService
 	private void sendNotification(SessionObject sessionObject, Room room, Message msg) throws JaxmppException {
 		Log.i("ActivityLifecycle", "focused=" + focusedOnRoomId + "; chatId=" + room.getId());
 
-		if (this.focusedOnRoomId != null && room.getId() == this.focusedOnRoomId) {
+		if (this.focusedOnRoomId != null && room.getId() == this.focusedOnRoomId.getOpenChatId()) {
 			return;
 		}
 
@@ -1352,7 +1354,7 @@ public class XMPPService
 			values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
 		} else {
 			values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-					   focusedOnChatId != null && chat.getId() == focusedOnChatId
+					   focusedOnChatId != null && chat.getId() == focusedOnChatId.getOpenChatId()
 					   ? DatabaseContract.ChatHistory.STATE_INCOMING
 					   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 		}
@@ -1391,7 +1393,7 @@ public class XMPPService
 			values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, (new Date()).getTime());
 
 			values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-					   focusedOnRoomId != null && room.getId() == focusedOnRoomId
+					   focusedOnRoomId != null && room.getId() == focusedOnRoomId.getOpenChatId()
 					   ? DatabaseContract.ChatHistory.STATE_INCOMING
 					   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
@@ -1601,7 +1603,7 @@ public class XMPPService
 			if (account != null && forceDisconnect) {
 				try {
 					multiJaxmpp.get(BareJID.bareJIDInstance(account)).disconnect();
-				} catch (JaxmppException e) {
+				} catch (java.lang.NullPointerException | JaxmppException e) {
 					Log.i("XMPPService", "Problem during disconnecting!", e);
 				}
 			}
@@ -1849,7 +1851,7 @@ public class XMPPService
 					values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 				} else if (nickname != null) {
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-							   focusedOnRoomId != null && room.getId() == focusedOnRoomId
+							   focusedOnRoomId != null && room.getId() == focusedOnRoomId.getOpenChatId()
 							   ? DatabaseContract.ChatHistory.STATE_INCOMING
 							   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,
@@ -1858,7 +1860,7 @@ public class XMPPService
 					notify = true;
 				} else {
 					values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-							   focusedOnRoomId != null && room.getId() == focusedOnRoomId
+							   focusedOnRoomId != null && room.getId() == focusedOnRoomId.getOpenChatId()
 							   ? DatabaseContract.ChatHistory.STATE_INCOMING
 							   : DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD);
 					values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE,

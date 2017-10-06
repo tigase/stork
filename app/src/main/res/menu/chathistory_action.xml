@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+            android:id="@+id/ac_copy"
+            android:icon="@drawable/ic_action_copy"
+            android:title="@string/action_history_copy"/>
+    <item android:visible="true"
+          android:id="@+id/ac_delete"
+          android:icon="@drawable/ic_action_delete"
+          android:title="@string/action_history_delete"/>
+
+</menu>

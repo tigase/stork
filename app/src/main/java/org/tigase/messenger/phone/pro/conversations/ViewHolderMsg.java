@@ -6,17 +6,17 @@ import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.view.View;
-import android.widget.PopupMenu;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class ViewHolderMsg
 		extends AbstractViewHolder {
 
-	public ViewHolderMsg(View itemView) {
-		super(itemView);
+	public ViewHolderMsg(View itemView, MultiSelectFragment fragment) {
+		super(itemView, fragment);
 	}
 
 	@Override
@@ -117,19 +117,9 @@ public class ViewHolderMsg
 
 	}
 
-	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {
-		View.OnLongClickListener longClickListener = new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				PopupMenu popup = new PopupMenu(itemView.getContext(), itemView);
-				popup.inflate(menuId);
-				popup.setOnMenuItemClickListener(menuClick);
-				popup.show();
-				return true;
-			}
-		};
-		itemView.setOnLongClickListener(longClickListener);
-		mContentView.setOnLongClickListener(longClickListener);
+	@Override
+	protected void onItemClick(View v) {
+
 	}
 
 	@Override

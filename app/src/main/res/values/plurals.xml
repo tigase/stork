@@ -6,4 +6,16 @@
         <item quantity="one">1 chat selected</item>
         <item quantity="other">%d chats selected</item>
     </plurals>
+    <plurals
+            name="message_selected">
+        <item quantity="zero">None</item>
+        <item quantity="one">1 message selected</item>
+        <item quantity="other">%d messages selected</item>
+    </plurals>
+    <plurals
+            name="roster_selected">
+        <item quantity="zero">None</item>
+        <item quantity="one">1 contact selected</item>
+        <item quantity="other">%d contacts selected</item>
+    </plurals>
 </resources>

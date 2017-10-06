@@ -22,15 +22,14 @@
 package org.tigase.messenger.phone.pro.roster;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -42,49 +41,47 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.contact.EditContactActivity;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 
 /**
  * A fragment representing a list of Items.
- * <p/>
- * Activities containing this fragment MUST implement the
- * {@link OnRosterItemIteractionListener} interface.
  */
 public class RosterItemFragment
-		extends Fragment {
+		extends MultiSelectFragment {
 
 	private static final boolean SHOW_OFFLINE_DEFAULT = true;
 	RecyclerView recyclerView;
 	private MyRosterItemRecyclerViewAdapter adapter;
 	private DBUpdateTask dbUpdateTask;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
-	private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
-
-		@Override
-		public void onRosterItemDelete(int id, final String account, final String jid, final String name) {
-			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					switch (which) {
-						case DialogInterface.BUTTON_POSITIVE:
-							(new RemoveContactTask(BareJID.bareJIDInstance(account),
-												   BareJID.bareJIDInstance(jid))).execute();
-							break;
-					}
-				}
-			};
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-			builder.setMessage(getContext().getString(R.string.roster_delete_contact, jid, name))
-					.setPositiveButton(android.R.string.yes, dialogClickListener)
-					.setNegativeButton(android.R.string.no, dialogClickListener)
-					.show();
-		}
-	};
-	private OnRosterItemIteractionListener mListener;
+	//	private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
+//
+//		@Override
+//		public void onRosterItemDelete(int id, final String account, final String jid, final String name) {
+//			DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+//				@Override
+//				public void onClick(DialogInterface dialog, int which) {
+//					switch (which) {
+//						case DialogInterface.BUTTON_POSITIVE:
+//							(new RemoveContactTask(BareJID.bareJIDInstance(account),
+//												   BareJID.bareJIDInstance(jid))).execute();
+//							break;
+//					}
+//				}
+//			};
+//
+//			AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+//			builder.setMessage(getContext().getString(R.string.roster_delete_contact, jid, name))
+//					.setPositiveButton(android.R.string.yes, dialogClickListener)
+//					.setNegativeButton(android.R.string.no, dialogClickListener)
+//					.show();
+//		}
+//	};
 	private SharedPreferences sharedPref;
 
 	// TODO: Customize parameter initialization
@@ -97,11 +94,36 @@ public class RosterItemFragment
 	}
 
 	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
+	 * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon screen orientation
+	 * changes).
 	 */
 	public RosterItemFragment() {
 		super();
+	}
+
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage(R.string.roster_delete_contact).setPositiveButton(R.string.yes, (dialog, which) -> {
+
+					final Cursor c = adapter.getCursor();
+					for (int pos : getMultiSelector().getSelectedPositions()) {
+						c.moveToPosition(pos);
+						String account = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ACCOUNT));
+						String jid = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_JID));
+						(new RemoveContactTask(BareJID.bareJIDInstance(account),
+											   BareJID.bareJIDInstance(jid))).execute();
+					}
+
+					mode.finish();
+				}).setNegativeButton(R.string.no, null).show();
+
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override
@@ -109,12 +131,6 @@ public class RosterItemFragment
 		this.sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
 
 		super.onAttach(context);
-
-		if (context instanceof OnRosterItemIteractionListener) {
-			mListener = (OnRosterItemIteractionListener) context;
-		} else {
-			throw new RuntimeException(context.toString() + " must implement OnRosterItemIteractionListener");
-		}
 
 		Intent intent = new Intent(context, XMPPService.class);
 		getActivity().bindService(intent, mConnection, 0);
@@ -127,10 +143,9 @@ public class RosterItemFragment
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
-		MenuInflater inflater = this.getActivity().getMenuInflater();
-		inflater.inflate(R.menu.roster_context, menu);
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.roster_context, menu);
+		return true;
 	}
 
 	@Override
@@ -154,15 +169,13 @@ public class RosterItemFragment
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(root.getContext()));
 
-		this.adapter = new MyRosterItemRecyclerViewAdapter(getContext(), null, mListener, mItemLongClickListener) {
+		this.adapter = new MyRosterItemRecyclerViewAdapter(getContext(), null, this) {
 			@Override
 			protected void onContentChanged() {
 				refreshRoster();
 			}
 		};
 		recyclerView.setAdapter(adapter);
-
-		registerForContextMenu(recyclerView);
 
 		return root;
 	}
@@ -173,7 +186,6 @@ public class RosterItemFragment
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
 		getActivity().unbindService(mConnection);
-		mListener = null;
 		super.onDetach();
 	}
 
@@ -239,15 +251,10 @@ public class RosterItemFragment
 		}
 	}
 
-	public interface OnRosterItemDeleteListener {
-
-		void onRosterItemDelete(int id, String account, String jid, String name);
-	}
-
-	public interface OnRosterItemIteractionListener {
-
-		void onListFragmentInteraction(int id, String account, String jid);
-
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.roster_selected, count, count));
 	}
 
 	private class DBUpdateTask
@@ -319,8 +326,11 @@ public class RosterItemFragment
 				return null;
 			}
 			try {
-				RosterStore store = RosterModule.getRosterStore(mService.getJaxmpp(account).getSessionObject());
-				store.remove(jid);
+				Jaxmpp jaxmpp = mService.getJaxmpp(account);
+				if (jaxmpp.isConnected()) {
+					RosterStore store = RosterModule.getRosterStore(jaxmpp.getSessionObject());
+					store.remove(jid);
+				}
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Can't remove contact from roster", e);
 				Toast.makeText(getContext(), "ERROR " + e.getMessage(), Toast.LENGTH_SHORT);

@@ -2,14 +2,15 @@ package org.tigase.messenger.phone.pro.conversations;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
 
 public abstract class AbstractViewHolder
-		extends RecyclerView.ViewHolder {
+		extends MultiSelectViewHolder {
 
 	protected final ImageView mAvatar;
 	protected final TextView mContentView;
@@ -18,8 +19,8 @@ public abstract class AbstractViewHolder
 	protected final TextView mTimestamp;
 	protected String ownNickname;
 
-	public AbstractViewHolder(View itemView) {
-		super(itemView);
+	public AbstractViewHolder(View itemView, MultiSelectFragment fragment) {
+		super(itemView, fragment);
 		mContentView = (TextView) itemView.findViewById(R.id.content);
 		mTimestamp = (TextView) itemView.findViewById(R.id.chat_timestamp);
 		mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);

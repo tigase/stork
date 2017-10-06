@@ -9,9 +9,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.*;
 import android.widget.EditText;
@@ -22,6 +23,7 @@ import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -29,24 +31,16 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
+import java.util.List;
+
 public class MucItemFragment
-		extends Fragment {
+		extends MultiSelectFragment {
 
 	EditText message;
 	RecyclerView recyclerView;
 	ImageView sendButton;
 	private MucItemRecyclerViewAdapter adapter;
-	private ChatItemIterationListener mListener = new ChatItemIterationListener() {
 
-		@Override
-		public void onCopyChatMessage(int id, String jid, String body) {
-			ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
-					.getSystemService(Context.CLIPBOARD_SERVICE);
-			ClipData clip = ClipData.newPlainText("Message from " + jid, body);
-
-			clipboard.setPrimaryClip(clip);
-		}
-	};
 	private Room room;
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
@@ -72,6 +66,74 @@ public class MucItemFragment
 	};
 	private Uri uri;
 
+	private String grabContent(List<Integer> selectedPositions) {
+		StringBuilder sb = new StringBuilder();
+
+		final Cursor cursor = adapter.getCursor();
+		for (Integer position : selectedPositions) {
+			if (!cursor.moveToPosition(position)) {
+				throw new IllegalStateException("couldn't move cursor to position " + position);
+			}
+			final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+			final String nickname = cursor.getString(
+					cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
+			final long time = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
+			final String timeStr = DateUtils.formatDateTime(getContext(), time,
+															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
+																	DateUtils.FORMAT_SHOW_TIME);
+			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
+			if (selectedPositions.size() == 1) {
+				sb.append(body).append('\n');
+			} else {
+				sb.append("[").append(timeStr).append("] ");
+
+				if (nickname != null) {
+					sb.append(nickname).append(": ");
+				}
+				sb.append(body);
+				sb.append('\n');
+			}
+		}
+		return sb.toString();
+	}
+
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(
+						getActivity());
+				builder.setMessage(R.string.delete_chat_item_question)
+						.setPositiveButton(R.string.yes, (dialog, which) -> {
+							for (Integer pos : getMultiSelector().getSelectedPositions()) {
+								long id = adapter.getItemId(pos);
+								getContext().getContentResolver()
+										.delete(ChatProvider.CHAT_HISTORY_URI,
+												DatabaseContract.ChatHistory.FIELD_ID + "=?",
+												new String[]{String.valueOf(id)});
+							}
+							getContext().getContentResolver().notifyChange(uri, null);
+							mode.finish();
+						})
+						.setNegativeButton(R.string.no, null)
+						.show();
+
+				return true;
+			case R.id.ac_copy:
+				String body = grabContent(getMultiSelector().getSelectedPositions());
+				ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
+						.getSystemService(Context.CLIPBOARD_SERVICE);
+				ClipData clip = ClipData.newPlainText("Messages from room " + room.getRoomJid(), body);
+
+				clipboard.setPrimaryClip(clip);
+
+				mode.finish();
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -88,6 +150,12 @@ public class MucItemFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
+	}
+
+	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
+		return true;
 	}
 
 	@Override
@@ -112,7 +180,7 @@ public class MucItemFragment
 		linearLayoutManager.setReverseLayout(true);
 
 		recyclerView.setLayoutManager(linearLayoutManager);
-		this.adapter = new MucItemRecyclerViewAdapter(getContext(), null, mListener) {
+		this.adapter = new MucItemRecyclerViewAdapter(getContext(), null, this) {
 			@Override
 			protected void onContentChanged() {
 				refreshChatHistory();
@@ -126,7 +194,6 @@ public class MucItemFragment
 
 	@Override
 	public void onDetach() {
-		mListener = null;
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
 		getActivity().unbindService(mConnection);
@@ -188,9 +255,10 @@ public class MucItemFragment
 		}
 	}
 
-	public interface ChatItemIterationListener {
-
-		void onCopyChatMessage(int id, String jid, String body);
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
 	}
 
 	private class DBUpdateTask

@@ -47,25 +47,16 @@ import android.widget.Spinner;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
-import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.SettingsActivity;
-import tigase.jaxmpp.android.Jaxmpp;
-import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.JID;
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 
 public class MainActivity
 		extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener,
-				   RosterItemFragment.OnRosterItemIteractionListener,
-				   OpenChatItemFragment.OnAddChatListener {
+		implements NavigationView.OnNavigationItemSelectedListener, OpenChatItemFragment.OnAddChatListener {
 
 	static final int STORAGE_ACCESS_REQUEST = 112;
 	public static String[] STORAGE_PERMISSIONS = {android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -192,33 +183,6 @@ public class MainActivity
 			}
 		} else {
 			//do here
-		}
-	}
-
-	@Override
-	public void onListFragmentInteraction(int id, String account, String jid) {
-		Jaxmpp jaxmpp = mServiceConnection.getService().getJaxmpp(account);
-		final BareJID bareJID = BareJID.bareJIDInstance(jid);
-		try {
-			Chat chat = null;
-			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
-				if (c.getJid().getBareJid().equals(bareJID)) {
-					chat = c;
-					break;
-				}
-			}
-			if (chat == null) {
-				chat = jaxmpp.getModule(MessageModule.class).createChat(JID.jidInstance(jid));
-			}
-
-			Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-			intent.putExtra("openChatId", (int) chat.getId());
-			intent.putExtra("jid", jid);
-			intent.putExtra("account", account);
-			startActivity(intent);
-
-		} catch (JaxmppException e) {
-			e.printStackTrace();
 		}
 	}
 

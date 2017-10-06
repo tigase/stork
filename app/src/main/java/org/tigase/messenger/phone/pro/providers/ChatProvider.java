@@ -164,6 +164,12 @@ public class ChatProvider
 					context.getContentResolver().notifyChange(uri, null);
 				}
 				return r;
+			case URI_INDICATOR_CHATS_ALL:
+				r = db.delete(DatabaseContract.ChatHistory.TABLE_NAME, selection, selectionArgs);
+				if (context != null) {
+					context.getContentResolver().notifyChange(uri, null);
+				}
+				return r;
 			default:
 				throw new IllegalArgumentException("Unsupported URI " + uri);
 		}

@@ -24,25 +24,22 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.PopupMenu;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractViewHolder;
 import org.tigase.messenger.phone.pro.conversations.ViewHolderImg;
 import org.tigase.messenger.phone.pro.conversations.ViewHolderMsg;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.selectionview.CursorMultiSelectViewAdapter;
+import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 
 public class MyChatItemRecyclerViewAdapter
-		extends CursorRecyclerViewAdapter<AbstractViewHolder> {
+		extends CursorMultiSelectViewAdapter<AbstractViewHolder> {
 
 	private final Context context;
-	private final ChatItemFragment.ChatItemIterationListener mListener;
 
-	MyChatItemRecyclerViewAdapter(Context context, Cursor cursor, ChatItemFragment.ChatItemIterationListener listener) {
-		super(cursor);
-		mListener = listener;
+	MyChatItemRecyclerViewAdapter(Context context, Cursor cursor, MultiSelectFragment fragment) {
+		super(cursor, fragment);
 		this.context = context;
 	}
 
@@ -56,18 +53,6 @@ public class MyChatItemRecyclerViewAdapter
 		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
 
 		holder.bind(context, cursor);
-
-		holder.setContextMenu(R.menu.chatitem_context, new PopupMenu.OnMenuItemClickListener() {
-			@Override
-			public boolean onMenuItemClick(MenuItem item) {
-				if (item.getItemId() == R.id.menu_chat_copytext) {
-					mListener.onCopyChatMessage(id, jid, body);
-					return true;
-				} else {
-					return false;
-				}
-			}
-		});
 	}
 
 	@Override
@@ -109,16 +94,16 @@ public class MyChatItemRecyclerViewAdapter
 					case DatabaseContract.ChatHistory.ITEM_TYPE_ERROR:
 						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
 															   .inflate(R.layout.fragment_chatitem_error, parent,
-																		false));
+																		false), getFragment());
 						break;
 					case DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE:
 						viewHolder = new ViewHolderImg(context, LayoutInflater.from(parent.getContext())
-								.inflate(R.layout.fragment_chatitem_received_image, parent, false));
+								.inflate(R.layout.fragment_chatitem_received_image, parent, false), getFragment());
 						break;
 					default:
 						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
 															   .inflate(R.layout.fragment_chatitem_received, parent,
-																		false));
+																		false), getFragment());
 						break;
 				}
 				break;
@@ -128,12 +113,12 @@ public class MyChatItemRecyclerViewAdapter
 				switch (messageType) {
 					case DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE:
 						viewHolder = new ViewHolderImg(context, LayoutInflater.from(parent.getContext())
-								.inflate(R.layout.fragment_chatitem_sent_image, parent, false));
+								.inflate(R.layout.fragment_chatitem_sent_image, parent, false), getFragment());
 						break;
 					default:
 						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
-															   .inflate(R.layout.fragment_chatitem_sent, parent,
-																		false));
+															   .inflate(R.layout.fragment_chatitem_sent, parent, false),
+													   getFragment());
 						break;
 				}
 				break;

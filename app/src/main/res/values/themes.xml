@@ -5,5 +5,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowActionModeOverlay">true</item>
     </style>
+    <style name="mySettingsTheme" parent="Theme.AppCompat.Light">
+
+    </style>
+
 
 </resources>
