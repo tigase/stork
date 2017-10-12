@@ -997,7 +997,9 @@ public class XMPPService
 		String text = getString(R.string.notification_certificate_error_text);
 
 		Intent resultIntent = new Intent(this, AccountProperties.class);
+		resultIntent.setAction(AccountProperties.ACCEPT_CERTIFICATE_KEY);
 		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
+		resultIntent.putExtra("chain", cause.getChain());
 
 		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
 		// Adds the back stack for the Intent (but not the Intent itself)

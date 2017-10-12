@@ -2,7 +2,6 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -10,11 +9,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.*;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
@@ -25,11 +26,14 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
+import java.security.cert.X509Certificate;
 import java.util.List;
 
 public class AccountProperties
 		extends AppCompatPreferenceActivity {
 
+	public static final String ACCEPT_CERTIFICATE_KEY = "ACCEPT_CERTIFICATE";
+	private final static String TAG = "AccountProperties";
 	private Account account;
 	private AccountManager mAccountManager;
 	private Fragment settingsFragment;
@@ -98,6 +102,11 @@ public class AccountProperties
 
 		setupActionBar(title);
 		getFragmentManager().beginTransaction().replace(android.R.id.content, settingsFragment).commit();
+
+		if (getIntent() != null && getIntent().getAction() != null &&
+				ACCEPT_CERTIFICATE_KEY.equals(getIntent().getAction())) {
+			showCertificateDialog(getIntent());
+		}
 	}
 
 	@Override
@@ -149,6 +158,31 @@ public class AccountProperties
 				actionBar.setTitle(title);
 			}
 		}
+	}
+
+	private void showCertificateDialog(Intent intent) {
+
+		final String account = intent.getExtras().getString("account_name");
+		X509Certificate[] chain = (X509Certificate[]) intent.getExtras().getSerializable("chain");
+
+		final CertificateDialogBuilder builder = new CertificateDialogBuilder(this, chain);
+		builder.setTitle(this.getString(R.string.account_certificate_info_title))
+				.setMessage(R.string.account_certificate_info_description)
+				.setCancelable(true)
+				.setPositiveButton(R.string.account_certificate_info_button_accept, (dialog, which) -> {
+					SecureTrustManagerFactory.addCertificate(getApplicationContext(), chain[0]);
+
+					Intent i = new Intent();
+					i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
+					i.putExtra(LoginActivity.KEY_ACCOUNT_NAME, account);
+					i.putExtra(LoginActivity.KEY_FORCE_DISCONNECT, true);
+					getApplication().sendBroadcast(i);
+				})
+				.setNegativeButton(R.string.account_certificate_info_button_reject, (dialog, which) -> {
+				})
+				.create()
+				.show();
+
 	}
 
 	private void showRemoveAccountDialog() {
@@ -277,22 +311,34 @@ public class AccountProperties
 					@Override
 					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
 							throws JaxmppException {
-						setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						try {
+							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
 					}
 
 					@Override
 					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
 										  List<JID> never) throws JaxmppException {
-						setMamSwitch(true, defValue);
+						try {
+							setMamSwitch(true, defValue);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
 					}
 
 					@Override
 					public void onTimeout() throws JaxmppException {
-						setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						try {
+							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
 					}
 				});
 			} catch (Exception e) {
-				Log.e("AccountProperties", "Cannot check MAM status", e);
+				Log.e(TAG, "Cannot check MAM status", e);
 			}
 		}
 
@@ -382,7 +428,7 @@ public class AccountProperties
 
 			SwitchPreference autoPrioritiesPreference = (SwitchPreference) findPreference("account_priorites_enabled");
 			String tmp = mAccountManager.getUserData(account, AccountsConstants.AUTOMATIC_PRIORITIES);
-			autoPrioritiesPreference.setChecked(tmp == null ? true : Boolean.parseBoolean(tmp));
+			autoPrioritiesPreference.setChecked(tmp == null || Boolean.parseBoolean(tmp));
 			autoPrioritiesPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -418,7 +464,7 @@ public class AccountProperties
 			SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference(
 					"account_push_notification");
 			tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
-			pushNotificationPreference.setChecked(tmp == null ? false : Boolean.parseBoolean(tmp));
+			pushNotificationPreference.setChecked(tmp != null && Boolean.parseBoolean(tmp));
 			pushNotificationPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -529,7 +575,7 @@ public class AccountProperties
 					}
 				});
 			} catch (Exception e) {
-				Log.e("AccountProperties", "Cannot update MAM status", e);
+				Log.e(TAG, "Cannot update MAM status", e);
 			}
 		}
 	}

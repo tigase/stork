@@ -55,9 +55,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
 /**
@@ -95,20 +92,6 @@ public class LoginActivity
 		SecureTrustManagerFactory.addCertificate(context, x509Certificate);
 	}
 
-	private static String bytesToHex(byte[] bytes) {
-		final char[] hexArray = "0123456789ABCDEF".toCharArray();
-		StringBuilder result = new StringBuilder();
-		for (int j = 0; j < bytes.length; j++) {
-			int v = bytes[j] & 0xFF;
-			result.append(hexArray[v >>> 4]);
-			result.append(hexArray[v & 0x0F]);
-			if (j < bytes.length) {
-				result.append(":");
-			}
-		}
-		return result.toString();
-	}
-
 	static SecureTrustManagerFactory.DataCertificateException getCertException(Throwable cause) {
 		Throwable tmp = cause;
 		while (tmp != null) {
@@ -123,50 +106,9 @@ public class LoginActivity
 
 	static void showInvalidCertificateDialog(final Context context, final X509Certificate[] chain,
 											 Runnable afterAccept) {
-		StringBuilder msg = new StringBuilder(100);
-
-		MessageDigest sha1 = null;
-		MessageDigest md5 = null;
-		try {
-			sha1 = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-			Log.wtf(TAG, "SHA1 should be here!", e);
-		}
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			Log.wtf(TAG, "MD5 should be here!", e);
-		}
-
-		for (int i = 0; i < chain.length; i++) {
-			msg.append(context.getString(R.string.account_certificate_info_chain, String.valueOf(i)));
-			msg.append(
-					context.getString(R.string.account_certificate_info_subject, chain[i].getSubjectDN().toString()));
-			msg.append(context.getString(R.string.account_certificate_info_issuer, chain[i].getIssuerDN().toString()));
-			if (sha1 != null) {
-				sha1.reset();
-				try {
-					msg.append(context.getString(R.string.account_certificate_info_fingerprint_sha,
-												 bytesToHex(sha1.digest(chain[i].getEncoded()))));
-
-				} catch (CertificateEncodingException e) {
-					Log.e(TAG, "Cannot add SHA1 to info", e);
-				}
-			}
-			if (md5 != null) {
-				md5.reset();
-				try {
-					msg.append(context.getString(R.string.account_certificate_info_fingerprint_md5,
-												 bytesToHex(md5.digest(chain[i].getEncoded()))));
-
-				} catch (CertificateEncodingException e) {
-					Log.e(TAG, "Cannot add MD5 to info", e);
-				}
-			}
-		}
-
-		new AlertDialog.Builder(context).setTitle(context.getString(R.string.account_certificate_info_title))
-				.setMessage(context.getString(R.string.account_certificate_info_description) + " " + msg.toString())
+		new CertificateDialogBuilder(context, chain).setTitle(
+				context.getString(R.string.account_certificate_info_title))
+				.setMessage(R.string.account_certificate_info_description)
 				.setCancelable(true)
 				.setPositiveButton(context.getString(R.string.account_certificate_info_button_accept),
 								   new DialogInterface.OnClickListener() {
@@ -182,6 +124,7 @@ public class LoginActivity
 									   public void onClick(DialogInterface dialog, int which) {
 									   }
 								   })
+				.create()
 				.show();
 	}
 
