@@ -117,6 +117,12 @@ public class MyOpenChatItemRecyclerViewAdapter
 			this.mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
 			this.mStatus = (ImageView) itemView.findViewById(R.id.contact_presence);
 			this.mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
+
+			addClickable(this.mContactName);
+			addClickable(this.mLastMessage);
+			addClickable(this.mContactAvatar);
+			addClickable(this.mStatus);
+			addClickable(this.mDeliveryStatus);
 		}
 
 		public void bind(Cursor cursor) {

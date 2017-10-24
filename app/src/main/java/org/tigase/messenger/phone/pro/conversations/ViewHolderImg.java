@@ -22,6 +22,9 @@ public class ViewHolderImg
 		super(itemView, fragment);
 		this.context = contex;
 		mImage = (ImageView) itemView.findViewById(R.id.image);
+		mImage.setClickable(true);
+		mImage.setLongClickable(true);
+		mImage.setOnLongClickListener(this);
 	}
 
 	@Override

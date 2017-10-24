@@ -13,39 +13,50 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/text_margin"
-            android:visibility="gone"
-    />
+            android:visibility="gone"/>
 
     <LinearLayout
             android:id="@+id/message_box"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/message_bubble_sent"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
             android:layout_marginLeft="30dp"
+            android:background="@drawable/message_bubble_sent"
             android:minWidth="150sp"
-            android:orientation="vertical"
-            android:longClickable="true" android:layout_alignParentBottom="true" android:layout_alignParentEnd="true">
+            android:orientation="vertical">
+
         <TextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginTop="3dp"
                 android:autoLink="web"
                 android:textColor="#ff000000"
-                android:textSize="15sp" android:layout_marginLeft="5dp" android:layout_marginRight="3dp"
-                android:layout_marginTop="3dp"/>
-        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
-                      android:orientation="horizontal" android:layout_gravity="right" android:layout_marginRight="3dp">
+                android:textSize="15sp"/>
+
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_marginRight="3dp"
+                android:orientation="horizontal">
+
             <TextView
                     android:id="@+id/chat_timestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:autoLink="web"
-                    android:text="wczoraj"
                     android:textColor="#bdbdbd"
                     android:textSize="12sp"/>
-            <ImageView android:id="@+id/chat_delivery_status" android:layout_width="wrap_content"
-                       android:layout_height="match_parent"
-                       android:tint="#bdbdbd"/>
+
+            <ImageView
+                    android:id="@+id/chat_delivery_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:tint="#bdbdbd"/>
 
         </LinearLayout>
     </LinearLayout>

@@ -55,6 +55,11 @@ public class ViewHolder
 		mContactNameView = (TextView) itemView.findViewById(R.id.contact_display_name);
 		mContactPresence = (ImageView) itemView.findViewById(R.id.contact_presence);
 		mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+
+		addClickable(mJidView);
+		addClickable(mContactNameView);
+		addClickable(mContactPresence);
+		addClickable(mContactAvatar);
 	}
 
 	public void bind(final Cursor cursor) {

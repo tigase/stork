@@ -26,6 +26,12 @@ public abstract class AbstractViewHolder
 		mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
 		mAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
 		mNickname = (TextView) itemView.findViewById(R.id.nickname);
+
+		addClickable(mContentView);
+		addClickable(mTimestamp);
+		addClickable(mDeliveryStatus);
+		addClickable(mAvatar);
+		addClickable(mNickname);
 	}
 
 	public abstract void bind(Context context, Cursor cursor);

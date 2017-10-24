@@ -29,15 +29,14 @@ import java.util.Date;
 public class FetchMessageArchiveMAM
 		implements Runnable {
 
-	public final static String LAST_MAM_ID = "LAST_MAM_ID_KEY";
-
 	private final SessionObject sessionObject;
-
+	private final Date startDate;
 	private final XMPPService xmppService;
 
 	public FetchMessageArchiveMAM(XMPPService xmppService, SessionObject sessionObject) {
 		this.xmppService = xmppService;
 		this.sessionObject = sessionObject;
+		this.startDate = getLastMessageDate();
 	}
 
 	private void fetchHistory(final Jaxmpp jaxmpp, final Chat chat, Date date) {
@@ -51,7 +50,6 @@ public class FetchMessageArchiveMAM
 
 			final RSM rsm = new RSM();
 			final String queryId = UIDGenerator.next() + UIDGenerator.next() + UIDGenerator.next();
-			jaxmpp.getSessionObject().setProperty(SessionObject.Scope.session, LAST_MAM_ID, queryId);
 
 			mam.queryItems(q, queryId, rsm, new MessageArchiveManagementModule.ResultCallback() {
 				@Override
@@ -194,8 +192,6 @@ public class FetchMessageArchiveMAM
 		try {
 			final Jaxmpp jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
 			final MessageArchivingModule mam = jaxmpp.getModule(MessageArchivingModule.class);
-
-			final Date startDate = getLastMessageDate();
 
 			Criteria cr = new Criteria().setStart(startDate);
 

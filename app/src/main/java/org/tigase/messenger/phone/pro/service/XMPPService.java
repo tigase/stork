@@ -119,11 +119,11 @@ public class XMPPService
 	public static final String CONNECT_ALL = "connect-all";
 
 	public static final String CONNECT_SINGLE = "connect-single";
-
 	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
 	public static final String LAST_ACCOUNT_ACTIVITY = "org.tigase.messenger.phone.pro.service.XMPPService.LAST_ACCOUNT_ACTIVITY";
 	public static final String SEND_FILE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.SEND_FILE_ACTION";
 	final static String TAG = "XMPPService";
+	private static final String ON_CONNECT_RUNNABLE_ARRAY_KEY = "ON_CONNECT_RUNNABLE_ARRAY";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.KEEP_ALIVE";
 	private static final StanzaExecutor executor = new StanzaExecutor();
 	private static final String ACCOUNT_ID = "ID";
@@ -250,6 +250,22 @@ public class XMPPService
 			// sendAcks();
 		}
 	};
+	private JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
+		@Override
+		public void onLoggedIn(SessionObject sessionObject) {
+			Log.i("XMPPService", "JAXMPP connected " + sessionObject.getUserBareJid());
+			List<Runnable> todo = sessionObject.getProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY);
+			try {
+				if (todo != null) {
+					for (Runnable runnable : todo) {
+						taskExecutor.execute(runnable);
+					}
+				}
+			} finally {
+				sessionObject.setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, null);
+			}
+		}
+	};
 	private long keepaliveInterval = 1000 * 60 * 3;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private AccountManager mAccountManager;
@@ -272,24 +288,6 @@ public class XMPPService
 	private MessageHandler messageHandler;
 	private MessageSender messageSender;
 	private MobileModeFeature mobileModeFeature;
-	private JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
-		@Override
-		public void onLoggedIn(SessionObject sessionObject) {
-			Log.i("XMPPService", "JAXMPP connected " + sessionObject.getUserBareJid());
-
-			final Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
-			try {
-				mobileModeFeature.accountConnected(jaxmpp);
-			} catch (JaxmppException e) {
-				Log.e(TAG, "Exception processing MobileModeFeature on connect for account " +
-						sessionObject.getUserBareJid().toString());
-			}
-
-			taskExecutor.execute(new SendUnsentMessages(XMPPService.this, jaxmpp));
-			taskExecutor.execute(new RejoinToMucRooms(sessionObject));
-			taskExecutor.execute(new FetchMessageArchiveMAM(XMPPService.this, sessionObject));
-		}
-	};
 	private MucHandler mucHandler;
 	private MessageNotification notificationHelper = new MessageNotification();
 	private OwnPresenceFactoryImpl ownPresenceStanzaFactory;
@@ -411,8 +409,30 @@ public class XMPPService
 									return;
 								}
 
+								final ArrayList<Runnable> onConnectTasks = new ArrayList<>();
+
+								onConnectTasks.add(new Runnable() {
+									@Override
+									public void run() {
+										try {
+											mobileModeFeature.accountConnected(jaxmpp);
+										} catch (JaxmppException e) {
+											Log.e(TAG,
+												  "Exception processing MobileModeFeature on connect for account " +
+														  jaxmpp.getSessionObject().getUserBareJid().toString());
+										}
+
+									}
+								});
+
+								onConnectTasks.add(new SendUnsentMessages(XMPPService.this, jaxmpp));
+								onConnectTasks.add(new RejoinToMucRooms(jaxmpp.getSessionObject()));
+								onConnectTasks.add(
+										new FetchMessageArchiveMAM(XMPPService.this, jaxmpp.getSessionObject()));
+
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
+								jaxmpp.getSessionObject().setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, onConnectTasks);
 								jaxmpp.login(false);
 							} catch (Exception e) {
 								if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
@@ -837,6 +857,7 @@ public class XMPPService
 		multiJaxmpp.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
 		multiJaxmpp.addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.NewRoomCreatedHandler.NewRoomCreatedEvent.class, mucHandler);
 
 		IntentFilter filterAccountModifyReceiver = new IntentFilter();
 		filterAccountModifyReceiver.addAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
@@ -1679,18 +1700,6 @@ public class XMPPService
 		@Override
 		public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp,
 										  Message message) throws JaxmppException {
-			String queryId = sessionObject.getProperty(FetchMessageArchiveMAM.LAST_MAM_ID);
-
-			if (queryId == null) {
-				Log.d(TAG, "Skip processing MAM message: no query id");
-				return;
-			}
-
-			if (!queryId.equals(queryid)) {
-				Log.d(TAG, "Skip processing MAM message: different query id");
-				return;
-			}
-
 			final BareJID myJID = sessionObject.getUserBareJid();
 			final JID msgFrom = message.getFrom();
 			final JID msgTo = message.getTo();
@@ -1788,7 +1797,8 @@ public class XMPPService
 					   MucModule.MessageErrorHandler,
 					   MucModule.StateChangeHandler,
 					   MucModule.PresenceErrorHandler,
-					   MucModule.OccupantLeavedHandler {
+					   MucModule.OccupantLeavedHandler,
+					   MucModule.NewRoomCreatedHandler {
 
 		@Override
 		public void onMessageError(SessionObject sessionObject, tigase.jaxmpp.core.client.xmpp.stanzas.Message msg,
@@ -1929,6 +1939,33 @@ public class XMPPService
 				Log.e(TAG, "Exception handling received MUC message", ex);
 			}
 
+		}
+
+		@Override
+		public void onNewRoomCreated(SessionObject sessionObject, Room room) {
+			try {
+				final Jaxmpp jaxmpp = getJaxmpp(sessionObject.getUserBareJid());
+				MucModule module = jaxmpp.getModule(MucModule.class);
+				module.setRoomConfiguration(room, null, new AsyncCallback() {
+					@Override
+					public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							throws JaxmppException {
+
+					}
+
+					@Override
+					public void onSuccess(Stanza stanza) throws JaxmppException {
+
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+
+					}
+				});
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		@Override
