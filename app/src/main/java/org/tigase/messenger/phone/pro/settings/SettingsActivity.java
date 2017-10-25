@@ -67,23 +67,19 @@ import java.util.List;
 import static org.tigase.messenger.phone.pro.utils.AvatarHelper.getCroppedBitmap;
 
 /**
- * A {@link PreferenceActivity} that presents a set of application settings. On
- * handset devices, settings are presented as a single list. On tablets,
- * settings are split by category, with category headers shown to the left of
- * the list of settings.
+ * A {@link PreferenceActivity} that presents a set of application settings. On handset devices, settings are presented
+ * as a single list. On tablets, settings are split by category, with category headers shown to the left of the list of
+ * settings.
  * <p/>
- * See
- * <a href="http://developer.android.com/design/patterns/settings.html"> Android
- * Design: Settings</a> for design guidelines and the
- * <a href="http://developer.android.com/guide/topics/ui/settings.html">Settings
- * API Guide</a> for more information on developing a Settings UI.
+ * See <a href="http://developer.android.com/design/patterns/settings.html"> Android Design: Settings</a> for design
+ * guidelines and the <a href="http://developer.android.com/guide/topics/ui/settings.html">Settings API Guide</a> for
+ * more information on developing a Settings UI.
  */
 public class SettingsActivity
 		extends AppCompatPreferenceActivity {
 
 	/**
-	 * A preference value change listener that updates the preference's summary
-	 * to reflect its new value.
+	 * A preference value change listener that updates the preference's summary to reflect its new value.
 	 */
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = (preference, value) -> {
 		String stringValue = value.toString();
@@ -143,11 +139,9 @@ public class SettingsActivity
 	private AccountManager mAccountManager;
 
 	/**
-	 * Binds a preference's summary to its value. More specifically, when the
-	 * preference's value is changed, its summary (line of text below the
-	 * preference title) is updated to reflect the value. The summary is also
-	 * immediately updated upon calling this method. The exact display format is
-	 * dependent on the type of preference.
+	 * Binds a preference's summary to its value. More specifically, when the preference's value is changed, its summary
+	 * (line of text below the preference title) is updated to reflect the value. The summary is also immediately
+	 * updated upon calling this method. The exact display format is dependent on the type of preference.
 	 *
 	 * @see #sBindPreferenceSummaryToValueListener
 	 */
@@ -174,8 +168,7 @@ public class SettingsActivity
 	}
 
 	/**
-	 * Helper method to determine if the device has an extra-large screen. For
-	 * example, 10" tablets are extra-large.
+	 * Helper method to determine if the device has an extra-large screen. For example, 10" tablets are extra-large.
 	 */
 	private static boolean isXLargeTablet(Context context) {
 		return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >=
@@ -201,7 +194,7 @@ public class SettingsActivity
 			Connector.State r = s.getJaxmpp(account).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
 			return r == null ? Connector.State.disconnected : r;
 		}
-		return null;
+		return Connector.State.disconnected;
 	}
 
 	private boolean isAccountActive(Account account) {
@@ -209,8 +202,7 @@ public class SettingsActivity
 	}
 
 	/**
-	 * This method stops fragment injection in malicious applications. Make sure
-	 * to deny any unknown fragments here.
+	 * This method stops fragment injection in malicious applications. Make sure to deny any unknown fragments here.
 	 */
 	protected boolean isValidFragment(String fragmentName) {
 		return PreferenceFragment.class.getName().equals(fragmentName) ||
@@ -393,8 +385,8 @@ public class SettingsActivity
 	}
 
 	/**
-	 * This fragment shows data and sync preferences only. It is used when the
-	 * activity is showing a two-pane settings UI.
+	 * This fragment shows data and sync preferences only. It is used when the activity is showing a two-pane settings
+	 * UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class AccountsPreferenceFragment
@@ -433,12 +425,6 @@ public class SettingsActivity
 
 			AccountManager am = AccountManager.get(screen.getContext());
 
-			Preference addAccountPref = new Preference(screen.getContext());
-			addAccountPref.setIntent(new Intent(screen.getContext(), NewAccountActivity.class));
-			addAccountPref.setTitle(getActivity().getString(R.string.pref_accounts_newaccount));
-			addAccountPref.setIcon(android.R.drawable.ic_input_add);
-			screen.addPreference(addAccountPref);
-
 			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 				AccountCat category = new AccountCat(screen.getContext(), account, (SettingsActivity) getActivity());
 				Intent x = new Intent(screen.getContext(), AccountProperties.class);
@@ -446,12 +432,19 @@ public class SettingsActivity
 				category.setIntent(x);
 				screen.addPreference(category);
 			}
+
+			Preference addAccountPref = new Preference(screen.getContext());
+			addAccountPref.setIntent(new Intent(screen.getContext(), NewAccountActivity.class));
+			addAccountPref.setTitle(getActivity().getString(R.string.pref_accounts_newaccount));
+			addAccountPref.setIcon(android.R.drawable.ic_input_add);
+			screen.addPreference(addAccountPref);
+
 		}
 	}
 
 	/**
-	 * This fragment shows data and sync preferences only. It is used when the
-	 * activity is showing a two-pane settings UI.
+	 * This fragment shows data and sync preferences only. It is used when the activity is showing a two-pane settings
+	 * UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class DataSyncPreferenceFragment
@@ -482,8 +475,7 @@ public class SettingsActivity
 	}
 
 	/**
-	 * This fragment shows general preferences only. It is used when the
-	 * activity is showing a two-pane settings UI.
+	 * This fragment shows general preferences only. It is used when the activity is showing a two-pane settings UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment
@@ -515,8 +507,8 @@ public class SettingsActivity
 	}
 
 	/**
-	 * This fragment shows notification preferences only. It is used when the
-	 * activity is showing a two-pane settings UI.
+	 * This fragment shows notification preferences only. It is used when the activity is showing a two-pane settings
+	 * UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class NotificationPreferenceFragment

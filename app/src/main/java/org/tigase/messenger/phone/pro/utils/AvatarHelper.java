@@ -46,7 +46,7 @@ public class AvatarHelper
 	private static Context context;
 	private static int defaultAvatarSize = 50;
 
-	private static int calculateSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+	public static int calculateSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
 		final int height = options.outHeight;
 		final int width = options.outWidth;
 		int inSampleSize = 1;

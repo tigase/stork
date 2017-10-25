@@ -490,6 +490,20 @@ public class AccountProperties
 				}
 			});
 
+			Preference vcardPreferences = findPreference("account_vcard");
+			vcardPreferences.setOnPreferenceClickListener(preference -> {
+				try {
+					Intent i = new Intent(getActivity(), VCardEditActivity.class);
+					i.putExtra("account", account.name);
+					getActivity().startActivity(i);
+					getActivity().finish();
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e("X", "CHuj!", e);
+				}
+				return true;
+			});
+
 			Preference reconnectPreference = findPreference("account_force_reconnect");
 			reconnectPreference.setOnPreferenceClickListener(preference -> {
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

@@ -6,6 +6,9 @@
         <SwitchPreference
                 android:key="accountEnabled"
                 android:title="Account active"/>
+        <Preference
+                android:key="account_vcard"
+                android:title="User details"/>
     </PreferenceCategory>
     <PreferenceCategory
             android:key="pref_account_connection"
@@ -15,7 +18,7 @@
                 android:enabled="false"
                 android:key="account_id"
                 android:summary="XMPP ID"
-                android:title="bmalkow@malkowscy.net"/>
+                android:title=""/>
 
 
         <EditTextPreference

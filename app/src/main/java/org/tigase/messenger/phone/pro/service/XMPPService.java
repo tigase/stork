@@ -1176,11 +1176,7 @@ public class XMPPService
 														  byte[] buffer = tigase.jaxmpp.core.client.Base64.decode(
 																  vcard.getPhotoVal());
 
-														  rosterProvider.updateVCardHash(sessionObject, jid, buffer);
-														  Intent intent = new Intent(
-																  "org.tigase.messenger.phone.pro.AvatarUpdated");
-														  intent.putExtra("jid", jid.toString());
-														  XMPPService.this.sendBroadcast(intent);
+														  updateVCardHash(sessionObject, jid, buffer);
 													  }
 												  } catch (Exception e) {
 													  Log.e("tigase", "WTF?", e);
@@ -1191,6 +1187,13 @@ public class XMPPService
 		} catch (Exception e) {
 			Log.e("tigase", "WTF?", e);
 		}
+	}
+
+	public void updateVCardHash(SessionObject sessionObject, BareJID jid, byte[] buffer) {
+		rosterProvider.updateVCardHash(sessionObject, jid, buffer);
+		Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
+		intent.putExtra("jid", jid.toString());
+		XMPPService.this.sendBroadcast(intent);
 	}
 
 	private void sendAcks() {
