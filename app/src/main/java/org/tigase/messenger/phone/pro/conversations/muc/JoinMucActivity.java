@@ -6,6 +6,7 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -64,6 +65,14 @@ public class JoinMucActivity
 		final BareJID account = BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString());
 		final BareJID jid = BareJID.bareJIDInstance(mRoomJid.getText().toString());
 		final String nickname = mNickname.getText().toString();
+
+		if (jid.getLocalpart() == null || jid.getDomain() == null || jid.getLocalpart().trim().isEmpty() ||
+				jid.getDomain().trim().isEmpty()) {
+			new AlertDialog.Builder(JoinMucActivity.this).setMessage("This is not right MUC Room address")
+					.setPositiveButton(android.R.string.ok, null)
+					.show();
+			return;
+		}
 
 		(new JoinToRoomTask(account, jid, nickname)).execute();
 
