@@ -1,12 +1,14 @@
 package org.tigase.messenger.phone.pro.account;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.v7.app.AlertDialog;
@@ -41,6 +43,21 @@ public class VCardEditActivity
 	private String accountName;
 	private ImageView avatarImageView;
 	private VCard vcard;
+
+	private static void dismissDialog(Activity activity, Dialog dialog) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			if (activity.isDestroyed()) { // or call isFinishing() if min sdk version < 17
+				return;
+			}
+		} else {
+			if (activity.isFinishing()) { // or call isFinishing() if min sdk version < 17
+				return;
+			}
+		}
+		if (null != dialog && dialog.isShowing()) {
+			dialog.dismiss();
+		}
+	}
 
 	private byte[] bitmapToByteArray(Bitmap bmp) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -272,7 +289,7 @@ public class VCardEditActivity
 				public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
 					runOnUiThread(() -> {
 						progress.hide();
-						progress.dismiss();
+						dismissDialog(VCardEditActivity.this, progress);
 						showErrorDialog("Cannot send user details to server");
 					});
 				}
@@ -289,7 +306,7 @@ public class VCardEditActivity
 					}
 					runOnUiThread(() -> {
 						progress.hide();
-						progress.dismiss();
+						dismissDialog(VCardEditActivity.this, progress);
 						finish();
 					});
 				}
