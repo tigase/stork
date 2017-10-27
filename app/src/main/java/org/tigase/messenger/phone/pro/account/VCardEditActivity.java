@@ -33,7 +33,6 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
-import java.util.function.Consumer;
 
 public class VCardEditActivity
 		extends AbstractServiceActivity {
@@ -45,17 +44,21 @@ public class VCardEditActivity
 	private VCard vcard;
 
 	private static void dismissDialog(Activity activity, Dialog dialog) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-			if (activity.isDestroyed()) { // or call isFinishing() if min sdk version < 17
-				return;
+		try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+				if (activity.isDestroyed()) { // or call isFinishing() if min sdk version < 17
+					return;
+				}
+			} else {
+				if (activity.isFinishing()) { // or call isFinishing() if min sdk version < 17
+					return;
+				}
 			}
-		} else {
-			if (activity.isFinishing()) { // or call isFinishing() if min sdk version < 17
-				return;
+			if (null != dialog && dialog.isShowing()) {
+				dialog.dismiss();
 			}
-		}
-		if (null != dialog && dialog.isShowing()) {
-			dialog.dismiss();
+		} catch (Throwable e) {
+			// be quiet
 		}
 	}
 
@@ -372,5 +375,10 @@ public class VCardEditActivity
 	private void showErrorDialog(String msg) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(VCardEditActivity.this);
 		builder.setMessage(msg).setPositiveButton(android.R.string.ok, (dialog, which) -> finish()).show();
+	}
+
+	private interface Consumer<T> {
+
+		void accept(T t);
 	}
 }
