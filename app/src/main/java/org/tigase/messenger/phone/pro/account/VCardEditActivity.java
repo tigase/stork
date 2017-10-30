@@ -2,7 +2,9 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -11,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
@@ -37,6 +40,8 @@ import java.io.FileNotFoundException;
 public class VCardEditActivity
 		extends AbstractServiceActivity {
 
+	private final static String TAG = "VCardEditActivity";
+
 	private static final int PICK_IMAGE = 1;
 	private static final int TAKE_PHOTO = 3;
 	private String accountName;
@@ -45,6 +50,7 @@ public class VCardEditActivity
 
 	private static void dismissDialog(Activity activity, Dialog dialog) {
 		try {
+			dialog.hide();
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
 				if (activity.isDestroyed()) { // or call isFinishing() if min sdk version < 17
 					return;
@@ -104,7 +110,7 @@ public class VCardEditActivity
 				a.setImageBitmap(bmp);
 			}
 		} catch (Exception e) {
-			Log.e("tigase", "WTF?", e);
+			Log.e(TAG, "WTF?", e);
 		}
 
 		this.vcard = vcard;
@@ -291,9 +297,8 @@ public class VCardEditActivity
 				@Override
 				public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition) throws JaxmppException {
 					runOnUiThread(() -> {
-						progress.hide();
 						dismissDialog(VCardEditActivity.this, progress);
-						showErrorDialog("Cannot send user details to server");
+						showErrorDialog("Cannot send user details to server (" + errorCondition + ")");
 					});
 				}
 
@@ -305,10 +310,9 @@ public class VCardEditActivity
 												 BareJID.bareJIDInstance(accountName),
 												 Base64.decode(vCard.getPhotoVal()));
 					} catch (Exception e) {
-						Log.e("VcardEdit", "Cannot update VCard cache", e);
+						Log.e(TAG, "Cannot update VCard cache", e);
 					}
 					runOnUiThread(() -> {
-						progress.hide();
 						dismissDialog(VCardEditActivity.this, progress);
 						finish();
 					});
@@ -317,8 +321,7 @@ public class VCardEditActivity
 				@Override
 				public void onTimeout() throws JaxmppException {
 					runOnUiThread(() -> {
-						progress.hide();
-						progress.dismiss();
+						dismissDialog(VCardEditActivity.this, progress);
 						showErrorDialog("Cannot send user details to server");
 					});
 				}
@@ -373,8 +376,37 @@ public class VCardEditActivity
 	}
 
 	private void showErrorDialog(String msg) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(VCardEditActivity.this);
-		builder.setMessage(msg).setPositiveButton(android.R.string.ok, (dialog, which) -> finish()).show();
+		Log.w(TAG, "Displaying error message: " + msg);
+		try {
+			AlertDialog.Builder builder = new AlertDialog.Builder(VCardEditActivity.this);
+			builder.setMessage(msg).setPositiveButton(android.R.string.ok, (dialog, which) -> finish()).show();
+		} catch (Exception e) {
+			Log.d(TAG, "Cannot display dialog because of " + e.getMessage(), e);
+			showErrorNotification(msg);
+		}
+	}
+
+	private void showErrorNotification(String msg) {
+		try {
+			NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext()).setSmallIcon(
+					android.R.drawable.stat_notify_error)
+					.setWhen(System.currentTimeMillis())
+					.setAutoCancel(true)
+					.setTicker("Personal Information Publishing Error")
+					.setContentTitle("Personal Information Publishing Error")
+					.setContentText(msg)
+					.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+//			builder.setLights(0xffff0000, 100, 100);
+
+			// getNotificationManager().notify(notificationId, builder.build());
+
+			NotificationManager mNotificationManager = (NotificationManager) getSystemService(
+					Context.NOTIFICATION_SERVICE);
+			mNotificationManager.notify(("error:" + accountName).hashCode(), builder.build());
+		} catch (Exception e) {
+			Log.d(TAG, "Cannot display error notification", e);
+		}
 	}
 
 	private interface Consumer<T> {
