@@ -1,44 +1,79 @@
 = Tigase Messenger User Guide
+:author: Daniel Wisnewski
+:version: v2.0, November 2017
 
-:author: Eric Dziewa
-:version: v1.0, April 2015: Tigase Messenger User Guide
+:toc:
+:numbered:
 :website: http://tigase.net
-:Date: 2015-04-30
 
-*Tigase Messenger* is the most intuitive, and user friendly mobile XMPP client on the market.
-Although you might feel hesitant to try it out if you've tried other clients, don't be.
-A few presses and swipes with Tigase Messenger and you are signed on and ready to use XMPP.
+*Tigase Messenger for Android* is a mobile chat client to use with XMPP services and servers. The totally revamped v3.0 now has new features, a better design, and Google integration.
+Tigase Messenger for Android supports any XMPP server, from free services like sure.im or Tigase.im, to a server you may host on your own. If you don’t have an XMPP account, you can use Tigase Messenger for Android to register a new account on sure.im, Tigase.im, or jabber.today for free and get chatting!
+
+== Features
+
+- *Save Battery Life and Data* +
+  Automatically set your status as you use (or don’t) your phone. When your phone is idle your device will not obtain presence information, lowering battery and data use when you are idle. If you are traveling through an area of poor reception, you will only reconnect when you take out your phone.
+
+- *Push Message Support* +
+  Support available for push notifications on servers that support Tigase push component. Get messages when device is idle.
+
+- *Multiple Account Management* +
+  Support multiple XMPP accounts at the same time. Selectively turn them on and off to keep things easy.
+
+- *Simplified File Sharing* +
+  Support for Tigase HTTP Upload component, uploading files and share using a URL!
+
+- *Google Services Integration* +
+  Manage your XMPP accounts with Google accounts management
+
+- *Message Archiving Support* +
+  Go back through conversations and history, what was that you sent last week? Now you can swipe up and find out!
+
+Welcome to Tigase Messenger v3.0!
 
 == Installation
 
 . Open the Play store and search for Tigase.
 +
-image:images/Screenshot_2015-04-26-13-38-30.png[]
+image:images/Search.png[]
 +
-. Tigase Messenger Free, and Tigase Messenger are the same. Select Tigase Messenger.
+. Select Tigase Messenger.
 +
-image:images/Screenshot_2015-04-26-13-38-46.png[]
+image:images/Install.png[]
 +
 . Tap INSTALL.
 +
-image:images/Screenshot_2015-04-26-13-40-14.png[]
-+
-. Accept the permission requests for the application.
+NOTE: There are no permissions needed for this application.
 . Let the phone do the rest.
 
-== First Setup
+== Creating an Account
 
-When you first load Tigase Messenger, you will be presented with our logo and a button indicating that you have an XMPP account.
+When you first load Tigase Messenger, you will be presented with our logo and a button asking if you have an XMPP account, or to create a new one.
 
 image:images/Welcome.png[]
 
-If you do not have one, visit https://xmpp.net/directory.php to select a federated server to register and obtain an XMPP account.
-
-Once you have credential information handy, go ahead and enter this information now.
+If you select Create an account, you will be taken to the next screen.
 
 image:images/Register.png[]
 
-Once the application logs in, you will be presented with your user roster and you are ready to use!
+Here, you can register your own XMPP account on a custom domain, or one of the services listed in the application: *tigase.im*, *sure.im*, *jabber.today*.
+
+The application will check for registration compatibility from the custom domain, or other listed ones before continuing to the next step.
+
+image:images/Register2.png[]
+
+Enter a username and password you wish to use.
+Note that usernames will be appended with the @domain.com suffix, so if you entered `exampleuser` at the tigase.im domain, the full username for your XMPP account will be `exampleuser@tigase.im`.
+
+Also be sure to include a valid E-mail so server administrators, or password reset functionality can reach you outside XMPP.
+
+Once registration is complete, the account will be added to your list of accounts.
+
+== Existing Account Login
+If you have an existing account on an XMPP Service, tap *I have an XMPP account* and enter your credential information.  The application will test credentials before they are saved to the device.
+Once the information is saved, you will be returned to the roster screen.  You will need to set your status to online to have the application login.
+
+To do so, select the menu option on the top left and select status and then online.
 
 == Roster view
 
@@ -48,11 +83,13 @@ The roster will show all contacts in your roster retrieved from the server you l
 
 To initiate a chat with a contact, simply tap their contact name.
 
-To add a contact to your roster, tap the "+" button at the bottom right and fill out the appropiate forms. They will be added to your roster and a presence subscription request will be sent to them. Should the user accept your request, they will likely add you back. When that happens, accept the add request when it shows up in your notifications window. Once that happens, thier status will be shown in your roster.
+To add a contact to your roster, tap the "+" button at the bottom right and fill out the appropriate forms. They will be added to your roster and a presence subscription request will be sent to them. Should the user accept your request, they will likely add you back. When that happens, accept the add request when it shows up in your notifications window. Once that happens, their status will be shown in your roster.
+
+vCard data will be obtained from the server, and images displayed on the icons if any is available.
 
 === Status indicators
 
-In your roster, users will display a colored circle indicting thier status.  See the table below to see what each color means.
+In your roster, users will display a colored circle indicting their status.  See the table below to see what each color means.
 
 .Status Table
 [options="header,footer"]
@@ -70,27 +107,37 @@ In your roster, users will display a colored circle indicting thier status.  See
 
 Tapping the ... on the top right or pressing the menu button on the phone will reveal two options for the roster menu:
 
-.Sort by which allows you to sort the Roster by presence or name.
+.Sort by which allows you to sort the Roster by presence or name.  Presences will be organized in the same order as the status table above.
 
 .Display offline contacts, which you can turn on or off.
+
+To add a new contact to the roster, tap the '+' icon to do so.
 
 == Chat View
 
 This view will show all your recent chats.  All active chats, chats that have not been archived, and any groupchats you are a part of will be listed here.
 
-To close any chat, long-press the chat you wish to remove and select Archive Chat.  This will close the chat from this menu, but the chat will be preserved the next time you bring the chat window up from the roster.
+To close any chat, long-press the chat you wish to remove, and you will have the following shown:
 
-image:images/ArchiveChat.png[]
+image:images/LongPressChat.png[]
 
-For groupchats, you will not have the ability to archive the chat.  Instead long pressing on the chatroom will provide you the ability to leave the room.
+You have two options to select, you may archive the chat by tapping image:images/Archive.png[] This will close the chat from this menu, but the chat will be preserved the next time you bring the chat window up from the roster in local storage - handy if message archiving is not enabled on the server you are connected too.
+
+If you just want to remove the chat, and not save it locally, tap image:images/DeleteChat.png[] and it will be removed from the device.
+
+For groupchats, you will not have the ability to archive the chat.  Instead long pressing on the chatroom will provide you the ability to leave the room after tapping the ... icon in the top right.
 
 image:images/LeaveRoom.png[]
+
+For a new chat, tapping the compose icon will show you the roster view, from which you can select a user to begin a conversation.
 
 === Groupchat View
 
 The groupchat view will display the current chat from all connected users.
 
 image:images/MUC.png[]
+
+You will only be able to leave the room from the Chats view.
 
 == Options Menu
 
@@ -101,6 +148,7 @@ image:images/Options.png[]
 === Status
 
 Here you may set your status for all signed in accounts.  Tapping the current status will bring up the various XMPP status options.
+All active accounts will be updated with the selected status.
 
 image:images/Status.png[]
 
@@ -114,11 +162,7 @@ image:images/JoinChat.png[]
 
 Here you can fill out a form to join a chat room in progress.  First select the account you wish to join the room with.  Then fill out the full name of the chatroom.  This includes the chatroom name and the MUC location.  So to join Chatroom1 on the muc.exmple.com server the address will be *Chatroom1@muc.example.com*.
 
-NOTE: You must fill out the Nickname field in order to join a chatroom.  MUC requires that you have a nickname that is seperate from your Jabber ID (your user name).
-
-== Connection info
-
-Connection info will display all your currently registered accounts, and the status of each of them.
+NOTE: You must fill out the Nickname field in order to join a chatroom.  MUC requires that you have a nickname that is separate from your Jabber ID (your user name).
 
 == Settings
 
@@ -126,9 +170,9 @@ Will open the settings menu.  You have three options: General, Notifications, an
 
 image:images/Menu.png[]
 
-=== General
+=== Status
 
-Contains general settings which pertain to automatically setting statuses based on inactivity levels.  Either of these settings may be set to off to disable them.  Note that Auto eXtended away delay will not be available if Auto Away is disabled.
+Contains general settings which pertain to automatically setting statuses based on inactivity levels.  Either of these settings may be set to off to disable them.  Note that Auto extended away delay will not be available if Auto Away is disabled.
 
 image:images/General.png[]
 
@@ -150,7 +194,7 @@ image:images/Notifications.png[]
 
 ==== New Message Notifications
 
-Whether or not to trigger the phone's notification mechanism when new chat messages are receieved.
+Whether or not to trigger the phone's notification mechanism when new chat messages are received.
 
 ==== Ringtone
 
@@ -164,7 +208,7 @@ Whether or not to vibrate the phone when a new chat message is received.
 
 ==== New message Notifications
 
-Whether or not to trigger the phone's notification mechanism when new groupchat messages are receieved.
+Whether or not to trigger the phone's notification mechanism when new groupchat messages are received.
 
 ==== Ringtone
 
@@ -180,18 +224,8 @@ image:images/Accounts.png[]
 
 This display will show all currently setup accounts as well as provide a method to add new accounts to the messenger.  You may also bring up this menu from the accounts section of your phone's settings menu.
 
-NOTE: To remove accounts, you will need to do so through your phone's account settings menu.
+For More details about account management, see the xref:accountManagement[Account Management] section of documentation for more details.
 
 == About
 
 Will display our logo along with the version of Tigase Messenger you are using.
-
-== Chat Window
-
-The chat window displays the conversation between you and your contact.  Chat windows may also contain historical chats as well as the current one.  Tap the back arrow to return to the previous screen.
-
-== Links
-
-- Drop by our link:https://projects.tigase.org/projects/tigase-mobilemessenger/boards[forum] to discuss *Tigase Messenger*.
-- Our other link:https://projects.tigase.org/[projects].
-- Receive Tigase news on our link:http://tigase.net[blog], link:https://twitter.com/tigase[Twitter], and link:https://www.facebook.com/Tigase[Facebook].

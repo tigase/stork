@@ -1,0 +1,66 @@
+[[accountManagement]]
+= Tigase Messenger User Guide
+:author: Daniel Wisnewski
+:version: v2.0, November 2017
+
+:toc:
+:numbered:
+:website: http://tigase.net
+
+Welcome to the Account Management section of the Tigase Messenger for Android documentation.
+All features in this section are accessible through the accounts section of Tigase Messenger for Android, or through Android's Account Management in Settings.
+
+Once you see the screen for accounts, tap on the account you wish to configure.  Once there, you will be presented with this screen:
+
+image:images/AccountProperties.png[]
+
+Below is a description of the settings.
+
+*Connection*
+Lists the account for which you are adjusting settings.
+
+== Account Active
+This enables or disables the account you are adjusting.  If an account is disabled, it will not update presence information, receive messages, or receive push notifications.
+
+== User Details
+Tapping user details will allow you to set vCard data which will allow you to fill in some personal information as well as set a user photo.
+image:images/vCard.png[]
+
+== Password
+Allows you to edit and change the associated password for the account.
+
+== Hostname
+By default, the hostname will be considered your domain address.  For example, if you are `user@xmppdomain.com`, `xmppdomain.com` will be used as the server hostname.
+However if you want to use a specific server address, and not the default one, you may set it here.
+NOTE: This option is also available when setting a new account.
+
+== Resource
+This adjusts the resource name for the client.  For example, if you were using `user@xmppdomain.com` and set the resource as `Mobile`, your full JID will be `user@xmppdomain.com/Mobile`.
+This full JID identifies your device, and allows other users to explicitly message one device rather than all devices connected with the same username.
+
+== Automatic Priorities
+By default this is enabled, which lets Tigase Messenger for Android set appropriate levels the different statuses.  Priorities will dictate which resource gets a message when it is sent to a user without a resource.  A device with a higher priority will receive the message first before one of a lower priority.
+For most users, we recommend to keep this function enabled.
+
+=== Custom Resource Priorities
+If you wish to set your own priority for each status you may tap this section.
+
+image:images/CustomPriorities.png[]
+
+WARNING: You should only set your own priorities if you wish to change normal message delivery behavior.  Improper priority settings could drastically affect how the application behaves!
+
+== Push Notifications
+Whether to enable or disable push notifications to the device.  xref:tmPush[Push Notifications] are described in a separate section of this guide.
+NOTE: Push notifications will only be delivered to a device that has an active & online account.  Disabled or offline accounts will not receive push notifications.
+
+== Message Archiving
+If the connected server supports it, you may use the Message Archive functionality to retrieve sent and received messages to the configured resource.  When enabled, you may either download messages from Roster Contacts (only contacts in your roster) or all conversations to your resource.
+Disabled will rely on the local storage when available.
+
+== Force Reconnect
+Tapping this will force a disconnect and then reconnection with the current settings.  This may be necessary when changing a number or settings, or testing new ones out.
+
+*Others*
+
+== Nickname
+Changing this will change your displayed nickname to other users, for those without a custom name, this name will appear on their roster.

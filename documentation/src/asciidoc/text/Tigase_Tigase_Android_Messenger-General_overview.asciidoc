@@ -1,8 +1,0 @@
-image::images/tiger-looking-left-small.png[]
-
-[[TigaseAndroidMessenger_DesignAndImplementation]]
-== Design and implementation
-
-=== Tigase Android Messenger
-
-Tigase Android Messenger is an Android IM application build using *Tigase JaXMPP*  client library.
