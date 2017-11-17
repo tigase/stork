@@ -30,13 +30,14 @@ public class FetchMessageArchiveMAM
 		implements Runnable {
 
 	private final SessionObject sessionObject;
-	private final Date startDate;
 	private final XMPPService xmppService;
+	private Account account;
+	private AccountManager mAccountManager;
+	private Date startDate;
 
 	public FetchMessageArchiveMAM(XMPPService xmppService, SessionObject sessionObject) {
 		this.xmppService = xmppService;
 		this.sessionObject = sessionObject;
-		this.startDate = getLastMessageDate();
 	}
 
 	private void fetchHistory(final Jaxmpp jaxmpp, final Chat chat, Date date) {
@@ -143,8 +144,16 @@ public class FetchMessageArchiveMAM
 		long d = Math.max(d1, d2);
 
 		if (d == -1) {
+			String syncTime = mAccountManager.getUserData(account, AccountsConstants.MAM_SYNC_TIME);
+
+			int hours = syncTime == null ? 24 : Integer.valueOf(syncTime);
+
+			if (hours == 0) {
+				return null;
+			}
+
 			Calendar now = Calendar.getInstance();
-			now.add(Calendar.DATE, -14);
+			now.add(Calendar.HOUR, -hours);
 			return now.getTime();
 		} else {
 			return new Date(d);
@@ -190,6 +199,21 @@ public class FetchMessageArchiveMAM
 	public void run() {
 		Log.i(XMPPService.TAG, "Fetching Messages Archive. Account=" + sessionObject.getUserBareJid());
 		try {
+			this.mAccountManager = AccountManager.get(xmppService);
+			this.account = AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString());
+			this.startDate = getLastMessageDate();
+
+			String autoSync = mAccountManager.getUserData(account, AccountsConstants.MAM_AUTOSYNC);
+			if (autoSync != null && !Boolean.parseBoolean(autoSync)) {
+				Log.i(XMPPService.TAG, "Autosync disabled. Skip.");
+				return;
+			}
+
+			if (startDate == null) {
+				Log.i(XMPPService.TAG, "Start date set to Never. Skip.");
+				return;
+			}
+
 			final Jaxmpp jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
 			final MessageArchivingModule mam = jaxmpp.getModule(MessageArchivingModule.class);
 

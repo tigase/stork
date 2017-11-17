@@ -170,7 +170,7 @@
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
         <activity android:name=".account.VCardEditActivity"
-                  android:label="User Details"
+                  android:label="Contact details"
                   android:theme="@style/AppTheme"
                   android:parentActivityName=".settings.SettingsActivity">
             <meta-data

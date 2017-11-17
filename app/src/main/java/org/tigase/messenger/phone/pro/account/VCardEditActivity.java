@@ -235,9 +235,6 @@ public class VCardEditActivity
 				startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE);
 			}
 		});
-
-//		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(this.accountName),
-//										 );
 	}
 
 	@Override

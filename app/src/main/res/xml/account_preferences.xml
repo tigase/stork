@@ -1,42 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <org.tigase.messenger.phone.pro.settings.AccountCat
+            android:key="pref_account_vcard"/>
     <PreferenceCategory
             android:key="pref_account_general"
             android:title="General">
         <SwitchPreference
                 android:key="accountEnabled"
-                android:title="Account active"/>
-        <Preference
-                android:key="account_vcard"
-                android:title="User details"/>
+                android:title="Enabled"/>
+        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                          android:enabled="true"
+                          android:key="pref_account_connection"
+                          android:title="Change account settings">
+            <intent
+                    android:action="ACCOUNT_SETTINGS_SCREEN"
+                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
+                    android:targetPackage="org.tigase.messenger.phone.pro"/>
+        </PreferenceScreen>
+
     </PreferenceCategory>
     <PreferenceCategory
-            android:key="pref_account_connection"
-            android:title="Connection">
-        <EditTextPreference
-                android:editable="false"
-                android:enabled="false"
-                android:key="account_id"
-                android:summary="XMPP ID"
-                android:title=""/>
-
-
-        <EditTextPreference
-                android:key="account_password"
-                android:password="true"
-                android:title="Password"/>
-
-        <EditTextPreference
-                android:inputType="textUri"
-                android:key="account_hostname"
-                android:summary="(default)"
-                android:title="Hostname"/>
-
-        <EditTextPreference
-                android:key="account_resource"
-                android:summary="TigaseMessenger"
-                android:title="Resource"/>
-
+            android:title="Resource priority">
         <SwitchPreference
                 android:key="account_priorites_enabled"
                 android:title="Automatic priorities"/>
@@ -49,22 +33,6 @@
                     android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
                     android:targetPackage="org.tigase.messenger.phone.pro"/>
         </PreferenceScreen>
-
-
-        <Preference
-                android:key="account_force_reconnect"
-                android:summary="Force connect or reconnect this account"
-                android:title="Force reconnect"/>
-
-        <!--<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--android:key="loginDetails"-->
-        <!--android:enabled="true"-->
-        <!--android:title="Login details">-->
-        <!--<intent-->
-        <!--android:action="android.intent.action.EDIT"-->
-        <!--android:targetPackage="org.tigase.messenger.phone.pro"-->
-        <!--android:targetClass="org.tigase.messenger.phone.pro.account.LoginActivity"/>-->
-        <!--</PreferenceScreen>-->
     </PreferenceCategory>
     <PreferenceCategory
             android:key="pref_account_pushnotifications"
@@ -76,14 +44,21 @@
     <PreferenceCategory
             android:key="pref_account_others"
             android:title="Message Archiving">
+
+        <SwitchPreference android:key="account_mam_enabled"
+                          android:title="Enabled"/>
+
+        <SwitchPreference android:key="account_mam_automatic_sync"
+                          android:title="Automatic synchronization"/>
+
         <ListPreference
-                android:entries="@array/account_mam_labels"
-                android:entryValues="@array/account_mam_values"
-                android:key="account_mam_type"
+                android:key="account_mam_synchronization"
+                android:entries="@array/account_mam_sync_labels"
+                android:entryValues="@array/account_mam_sync_values"
                 android:negativeButtonText="@null"
                 android:persistent="false"
                 android:positiveButtonText="@null"
-                android:title="@string/account_mam_title"/>
+                android:title="Synchronization"/>
     </PreferenceCategory>
     <PreferenceCategory
             android:key="pref_account_others"

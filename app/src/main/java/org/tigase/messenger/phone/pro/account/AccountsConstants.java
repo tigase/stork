@@ -38,4 +38,6 @@ public class AccountsConstants {
 	public static final String PUSH_NOTIFICATION = "push_notifications";
 	public static final String PUSH_SERVICE_NODE_KEY = "push_service_node_key";
 	public static final String DISCONNECTION_CAUSE_KEY = "disconnection_cause";
+	public static final String MAM_SYNC_TIME = "mam_sync_time";
+	public static final String MAM_AUTOSYNC = "mam_autosync";
 }

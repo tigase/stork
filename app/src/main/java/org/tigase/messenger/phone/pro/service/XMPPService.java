@@ -974,6 +974,7 @@ public class XMPPService
 		String text = getString(R.string.notification_certificate_error_text);
 
 		Intent resultIntent = new Intent(this, AccountProperties.class);
+		resultIntent.setAction("ACCOUNT_SETTINGS_SCREEN");
 		resultIntent.putExtra("account_name", jaxmpp.getSessionObject().getUserBareJid().toString());
 
 		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
