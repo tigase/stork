@@ -23,7 +23,6 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 
 import android.app.Activity;
 import android.app.NotificationManager;
-import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -32,7 +31,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -40,7 +38,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
-import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -68,14 +65,7 @@ public class ChatActivity
 	private Uri contactUri;
 	private MarkAsRead markAsRead;
 	private int openChatId;
-	private MainActivity.XMPPServiceConnection mServiceConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-			Chat chat = findOrCreateChat(getAccount(), getJid());
-			ChatActivity.this.openChatId = (int) chat.getId();
-		}
-	};
+
 	private Integer rosterId;
 
 	private void doUploadFile(Intent data, int resultCode) {
@@ -90,7 +80,7 @@ public class ChatActivity
 
 	private Chat findOrCreateChat(BareJID account, JID jid) {
 		try {
-			Jaxmpp jaxmpp = mServiceConnection.getService().getJaxmpp(account);
+			Jaxmpp jaxmpp = getServiceConnection().getService().getJaxmpp(account);
 			final BareJID bareJID = jid.getBareJid();
 			Chat chat = null;
 			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
@@ -241,13 +231,18 @@ public class ChatActivity
 	protected void onStart() {
 		super.onStart();
 		Intent service = new Intent(getApplicationContext(), XMPPService.class);
-		bindService(service, mServiceConnection, 0);
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		unbindService(mServiceConnection);
+	}
+
+	@Override
+	protected void onXMPPServiceConnected() {
+		super.onXMPPServiceConnected();
+		Chat chat = findOrCreateChat(getAccount(), getJid());
+		ChatActivity.this.openChatId = (int) chat.getId();
 	}
 
 	private class ContactPresenceChangeObserver

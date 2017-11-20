@@ -12,7 +12,7 @@ import tigase.jaxmpp.core.client.JaxmppCore;
 public abstract class AbstractServiceActivity
 		extends AppCompatActivity {
 
-	protected final MainActivity.XMPPServiceConnection mServiceConnection = new MainActivity.XMPPServiceConnection() {
+	private final MainActivity.XMPPServiceConnection mServiceConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			super.onServiceConnected(name, service);
@@ -39,6 +39,10 @@ public abstract class AbstractServiceActivity
 			return null;
 		}
 		return s.getJaxmpp(accountJid);
+	}
+
+	public MainActivity.XMPPServiceConnection getServiceConnection() {
+		return mServiceConnection;
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -173,6 +174,32 @@ public class MucItemFragment
 		message = (EditText) root.findViewById(R.id.messageText);
 		sendButton = (ImageView) root.findViewById(R.id.send_button);
 		sendButton.setOnClickListener(view -> send());
+
+		final FloatingActionButton floatingActionButton = (FloatingActionButton) root.findViewById(R.id.scroll_down);
+		floatingActionButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				recyclerView.smoothScrollToPosition(0);
+			}
+		});
+		floatingActionButton.hide();
+
+		recyclerView = (RecyclerView) root.findViewById(R.id.chat_list);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			this.recyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+				@Override
+				public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+					LinearLayoutManager myLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+					final boolean shouldBeVisible = myLayoutManager.findFirstVisibleItemPosition() > 0;
+
+					if (shouldBeVisible) {
+						floatingActionButton.show();
+					} else {
+						floatingActionButton.hide();
+					}
+				}
+			});
+		}
 
 		message.setEnabled(false);
 

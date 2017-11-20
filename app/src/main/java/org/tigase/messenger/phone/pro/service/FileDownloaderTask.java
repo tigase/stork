@@ -71,6 +71,9 @@ public class FileDownloaderTask
 				options.inJustDecodeBounds = true;
 				return BitmapFactory.decodeStream(in);
 			}
+		} catch (java.io.FileNotFoundException e) {
+			Log.w(TAG, "File not found on server", e);
+			return null;
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot download image", e);
 			throw new RuntimeException(e);
@@ -79,6 +82,10 @@ public class FileDownloaderTask
 
 	@Override
 	protected void onPostExecute(Bitmap bitmap) {
+		if (bitmap == null) {
+			Log.w(TAG, "File not found on server. Nothing to add");
+			return;
+		}
 		Log.i(TAG, "Saving image in MediaStore");
 		final ContentValues values = new ContentValues();
 		String uri = MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "", "");

@@ -44,7 +44,11 @@ public class ViewHolderImg
 
 	protected void setImageContent(final String datUri) {
 		if (mImage != null) {
-			mImage.setOnClickListener(v -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(datUri))));
+			mImage.setOnClickListener(v -> {
+				if (datUri != null) {
+					context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(datUri)));
+				}
+			});
 			mImage.post(() -> {
 				if (datUri == null) {
 					mImage.setImageResource(R.drawable.image_placeholder);

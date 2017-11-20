@@ -1,11 +1,11 @@
 package org.tigase.messenger.phone.pro.conversations;
 
-import android.support.v7.app.AppCompatActivity;
+import org.tigase.messenger.AbstractServiceActivity;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
 public class AbstractConversationActivity
-		extends AppCompatActivity {
+		extends AbstractServiceActivity {
 
 	public static final int FILE_UPLOAD_REQUEST_CODE = 109;
 
@@ -14,6 +14,16 @@ public class AbstractConversationActivity
 
 	public BareJID getAccount() {
 		return account;
+	}
+
+	@Override
+	protected void onXMPPServiceConnected() {
+
+	}
+
+	@Override
+	protected void onXMPPServiceDisconnected() {
+
 	}
 
 	protected void setAccount(BareJID account) {

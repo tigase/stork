@@ -302,7 +302,7 @@ public class VCardEditActivity
 				@Override
 				public void onSuccess(Stanza stanza) throws JaxmppException {
 					try {
-						mServiceConnection.getService()
+						getServiceConnection().getService()
 								.updateVCardHash(getJaxmpp(accountName).getSessionObject(),
 												 BareJID.bareJIDInstance(accountName),
 												 Base64.decode(vCard.getPhotoVal()));
