@@ -1190,13 +1190,6 @@ public class XMPPService
 		}
 	}
 
-	public void updateVCardHash(SessionObject sessionObject, BareJID jid, byte[] buffer) {
-		rosterProvider.updateVCardHash(sessionObject, jid, buffer);
-		Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
-		intent.putExtra("jid", jid.toString());
-		XMPPService.this.sendBroadcast(intent);
-	}
-
 	private void sendAcks() {
 		taskExecutor.execute(new Runnable() {
 			@Override
@@ -1504,15 +1497,14 @@ public class XMPPService
 			String nickname = mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME);
 			String hostname = mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME);
 			String resource = mAccountManager.getUserData(account, AccountsConstants.FIELD_RESOURCE);
-			hostname = hostname == null ? null : hostname.trim();
 
 			jaxmpp.getSessionObject().setUserProperty(SessionObject.PASSWORD, password);
 			jaxmpp.getSessionObject().setUserProperty(SessionObject.NICKNAME, nickname);
-			if (hostname != null && TextUtils.isEmpty(hostname)) {
+			if (TextUtils.isEmpty(hostname)) {
 				hostname = null;
 			}
-			// sessionObject.setUserProperty(SessionObject.DOMAIN_NAME,
-			// hostname);
+			jaxmpp.getSessionObject().setUserProperty(SocketConnector.SERVER_HOST, hostname);
+
 			if (TextUtils.isEmpty(resource)) {
 				resource = null;
 			}
@@ -1593,6 +1585,13 @@ public class XMPPService
 		// sessionObject.getUserBareJid(), from, bestPresence);
 	}
 
+	public void updateVCardHash(SessionObject sessionObject, BareJID jid, byte[] buffer) {
+		rosterProvider.updateVCardHash(sessionObject, jid, buffer);
+		Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
+		intent.putExtra("jid", jid.toString());
+		XMPPService.this.sendBroadcast(intent);
+	}
+
 //	private void uploadFileAndSend(final String account, final Uri content, int chatId) {
 //		Jaxmpp jaxmpp = getJaxmpp(account);
 //
@@ -1618,15 +1617,25 @@ public class XMPPService
 //	}
 
 	private class AccountModifyReceiver
-			extends BroadcastReceiver {
+			extends BroadcastReceiver
+			implements Runnable {
+
+		private String account;
+		private boolean forceDisconnect;
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Log.i("XMPPService", "Updating accounts !" + intent.getAction());
 
-			String account = intent.getStringExtra(LoginActivity.KEY_ACCOUNT_NAME);
-			boolean forceDisconnect = intent.getBooleanExtra(LoginActivity.KEY_FORCE_DISCONNECT, false);
+			this.account = intent.getStringExtra(LoginActivity.KEY_ACCOUNT_NAME);
+			this.forceDisconnect = intent.getBooleanExtra(LoginActivity.KEY_FORCE_DISCONNECT, false);
 
+			(new Thread(this)).start();
+		}
+
+		@Override
+		public void run() {
+			Log.i("XMPPService", "Updating account");
 			if (account != null && forceDisconnect) {
 				try {
 					multiJaxmpp.get(BareJID.bareJIDInstance(account)).disconnect();
