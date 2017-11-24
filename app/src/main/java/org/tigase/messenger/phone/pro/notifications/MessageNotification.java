@@ -195,8 +195,8 @@ public class MessageNotification {
 		Intent resultIntent = new Intent(context, ChatActivity.class);
 		resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		resultIntent.putExtra("openChatId", (int) chat.getId());
-		resultIntent.putExtra("jid", chat.getJid().getBareJid().toString());
-		resultIntent.putExtra("account", account);
+		resultIntent.putExtra(ChatActivity.JID_KEY, chat.getJid().getBareJid().toString());
+		resultIntent.putExtra(ChatActivity.ACCOUNT_KEY, account);
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent,
 																	  PendingIntent.FLAG_UPDATE_CURRENT);
 

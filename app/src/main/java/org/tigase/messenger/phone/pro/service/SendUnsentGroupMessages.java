@@ -107,8 +107,9 @@ class SendUnsentGroupMessages
 						protected void sendMessage(String getUri, String mimeType) {
 							try {
 								SendUnsentMessages.addOOB(itemType, "<url>" + getUri + "</url>", msg, values);
-								values.put(DatabaseContract.ChatHistory.FIELD_BODY, getUri);
-								msg.setBody(getUri);
+								String bd = getUri + (body == null ? "" : "\n" + body);
+								values.put(DatabaseContract.ChatHistory.FIELD_BODY, bd);
+								msg.setBody(bd);
 								send(id, msg, values);
 							} catch (Exception e) {
 								Log.w(TAG, "Babollo", e);

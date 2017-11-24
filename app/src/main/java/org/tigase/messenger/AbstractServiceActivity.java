@@ -9,14 +9,24 @@ import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 
+import java.util.ArrayList;
+
 public abstract class AbstractServiceActivity
 		extends AppCompatActivity {
 
+	private final ArrayList<Runnable> doAfterBind = new ArrayList<>();
 	private final MainActivity.XMPPServiceConnection mServiceConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			super.onServiceConnected(name, service);
 			AbstractServiceActivity.this.onXMPPServiceConnected();
+			try {
+				for (Runnable runnable : doAfterBind) {
+					runnable.run();
+				}
+			} finally {
+				doAfterBind.clear();
+			}
 		}
 
 		@Override
@@ -61,4 +71,12 @@ public abstract class AbstractServiceActivity
 	protected abstract void onXMPPServiceConnected();
 
 	protected abstract void onXMPPServiceDisconnected();
+
+	protected final void startWhenBinded(Runnable r) {
+		if (getServiceConnection().getService() == null) {
+			doAfterBind.add(r);
+		} else {
+			r.run();
+		}
+	}
 }

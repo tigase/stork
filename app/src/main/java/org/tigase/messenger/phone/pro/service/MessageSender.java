@@ -50,6 +50,7 @@ public class MessageSender {
 
 		Bitmap bmp = getBitmapFromUri(context, localContentUri);
 		String imu = MediaStore.Images.Media.insertImage(context.getContentResolver(), bmp, "Sent image", "");
+
 		return Uri.parse(imu);
 	}
 
@@ -59,6 +60,17 @@ public class MessageSender {
 		Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
 		parcelFileDescriptor.close();
 		return image;
+	}
+
+	public static String getMimeType(final Context context, final Uri localContentUri) {
+		String displayName = null;
+		try (Cursor cursor = context.getContentResolver().query(localContentUri, null, null, null, null, null)) {
+			if (cursor != null && cursor.moveToFirst()) {
+				displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+
+			}
+		}
+		return FileUploaderTask.guessMimeType(displayName);
 	}
 
 	public MessageSender(XMPPService xmppService) {
@@ -93,17 +105,6 @@ public class MessageSender {
 		return null;
 	}
 
-	private String getMimeType(final Context context, final Uri localContentUri) {
-		String displayName = null;
-		try (Cursor cursor = context.getContentResolver().query(localContentUri, null, null, null, null, null)) {
-			if (cursor != null && cursor.moveToFirst()) {
-				displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-
-			}
-		}
-		return FileUploaderTask.guessMimeType(displayName);
-	}
-
 	public void process(Context context, Intent intent) {
 		switch (intent.getAction()) {
 			case SEND_CHAT_MESSAGE_ACTION:
@@ -123,6 +124,12 @@ public class MessageSender {
 		final String body = intent.getStringExtra(BODY);
 		final BareJID account = BareJID.bareJIDInstance(intent.getStringExtra(ACCOUNT));
 		final Uri localContentUri = intent.getParcelableExtra(LOCAL_CONTENT_URI);
+
+//		if (localContentUri != null) {
+//			context.getContentResolver()
+//					.takePersistableUriPermission(localContentUri, intent.getFlags() &
+//							(Intent.FLAG_GRANT_READ_URI_PERMISSION + Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
+//		}
 
 		final Chat chat = getChat(account, chatId);
 		final Jaxmpp jaxmpp = service.getJaxmpp(chat.getSessionObject().getUserBareJid());

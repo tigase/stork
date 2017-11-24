@@ -31,15 +31,16 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.conversations.imagepreview.PreviewImageActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
@@ -57,8 +58,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 public class ChatActivity
 		extends AbstractConversationActivity {
 
+	public static final String SEND_IMAGE_ACTION = "SEND_IMAGE_ACTION";
 	public static final String ACCOUNT_KEY = "account";
 	public static final String JID_KEY = "jid";
+	public static final String SEND_TEXT_ACTION = "SEND_TEXT_ACTION";
+	public static final int PREVIEW_IMAGE_REQUEST_CODE = 1;
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	TextView mContactName;
 	ImageView mContactPresence;
@@ -68,14 +72,28 @@ public class ChatActivity
 
 	private Integer rosterId;
 
-	private void doUploadFile(Intent data, int resultCode) {
-		Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
-		ssIntent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
-		ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
-		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
-		ssIntent.putExtra(MessageSender.CHAT_ID, openChatId);
+	private void doPreviewImage(final Intent data) {
+		startWhenBinded(() -> {
+			Intent intent = new Intent(this, PreviewImageActivity.class);
+			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
+			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
+			intent.setData(data.getData());
 
-		getApplicationContext().startService(ssIntent);
+			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
+		});
+	}
+
+	private void doUploadFile(Intent data) {
+		final Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
+		ssIntent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
+		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
+
+		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
+		startWhenBinded(() -> {
+			ssIntent.putExtra(MessageSender.CHAT_ID, openChatId);
+			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
+			getApplicationContext().startService(ssIntent);
+		});
 	}
 
 	private Chat findOrCreateChat(BareJID account, JID jid) {
@@ -102,9 +120,7 @@ public class ChatActivity
 	String getContactName() {
 		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
 										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
-										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME,
-										   ChatProvider.FIELD_UNREAD_COUNT, DatabaseContract.OpenChats.FIELD_TYPE,
-										   ChatProvider.FIELD_CONTACT_PRESENCE, ChatProvider.FIELD_LAST_MESSAGE};
+										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME};
 
 		try (Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId),
 												   cols, null, null, null)) {
@@ -161,8 +177,11 @@ public class ChatActivity
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-			doUploadFile(data, resultCode);
+		if (requestCode == PREVIEW_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			doUploadFile(data);
+		} else if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			// doUploadFile(data, resultCode);
+			doPreviewImage(data);
 		} else {
 			super.onActivityResult(requestCode, resultCode, data);
 		}
@@ -194,8 +213,6 @@ public class ChatActivity
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-		FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-		fab.setVisibility(View.GONE);
 		// fab.setOnClickListener(new View.OnClickListener() {
 		// @Override
 		// public void onClick(View view) {
@@ -206,6 +223,16 @@ public class ChatActivity
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		this.markAsRead = new MarkAsRead(this);
+
+		Intent intent = getIntent();
+		if (intent != null && intent.getAction() != null && intent.getAction().equals(SEND_TEXT_ACTION)) {
+			EditText v = (EditText) findViewById(R.id.messageText);
+			if (v != null) {
+				v.setText(intent.getStringExtra(TEXT));
+			}
+		} else if (intent != null && intent.getAction() != null && intent.getAction().equals(SEND_IMAGE_ACTION)) {
+			doPreviewImage(intent);
+		}
 	}
 
 	@Override
@@ -243,6 +270,8 @@ public class ChatActivity
 		super.onXMPPServiceConnected();
 		Chat chat = findOrCreateChat(getAccount(), getJid());
 		ChatActivity.this.openChatId = (int) chat.getId();
+
+		loadContact();
 	}
 
 	private class ContactPresenceChangeObserver

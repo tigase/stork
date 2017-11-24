@@ -7,6 +7,8 @@ import tigase.jaxmpp.core.client.JID;
 public class AbstractConversationActivity
 		extends AbstractServiceActivity {
 
+	public static final String TEXT = "TEXT";
+
 	public static final int FILE_UPLOAD_REQUEST_CODE = 109;
 
 	private BareJID account;
@@ -14,16 +16,6 @@ public class AbstractConversationActivity
 
 	public BareJID getAccount() {
 		return account;
-	}
-
-	@Override
-	protected void onXMPPServiceConnected() {
-
-	}
-
-	@Override
-	protected void onXMPPServiceDisconnected() {
-
 	}
 
 	protected void setAccount(BareJID account) {
@@ -36,6 +28,16 @@ public class AbstractConversationActivity
 
 	protected void setJid(JID jid) {
 		this.jid = jid;
+	}
+
+	@Override
+	protected void onXMPPServiceConnected() {
+
+	}
+
+	@Override
+	protected void onXMPPServiceDisconnected() {
+
 	}
 
 }

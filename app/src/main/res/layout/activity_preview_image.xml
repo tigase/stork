@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+>
+
+    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent"
+    >
+
+        <android.support.design.widget.AppBarLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:theme="@style/AppTheme.AppBarOverlay"
+                android:id="@+id/appBarLayout2">
+            <android.support.v7.widget.Toolbar
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="?attr/colorPrimary"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+                <RelativeLayout android:layout_width="match_parent"
+                                android:layout_height="?attr/actionBarSize"
+                                android:gravity="left">
+                    <ImageView
+                            android:id="@+id/contact_avatar"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_alignParentLeft="true"
+                            android:scaleType="fitStart"
+                            android:src="@drawable/user_avatar"/>
+
+                    <TextView
+                            android:id="@+id/contact_display_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:text="Bartek"
+                            android:textColor="#ffffffff"
+                            android:layout_centerVertical="true"
+                            android:layout_toEndOf="@+id/contact_avatar"/>
+
+                </RelativeLayout>
+            </android.support.v7.widget.Toolbar>
+        </android.support.design.widget.AppBarLayout>
+
+        <ImageView android:id="@+id/imageView"
+                   android:background="#000000"
+                   android:layout_width="match_parent"
+                   android:layout_height="match_parent"
+                   android:src="@drawable/ic_launcher"
+                   android:layout_above="@+id/editorPanel"
+                   android:layout_below="@+id/appBarLayout2"
+                   android:layout_alignParentStart="true"/>
+
+        <RelativeLayout android:id="@+id/editorPanel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="5dp"
+                        android:background="#ECEFF1"
+                        android:layout_alignParentBottom="true"
+                        android:layout_centerHorizontal="true">
+
+            <EditText android:id="@+id/messageText"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:inputType="textCapSentences|textShortMessage|textMultiLine"
+                      android:ems="10"
+                      android:minLines="1"
+                      android:imeActionId="@+id/send"
+                      android:imeActionLabel="Send"
+                      android:layout_toLeftOf="@+id/send_button"
+                      android:imeOptions="actionSend|flagNoExtractUi"
+                      android:autoLink="all"/>
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:src="@drawable/ic_send_24dp"
+                    android:id="@+id/send_button"
+                    android:layout_alignBottom="@+id/messageText"
+                    android:layout_alignTop="@+id/messageText"/>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

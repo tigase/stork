@@ -43,12 +43,6 @@ public class SendUnsentMessages
 	private final Jaxmpp jaxmpp;
 	private final SessionObject sessionObject;
 
-	public SendUnsentMessages(Context context, Jaxmpp jaxmpp) {
-		this.context = context;
-		this.jaxmpp = jaxmpp;
-		this.sessionObject = jaxmpp.getSessionObject();
-	}
-
 	static void addOOB(final int messageType, String oobData, Message msg, ContentValues values)
 			throws JaxmppException {
 		if (oobData != null) {
@@ -59,6 +53,12 @@ public class SendUnsentMessages
 
 			values.put(DatabaseContract.ChatHistory.FIELD_DATA, url.getAsString());
 		}
+	}
+
+	public SendUnsentMessages(Context context, Jaxmpp jaxmpp) {
+		this.context = context;
+		this.jaxmpp = jaxmpp;
+		this.sessionObject = jaxmpp.getSessionObject();
 	}
 
 	public void run(final Uri itemUri) {
@@ -114,8 +114,9 @@ public class SendUnsentMessages
 					protected void sendMessage(String getUri, String mimeType) {
 						try {
 							addOOB(messageType, "<url>" + getUri + "</url>", msg, values);
-							values.put(DatabaseContract.ChatHistory.FIELD_BODY, getUri);
-							msg.setBody(getUri);
+							String bd = getUri + (body == null ? "" : "\n" + body);
+							values.put(DatabaseContract.ChatHistory.FIELD_BODY, bd);
+							msg.setBody(bd);
 							send(id, msg, values);
 						} catch (Exception e) {
 							Log.w(TAG, "Babollo", e);

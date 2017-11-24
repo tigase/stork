@@ -80,8 +80,8 @@ public class ViewHolder
 	@Override
 	protected void onItemClick(View v) {
 		Intent intent = new Intent(context, ChatActivity.class);
-		intent.putExtra("jid", jid);
-		intent.putExtra("account", account);
+		intent.putExtra(ChatActivity.JID_KEY, jid);
+		intent.putExtra(ChatActivity.ACCOUNT_KEY, account);
 		context.startActivity(intent);
 	}
 

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.conversations.imagepreview.PreviewImageActivity;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -19,18 +20,33 @@ import tigase.jaxmpp.core.client.JID;
 public class MucActivity
 		extends AbstractConversationActivity {
 
+	public static final int PREVIEW_IMAGE_REQUEST_CODE = 1;
 	TextView mContactName;
 	private MarkAsRead markAsRead;
 	private int openChatId;
 
-	private void doUploadFile(Intent data, int resultCode) {
+	private void doPreviewImage(final Intent data) {
+		startWhenBinded(() -> {
+			Intent intent = new Intent(this, PreviewImageActivity.class);
+			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
+			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
+			intent.setData(data.getData());
+
+			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
+		});
+	}
+
+	private void doUploadFile(Intent data) {
 		Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
 		ssIntent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION);
-		ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
 		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
-		ssIntent.putExtra(MessageSender.ROOM_JID, getJid().getBareJid().toString());
 
-		getApplicationContext().startService(ssIntent);
+		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
+		startWhenBinded(() -> {
+			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
+			ssIntent.putExtra(MessageSender.ROOM_JID, getJid().getBareJid().toString());
+			getApplicationContext().startService(ssIntent);
+		});
 	}
 
 	public int getOpenChatId() {
@@ -39,8 +55,10 @@ public class MucActivity
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-			doUploadFile(data, resultCode);
+		if (requestCode == PREVIEW_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			doUploadFile(data);
+		} else if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			doPreviewImage(data);
 		} else {
 			super.onActivityResult(requestCode, resultCode, data);
 		}

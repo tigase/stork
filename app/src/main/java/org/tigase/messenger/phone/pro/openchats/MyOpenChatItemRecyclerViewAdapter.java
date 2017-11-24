@@ -82,16 +82,18 @@ public class MyOpenChatItemRecyclerViewAdapter
 		switch (type) {
 			case DatabaseContract.OpenChats.TYPE_CHAT:
 				intent = new Intent(context, ChatActivity.class);
+				intent.putExtra(ChatActivity.JID_KEY, jid);
+				intent.putExtra(ChatActivity.ACCOUNT_KEY, account);
 				break;
 			case DatabaseContract.OpenChats.TYPE_MUC:
 				intent = new Intent(context, MucActivity.class);
+				intent.putExtra("jid", jid);
+				intent.putExtra("account", account);
 				break;
 			default:
 				throw new RuntimeException("Unrecognized open_chat type = " + type);
 		}
 		intent.putExtra("openChatId", openChatId);
-		intent.putExtra("jid", jid);
-		intent.putExtra("account", account);
 
 		context.startActivity(intent);
 	}
