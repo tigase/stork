@@ -9,24 +9,28 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.searchbar.SearchActionMode;
 
 public class ReceiverContextActivity
 		extends AppCompatActivity {
 
 	private final OnItemSelected selectionHandler = ReceiverContextActivity.this::onChatSelected;
 	private DBUpdateTask dbUpdateTask;
+	private RecyclerView recyclerView;
+	private SearchActionMode searchActionMode;
 	private CursorViewAdapter adapter = new CursorViewAdapter(this, null, selectionHandler) {
 		@Override
 		protected void onContentChanged() {
 			loadData();
 		}
 	};
-	private RecyclerView recyclerView;
 
 	private void handleSendImageToChat(String account, String chatJid, Intent intent) {
 		Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
@@ -58,7 +62,7 @@ public class ReceiverContextActivity
 	private void loadData() {
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
 			dbUpdateTask = new DBUpdateTask(this, adapter);
-			dbUpdateTask.execute();
+			dbUpdateTask.execute(this.searchActionMode.getSearchText());
 		}
 	}
 
@@ -81,6 +85,10 @@ public class ReceiverContextActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_select_receiver);
 		setTitle("Send to...");
+		this.searchActionMode = new SearchActionMode(this, txt -> loadData());
+
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setDisplayShowHomeEnabled(true);
 
 		recyclerView = (RecyclerView) findViewById(R.id.contacts_list);
 		recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
@@ -90,10 +98,32 @@ public class ReceiverContextActivity
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.openchat_fragment, menu);
+		return true;
+	}
+
+	@Override
 	protected void onDestroy() {
 		recyclerView.setAdapter(null);
 		adapter.swapCursor(null);
 		super.onDestroy();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				//NavUtils.navigateUpFromSameTask(this);
+				finish();
+				return true;
+			case R.id.ac_serach:
+				startSupportActionMode(this.searchActionMode);
+				return true;
+
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override
@@ -108,7 +138,7 @@ public class ReceiverContextActivity
 	}
 
 	private static class DBUpdateTask
-			extends AsyncTask<Void, Void, Cursor> {
+			extends AsyncTask<String, Void, Cursor> {
 
 		private final CursorViewAdapter adapter;
 		private final String[] columnsToReturn = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
@@ -124,13 +154,22 @@ public class ReceiverContextActivity
 		}
 
 		@Override
-		protected Cursor doInBackground(Void... voids) {
+		protected Cursor doInBackground(String... params) {
 			String selection = "1=1 ";
+			String[] args = null;
+
+			final String searchText = params != null ? params[0] : null;
+
+			if (searchText != null) {
+				selection += " AND (" + DatabaseContract.RosterItemsCache.FIELD_NAME + " like ? OR " +
+						DatabaseContract.RosterItemsCache.FIELD_JID + " like ?" + " )";
+				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
+			}
 
 			String sort = DatabaseContract.RosterItemsCache.FIELD_NAME + " COLLATE NOCASE ASC";
 
 			Cursor cursor = context.getContentResolver()
-					.query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null, sort);
+					.query(RosterProvider.ROSTER_URI, columnsToReturn, selection, args, sort);
 
 			return cursor;
 		}

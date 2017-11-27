@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ roster_fragment.xml
+  ~ openchat_fragment.xml
   ~
   ~ Tigase Android Messenger
   ~ Copyright (C) 2011-2016 "Tigase, Inc." <office@tigase.com>
@@ -19,33 +19,9 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/ac_serach"
           android:icon="@drawable/ic_search"
           android:title="Search"
           app:showAsAction="always"/>
-    <item
-            android:id="@+id/menu_roster_show_offline"
-            android:checkable="true"
-            android:orderInCategory="100"
-            android:title="@string/menu_roster_show_offline"
-            app:showAsAction="never"/>
-    <item
-            android:id="@+id/menu_roster_sort"
-            android:orderInCategory="100"
-            android:title="@string/menu_roster_sort"
-            app:showAsAction="never">
-        <menu>
-            <group android:checkableBehavior="single">
-                <item
-                        android:id="@+id/menu_roster_sort_presence"
-                        android:title="@string/menu_roster_sort_presence"/>
-                <item
-                        android:id="@+id/menu_roster_sort_name"
-                        android:title="@string/menu_roster_sort_name"/>
-            </group>
-        </menu>
-    </item>
-
 </menu>

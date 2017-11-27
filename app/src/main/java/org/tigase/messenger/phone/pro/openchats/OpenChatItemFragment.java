@@ -44,6 +44,7 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
+import org.tigase.messenger.phone.pro.searchbar.SearchActionMode;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -67,6 +68,10 @@ public class OpenChatItemFragment
 	RecyclerView recyclerView;
 	private MyOpenChatItemRecyclerViewAdapter adapter;
 	private DBUpdateTask dbUpdateTask;
+	private OnAddChatListener mAddChatListener;
+	//
+	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
+	private SearchActionMode searchActionMode;
 	private final ContentObserver contactPresenceChangeObserver = new ContentObserver(new Handler()) {
 
 		@Override
@@ -80,9 +85,6 @@ public class OpenChatItemFragment
 			refreshChatlist();
 		}
 	};
-	private OnAddChatListener mAddChatListener;
-	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
-//
 
 	public static OpenChatItemFragment newInstance(MainActivity.XMPPServiceConnection mServiceConnection) {
 		Log.v(TAG, "new instance");
@@ -271,7 +273,8 @@ public class OpenChatItemFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(false);
+		this.searchActionMode = new SearchActionMode(getActivity(), txt -> refreshChatlist());
+		setHasOptionsMenu(true);
 		Log.v(TAG, "Fragment is created");
 	}
 
@@ -283,8 +286,7 @@ public class OpenChatItemFragment
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		// TODO
-		inflater.inflate(R.menu.chatitem_fragment, menu);
+		inflater.inflate(R.menu.openchat_fragment, menu);
 	}
 
 	@Override
@@ -364,6 +366,18 @@ public class OpenChatItemFragment
 	}
 
 	@Override
+	public boolean onOptionsItemSelected(final MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_serach: {
+				ActionMode am = startActionMode(this.searchActionMode);
+				return true;
+			}
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
 	public void onResume() {
 		Log.v(TAG, "Resume view");
 		super.onResume();
@@ -377,8 +391,9 @@ public class OpenChatItemFragment
 	private void refreshChatlist() {
 		Log.v(TAG, "Task: " + (dbUpdateTask == null ? "NONE" : dbUpdateTask.getStatus()));
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+			String txt = searchActionMode.getSearchText();
 			dbUpdateTask = new DBUpdateTask();
-			dbUpdateTask.execute();
+			dbUpdateTask.execute(txt);
 			Log.v(TAG, "Task executed");
 		}
 	}
@@ -422,7 +437,7 @@ public class OpenChatItemFragment
 	}
 
 	private class DBUpdateTask
-			extends AsyncTask<Void, Void, Cursor> {
+			extends AsyncTask<String, Void, Cursor> {
 
 		private final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
 												   DatabaseContract.OpenChats.FIELD_ACCOUNT,
@@ -434,14 +449,26 @@ public class OpenChatItemFragment
 												   ChatProvider.FIELD_LAST_MESSAGE_STATE};
 
 		@Override
-		protected Cursor doInBackground(Void... params) {
+		protected Cursor doInBackground(String... params) {
 			Log.d(TAG, "Querying for cursor ctx=" + (getContext() != null));
 			if (getContext() == null) {
 				return null;
 			}
-			Cursor cursor = getContext().getContentResolver()
-					.query(ChatProvider.OPEN_CHATS_URI, cols, null, null,
-						   ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
+			String searchText = params != null ? params[0] : null;
+
+			String selection;
+			String[] args;
+			if (searchText == null) {
+				selection = null;
+				args = null;
+			} else {
+				selection = ChatProvider.FIELD_NAME + " like ? OR " + DatabaseContract.OpenChats.TABLE_NAME + "." +
+						DatabaseContract.OpenChats.FIELD_JID + " like ?";
+				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
+
+			}
+			Cursor cursor = getContext().getContentResolver().query(ChatProvider.OPEN_CHATS_URI, cols, selection, args,
+																	ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
 			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
 			return cursor;

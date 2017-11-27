@@ -45,8 +45,13 @@ public abstract class MultiSelectFragment
 
 	protected abstract boolean onCreateActionMode(ActionMode actionMode, Menu menu);
 
-	public void startActionMode() {
-		((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
+	public ActionMode startActionMode() {
+		return ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
+
+	}
+
+	public ActionMode startActionMode(ActionMode.Callback callback) {
+		return ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
 
 	}
 

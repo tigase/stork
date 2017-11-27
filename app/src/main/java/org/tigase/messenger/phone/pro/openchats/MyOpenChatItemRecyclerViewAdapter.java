@@ -176,7 +176,6 @@ public class MyOpenChatItemRecyclerViewAdapter
 					mStatus.setImageResource(presenceIconResource);
 					mStatus.setVisibility(View.VISIBLE);
 					mContactName.setText(context.getString(R.string.openchats_chat, name));
-//				holder.setContextMenu(R.menu.openchat_chat_context, menuListener);
 					AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
 					break;
 			}

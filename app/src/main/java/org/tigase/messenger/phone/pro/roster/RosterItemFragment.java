@@ -41,6 +41,7 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.contact.EditContactActivity;
+import org.tigase.messenger.phone.pro.searchbar.SearchActionMode;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -59,6 +60,7 @@ public class RosterItemFragment
 	private MyRosterItemRecyclerViewAdapter adapter;
 	private DBUpdateTask dbUpdateTask;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
+	private SearchActionMode searchActionMode;
 	//	private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
 //
 //		@Override
@@ -139,6 +141,7 @@ public class RosterItemFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.searchActionMode = new SearchActionMode(getActivity(), txt -> refreshRoster());
 		setHasOptionsMenu(true);
 	}
 
@@ -194,6 +197,9 @@ public class RosterItemFragment
 
 		SharedPreferences.Editor editor;
 		switch (item.getItemId()) {
+			case R.id.ac_serach:
+				ActionMode am = startActionMode(this.searchActionMode);
+				return true;
 			case R.id.menu_roster_sort_presence:
 				item.setChecked(true);
 
@@ -246,8 +252,9 @@ public class RosterItemFragment
 
 	private void refreshRoster() {
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+			String txt = searchActionMode.getSearchText();
 			dbUpdateTask = new DBUpdateTask();
-			dbUpdateTask.execute();
+			dbUpdateTask.execute(txt);
 		}
 	}
 
@@ -258,10 +265,10 @@ public class RosterItemFragment
 	}
 
 	private class DBUpdateTask
-			extends AsyncTask<Void, Void, Cursor> {
+			extends AsyncTask<String, Void, Cursor> {
 
 		@Override
-		protected Cursor doInBackground(Void... params) {
+		protected Cursor doInBackground(String... params) {
 			if (sharedPref == null) {
 				Log.e("RosterItemFragment", "Shared preferences are empty?");
 				return null;
@@ -273,10 +280,19 @@ public class RosterItemFragment
 													DatabaseContract.RosterItemsCache.FIELD_STATUS};
 
 			boolean showOffline = sharedPref.getBoolean("show_offline", SHOW_OFFLINE_DEFAULT);
+			final String searchText = params != null ? params[0] : null;
+
 			String selection = "1=1 ";
+			String[] args = null;
 
 			if (!showOffline) {
 				selection += " AND " + DatabaseContract.RosterItemsCache.FIELD_STATUS + ">=5 ";
+			}
+
+			if (searchText != null) {
+				selection += " AND (" + DatabaseContract.RosterItemsCache.FIELD_NAME + " like ? OR " +
+						DatabaseContract.RosterItemsCache.FIELD_JID + " like ?" + " )";
+				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
 			}
 
 			String sort;
@@ -295,8 +311,9 @@ public class RosterItemFragment
 				default:
 					sort = "";
 			}
+
 			Cursor cursor = getContext().getContentResolver()
-					.query(RosterProvider.ROSTER_URI, columnsToReturn, selection, null, sort);
+					.query(RosterProvider.ROSTER_URI, columnsToReturn, selection, args, sort);
 
 			return cursor;
 		}

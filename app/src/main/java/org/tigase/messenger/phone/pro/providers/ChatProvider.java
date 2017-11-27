@@ -38,7 +38,7 @@ import java.util.Map;
 public class ChatProvider
 		extends ContentProvider {
 
-	public static final String FIELD_NAME = "name";
+	public static final String FIELD_NAME = "contact_name";
 	public static final String FIELD_UNREAD_COUNT = "unread";
 	public static final String FIELD_CONTACT_PRESENCE = "contact_presence";
 	public static final String FIELD_LAST_MESSAGE = "last_message";
