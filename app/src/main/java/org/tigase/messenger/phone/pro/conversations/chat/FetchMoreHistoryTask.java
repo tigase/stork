@@ -54,7 +54,7 @@ public class FetchMoreHistoryTask
 		
 		Calendar endDate = getFirstMessageDate();
 		Calendar startDate = (Calendar) endDate.clone();
-		startDate.add(Calendar.DATE, -hours);
+		startDate.add(Calendar.HOUR, -hours);
 
 		MessageArchiveManagementModule.Query q = new MessageArchiveManagementModule.Query();
 		q.setStart(startDate.getTime());
