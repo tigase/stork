@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,7 +18,6 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
-import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
@@ -42,19 +42,22 @@ public class PreviewImageActivity
 	private ImageView sendButton;
 
 	String getContactName() {
-		final String[] cols = new String[]{DatabaseContract.RosterItemsCache.FIELD_ID,
-										   DatabaseContract.RosterItemsCache.FIELD_ACCOUNT,
-										   DatabaseContract.RosterItemsCache.FIELD_JID,
-										   DatabaseContract.RosterItemsCache.FIELD_NAME};
+		try {
+			final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+											   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+											   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME};
 
-		try (Cursor c = getContentResolver().query(Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid),
-												   cols, null, null, null)) {
-			if (c.moveToNext()) {
-				String r = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
-				return r == null || r.isEmpty() ? jid.toString() : r;
-			} else {
-				return jid.toString();
+			try (Cursor c = getContentResolver().query(Uri.parse(ChatProvider.OPEN_CHATS_URI + "/" + jid), cols, null,
+													   null, null)) {
+				if (c.moveToNext()) {
+					return c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
+				} else {
+					return jid.toString();
+				}
 			}
+		} catch (Throwable e) {
+			Log.wtf("Preview", e);
+			return jid.toString();
 		}
 	}
 
@@ -94,6 +97,18 @@ public class PreviewImageActivity
 			Log.i(TAG, mime);
 		} catch (IOException e) {
 			Log.e(TAG, "Cannot load image", e);
+		}
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				//NavUtils.navigateUpFromSameTask(this);
+				finish();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
 	}
 

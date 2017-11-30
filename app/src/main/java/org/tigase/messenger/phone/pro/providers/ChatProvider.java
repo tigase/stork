@@ -324,7 +324,7 @@ public class ChatProvider
 										new String[]{uri.getLastPathSegment()}, sortOrder);
 				break;
 			case URI_INDICATOR_OPENCHAT_BY_JID:
-				cursor = queryOpenChats(projection, DatabaseContract.OpenChats.FIELD_JID + "=?",
+				cursor = queryOpenChats(projection, "open_chats." + DatabaseContract.OpenChats.FIELD_JID + "=?",
 										new String[]{uri.getLastPathSegment()}, sortOrder);
 				break;
 			case URI_INDICATOR_UNSENT: {
