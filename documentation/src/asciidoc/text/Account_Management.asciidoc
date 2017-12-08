@@ -16,27 +16,28 @@ image:images/AccountProperties.png[]
 
 Below is a description of the settings.
 
-*Connection*
+*Account Properties*
 Lists the account for which you are adjusting settings.
 
-== Account Active
-This enables or disables the account you are adjusting.  If an account is disabled, it will not update presence information, receive messages, or receive push notifications.
-
-== User Details
-Tapping user details will allow you to set vCard data which will allow you to fill in some personal information as well as set a user photo.
+Tapping the user icon will allow you to set vCard data which will allow you to fill in some personal information as well as set a user photo.
 image:images/vCard.png[]
 
-== Password
-Allows you to edit and change the associated password for the account.
+== Enabled
+This enables or disables the account you are adjusting.  If an account is disabled, it will not update presence information, receive messages, or receive push notifications.
 
-== Hostname
-By default, the hostname will be considered your domain address.  For example, if you are `user@xmppdomain.com`, `xmppdomain.com` will be used as the server hostname.
-However if you want to use a specific server address, and not the default one, you may set it here.
-NOTE: This option is also available when setting a new account.
+== Change Account settings
+This allows you to change some settings for the account:
 
-== Resource
-This adjusts the resource name for the client.  For example, if you were using `user@xmppdomain.com` and set the resource as `Mobile`, your full JID will be `user@xmppdomain.com/Mobile`.
-This full JID identifies your device, and allows other users to explicitly message one device rather than all devices connected with the same username.
+=== Password
+Allows you to change the password on the device.  This is only if you need to change the password, it will not change the password to your XMPP account.
+
+=== Hostname
+By default the hostname will be the root of your username (server.com of user@server.com).  However, you can specify a FQDN or an IP address if you wish to connect directly.
+
+=== Resource
+This will change the resource name of your JID.  The resource is the part after a slash that can denote different devices of the same account.  So user@server.com/TigaseMessenger shows TigaseMessenger is the resource (which is set by default).
+
+== Resource priority
 
 == Automatic Priorities
 By default this is enabled, which lets Tigase Messenger for Android set appropriate levels the different statuses.  Priorities will dictate which resource gets a message when it is sent to a user without a resource.  A device with a higher priority will receive the message first before one of a lower priority.
@@ -57,10 +58,13 @@ NOTE: Push notifications will only be delivered to a device that has an active &
 If the connected server supports it, you may use the Message Archive functionality to retrieve sent and received messages to the configured resource.  When enabled, you may either download messages from Roster Contacts (only contacts in your roster) or all conversations to your resource.
 Disabled will rely on the local storage when available.
 
-== Force Reconnect
-Tapping this will force a disconnect and then reconnection with the current settings.  This may be necessary when changing a number or settings, or testing new ones out.
+=== Automatic synchronization
+This will turn on fetching messages from message archive on the server.
 
-*Others*
+==== Synchronization
+How far back will the application retrieve messages from message archive.
 
-== Nickname
-Changing this will change your displayed nickname to other users, for those without a custom name, this name will appear on their roster.
+== Others
+
+=== Nickname
+Changing this will change your displayed nickname to other users, for those without a custom name, this name will appear on their contact list.

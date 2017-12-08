@@ -12,6 +12,8 @@ This section contains information about advanced settings and options that are a
 
 Tigase Messenger for Android supports link:https://xmpp.org/extensions/xep-0357.html[XEP-0357 Push Notifications] which will receive notifications even when the program is closed from inactivity or memory management.
 
+TIP: Push notifications will not work if the user is offline.
+
 Servers will be checked for Push support in the accounts management section of the application.  If it is supported, you will be able to enable push notifications.
 
 Devices must be registered for push notifications and must register them VIA the Tigase XMPP Push Component.

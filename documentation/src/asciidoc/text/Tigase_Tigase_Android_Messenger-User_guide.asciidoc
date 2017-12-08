@@ -43,10 +43,11 @@ image:images/Install.png[]
 +
 . Tap INSTALL.
 +
-NOTE: There are no permissions needed for this application.
 . Let the phone do the rest.
 
-== Creating an Account
+NOTE: Tigase messenger requires access to files on your device to be able to send files and photos through the messenger.
+
+=== Creating an Account
 
 When you first load Tigase Messenger, you will be presented with our logo and a button asking if you have an XMPP account, or to create a new one.
 
@@ -69,13 +70,50 @@ Also be sure to include a valid E-mail so server administrators, or password res
 
 Once registration is complete, the account will be added to your list of accounts.
 
-== Existing Account Login
+=== Existing Account Login
 If you have an existing account on an XMPP Service, tap *I have an XMPP account* and enter your credential information.  The application will test credentials before they are saved to the device.
 Once the information is saved, you will be returned to the roster screen.  You will need to set your status to online to have the application login.
 
 To do so, select the menu option on the top left and select status and then online.
 
-== Roster view
+== Main screen menus
+These can be opened by tapping the menu icon in the top left.
+
+=== Online Status
+The first section allows you to select your status to let other contacts know if you are online, away, busy etc..
+To change status, tap the current status and select one from the pop up list.
+
+image:images/Status.png[]
+
+Note that if you are offline, other users will be unable to send you messages, and you will receive no notifications.
+
+=== Chat View
+
+This view will show all your recent chats.  All active chats, chats that have not been archived, and any groupchats you are a part of will be listed here.
+
+To close any chat, long-press the chat you wish to remove, and you will have the following shown:
+
+image:images/LongPressChat.png[]
+
+You have two options to select, you may archive the chat by tapping image:images/Archive.png[] This will close the chat from this menu, but the chat will be preserved the next time you bring the chat window up from the roster in local storage - handy if message archiving is not enabled on the server you are connected too.
+
+If you just want to remove the chat, and not save it locally, tap image:images/DeleteChat.png[] and it will be removed from the device.
+
+For groupchats, long pressing on the chatroom will provide you for the ability to leave the room after tapping the ... icon in the top right.
+
+image:images/LeaveRoom.png[]
+
+For a new chat, tapping the compose icon will show you the roster view, from which you can select a user to begin a conversation.
+
+==== Groupchat View
+
+The groupchat view will display the current conversation, you may scroll and look back on the chat if the server supports it.  You may also tap the ... icon to send a file to all participants if the server supports it.  (If it does not, you will not be able to send a file.)
+
+image:images/MUC.png[]
+
+NOTE: You will only be able to leave the room from the Chats view.
+
+=== Contacts view
 
 image:images/Roster.png[]
 
@@ -87,7 +125,7 @@ To add a contact to your roster, tap the "+" button at the bottom right and fill
 
 vCard data will be obtained from the server, and images displayed on the icons if any is available.
 
-=== Status indicators
+==== Status indicators
 
 In your roster, users will display a colored circle indicting their status.  See the table below to see what each color means.
 
@@ -103,88 +141,45 @@ In your roster, users will display a colored circle indicting their status.  See
 |Grey          | Offline
 |===========================================
 
-=== Roster Options
+==== Contacts Options
 
-Tapping the ... on the top right or pressing the menu button on the phone will reveal two options for the roster menu:
+Tapping the ... on the top right or pressing the menu button on the phone will reveal two options for the contacts screen:
 
-.Sort by which allows you to sort the Roster by presence or name.  Presences will be organized in the same order as the status table above.
+.Show offline contacts, which you can enable or disable.
 
-.Display offline contacts, which you can turn on or off.
+.Sort by which allows you to sort the contact list by presence or name.  Presences will be organized in the same order as the status table above.
 
-To add a new contact to the roster, tap the '+' icon to do so.
+To add a new contact, tap the '+' icon to do so and fill out the username.  You may optionally specify a nickname for the new contact, this will be shared on the account so all devices can see it.
 
-== Chat View
-
-This view will show all your recent chats.  All active chats, chats that have not been archived, and any groupchats you are a part of will be listed here.
-
-To close any chat, long-press the chat you wish to remove, and you will have the following shown:
-
-image:images/LongPressChat.png[]
-
-You have two options to select, you may archive the chat by tapping image:images/Archive.png[] This will close the chat from this menu, but the chat will be preserved the next time you bring the chat window up from the roster in local storage - handy if message archiving is not enabled on the server you are connected too.
-
-If you just want to remove the chat, and not save it locally, tap image:images/DeleteChat.png[] and it will be removed from the device.
-
-For groupchats, you will not have the ability to archive the chat.  Instead long pressing on the chatroom will provide you the ability to leave the room after tapping the ... icon in the top right.
-
-image:images/LeaveRoom.png[]
-
-For a new chat, tapping the compose icon will show you the roster view, from which you can select a user to begin a conversation.
-
-=== Groupchat View
-
-The groupchat view will display the current chat from all connected users.
-
-image:images/MUC.png[]
-
-You will only be able to leave the room from the Chats view.
-
-== Options Menu
-
-The Options Menu can be found by tapping the menu icon on the top right, or by pressing the menu button on your phone.  This may be brought up from either the Chats or Roster view.
-
-image:images/Options.png[]
-
-=== Status
-
-Here you may set your status for all signed in accounts.  Tapping the current status will bring up the various XMPP status options.
-All active accounts will be updated with the selected status.
-
-image:images/Status.png[]
-
-=== Chats/Roster
-
-Your next two options will provide links to display the Chats or Roster screens.
 
 === Join Chat Room
+This section allows you to join a chatroom, or setup a new one if the server supports it.
 
-image:images/JoinChat.png[]
+image:images/Joinchat.png[]
 
-Here you can fill out a form to join a chat room in progress.  First select the account you wish to join the room with.  Then fill out the full name of the chatroom.  This includes the chatroom name and the MUC location.  So to join Chatroom1 on the muc.exmple.com server the address will be *Chatroom1@muc.example.com*.
+The chatroom should have a following format when joining: roomname@muc.server.com where muc.server.com is the multi-user chat component of the server.
 
 NOTE: You must fill out the Nickname field in order to join a chatroom.  MUC requires that you have a nickname that is separate from your Jabber ID (your user name).
 
-== Settings
+=== Settings Menu
 
-Will open the settings menu.  You have three options: General, Notifications, and Accounts.
+The settings menu can be found by tapping the menu icon on the top left and tapping Settings.
 
-image:images/Menu.png[]
+image:images/Options.png[]
 
-=== Status
+==== Status
 
-Contains general settings which pertain to automatically setting statuses based on inactivity levels.  Either of these settings may be set to off to disable them.  Note that Auto extended away delay will not be available if Auto Away is disabled.
+These menu options determine whether and how automatic presence management will operate.
 
-image:images/General.png[]
-
-==== Auto Away presence delay
+===== Auto Away presence delay
 
 How long in seconds should the application wait after last activity to display an 'Away' status.
 
-==== Auto Extended Away delay (after Away)
+===== Auto Extended Away delay (after Away)
 
 How long in seconds should the application wait after Auto Away has been set to change the status to 'Extended Away' or XA status.
 
-=== Notifications
+==== Notifications
 
 Contains settings on phone notifications and status updates.
 
@@ -192,33 +187,33 @@ image:images/Notifications.png[]
 
 *Chats*
 
-==== New Message Notifications
+===== New Message Notifications
 
 Whether or not to trigger the phone's notification mechanism when new chat messages are received.
 
-==== Ringtone
+===== Ringtone
 
 Here you may set an application-specific sound to play when an XMPP chat notification is triggered.
 
-==== Vibrate
+===== Vibrate
 
 Whether or not to vibrate the phone when a new chat message is received.
 
 *Groupchats*
 
-==== New message Notifications
+===== New message Notifications
 
 Whether or not to trigger the phone's notification mechanism when new groupchat messages are received.
 
-==== Ringtone
+===== Ringtone
 
 Here you may set an application-specific sound to play when an XMPP chat notification is triggered.
 
-==== Vibrate
+===== Vibrate
 
 Whether or not to vibrate the phone when a new chat message is received.
 
-=== Accounts
+==== Accounts
 
 image:images/Accounts.png[]
 
@@ -226,6 +221,6 @@ This display will show all currently setup accounts as well as provide a method 
 
 For More details about account management, see the xref:accountManagement[Account Management] section of documentation for more details.
 
-== About
+=== About
 
 Will display our logo along with the version of Tigase Messenger you are using.
