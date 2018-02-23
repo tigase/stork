@@ -13,6 +13,11 @@ public class OnlyVerticalSwipeRefreshLayout
 	private float prevX;
 	private int touchSlop;
 
+	public OnlyVerticalSwipeRefreshLayout(Context context) {
+		super(context);
+		touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+	}
+
 	public OnlyVerticalSwipeRefreshLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();

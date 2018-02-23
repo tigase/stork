@@ -35,9 +35,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.*;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.BaseAdapter;
 import org.tigase.messenger.phone.pro.MainActivity;
@@ -65,6 +64,8 @@ import java.util.List;
  */
 public class SettingsActivity
 		extends AppCompatPreferenceActivity {
+
+	private final static String TAG = "SettingsActivity";
 
 	/**
 	 * A preference value change listener that updates the preference's summary to reflect its new value.
@@ -227,10 +228,11 @@ public class SettingsActivity
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		int id = item.getItemId();
+		Log.wtf(TAG, "Id=" + id);
 		if (id == android.R.id.home) {
-			if (!super.onMenuItemSelected(featureId, item)) {
-				NavUtils.navigateUpFromSameTask(this);
-			}
+			Log.wtf(TAG, "HOME?  " + super.onMenuItemSelected(featureId, item));
+			//	NavUtils.navigateUpFromSameTask(this);
+			onBackPressed();
 			return true;
 		}
 		return super.onMenuItemSelected(featureId, item);
@@ -253,11 +255,26 @@ public class SettingsActivity
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
 	 */
 	private void setupActionBar() {
-		ActionBar actionBar = getSupportActionBar();
-		if (actionBar != null) {
-			// Show the Up button in the action bar.
-			actionBar.setDisplayHomeAsUpEnabled(true);
-		}
+		getSupportActionBar().setDisplayShowHomeEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+
+	public abstract static class AbstractPreferenceFragment
+			extends PreferenceFragment {
+
+//		@Override
+//		public boolean onOptionsItemSelected(MenuItem item) {
+////			int id = item.getItemId();
+////			if (id == android.R.id.home) {
+////				Log.d(TAG, "Home on AbstractPreferenceFragment");
+////				NavUtils.navigateUpFromSameTask(getActivity());
+//////				startActivity(new Intent(getActivity(), SettingsActivity.class));
+////
+////				return true;
+////			}
+//			return super.onOptionsItemSelected(item);
+//		}
+
 	}
 
 	/**
@@ -266,7 +283,7 @@ public class SettingsActivity
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class AccountsPreferenceFragment
-			extends PreferenceFragment {
+			extends AbstractPreferenceFragment {
 
 		private PreferenceScreen screen;
 
@@ -278,18 +295,10 @@ public class SettingsActivity
 			((SettingsActivity) getActivity()).getEventBus()
 					.addListener(Connector.StateChangedHandler.StateChangedEvent.class, event -> {
 						BaseAdapter adapter = (BaseAdapter) screen.getRootAdapter();
-						if (getActivity() != null) getActivity().runOnUiThread(adapter::notifyDataSetChanged);
+						if (getActivity() != null) {
+							getActivity().runOnUiThread(adapter::notifyDataSetChanged);
+						}
 					});
-		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			int id = item.getItemId();
-			if (id == android.R.id.home) {
-				startActivity(new Intent(getActivity(), SettingsActivity.class));
-				return true;
-			}
-			return super.onOptionsItemSelected(item);
 		}
 
 		@Override
@@ -315,7 +324,6 @@ public class SettingsActivity
 			addAccountPref.setTitle(getActivity().getString(R.string.pref_accounts_newaccount));
 			addAccountPref.setIcon(android.R.drawable.ic_input_add);
 			screen.addPreference(addAccountPref);
-
 		}
 	}
 
@@ -325,7 +333,7 @@ public class SettingsActivity
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class DataSyncPreferenceFragment
-			extends PreferenceFragment {
+			extends AbstractPreferenceFragment {
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -339,16 +347,6 @@ public class SettingsActivity
 			// guidelines.
 			bindPreferenceSummaryToValue(findPreference("sync_frequency"));
 		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			int id = item.getItemId();
-			if (id == android.R.id.home) {
-				startActivity(new Intent(getActivity(), SettingsActivity.class));
-				return true;
-			}
-			return super.onOptionsItemSelected(item);
-		}
 	}
 
 	/**
@@ -356,7 +354,7 @@ public class SettingsActivity
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment
-			extends PreferenceFragment {
+			extends AbstractPreferenceFragment {
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -371,16 +369,6 @@ public class SettingsActivity
 			bindPreferenceSummaryToValue(findPreference("away_delay_seconds"));
 			bindPreferenceSummaryToValue(findPreference("xa_delay_seconds"));
 		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			int id = item.getItemId();
-			if (id == android.R.id.home) {
-				startActivity(new Intent(getActivity(), SettingsActivity.class));
-				return true;
-			}
-			return super.onOptionsItemSelected(item);
-		}
 	}
 
 	/**
@@ -389,7 +377,7 @@ public class SettingsActivity
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class NotificationPreferenceFragment
-			extends PreferenceFragment {
+			extends AbstractPreferenceFragment {
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -403,16 +391,6 @@ public class SettingsActivity
 			// guidelines.
 			bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
 			bindPreferenceSummaryToValue(findPreference("notifications_new_groupmessage_ringtone"));
-		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			int id = item.getItemId();
-			if (id == android.R.id.home) {
-				startActivity(new Intent(getActivity(), SettingsActivity.class));
-				return true;
-			}
-			return super.onOptionsItemSelected(item);
 		}
 	}
 }

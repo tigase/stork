@@ -1,6 +1,9 @@
 package org.tigase.messenger.phone.pro.conversations;
 
+import android.content.Intent;
+import android.view.MenuItem;
 import org.tigase.messenger.AbstractServiceActivity;
+import org.tigase.messenger.phone.pro.MainActivity;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
@@ -28,6 +31,17 @@ public class AbstractConversationActivity
 
 	protected void setJid(JID jid) {
 		this.jid = jid;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			startActivity(new Intent(this, MainActivity.class));
+			return true;
+		} else {
+			return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override

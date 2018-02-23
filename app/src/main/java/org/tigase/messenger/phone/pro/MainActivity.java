@@ -36,7 +36,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -44,6 +43,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import org.tigase.messenger.AbstractServiceActivity;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment;
@@ -53,18 +54,37 @@ import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
 import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.SettingsActivity;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.SessionObject;
+
+import java.util.Collection;
 
 public class MainActivity
-		extends AppCompatActivity
+		extends AbstractServiceActivity
 		implements NavigationView.OnNavigationItemSelectedListener, OpenChatItemFragment.OnAddChatListener {
 
 	static final int STORAGE_ACCESS_REQUEST = 112;
 	public static String[] STORAGE_PERMISSIONS = {android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
 												  Manifest.permission.READ_EXTERNAL_STORAGE};
+	private final StatusHandler statusHandler = new StatusHandler();
 	public Toolbar toolbar;
 	Spinner statusSelector;
-	private XMPPServiceConnection mServiceConnection = new XMPPServiceConnection();
+	private TextView connectionStatus;
 	private Menu navigationMenu;
+
+	private static Connector.State getState(JaxmppCore j) {
+		Connector.State st = j.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		if (st == null) {
+			return Connector.State.disconnected;
+		} else if (st == Connector.State.connected && j.isConnected()) {
+			return Connector.State.connected;
+		} else if (st == Connector.State.connected && !j.isConnected()) {
+			return Connector.State.connecting;
+		} else {
+			return st;
+		}
+	}
 
 	public static boolean hasPermissions(Context context, String... permissions) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
@@ -76,6 +96,12 @@ public class MainActivity
 		}
 		return true;
 	}
+	// @Override
+	// public boolean onCreateOptionsMenu(Menu menu) {
+	// // Inflate the menu; this adds items to the action bar if it is present.
+	// getMenuInflater().inflate(R.menu.main, menu);
+	// return true;
+	// }
 
 	private void doPresenceChange(long presenceId) {
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -92,12 +118,6 @@ public class MainActivity
 	public void onAddChatClick() {
 		switchMainFragment(R.id.nav_roster);
 	}
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// // Inflate the menu; this adds items to the action bar if it is present.
-	// getMenuInflater().inflate(R.menu.main, menu);
-	// return true;
-	// }
 
 	@Override
 	public void onBackPressed() {
@@ -139,6 +159,8 @@ public class MainActivity
 
 		View headerLayout = navigationView.getHeaderView(0);
 		this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
+
+		this.connectionStatus = (TextView) headerLayout.findViewById(R.id.connection_status);
 
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (sharedPref.getString("menu", "roster")) {
@@ -209,17 +231,6 @@ public class MainActivity
 		}
 	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-		boolean itemVisible = sharedPref.getBoolean("nav_connectionstatus", false);
-
-		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
-		conStat.setVisible(itemVisible);
-	}
-
 	// @Override
 	// public boolean onOptionsItemSelected(MenuItem item) {
 	// // Handle action bar item clicks here. The action bar will
@@ -236,16 +247,51 @@ public class MainActivity
 	// }
 
 	@Override
-	protected void onStart() {
-		super.onStart();
-		Intent service = new Intent(getApplicationContext(), XMPPService.class);
-		bindService(service, mServiceConnection, 0);
+	protected void onResume() {
+		super.onResume();
+
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		boolean itemVisible = sharedPref.getBoolean("nav_connectionstatus", false);
+
+		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
+		conStat.setVisible(itemVisible);
+
+		updateConnectionStatus();
 	}
 
 	@Override
-	protected void onStop() {
-		super.onStop();
-		unbindService(mServiceConnection);
+	protected void onXMPPServiceConnected() {
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(Connector.StateChangedHandler.StateChangedEvent.class, this.statusHandler);
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, this.statusHandler);
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, this.statusHandler);
+		updateConnectionStatus();
+	}
+
+	@Override
+	protected void onXMPPServiceDisconnected() {
+		getServiceConnection().getService().getMultiJaxmpp().remove(this.statusHandler);
+	}
+
+	private void setStatusText(final String text, final int backgroundColor, final int textColor) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				connectionStatus.setText(text);
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+					connectionStatus.setBackgroundColor(getResources().getColor(backgroundColor, null));
+					connectionStatus.setTextColor(getResources().getColor(textColor, null));
+				} else {
+					connectionStatus.setBackgroundColor(getResources().getColor(backgroundColor));
+					connectionStatus.setTextColor(getResources().getColor(textColor));
+				}
+			}
+		});
 	}
 
 	private void switchMainFragment(final int id) {
@@ -276,7 +322,7 @@ public class MainActivity
 			case R.id.nav_roster: {
 				FragmentManager fragmentManager = getSupportFragmentManager();
 				fragmentManager.beginTransaction()
-						.replace(R.id.flContent, RosterItemFragment.newInstance(mServiceConnection))
+						.replace(R.id.flContent, RosterItemFragment.newInstance(getServiceConnection()))
 						.commit();
 
 				SharedPreferences.Editor editor = sharedPref.edit();
@@ -290,7 +336,7 @@ public class MainActivity
 			case R.id.nav_chats: {
 				FragmentManager fragmentManager = getSupportFragmentManager();
 				fragmentManager.beginTransaction()
-						.replace(R.id.flContent, OpenChatItemFragment.newInstance(mServiceConnection))
+						.replace(R.id.flContent, OpenChatItemFragment.newInstance(getServiceConnection()))
 						.commit();
 
 				SharedPreferences.Editor editor = sharedPref.edit();
@@ -310,6 +356,81 @@ public class MainActivity
 				Intent intent = new Intent(this, SettingsActivity.class);
 				startActivity(intent);
 				break;
+			}
+		}
+	}
+
+	private void updateConnectionStatus() {
+		if (connectionStatus == null) {
+			return;
+		}
+		if (getServiceConnection().getService() == null) {
+			setStatusText("Disconnected", R.color.status_background_disconnected,
+						  R.color.status_foreground_disconnected);
+			return;
+		}
+
+		Collection<JaxmppCore> accounts = getServiceConnection().getService().getMultiJaxmpp().get();
+		if (accounts.size() == 0) {
+			connectionStatus.setVisibility(View.VISIBLE);
+			setStatusText("Disconnected", R.color.status_background_disconnected,
+						  R.color.status_foreground_disconnected);
+		} else if (accounts.size() == 1) {
+			Connector.State st = getState(accounts.iterator().next());
+			connectionStatus.setVisibility(View.VISIBLE);
+			switch (st) {
+				case connected:
+					setStatusText("Connected", R.color.status_background_connected,
+								  R.color.status_foreground_connected);
+					break;
+				case disconnected:
+					setStatusText("Disconnected", R.color.status_background_disconnected,
+								  R.color.status_foreground_disconnected);
+					break;
+				case connecting:
+					setStatusText("Connecting…", R.color.status_background_connecting,
+								  R.color.status_foreground_connecting);
+					break;
+				case disconnecting:
+					setStatusText("Disconnecting…", R.color.status_background_disconnecting,
+								  R.color.status_foreground_disconnecting);
+					break;
+			}
+		} else {
+			int connected = 0;
+			int disconnected = 0;
+			int connecting = 0;
+			int disconnecting = 0;
+
+			for (JaxmppCore account : accounts) {
+				switch (getState(account)) {
+					case connected:
+						++connected;
+						break;
+					case disconnected:
+						++disconnected;
+						break;
+					case connecting:
+						++connecting;
+						break;
+					case disconnecting:
+						++disconnecting;
+						break;
+				}
+			}
+			connectionStatus.setVisibility(View.VISIBLE);
+
+			if (connected == accounts.size()) {
+				setStatusText("Connected", R.color.status_background_connected, R.color.status_foreground_connected);
+			} else if (connecting > 0) {
+				setStatusText("Connecting…", R.color.status_background_connecting,
+							  R.color.status_foreground_connecting);
+			} else if (disconnecting > 0) {
+				setStatusText("Disconnecting…", R.color.status_background_disconnecting,
+							  R.color.status_foreground_disconnecting);
+			} else {
+				setStatusText("Disconnected", R.color.status_background_disconnected,
+							  R.color.status_foreground_disconnected);
 			}
 		}
 	}
@@ -337,6 +458,25 @@ public class MainActivity
 		public void onServiceDisconnected(ComponentName name) {
 			Log.i("MainActivity", "Service unbinded");
 			mService = null;
+		}
+	}
+
+	private class StatusHandler
+			implements Connector.StateChangedHandler, JaxmppCore.LoggedInHandler, JaxmppCore.LoggedOutHandler {
+
+		@Override
+		public void onLoggedIn(SessionObject sessionObject) {
+			updateConnectionStatus();
+		}
+
+		@Override
+		public void onLoggedOut(SessionObject sessionObject) {
+			updateConnectionStatus();
+		}
+
+		@Override
+		public void onStateChanged(SessionObject sessionObject, Connector.State oldState, Connector.State newState) {
+			updateConnectionStatus();
 		}
 	}
 }
