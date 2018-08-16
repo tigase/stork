@@ -20,6 +20,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class EditContactActivity
@@ -64,9 +65,8 @@ public class EditContactActivity
 			return;
 		}
 		if (mService != null) {
-			AddContactTask task = new AddContactTask(
-					BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString()), jid,
-					mContactName.getText().toString());
+			AddContactTask task = new AddContactTask(this, mService, BareJID.bareJIDInstance(
+					mAccountSelector.getSelectedItem().toString()), jid, mContactName.getText().toString());
 			task.execute();
 		}
 	}
@@ -110,16 +110,21 @@ public class EditContactActivity
 		unbindService(mServiceConnection);
 	}
 
-	private class AddContactTask
+	private static class AddContactTask
 			extends AsyncTask<Void, Integer, Boolean> {
 
 		private final BareJID account;
 		private final BareJID jid;
 		private final String name;
+		private final WeakReference<EditContactActivity> weakActivity;
 		private XMPPException.ErrorCondition error = null;
+		private XMPPService mService;
 		private boolean result = false;
 
-		public AddContactTask(BareJID account, BareJID jid, String name) {
+		public AddContactTask(EditContactActivity activity, XMPPService mService, BareJID account, BareJID jid,
+							  String name) {
+			weakActivity = new WeakReference<>(activity);
+			this.mService = mService;
 			this.jid = jid;
 			this.name = name;
 			this.account = account;
@@ -166,7 +171,15 @@ public class EditContactActivity
 				return result;
 			} catch (Exception e) {
 				Log.e(this.getClass().getSimpleName(), "Can't add contact to roster", e);
-				Toast.makeText(getBaseContext(), "ERROR " + e.getMessage(), Toast.LENGTH_SHORT);
+				final EditContactActivity activity = weakActivity.get();
+				if (activity != null) {
+					activity.runOnUiThread(() -> {
+						try {
+							Toast.makeText(activity, "ERROR " + e.getMessage(), Toast.LENGTH_SHORT).show();
+						} catch (Exception ignore) {
+						}
+					});
+				}
 				return Boolean.FALSE;
 			}
 		}
@@ -174,19 +187,30 @@ public class EditContactActivity
 		@Override
 		protected void onPostExecute(Boolean aBoolean) {
 			super.onPostExecute(aBoolean);
-			progressBar.setVisibility(View.GONE);
-			if (result) {
-				EditContactActivity.this.finish();
-			} else if (error != null) {
-				Toast.makeText(getBaseContext(), "Error " + error, Toast.LENGTH_SHORT);
-			} else {
-				Toast.makeText(getBaseContext(), "Timeout ", Toast.LENGTH_SHORT);
+			final EditContactActivity activity = weakActivity.get();
+			if (activity != null) {
+				activity.runOnUiThread(() -> {
+					try {
+						activity.progressBar.setVisibility(View.GONE);
+						if (result) {
+							activity.finish();
+						} else if (error != null) {
+							Toast.makeText(activity, "Error " + error, Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(activity, "Timeout ", Toast.LENGTH_SHORT).show();
+						}
+					} catch (Exception ignore) {
+					}
+				});
 			}
 		}
 
 		@Override
 		protected void onPreExecute() {
-			progressBar.setVisibility(View.VISIBLE);
+			final EditContactActivity activity = weakActivity.get();
+			if (activity != null) {
+				activity.progressBar.setVisibility(View.VISIBLE);
+			}
 			super.onPreExecute();
 		}
 	}

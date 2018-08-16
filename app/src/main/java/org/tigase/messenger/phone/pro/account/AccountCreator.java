@@ -169,18 +169,18 @@ public class AccountCreator {
 	}
 
 	public boolean register(android.content.Context context) {
-		stopped = false;
-		contact.getSessionObject().setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
+		try {
+			stopped = false;
+			contact.getSessionObject()
+					.setProperty(InBandRegistrationModule.IN_BAND_REGISTRATION_MODE_KEY, Boolean.TRUE);
 //		contact.getConnectionConfiguration().setServer("127.0.0.1");
-		contact.getConnectionConfiguration().setDomain(hostname);
+			contact.getConnectionConfiguration().setDomain(hostname);
 
-		contact.getProperties()
-				.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers(context));
+			contact.getProperties()
+					.setUserProperty(Connector.TRUST_MANAGERS_KEY, SecureTrustManagerFactory.getTrustManagers(context));
 //		if (hostname != null && !hostname.trim().isEmpty()) {
 //			contact.getProperties().setUserProperty(SocketConnector.SERVER_HOST, hostname);
 //		}
-
-		try {
 
 			Log.d(TAG, "Login 1...");
 			contact.login(false);

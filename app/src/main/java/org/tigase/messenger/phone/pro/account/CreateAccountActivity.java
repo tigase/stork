@@ -177,12 +177,16 @@ public class CreateAccountActivity
 					LoginActivity.showInvalidCertificateDialog(CreateAccountActivity.this, chain,
 															   () -> startConnection(hostname));
 				} else {
-					String msg = accountCreator.getErrorMessage();
-					if (msg == null || msg.isEmpty()) {
+					final String msg;
+					if (accountCreator.getErrorMessage() == null || accountCreator.getErrorMessage().isEmpty()) {
 						msg = "Connection error.";
+					} else {
+						msg = accountCreator.getErrorMessage();
 					}
-					AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
-					builder.setMessage(msg).setPositiveButton(android.R.string.ok, null).show();
+					runOnUiThread(() -> {
+						AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
+						builder.setMessage(msg).setPositiveButton(android.R.string.ok, null).show();
+					});
 				}
 				return;
 			}
@@ -252,6 +256,18 @@ public class CreateAccountActivity
 			InBandRegistrationModule m = accountCreator.getJaxmpp().getModule(InBandRegistrationModule.class);
 
 			try {
+				if (jabberDataElement == null) {
+					runOnUiThread(() -> {
+						progress.dismiss();
+						progress = null;
+						AlertDialog.Builder builder = new AlertDialog.Builder(CreateAccountActivity.this);
+						builder.setMessage("Server doesn't support registration.")
+								.setPositiveButton(android.R.string.ok, null)
+								.show();
+					});
+					return;
+				}
+
 				m.register(jabberDataElement, new AsyncCallback() {
 					@Override
 					public void onError(Stanza stanza, final XMPPException.ErrorCondition errorCondition)
