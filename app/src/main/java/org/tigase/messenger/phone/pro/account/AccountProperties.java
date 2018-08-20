@@ -13,6 +13,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
@@ -36,7 +37,7 @@ public class AccountProperties
 	public static final String ACCEPT_CERTIFICATE_KEY = "ACCEPT_CERTIFICATE";
 	private final static String TAG = "AccountProperties";
 	private Account account;
-	private AccountManager mAccountManager;
+	//	private Account account;
 	private Fragment settingsFragment;
 	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
@@ -56,14 +57,15 @@ public class AccountProperties
 		if (intent.getStringExtra("account_name") != null) {
 			return intent.getStringExtra("account_name");
 		}
-		if (intent != null) {
-			Account account = intent.getParcelableExtra("account");
-			return account == null ? null : account.name;
-		}
-		return null;
+		Account account = intent.getParcelableExtra("account");
+		return account == null ? null : account.name;
 	}
 
 	Account getAccount() {
+		if (account == null) {
+			final String accountName = getAccountName(getIntent());
+			this.account = AccountHelper.getAccount(getmAccountManager(), accountName);
+		}
 		return account;
 	}
 
@@ -72,7 +74,7 @@ public class AccountProperties
 	}
 
 	AccountManager getmAccountManager() {
-		return mAccountManager;
+		return AccountManager.get(this);
 	}
 
 	@Override
@@ -85,10 +87,6 @@ public class AccountProperties
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mAccountManager = AccountManager.get(this);
-
-		final String accountName = getAccountName(getIntent());
-		this.account = AccountHelper.getAccount(mAccountManager, accountName);
 
 		String title;
 		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
@@ -129,7 +127,7 @@ public class AccountProperties
 			builder.setPositiveButton(R.string.yes, (dialog, which) -> {
 				Intent i = new Intent();
 				i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
-				i.putExtra(LoginActivity.KEY_ACCOUNT_NAME, account.name);
+				i.putExtra(LoginActivity.KEY_ACCOUNT_NAME, getAccount().name);
 				i.putExtra(LoginActivity.KEY_FORCE_DISCONNECT, true);
 				sendBroadcast(i);
 			});
@@ -211,16 +209,16 @@ public class AccountProperties
 	private void showRemoveAccountDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Remove account");
-		builder.setMessage("Account " + account.name + " will be removed. Are you sure?");
+		builder.setMessage("Account " + getAccount().name + " will be removed. Are you sure?");
 
 		builder.setNegativeButton(R.string.no, (dialog, which) -> {
 		});
 		builder.setPositiveButton(R.string.yes, (dialog, which) -> {
 			Intent i = new Intent();
 			i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
-			i.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
+			i.putExtra(AccountManager.KEY_ACCOUNT_NAME, getAccount().name);
 
-			mAccountManager.removeAccount(account, null, null);
+			getmAccountManager().removeAccount(getAccount(), null, null);
 
 			sendBroadcast(i);
 
@@ -256,7 +254,8 @@ public class AccountProperties
 					}
 
 					@Override
-					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always, List<JID> never) throws JaxmppException {
+					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+										  List<JID> never) throws JaxmppException {
 						try {
 							setMamSwitch(true, defValue);
 						} catch (Exception e) {
@@ -286,6 +285,11 @@ public class AccountProperties
 			addPreferencesFromResource(R.xml.account_preferences);
 			this.mAccountManager = ((AccountProperties) getActivity()).getmAccountManager();
 			this.account = ((AccountProperties) getActivity()).getAccount();
+
+			if (account == null || mAccountManager == null) {
+				Toast.makeText(getActivity(), "Jebło", Toast.LENGTH_LONG).show();
+				return;
+			}
 
 			AccountCat avatarPreference = (AccountCat) findPreference("pref_account_vcard");
 			avatarPreference.setAccount(account);
@@ -362,13 +366,15 @@ public class AccountProperties
 				}
 			});
 
-			SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference("account_push_notification");
+			SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference(
+					"account_push_notification");
 			tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
 			pushNotificationPreference.setChecked(tmp != null && Boolean.parseBoolean(tmp));
 			pushNotificationPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object newValue) {
-					mAccountManager.setUserData(account, AccountsConstants.PUSH_NOTIFICATION, Boolean.toString((Boolean) newValue));
+					mAccountManager.setUserData(account, AccountsConstants.PUSH_NOTIFICATION,
+												Boolean.toString((Boolean) newValue));
 
 					Intent action = new Intent(XMPPService.PUSH_NOTIFICATION_CHANGED);
 					action.putExtra("account", account);
@@ -445,7 +451,8 @@ public class AccountProperties
 					}
 
 					@Override
-					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always, List<JID> never) throws JaxmppException {
+					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+										  List<JID> never) throws JaxmppException {
 						checkMAM();
 					}
 
