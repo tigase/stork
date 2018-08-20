@@ -68,7 +68,8 @@ public class JoinMucActivity
 
 		if (jid.getLocalpart() == null || jid.getDomain() == null || jid.getLocalpart().trim().isEmpty() ||
 				jid.getDomain().trim().isEmpty()) {
-			new AlertDialog.Builder(JoinMucActivity.this).setMessage("This is not right MUC Room address")
+			new AlertDialog.Builder(JoinMucActivity.this).setMessage(
+					"Invalid room address, please check and try again.")
 					.setPositiveButton(android.R.string.ok, null)
 					.show();
 			return;
