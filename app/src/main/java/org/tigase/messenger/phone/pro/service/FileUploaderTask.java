@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.OpenableColumns;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import org.tigase.messenger.phone.pro.R;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -32,7 +32,6 @@ public abstract class FileUploaderTask
 	private final Uri content;
 	private final Context context;
 	private final Jaxmpp jaxmpp;
-	private final AccountManager mAccountManager;
 	private final HttpFileUploadModule module;
 	private final int notificationId;
 	private String displayName;
@@ -80,7 +79,7 @@ public abstract class FileUploaderTask
 		this.jaxmpp = jaxmpp;
 		this.content = content;
 		this.module = jaxmpp.getModule(HttpFileUploadModule.class);
-		this.mAccountManager = AccountManager.get(context);
+		AccountManager mAccountManager = AccountManager.get(context);
 	}
 
 	@Override

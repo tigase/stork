@@ -4,7 +4,7 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.0'
+		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.3'
 	}
 }
 asciidoctorj {

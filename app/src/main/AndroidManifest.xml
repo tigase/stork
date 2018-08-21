@@ -154,6 +154,7 @@
         <activity
                 android:name=".conversations.chat.ChatActivity"
                 android:label="@string/title_activity_chat"
+                android:theme="@style/ChatStyle"
                 android:parentActivityName=".MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -164,6 +165,7 @@
         <activity
                 android:name=".conversations.muc.MucActivity"
                 android:label="@string/title_activity_muc"
+                android:theme="@style/ChatStyle"
                 android:parentActivityName=".MainActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
