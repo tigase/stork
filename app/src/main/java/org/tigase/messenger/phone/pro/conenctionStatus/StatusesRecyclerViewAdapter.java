@@ -15,9 +15,15 @@ import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.SettingsActivity;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.MultiJaxmpp;
+import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslMechanism;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
+import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
 import java.util.ArrayList;
 
@@ -84,13 +90,29 @@ public class StatusesRecyclerViewAdapter
 																				   getDisconectionProblemDescription(
 																						   account)));
 			} else {
-				holder.mStage.setText("Stage: " + state);
+				holder.mStage.setText("" + state);
 			}
 		}
 
-		holder.mConnected.setText("Connected: " + j.isConnected());
-		holder.mResumption.setText(
-				"Session resumption: " + StreamManagementModule.isResumptionEnabled(j.getSessionObject()));
+		holder.mConnected.setText("" + j.isConnected());
+		holder.mResumption.setText("" + StreamManagementModule.isResumptionEnabled(j.getSessionObject()));
+
+		Boolean authorized = j.getSessionObject().getProperty(AuthModule.AUTHORIZED);
+		SaslMechanism saslMech = j.getSessionObject().getProperty(SaslModule.SASL_MECHANISM);
+
+		String x = (authorized != null && authorized) ? "authorized" : "not authorized";
+		if (saslMech != null) {
+			x += " (" + saslMech.name() + ")";
+		}
+		holder.mAuthSatus.setText(x);
+
+		Boolean streamEncrypted = j.getSessionObject().getProperty(SocketConnector.ENCRYPTED_KEY);
+		holder.mTlsStatus.setText("" + (streamEncrypted != null && streamEncrypted));
+		Boolean streamCompressed = j.getSessionObject().getProperty(SocketConnector.COMPRESSED_KEY);
+		holder.mZlibStatus.setText("" + (streamCompressed != null && streamCompressed));
+
+		JID bindedJid = ResourceBinderModule.getBindedJID(j.getSessionObject());
+		holder.mSessionBind.setText(bindedJid == null ? "-" : bindedJid.toString());
 
 		PopupMenu.OnMenuItemClickListener menuListener = new PopupMenu.OnMenuItemClickListener() {
 			@Override

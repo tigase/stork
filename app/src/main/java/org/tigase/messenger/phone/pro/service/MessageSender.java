@@ -132,15 +132,15 @@ public class MessageSender {
 //		}
 
 		final Chat chat = getChat(account, chatId);
-		final Jaxmpp jaxmpp = service.getJaxmpp(chat.getSessionObject().getUserBareJid());
 
 		int state;
 		Message msg;
 		String stanzaId = null;
 		final ContentValues values = new ContentValues();
 		int itemType = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
-
+		Jaxmpp jaxmpp = null;
 		try {
+			jaxmpp = service.getJaxmpp(chat.getSessionObject().getUserBareJid());
 			msg = chat.createMessage(body);
 			stanzaId = msg.getId();
 			MessageModule m = jaxmpp.getModule(MessageModule.class);
@@ -148,9 +148,9 @@ public class MessageSender {
 			if (localContentUri != null) {
 				state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
 				final String mimeType = getMimeType(context, localContentUri);
-				if (mimeType != null && mimeType.startsWith("image/")) {
+				if (mimeType.startsWith("image/")) {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE;
-				} else if (mimeType != null && mimeType.startsWith("video/")) {
+				} else if (mimeType.startsWith("video/")) {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_VIDEO;
 				} else {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_FILE;
@@ -199,7 +199,7 @@ public class MessageSender {
 			context.getContentResolver().notifyChange(u, null);
 		}
 
-		if (localContentUri != null) {
+		if (localContentUri != null && jaxmpp != null) {
 			SendUnsentMessages sum = new SendUnsentMessages(context, jaxmpp);
 			sum.run(u);
 		}
@@ -231,9 +231,9 @@ public class MessageSender {
 			if (localContentUri != null) {
 				state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
 				final String mimeType = getMimeType(context, localContentUri);
-				if (mimeType != null && mimeType.startsWith("image/")) {
+				if (mimeType.startsWith("image/")) {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE;
-				} else if (mimeType != null && mimeType.startsWith("video/")) {
+				} else if (mimeType.startsWith("video/")) {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_VIDEO;
 				} else {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_FILE;

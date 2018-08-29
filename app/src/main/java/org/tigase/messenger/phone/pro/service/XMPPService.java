@@ -286,8 +286,8 @@ public class XMPPService
 	};
 	private MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler mamHandler;
 	private MessageHandler messageHandler;
-	private MessageSender messageSender;
-	private MobileModeFeature mobileModeFeature;
+	private MessageSender messageSender = new MessageSender(this);
+	private MobileModeFeature mobileModeFeature = new MobileModeFeature(this);
 	private MucHandler mucHandler;
 	private MessageNotification notificationHelper = new MessageNotification();
 	private OwnPresenceFactoryImpl ownPresenceStanzaFactory;
@@ -415,7 +415,9 @@ public class XMPPService
 									@Override
 									public void run() {
 										try {
-											mobileModeFeature.accountConnected(jaxmpp);
+											if (mobileModeFeature != null) {
+												mobileModeFeature.accountConnected(jaxmpp);
+											}
 										} catch (JaxmppException e) {
 											Log.e(TAG,
 												  "Exception processing MobileModeFeature on connect for account " +
@@ -766,9 +768,6 @@ public class XMPPService
 		}, "roster_version");
 		rosterProvider.resetStatus();
 
-		this.mobileModeFeature = new MobileModeFeature(this);
-		this.messageSender = new MessageSender(this);
-
 		this.presenceHandler = new PresenceHandler(this);
 		this.messageHandler = new MessageHandler(this);
 		this.mamHandler = new MAMHandler(this);
@@ -932,7 +931,7 @@ public class XMPPService
 		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
 				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
 			messageSender.process(this, intent);
-//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
+	//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
 //			String account = intent.getStringExtra("account");
 //			Uri content = intent.getParcelableExtra("content");
 //			String roomJid = intent.getStringExtra("roomJID");

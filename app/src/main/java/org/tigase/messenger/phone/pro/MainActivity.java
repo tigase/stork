@@ -60,6 +60,9 @@ import tigase.jaxmpp.core.client.SessionObject;
 
 import java.util.Collection;
 
+import static org.tigase.messenger.phone.pro.service.XMPPService.ACCOUNT_TMP_DISABLED_KEY;
+import static org.tigase.messenger.phone.pro.service.XMPPService.CONNECT_ALL;
+
 public class MainActivity
 		extends AbstractServiceActivity
 		implements NavigationView.OnNavigationItemSelectedListener, OpenChatItemFragment.OnAddChatListener {
@@ -206,6 +209,10 @@ public class MainActivity
 		} else {
 			//do here
 		}
+
+		Intent ssIntent = new Intent(this, XMPPService.class);
+		ssIntent.setAction(CONNECT_ALL);
+		startService(ssIntent);
 	}
 
 	@SuppressWarnings("StatementWithEmptyBody")
@@ -401,8 +408,16 @@ public class MainActivity
 			int disconnected = 0;
 			int connecting = 0;
 			int disconnecting = 0;
+			int accountsAmount = 0;
 
 			for (JaxmppCore account : accounts) {
+				boolean disabled = account.getSessionObject().getProperty(ACCOUNT_TMP_DISABLED_KEY);
+
+				if (disabled) {
+					continue;
+				}
+
+				++accountsAmount;
 				switch (getState(account)) {
 					case connected:
 						++connected;
@@ -420,7 +435,7 @@ public class MainActivity
 			}
 			connectionStatus.setVisibility(View.VISIBLE);
 
-			if (connected == accounts.size()) {
+			if (connected == accountsAmount) {
 				setStatusText("Connected", R.color.status_background_connected, R.color.status_foreground_connected);
 			} else if (connecting > 0) {
 				setStatusText("Connecting…", R.color.status_background_connecting,
@@ -429,8 +444,8 @@ public class MainActivity
 				setStatusText("Disconnecting…", R.color.status_background_disconnecting,
 							  R.color.status_foreground_disconnecting);
 			} else {
-				setStatusText("Disconnected", R.color.status_background_disconnected,
-							  R.color.status_foreground_disconnected);
+				setStatusText("Disconnected " + connected + " " + disconnected + " " + connecting + " " + disconnecting,
+							  R.color.status_background_disconnected, R.color.status_foreground_disconnected);
 			}
 		}
 	}

@@ -25,50 +25,165 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:padding="8dp">
 
-    <LinearLayout
+    <TextView
+            android:id="@+id/server_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:orientation="vertical"
-            android:paddingLeft="8dp">
+            android:singleLine="true"
+            android:text="Contact"
+            android:textColor="#000000"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"/>
 
-        <TextView
-                android:id="@+id/server_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="Contact"
-                android:textColor="#000000"
-                android:textSize="17sp"
-                android:fontFamily="sans-serif"
-        />
+    <TableLayout
+            android:layout_below="@+id/server_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="1">
+
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Connected"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_connected"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Connector stage"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_stage"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Stream encrypted"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_sslstatus"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Stream compressed"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_zlibstatus"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Auth status"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_authsatus"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Session bind"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_sessionbinded"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Session resumption"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_sessionresumption"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
+        <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:text="Session resumption"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+            <TextView
+                    android:id="@+id/server_status_sessionestablished"
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorPrimaryDark"
+                    android:textSize="12sp"/>
+        </TableRow>
 
 
-        <TextView
-                android:id="@+id/server_status_stage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="Contact"
-                android:textColor="?attr/colorPrimaryDark"
-                android:textSize="12sp"/>
-        <TextView
-                android:id="@+id/server_status_connected"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="Contact"
-                android:textColor="?attr/colorPrimaryDark"
-                android:textSize="12sp"/>
-        <TextView
-                android:id="@+id/server_status_sessionresumption"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="Contact"
-                android:textColor="?attr/colorPrimaryDark"
-                android:textSize="12sp"/>
-    </LinearLayout>
+    </TableLayout>
 
 
 </RelativeLayout>
