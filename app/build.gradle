@@ -29,8 +29,8 @@ android {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 19
 		targetSdkVersion 27
-		versionCode 69
-		versionName "3.0.6"
+		versionCode 70
+		versionName "3.0.7"
 //		jackOptions {
 //			enabled true
 //		}
