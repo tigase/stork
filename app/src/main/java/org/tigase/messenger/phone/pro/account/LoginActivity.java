@@ -383,6 +383,7 @@ public class LoginActivity
 			mAuthTask = null;
 			if (progress != null) {
 				progress.hide();
+				progress.dismiss();
 			}
 
 			if (success) {

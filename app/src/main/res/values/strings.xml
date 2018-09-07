@@ -233,6 +233,8 @@
     <string name="action_history_copy">Copy</string>
     <string name="action_history_delete">Delete</string>
     <string name="delete_chat_item_question">Do you want to delete messages? It cannot be undone.</string>
+    <string name="channel_name">Messages</string>
+    <string name="channel_description">Incomming messages</string>
     <string-array name="vcard_avatar_action">
         <item>Take photo</item>
         <item>Pick photo</item>

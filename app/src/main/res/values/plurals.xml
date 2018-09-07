@@ -18,4 +18,12 @@
         <item quantity="one">1 contact selected</item>
         <item quantity="other">%d contacts selected</item>
     </plurals>
+    <plurals name="notification_unread_chat">
+        <item quantity="one">%s</item>
+        <item quantity="other">%s (%d messages)</item>
+    </plurals>
+    <plurals name="notification_unread_muc">
+        <item quantity="one">%s</item>
+        <item quantity="other">%s (%d messages)</item>
+    </plurals>
 </resources>
