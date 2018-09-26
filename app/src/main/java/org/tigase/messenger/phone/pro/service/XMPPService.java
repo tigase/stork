@@ -647,6 +647,10 @@ public class XMPPService
 		return info.getType();
 	}
 
+	public CapabilitiesDBCache getCapsCache() {
+		return capsCache;
+	}
+
 	DisconnectionCauses getDisconectionProblemDescription(Account accout) {
 		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
 		if (tmp == null) {
@@ -931,7 +935,7 @@ public class XMPPService
 		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
 				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
 			messageSender.process(this, intent);
-	//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
+			//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
 //			String account = intent.getStringExtra("account");
 //			Uri content = intent.getParcelableExtra("content");
 //			String roomJid = intent.getStringExtra("roomJID");

@@ -45,6 +45,7 @@ import org.tigase.messenger.phone.pro.account.AccountProperties;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
+import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.eventbus.DefaultEventBus;
@@ -198,6 +199,7 @@ public class SettingsActivity
 				GeneralPreferenceFragment.class.getName().equals(fragmentName) ||
 				DataSyncPreferenceFragment.class.getName().equals(fragmentName) ||
 				AccountsPreferenceFragment.class.getName().equals(fragmentName) ||
+				ServerFeaturesFragment.class.getName().equals(fragmentName) ||
 				NotificationPreferenceFragment.class.getName().equals(fragmentName);
 	}
 

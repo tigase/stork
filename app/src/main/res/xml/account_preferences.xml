@@ -10,10 +10,17 @@
                 android:title="Enabled"/>
         <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                           android:enabled="true"
+                          android:key="pref_account_server_features"
+                          android:title="Server features">
+            <intent android:action="ACCOUNT_SETTINGS_SERVER_FEATURES"
+                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
+                    android:targetPackage="org.tigase.messenger.phone.pro"/>
+        </PreferenceScreen>
+        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                          android:enabled="true"
                           android:key="pref_account_connection"
                           android:title="Change account settings">
-            <intent
-                    android:action="ACCOUNT_SETTINGS_SCREEN"
+            <intent android:action="ACCOUNT_SETTINGS_SCREEN"
                     android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
                     android:targetPackage="org.tigase.messenger.phone.pro"/>
         </PreferenceScreen>

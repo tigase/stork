@@ -16,6 +16,8 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesActivity;
+import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesFragment;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AccountCat;
@@ -90,6 +92,11 @@ public class AccountProperties
 
 		String title;
 		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
+			case "ACCOUNT_SETTINGS_SERVER_FEATURES":
+				this.settingsFragment = new ServerFeaturesFragment();
+				((ServerFeaturesFragment) this.settingsFragment).setAccount(getAccountName(getIntent()));
+				title = "Server features";
+				break;
 			case "ACCOUNT_SETTINGS_SCREEN":
 				this.settingsFragment = new ConnectionSettingsFragment();
 				title = "Account settings";
@@ -310,6 +317,11 @@ public class AccountProperties
 					"pref_account_connection");
 			if (connectionSettingsPreference != null) {
 				connectionSettingsPreference.getIntent().putExtra("account_name", account.name);
+			}
+
+			PreferenceScreen serverFeaures = (PreferenceScreen) findPreference("pref_account_server_features");
+			if (serverFeaures != null) {
+				serverFeaures.getIntent().putExtra(ServerFeaturesActivity.ACCOUNT_JID, account.name);
 			}
 
 			SwitchPreference accountEnabledPreference = (SwitchPreference) findPreference("accountEnabled");

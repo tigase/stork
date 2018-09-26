@@ -18,6 +18,7 @@ import android.widget.Toast;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
@@ -95,6 +96,13 @@ public class ConnectionStatusesFragment
 					return null;
 				}
 			}).execute();
+		}
+
+		@Override
+		public void onServerFeatures(String accountJID) {
+			Intent intent = new Intent(getActivity(), ServerFeaturesActivity.class);
+			intent.putExtra(ServerFeaturesActivity.ACCOUNT_JID, accountJID);
+			startActivity(intent);
 		}
 	};
 	private Runnable refreshRun = new Runnable() {
@@ -185,5 +193,7 @@ public class ConnectionStatusesFragment
 	public interface OnListFragmentInteractionListener {
 
 		void onPingServer(String accountJID);
+
+		void onServerFeatures(String accountJID);
 	}
 }
