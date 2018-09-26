@@ -39,6 +39,22 @@ class FeaturesAdapter
 		return featureItems.size();
 	}
 
+	private boolean isOnServerFeaturesList(final FeatureItem item) {
+		if (item.getXmlns().contains("*")) {
+			final String t = item.getXmlns().substring(0, item.getXmlns().length() - 1);
+
+			for (String serverFeature : serverFeatures) {
+				if (serverFeature.startsWith(t)) {
+					return true;
+				}
+			}
+
+			return false;
+		} else {
+			return this.serverFeatures.contains(item.getXmlns());
+		}
+	}
+
 	@Override
 	public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 		FeatureItem item = featureItems.get(position);
@@ -63,7 +79,7 @@ class FeaturesAdapter
 		featureItems.clear();
 		if (serverFeatures != null) {
 			for (FeatureItem item : featuresProvider.get(context)) {
-				if (serverFeatures.contains(item.getXmlns())) {
+				if (isOnServerFeaturesList(item)) {
 					featureItems.add(item);
 				}
 			}
