@@ -29,8 +29,8 @@ android {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 19
 		targetSdkVersion 27
-		versionCode 71
-		versionName "3.0.8"
+		versionCode 72
+		versionName "3.0.9"
 //		jackOptions {
 //			enabled true
 //		}
@@ -85,8 +85,8 @@ dependencies {
 	implementation 'com.android.support:design:27.1.1'
 	implementation 'com.android.support:support-v4:27.1.1'
 	implementation 'com.android.support:recyclerview-v7:27.1.1'
-	implementation 'com.google.firebase:firebase-core:16.0.3'
-	implementation 'com.google.firebase:firebase-messaging:17.3.2'
+	implementation 'com.google.firebase:firebase-core:16.0.4'
+	implementation 'com.google.firebase:firebase-messaging:17.3.3'
 	implementation 'com.bignerdranch.android:recyclerview-multiselect:0.2'
 	implementation "me.leolin:ShortcutBadger:1.1.22@aar"
 }
