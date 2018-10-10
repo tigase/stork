@@ -15,10 +15,12 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import me.leolin.shortcutbadger.ShortcutBadger;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
+import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
@@ -34,11 +36,45 @@ public class MessageNotification {
 	final String GROUP_KEY_MESSAGES = "group_key_messages";
 
 	public static void cancelSummaryNotification(Context context) {
-		getCotificationManager(context).cancel(SUMMARY_ID);
+		getNotificationManager(context).cancel(SUMMARY_ID);
+
+		ShortcutBadger.removeCount(context);
+//		updateUnreadBadge(context);
 	}
 
-	public static NotificationManagerCompat getCotificationManager(Context context) {
+	private static int countUnreadMessages(Context context) {
+		DatabaseHelper dbHelper = DatabaseHelper.getInstance(context);
+		final StringBuilder sql = new StringBuilder();
+
+		sql.append("SELECT count(*) FROM ")
+//		sql.append("SELECT count(")
+//				.append("DISTINCT(")
+//				.append(DatabaseContract.ChatHistory.FIELD_JID)
+//				.append(")")
+//				.append(") " + "FROM ")
+				.append(DatabaseContract.ChatHistory.TABLE_NAME)
+				.append(" WHERE ")
+				.append(DatabaseContract.ChatHistory.FIELD_STATE)
+				.append("=?");
+
+		try (Cursor c = dbHelper.getReadableDatabase()
+				.rawQuery(sql.toString(), new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD})) {
+			c.moveToFirst();
+			return c.getInt(0);
+		}
+	}
+
+	public static NotificationManagerCompat getNotificationManager(Context context) {
 		return NotificationManagerCompat.from(context);
+	}
+
+	private static void updateUnreadBadge(Context context) {
+		final int unreadCount = countUnreadMessages(context);
+		if (unreadCount == 0) {
+			ShortcutBadger.removeCount(context);
+		} else {
+			ShortcutBadger.applyCount(context, unreadCount);
+		}
 	}
 
 	private UnreadConversation createChatSyle(Context context, Room room) {
@@ -134,6 +170,11 @@ public class MessageNotification {
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(
 				context.getApplicationContext());
 
+		final UnreadConversation unreadConversation = createChatSyle(context, chat);
+		if (unreadConversation.unread == 0) {
+			return;
+		}
+
 		final String account = chat.getSessionObject().getUserBareJid().toString();
 		final String chatJid = chat.getJid().getBareJid().toString();
 		final Bitmap avatar = AvatarHelper.getAvatar(chat.getJid().getBareJid());
@@ -174,14 +215,15 @@ public class MessageNotification {
 
 		NotificationCompat.Builder notification = createNotificationBuilder(context, soundUri, vibrationPattern,
 																			resultPendingIntent);
-		UnreadConversation unreadCnversation = createChatSyle(context, chat);
-		notification.setStyle(unreadCnversation.style);
+		notification.setStyle(unreadConversation.style);
 		notification.setContentTitle(context.getResources()
 											 .getQuantityString(R.plurals.notification_unread_muc,
-																unreadCnversation.unread, senderName,
-																unreadCnversation.unread));
+																unreadConversation.unread, senderName,
+																unreadConversation.unread));
 		notification.setContentText(msg.getBody());
 		notification.setLargeIcon(avatar);
+
+		updateUnreadBadge(context);
 
 		NotificationCompat.Builder summaryNotification = createNotificationBuilder(context, soundUri, vibrationPattern,
 																				   resultPendingIntent);
@@ -200,6 +242,11 @@ public class MessageNotification {
 		createNotificationChannel(context);
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(
 				context.getApplicationContext());
+
+		final UnreadConversation unreadConversation = createChatSyle(context, room);
+		if (unreadConversation.unread == 0) {
+			return;
+		}
 
 		final String account = room.getSessionObject().getUserBareJid().toString();
 		final String chatJid = room.getRoomJid().toString();
@@ -222,13 +269,14 @@ public class MessageNotification {
 
 		NotificationCompat.Builder notification = createNotificationBuilder(context, soundUri, vibrationPattern,
 																			resultPendingIntent);
-		UnreadConversation unreadCnversation = createChatSyle(context, room);
-		notification.setStyle(unreadCnversation.style);
+		notification.setStyle(unreadConversation.style);
 		notification.setContentTitle(context.getResources()
 											 .getQuantityString(R.plurals.notification_unread_muc,
-																unreadCnversation.unread, room.getRoomJid(),
-																unreadCnversation.unread));
+																unreadConversation.unread, room.getRoomJid(),
+																unreadConversation.unread));
 		notification.setContentText(senderName + ": " + msg.getBody());
+
+		updateUnreadBadge(context);
 
 		NotificationCompat.Builder summaryNotification = createNotificationBuilder(context, soundUri, vibrationPattern,
 																				   resultPendingIntent);

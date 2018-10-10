@@ -86,8 +86,9 @@ dependencies {
 	implementation 'com.android.support:support-v4:27.1.1'
 	implementation 'com.android.support:recyclerview-v7:27.1.1'
 	implementation 'com.google.firebase:firebase-core:16.0.3'
-	implementation 'com.google.firebase:firebase-messaging:17.3.1'
+	implementation 'com.google.firebase:firebase-messaging:17.3.2'
 	implementation 'com.bignerdranch.android:recyclerview-multiselect:0.2'
+	implementation "me.leolin:ShortcutBadger:1.1.22@aar"
 }
 
 apply plugin: 'com.google.gms.google-services'

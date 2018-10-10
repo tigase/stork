@@ -42,8 +42,8 @@
                     android:singleLine="true"
                     android:text="Contact"
                     android:textColor="#000000"
-                    android:textSize="17sp"
-                    android:fontFamily="sans-serif"/>
+                    android:textSize="18sp"
+                    android:fontFamily="sans-serif" android:gravity="center_vertical"/>
         </RelativeLayout>
 
         <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
@@ -59,8 +59,9 @@
                     android:layout_height="wrap_content"
                     android:text="wczoraj"
                     android:singleLine="true"
+                    android:layout_gravity="center_vertical"
                     android:textColor="#000000"
-                    android:textSize="12sp"/>
+                    android:textSize="14sp"/>
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

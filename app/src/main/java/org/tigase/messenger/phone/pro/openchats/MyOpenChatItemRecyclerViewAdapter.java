@@ -143,8 +143,10 @@ public class MyOpenChatItemRecyclerViewAdapter
 			mLastMessage.setText(lastMessage);
 
 			if (unreadCount > 0) {
+				mLastMessage.setTextColor(0xFF000000);
 				mLastMessage.setTypeface(Typeface.DEFAULT_BOLD);
 			} else {
+				mLastMessage.setTextColor(0xFF6B6666);
 				mLastMessage.setTypeface(Typeface.DEFAULT);
 			}
 
