@@ -2448,7 +2448,7 @@
         <date>2011-08-18</date>
         <description/>
     </feature>
-    <feature id="">
+    <feature id="urn:xmpp:features:pipelining">
         <xep>XEP-0305</xep>
         <name>XMPP Quickstart</name>
         <type>Standards Track</type>

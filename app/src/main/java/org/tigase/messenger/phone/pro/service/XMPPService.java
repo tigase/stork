@@ -65,6 +65,7 @@ import tigase.jaxmpp.core.client.xmpp.forms.XDataType;
 import tigase.jaxmpp.core.client.xmpp.modules.EntityTimeModule;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
 import tigase.jaxmpp.core.client.xmpp.modules.SoftwareVersionModule;
+import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.AdHocCommansModule;
 import tigase.jaxmpp.core.client.xmpp.modules.adhoc.State;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
@@ -307,6 +308,7 @@ public class XMPPService
 		}
 	};
 	private SSLSocketFactory sslSocketFactory;
+	private StreamFeaturesModule.CacheProvider streamFeaturesCache;
 	private int usedNetworkType;
 	final BroadcastReceiver presenceChangedReceiver = new BroadcastReceiver() {
 		@Override
@@ -506,6 +508,8 @@ public class XMPPService
 		sessionObject.setUserProperty(Connector.EXTERNAL_KEEPALIVE_KEY, true);
 
 		sessionObject.setUserProperty(JaxmppCore.AUTOADD_STANZA_ID_KEY, Boolean.TRUE);
+
+		StreamFeaturesModule.setCacheProvider(sessionObject, streamFeaturesCache);
 
 		// sessionObject.setUserProperty(SocketConnector.SSL_SOCKET_FACTORY_KEY,
 		// sslSocketFactory);
@@ -744,9 +748,10 @@ public class XMPPService
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		this.mAccountManager = AccountManager.get(this);
-
 		Log.i("XMPPService", "Service started");
+
+		this.mAccountManager = AccountManager.get(this);
+		this.streamFeaturesCache = new PipeliningCache(this);
 
 		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
 

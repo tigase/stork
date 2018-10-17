@@ -19,15 +19,20 @@ import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountProperties;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.core.client.JaxmppCore;
+import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import static tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule.SERVER_FEATURES_KEY;
 
@@ -54,8 +59,11 @@ public class ServerFeaturesFragment
 	private void addFeatures(JaxmppCore jaxmpp, Collection<String> serverFeatures) {
 		adapter.addFeatures(serverFeatures);
 		try {
-			if (jaxmpp != null && StreamManagementModule.isStreamManagementAvailable(jaxmpp.getSessionObject())) {
-				adapter.addFeature(StreamManagementModule.XMLNS);
+			if (jaxmpp != null) {
+				adapter.addFeatures(getStreamFeaturesXMLNS(jaxmpp.getSessionObject()));
+				if (StreamManagementModule.isStreamManagementAvailable(jaxmpp.getSessionObject())) {
+					adapter.addFeature(StreamManagementModule.XMLNS);
+				}
 			}
 		} catch (Exception e) {
 			Log.d(TAG, "", e);
@@ -122,6 +130,24 @@ public class ServerFeaturesFragment
 			}
 		} else {
 			addFeatures(jaxmpp, serverFeatures);
+		}
+	}
+
+	private Set<String> getStreamFeaturesXMLNS(final SessionObject sessionObject) {
+		try {
+			final HashSet<String> result = new HashSet<>();
+			final Element features = StreamFeaturesModule.getStreamFeatures(sessionObject);
+
+			for (Element child : features.getChildren()) {
+				String x = child.getXMLNS();
+				if (x != null) {
+					result.add(x);
+				}
+			}
+
+			return result;
+		} catch (Throwable e) {
+			return Collections.emptySet();
 		}
 	}
 
