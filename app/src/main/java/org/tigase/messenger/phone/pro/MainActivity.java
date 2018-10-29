@@ -444,8 +444,8 @@ public class MainActivity
 				setStatusText("Disconnecting…", R.color.status_background_disconnecting,
 							  R.color.status_foreground_disconnecting);
 			} else {
-				setStatusText("Disconnected " + connected + " " + disconnected + " " + connecting + " " + disconnecting,
-							  R.color.status_background_disconnected, R.color.status_foreground_disconnected);
+				setStatusText("Disconnected", R.color.status_background_disconnected,
+							  R.color.status_foreground_disconnected);
 			}
 		}
 	}

@@ -31,9 +31,7 @@ import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ChatProvider
 		extends ContentProvider {
@@ -423,13 +421,22 @@ public class ChatProvider
 		switch (sUriMatcher.match(uri)) {
 			case URI_INDICATOR_GROUP_CHATS_ACCOUNT:
 			case URI_INDICATOR_CHATS_ACCOUNT: {
-				final String account = uri.getPathSegments().get(uri.getPathSegments().size() - 1);
+				final String account = uri.getPathSegments().get(uri.getPathSegments().size() - 2);
 				final String jid = uri.getLastPathSegment();
 
-				int updated = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values,
-										DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " +
-												DatabaseContract.ChatHistory.FIELD_JID + "=?",
-										new String[]{account, jid});
+				String whereClause = "(" + DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? AND " +
+						DatabaseContract.ChatHistory.FIELD_JID + "=?)";
+				List<String> whereArgs = new ArrayList<>();
+				whereArgs.add(account);
+				whereArgs.add(jid);
+
+				if (selection != null) {
+					whereClause += " AND (" + selection + ")";
+					Collections.addAll(whereArgs, selectionArgs);
+				}
+
+				int updated = db.update(DatabaseContract.ChatHistory.TABLE_NAME, values, whereClause,
+										whereArgs.toArray(new String[]{}));
 
 				if (context != null) {
 					context.getContentResolver().notifyChange(uri, null);

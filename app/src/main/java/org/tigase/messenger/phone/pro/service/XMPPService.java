@@ -76,6 +76,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageCarbonsModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatState;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0085.ChatStateExtension;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.xep0184.MessageDeliveryReceiptsExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
 import tigase.jaxmpp.core.client.xmpp.modules.httpfileupload.HttpFileUploadModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
@@ -293,6 +294,7 @@ public class XMPPService
 	private MessageNotification notificationHelper = new MessageNotification();
 	private OwnPresenceFactoryImpl ownPresenceStanzaFactory;
 	private PresenceHandler presenceHandler;
+	private ReceiptReceiver receiptReceiver;
 	private RosterProviderExt rosterProvider;
 	private final PresenceModule.SubscribeRequestHandler subscribeHandler = new PresenceModule.SubscribeRequestHandler() {
 		@Override
@@ -437,6 +439,12 @@ public class XMPPService
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
 								jaxmpp.getSessionObject().setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, onConnectTasks);
+								final String actionId = UIDGenerator.next() + "-" + System.currentTimeMillis();
+								jaxmpp.getSessionObject()
+										.setProperty(SessionObject.Scope.session,
+													 CheckConnectionTask.LOGIN_ACTION_ID_KEY, actionId);
+								Log.d(TAG, "Adding connection checker task (" + actionId + ")");
+								timer.schedule(new CheckConnectionTask(actionId, jaxmpp), 30_000);
 								jaxmpp.login(false);
 							} catch (Exception e) {
 								if (e.getCause() instanceof SecureTrustManagerFactory.DataCertificateException) {
@@ -534,6 +542,7 @@ public class XMPPService
 		MessageModule messageModule = new MessageModule(chatManager);
 		jaxmpp.getModulesManager().register(messageModule);
 
+		messageModule.addExtension(new MessageDeliveryReceiptsExtension(jaxmpp.getContext()));
 		messageModule.addExtension(new ChatStateExtension(chatManager));
 
 		jaxmpp.getModulesManager().register(new MucModule(new AndroidRoomsManager(this.chatProvider)));
@@ -779,6 +788,7 @@ public class XMPPService
 
 		this.presenceHandler = new PresenceHandler(this);
 		this.messageHandler = new MessageHandler(this);
+		this.receiptReceiver = new ReceiptReceiver();
 		this.mamHandler = new MAMHandler(this);
 		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
 																					  new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
@@ -845,6 +855,8 @@ public class XMPPService
 							   presenceHandler);
 		multiJaxmpp.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscribeHandler);
 
+		multiJaxmpp.addHandler(MessageDeliveryReceiptsExtension.ReceiptReceivedHandler.ReceiptReceivedEvent.class,
+							   receiptReceiver);
 		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
 		multiJaxmpp.addHandler(
 				MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
@@ -1669,6 +1681,52 @@ public class XMPPService
 
 	}
 
+	private class CheckConnectionTask
+			extends TimerTask {
+
+		public static final String LOGIN_ACTION_ID_KEY = "LOGIN_ACTION_ID_KEY";
+		private final String actionId;
+		private final Jaxmpp jaxmpp;
+
+		public CheckConnectionTask(String actionId, Jaxmpp jaxmpp) {
+			Log.d("CheckConnectionTask", "Create: " + actionId);
+			this.actionId = actionId;
+			this.jaxmpp = jaxmpp;
+		}
+
+		@Override
+		public void run() {
+			Log.d("CheckConnectionTask", "Checking login success for " + jaxmpp.getSessionObject().getUserBareJid());
+			final String jActionKey = jaxmpp.getSessionObject().getProperty(LOGIN_ACTION_ID_KEY);
+			if (jActionKey == null || !jActionKey.equals(actionId)) {
+				Log.d("CheckConnectionTask", "No valid actionId (" + actionId + "!=" + jActionKey + ") . Skipping.");
+				return;
+			}
+
+			final boolean cnctr =
+					jaxmpp.getConnector() != null && jaxmpp.getConnector().getState() == Connector.State.connected;
+
+			if (!cnctr) {
+				Log.d("CheckConnectionTask", "Connector isn't connected. Skipping.");
+				return;
+			}
+
+			if (!jaxmpp.isConnected()) {
+				Log.d("CheckConnectionTask",
+					  jaxmpp.getSessionObject().getUserBareJid() + " is not successfully " + "connected");
+				streamFeaturesCache.save(jaxmpp.getSessionObject(), new ArrayList<>());
+
+				Intent i = new Intent();
+				i.setAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
+				i.putExtra(LoginActivity.KEY_ACCOUNT_NAME, jaxmpp.getSessionObject().getUserBareJid().toString());
+				i.putExtra(LoginActivity.KEY_FORCE_DISCONNECT, true);
+				sendBroadcast(i);
+			} else {
+				Log.d("CheckConnectionTask", jaxmpp.getSessionObject().getUserBareJid() + " seems o be connected.");
+			}
+		}
+	}
+
 	private class CheckPushNotificationStatus
 			implements Runnable {
 
@@ -2175,6 +2233,31 @@ public class XMPPService
 				Log.v(TAG, "Exception updating roster item presence", ex);
 			}
 			rosterProvider.updateStatus(sessionObject, JID.jidInstance(jid));
+		}
+	}
+
+	private class ReceiptReceiver
+			implements MessageDeliveryReceiptsExtension.ReceiptReceivedHandler {
+
+		@Override
+		public void onReceiptReceived(SessionObject sessionObject, Chat chat, Message message, String confirmedId) {
+			try {
+				Uri chatHistoryUri = Uri.parse(
+						ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
+								message.getFrom().getBareJid());
+
+				ContentValues values = new ContentValues();
+				values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_DELIVERED);
+
+				int r = getContentResolver().update(chatHistoryUri, values,
+													DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=?",
+													new String[]{confirmedId});
+
+				Log.d(TAG, "confirmedId=" + confirmedId);
+				getApplicationContext().getContentResolver().notifyChange(chatHistoryUri, null);
+			} catch (Exception e) {
+				Log.w(TAG, "Cannot update receipt", e);
+			}
 		}
 	}
 
