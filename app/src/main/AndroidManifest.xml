@@ -36,6 +36,9 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <application
             android:name=".MessengerApplication"
             android:allowBackup="true"
@@ -231,9 +234,14 @@
                 <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
-        <activity android:name=".conversations.imagepreview.PreviewImageActivity">
 
+        <activity android:name=".conversations.imagepreview.PreviewImageActivity">
         </activity>
+
+        <activity android:name=".video.VideoChatActivity"
+                  android:label="Video Chat">
+        </activity>
+
     </application>
 
 </manifest>

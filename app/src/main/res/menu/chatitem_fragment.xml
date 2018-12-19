@@ -19,11 +19,11 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
->
-    <item
-            android:id="@+id/send_file"
-            android:orderInCategory="100"
-            android:title="@string/send_file"
-    />
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/send_file"
+          android:orderInCategory="100"
+          android:title="@string/send_file"/>
+    <item android:id="@+id/video_chat"
+          android:orderInCategory="100"
+          android:title="Video Chat"/>
 </menu>

@@ -2,6 +2,7 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -63,20 +64,8 @@ public class AccountProperties
 		return account == null ? null : account.name;
 	}
 
-	Account getAccount() {
-		if (account == null) {
-			final String accountName = getAccountName(getIntent());
-			this.account = AccountHelper.getAccount(getmAccountManager(), accountName);
-		}
-		return account;
-	}
-
 	public Jaxmpp getJaxmpp() {
 		return mConnection.getService().getJaxmpp(account.name);
-	}
-
-	AccountManager getmAccountManager() {
-		return AccountManager.get(this);
 	}
 
 	@Override
@@ -84,39 +73,6 @@ public class AccountProperties
 		super.onAttachFragment(fragment);
 		Intent intent = new Intent(getApplicationContext(), XMPPService.class);
 		bindService(intent, mConnection, 0);
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		String title;
-		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
-			case "ACCOUNT_SETTINGS_SERVER_FEATURES":
-				this.settingsFragment = new ServerFeaturesFragment();
-				((ServerFeaturesFragment) this.settingsFragment).setAccount(getAccountName(getIntent()));
-				title = "Server features";
-				break;
-			case "ACCOUNT_SETTINGS_SCREEN":
-				this.settingsFragment = new ConnectionSettingsFragment();
-				title = "Account settings";
-				break;
-			case "PRIORITIES_SCREEN":
-				this.settingsFragment = new PrioritiesFragment();
-				title = "Priorities";
-				break;
-			default:
-				this.settingsFragment = new AccountPropertiesFragment();
-				title = null;
-		}
-
-		setupActionBar(title);
-		getFragmentManager().beginTransaction().replace(android.R.id.content, settingsFragment).commit();
-
-		if (getIntent() != null && getIntent().getAction() != null &&
-				ACCEPT_CERTIFICATE_KEY.equals(getIntent().getAction())) {
-			showCertificateDialog(getIntent());
-		}
 	}
 
 	@Override
@@ -170,6 +126,51 @@ public class AccountProperties
 			getMenuInflater().inflate(R.menu.menu_account_pref, menu);
 		}
 		return super.onPrepareOptionsMenu(menu);
+	}
+
+	Account getAccount() {
+		if (account == null) {
+			final String accountName = getAccountName(getIntent());
+			this.account = AccountHelper.getAccount(getmAccountManager(), accountName);
+		}
+		return account;
+	}
+
+	AccountManager getmAccountManager() {
+		return AccountManager.get(this);
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		String title;
+		switch (getIntent() == null || getIntent().getAction() == null ? "" : getIntent().getAction()) {
+			case "ACCOUNT_SETTINGS_SERVER_FEATURES":
+				this.settingsFragment = new ServerFeaturesFragment();
+				((ServerFeaturesFragment) this.settingsFragment).setAccount(getAccountName(getIntent()));
+				title = "Server features";
+				break;
+			case "ACCOUNT_SETTINGS_SCREEN":
+				this.settingsFragment = new ConnectionSettingsFragment();
+				title = "Account settings";
+				break;
+			case "PRIORITIES_SCREEN":
+				this.settingsFragment = new PrioritiesFragment();
+				title = "Priorities";
+				break;
+			default:
+				this.settingsFragment = new AccountPropertiesFragment();
+				title = null;
+		}
+
+		setupActionBar(title);
+		getFragmentManager().beginTransaction().replace(android.R.id.content, settingsFragment).commit();
+
+		if (getIntent() != null && getIntent().getAction() != null &&
+				ACCEPT_CERTIFICATE_KEY.equals(getIntent().getAction())) {
+			showCertificateDialog(getIntent());
+		}
 	}
 
 	/**
@@ -437,15 +438,17 @@ public class AccountProperties
 		}
 
 		private void setMamSwitch(final boolean enabled, final MessageArchiveManagementModule.DefaultValue value) {
-
-			getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					mamEnabled.setEnabled(enabled);
-					mamEnabled.setChecked(value == MessageArchiveManagementModule.DefaultValue.roster);
-				}
-			});
-			updateSyncTimeField();
+			Activity a = getActivity();
+			if (a != null) {
+				a.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						mamEnabled.setEnabled(enabled);
+						mamEnabled.setChecked(value == MessageArchiveManagementModule.DefaultValue.roster);
+					}
+				});
+				updateSyncTimeField();
+			}
 		}
 
 		private void updateMAM(Boolean enabled) {
@@ -614,32 +617,6 @@ public class AccountProperties
 		private NumberPickerPreference npXa;
 		private PrioritiesEntity pr;
 
-		private boolean changeListener(Preference preference, Object o) {
-			switch (preference.getKey()) {
-				case "pr_chat":
-					pr.setChat((Integer) o);
-					break;
-				case "pr_online":
-					pr.setOnline((Integer) o);
-					break;
-				case "pr_away":
-					pr.setAway((Integer) o);
-					break;
-				case "pr_xa":
-					pr.setXa((Integer) o);
-					break;
-				case "pr_dnd":
-					pr.setDnd((Integer) o);
-					break;
-			}
-
-			mAccountManager.setUserData(this.account, AccountsConstants.CUSTOM_PRIORITIES, pr.toString());
-
-			updateSummaries();
-			modified = true;
-			return true;
-		}
-
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
@@ -674,6 +651,32 @@ public class AccountProperties
 				getActivity().sendBroadcast(i);
 			}
 			super.onPause();
+		}
+
+		private boolean changeListener(Preference preference, Object o) {
+			switch (preference.getKey()) {
+				case "pr_chat":
+					pr.setChat((Integer) o);
+					break;
+				case "pr_online":
+					pr.setOnline((Integer) o);
+					break;
+				case "pr_away":
+					pr.setAway((Integer) o);
+					break;
+				case "pr_xa":
+					pr.setXa((Integer) o);
+					break;
+				case "pr_dnd":
+					pr.setDnd((Integer) o);
+					break;
+			}
+
+			mAccountManager.setUserData(this.account, AccountsConstants.CUSTOM_PRIORITIES, pr.toString());
+
+			updateSummaries();
+			modified = true;
+			return true;
 		}
 
 		private void updateSummaries() {

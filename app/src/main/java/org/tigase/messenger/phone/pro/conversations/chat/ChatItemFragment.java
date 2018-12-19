@@ -51,6 +51,7 @@ import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
+import org.tigase.messenger.phone.pro.video.VideoChatActivity;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -97,99 +98,6 @@ public class ChatItemFragment
 	public ChatItemFragment() {
 	}
 
-	private String grabContent(List<Integer> selectedPositions) {
-		StringBuilder sb = new StringBuilder();
-
-		AccountManager accountManager = AccountManager.get(getContext());
-		Account account = AccountHelper.getAccount(accountManager,
-												   ((ChatActivity) getActivity()).getAccount().toString());
-
-		final String theirName = ((ChatActivity) getActivity()).getContactName();
-		String myNickname = accountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME);
-
-		if (myNickname == null || myNickname.trim().isEmpty()) {
-			myNickname = "Me";
-		}
-
-		final Cursor cursor = adapter.getCursor();
-		for (Integer position : selectedPositions) {
-			if (!cursor.moveToPosition(position)) {
-				throw new IllegalStateException("couldn't move cursor to position " + position);
-			}
-			final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-			final long time = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
-			final String timeStr = DateUtils.formatDateTime(getContext(), time,
-															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
-																	DateUtils.FORMAT_SHOW_TIME);
-			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
-			if (selectedPositions.size() == 1) {
-				sb.append(body).append('\n');
-			} else {
-				sb.append("[").append(timeStr).append("] ");
-				switch (state) {
-					case DatabaseContract.ChatHistory.STATE_INCOMING:
-					case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
-						sb.append(theirName).append(": ");
-						break;
-
-					case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-					case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-					case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-						sb.append(myNickname).append(": ");
-				}
-				sb.append(body);
-				sb.append('\n');
-			}
-
-		}
-
-		return sb.toString();
-	}
-
-	protected void loadMoreHistory() {
-		Jaxmpp jaxmpp = ((ChatActivity) getActivity()).getServiceConnection().getService().getJaxmpp(this.mAccount);
-		(new FetchMoreHistoryTask(getActivity(), this.swipeRefresh, jaxmpp, ((ChatActivity) getContext()).getJid(),
-								  uri)).execute();
-	}
-
-	@Override
-	protected boolean onActionItemClicked(final ActionMode mode, final MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_delete:
-				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-				builder.setMessage(R.string.delete_chat_item_question)
-						.setPositiveButton(R.string.yes, (dialog, which) -> {
-							for (Integer pos : getMultiSelector().getSelectedPositions()) {
-								long id = adapter.getItemId(pos);
-								getContext().getContentResolver()
-										.delete(ChatProvider.CHAT_HISTORY_URI,
-												DatabaseContract.ChatHistory.FIELD_ID + "=?",
-												new String[]{String.valueOf(id)});
-							}
-							mode.finish();
-						})
-						.setNegativeButton(R.string.no, null)
-						.show();
-
-				return true;
-			case R.id.ac_copy:
-				final JID jid = ((ChatActivity) getActivity()).getJid();
-				String body = grabContent(getMultiSelector().getSelectedPositions());
-
-				ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext()
-						.getSystemService(Context.CLIPBOARD_SERVICE);
-
-				ClipData clip = ClipData.newPlainText("Message from " + jid, body);
-
-				clipboard.setPrimaryClip(clip);
-
-				mode.finish();
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -207,12 +115,6 @@ public class ChatItemFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
-	}
-
-	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
-		return true;
 	}
 
 	@Override
@@ -298,8 +200,11 @@ public class ChatItemFragment
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+			case R.id.video_chat:
+				Intent i = new Intent(getContext(), VideoChatActivity.class);
+				startActivity(i);
+				return true;
 			case R.id.send_file:
-
 				if (!MainActivity.hasPermissions(getContext(), MainActivity.STORAGE_PERMISSIONS)) {
 					AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
@@ -333,6 +238,111 @@ public class ChatItemFragment
 		refreshChatHistory();
 	}
 
+	protected void loadMoreHistory() {
+		Jaxmpp jaxmpp = ((ChatActivity) getActivity()).getServiceConnection().getService().getJaxmpp(this.mAccount);
+		(new FetchMoreHistoryTask(getActivity(), this.swipeRefresh, jaxmpp, ((ChatActivity) getContext()).getJid(),
+								  uri)).execute();
+	}
+
+	@Override
+	protected boolean onActionItemClicked(final ActionMode mode, final MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage(R.string.delete_chat_item_question)
+						.setPositiveButton(R.string.yes, (dialog, which) -> {
+							for (Integer pos : getMultiSelector().getSelectedPositions()) {
+								long id = adapter.getItemId(pos);
+								getContext().getContentResolver()
+										.delete(ChatProvider.CHAT_HISTORY_URI,
+												DatabaseContract.ChatHistory.FIELD_ID + "=?",
+												new String[]{String.valueOf(id)});
+							}
+							mode.finish();
+						})
+						.setNegativeButton(R.string.no, null)
+						.show();
+
+				return true;
+			case R.id.ac_copy:
+				final JID jid = ((ChatActivity) getActivity()).getJid();
+				String body = grabContent(getMultiSelector().getSelectedPositions());
+
+				ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext()
+						.getSystemService(Context.CLIPBOARD_SERVICE);
+
+				ClipData clip = ClipData.newPlainText("Message from " + jid, body);
+
+				clipboard.setPrimaryClip(clip);
+
+				mode.finish();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
+		return true;
+	}
+
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
+	}
+
+	private String grabContent(List<Integer> selectedPositions) {
+		StringBuilder sb = new StringBuilder();
+
+		AccountManager accountManager = AccountManager.get(getContext());
+		Account account = AccountHelper.getAccount(accountManager,
+												   ((ChatActivity) getActivity()).getAccount().toString());
+
+		final String theirName = ((ChatActivity) getActivity()).getContactName();
+		String myNickname = accountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME);
+
+		if (myNickname == null || myNickname.trim().isEmpty()) {
+			myNickname = "Me";
+		}
+
+		final Cursor cursor = adapter.getCursor();
+		for (Integer position : selectedPositions) {
+			if (!cursor.moveToPosition(position)) {
+				throw new IllegalStateException("couldn't move cursor to position " + position);
+			}
+			final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+			final long time = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
+			final String timeStr = DateUtils.formatDateTime(getContext(), time,
+															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
+																	DateUtils.FORMAT_SHOW_TIME);
+			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
+			if (selectedPositions.size() == 1) {
+				sb.append(body).append('\n');
+			} else {
+				sb.append("[").append(timeStr).append("] ");
+				switch (state) {
+					case DatabaseContract.ChatHistory.STATE_INCOMING:
+					case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
+						sb.append(theirName).append(": ");
+						break;
+
+					case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+					case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+					case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+						sb.append(myNickname).append(": ");
+				}
+				sb.append(body);
+				sb.append('\n');
+			}
+
+		}
+
+		return sb.toString();
+	}
+
 	private void refreshChatHistory() {
 		Log.v(TAG, "Task: " + (dbUpdateTask == null ? "NONE" : dbUpdateTask.getStatus()));
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
@@ -340,22 +350,6 @@ public class ChatItemFragment
 			dbUpdateTask.execute();
 			Log.v(TAG, "Task executed");
 		}
-	}
-
-	private void send() {
-		String body = this.message.getText().toString();
-		if (body == null || body.trim().isEmpty()) {
-			return;
-		}
-
-		Intent intent = new Intent(getContext(), XMPPService.class);
-		intent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
-		intent.putExtra(MessageSender.BODY, body);
-		intent.putExtra(MessageSender.CHAT_ID, ((ChatActivity) getContext()).getOpenChatId());
-		intent.putExtra(MessageSender.ACCOUNT, mAccount.toString());
-
-		this.message.getText().clear();
-		getContext().startService(intent);
 	}
 
 //	private void setVisibility(final FloatingActionButton floatingActionButton, boolean showing) {
@@ -400,10 +394,20 @@ public class ChatItemFragment
 ////		}
 //	}
 
-	@Override
-	protected void updateActionMode(ActionMode actionMode) {
-		final int count = mMultiSelector.getSelectedPositions().size();
-		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
+	private void send() {
+		String body = this.message.getText().toString();
+		if (body == null || body.trim().isEmpty()) {
+			return;
+		}
+
+		Intent intent = new Intent(getContext(), XMPPService.class);
+		intent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
+		intent.putExtra(MessageSender.BODY, body);
+		intent.putExtra(MessageSender.CHAT_ID, ((ChatActivity) getContext()).getOpenChatId());
+		intent.putExtra(MessageSender.ACCOUNT, mAccount.toString());
+
+		this.message.getText().clear();
+		getContext().startService(intent);
 	}
 
 	private class DBUpdateTask

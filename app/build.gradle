@@ -72,7 +72,6 @@ dependencies {
 	implementation 'tigase:jaxmpp-registration:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-vcard:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-filetransfer:3.3.0-SNAPSHOT'
-	implementation 'tigase:jaxmpp-jingle:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-socks5:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-pubsub:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-im:3.3.0-SNAPSHOT'
@@ -86,10 +85,11 @@ dependencies {
 	implementation 'com.android.support:design:27.1.1'
 	implementation 'com.android.support:support-v4:27.1.1'
 	implementation 'com.android.support:recyclerview-v7:27.1.1'
-	implementation 'com.google.firebase:firebase-core:16.0.4'
-	implementation 'com.google.firebase:firebase-messaging:17.3.3'
+	implementation 'com.google.firebase:firebase-core:16.0.5'
+	implementation 'com.google.firebase:firebase-messaging:17.3.4'
 	implementation 'com.bignerdranch.android:recyclerview-multiselect:0.2'
 	implementation "me.leolin:ShortcutBadger:1.1.22@aar"
+	implementation 'org.webrtc:google-webrtc:1.0.23995'
 }
 
 apply plugin: 'com.google.gms.google-services'

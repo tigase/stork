@@ -24,8 +24,8 @@ package org.tigase.messenger.phone.pro.service;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.*;
-import android.content.*;
 import android.content.Context;
+import android.content.*;
 import android.content.pm.PackageInfo;
 import android.net.*;
 import android.os.Binder;
@@ -36,6 +36,9 @@ import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import com.google.firebase.iid.FirebaseInstanceId;
+import org.tigase.jaxmpp.modules.jingle.JingleContent;
+import org.tigase.jaxmpp.modules.jingle.JingleModule;
+import org.tigase.jaxmpp.modules.jingle.JingleSession;
 import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
 import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
@@ -54,6 +57,7 @@ import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
+import org.tigase.messenger.phone.pro.video.VideoChatActivity;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -355,6 +359,367 @@ public class XMPPService
 
 	}
 
+	public CapabilitiesDBCache getCapsCache() {
+		return capsCache;
+	}
+
+	public Jaxmpp getJaxmpp(String account) {
+		return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
+	}
+
+	public Jaxmpp getJaxmpp(BareJID account) {
+		return this.multiJaxmpp.get(account);
+	}
+
+	public MultiJaxmpp getMultiJaxmpp() {
+		return this.multiJaxmpp;
+	}
+
+	public boolean isDisabled(SessionObject sessionObject) {
+		Boolean x = sessionObject.getProperty(ACCOUNT_TMP_DISABLED_KEY);
+		return x == null ? false : x;
+	}
+
+	public IBinder onBind(Intent intent) {
+		return mBinder;
+	}
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		Log.i("XMPPService", "Service started");
+
+		this.mAccountManager = AccountManager.get(this);
+		this.streamFeaturesCache = new PipeliningCache(this);
+
+		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
+
+		this.ownPresenceStanzaFactory = new OwnPresenceFactoryImpl();
+		this.dbHelper = DatabaseHelper.getInstance(this);
+		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		this.dataRemover = new DataRemover(this.dbHelper);
+
+		SSLSessionCache sslSessionCache = new SSLSessionCache(this);
+		this.sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
+
+		this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
+			@Override
+			public void onChange(Long rosterItemId) {
+				Uri uri = rosterItemId != null
+						  ? ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterItemId)
+						  : RosterProvider.ROSTER_URI;
+
+				Log.i(TAG, "Content change: " + uri);
+				getApplicationContext().getContentResolver().notifyChange(uri, null);
+
+			}
+		}, "roster_version");
+		rosterProvider.resetStatus();
+
+		this.presenceHandler = new PresenceHandler(this);
+		this.messageHandler = new MessageHandler(this);
+		this.receiptReceiver = new ReceiptReceiver();
+		this.mamHandler = new MAMHandler(this);
+		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
+																					  new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
+																						  @Override
+																						  public void onChange(
+																								  Long chatId) {
+																							  Uri uri = chatId != null
+																										? ContentUris.withAppendedId(
+																									  ChatProvider.OPEN_CHATS_URI,
+																									  chatId)
+																										: ChatProvider.OPEN_CHATS_URI;
+																							  getApplicationContext().getContentResolver()
+																									  .notifyChange(uri,
+																													null);
+																						  }
+																					  });
+		chatProvider.resetRoomState(CPresence.OFFLINE);
+		this.mucHandler = new MucHandler();
+		this.capsCache = new CapabilitiesDBCache(dbHelper);
+
+		IntentFilter screenStateReceiverFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		screenStateReceiverFilter.addAction(Intent.ACTION_SCREEN_OFF);
+		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
+
+		registerReceiver(lastAccountActivityReceiver, new IntentFilter(LAST_ACCOUNT_ACTIVITY));
+		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
+		registerReceiver(pushNotificationChangeReceived, new IntentFilter(PUSH_NOTIFICATION_CHANGED));
+
+		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+
+		multiJaxmpp.addHandler(MessageModule.ChatUpdatedHandler.ChatUpdatedEvent.class,
+							   (so, chat) -> chatProvider.updateChat(chat));
+		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
+							   new StreamManagementModule.StreamManagementFailedHandler() {
+								   @Override
+								   public void onStreamManagementFailed(final SessionObject sessionObject,
+																		XMPPException.ErrorCondition condition) {
+									   if (condition != null && condition.getElementName().equals("item-not-found")) {
+										   XMPPService.this.rosterProvider.resetStatus(sessionObject);
+									   }
+								   }
+							   });
+		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
+							   streamHandler);
+		multiJaxmpp.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, jaxmppConnectedHandler);
+		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
+							   serverFeaturesReceivedHandler);
+		multiJaxmpp.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, jaxmppDisconnectedHandler);
+		// multiJaxmpp.addHandler(SocketConnector.ErrorHandler.ErrorEvent.class,
+		// );
+		//
+		// this.connectorListener = new Connector.ErrorHandler() {
+		//
+		// @Override
+		// public void onError(SessionObject sessionObject, StreamError
+		// condition, Throwable caught) throws JaxmppException {
+		// AbstractSocketXmppSessionLogic.this.processConnectorErrors(condition,
+		// caught);
+		// }
+		// };
+		multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
+		multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
+		multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class,
+							   presenceHandler);
+		multiJaxmpp.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscribeHandler);
+
+		multiJaxmpp.addHandler(MessageDeliveryReceiptsExtension.ReceiptReceivedHandler.ReceiptReceivedEvent.class,
+							   receiptReceiver);
+		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
+		multiJaxmpp.addHandler(
+				MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
+				mamHandler);
+		multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
+		multiJaxmpp.addHandler(ChatStateExtension.ChatStateChangedHandler.ChatStateChangedEvent.class, messageHandler);
+		multiJaxmpp.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
+
+			@Override
+			public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error) throws JaxmppException {
+				processAuthenticationError((Jaxmpp) multiJaxmpp.get(sessionObject));
+			}
+		});
+
+		multiJaxmpp.addHandler(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.OccupantLeavedHandler.OccupantLeavedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.MessageErrorHandler.MessageErrorEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, mucHandler);
+		multiJaxmpp.addHandler(MucModule.NewRoomCreatedHandler.NewRoomCreatedEvent.class, mucHandler);
+
+		multiJaxmpp.addHandler(JingleModule.JingleSessionInitiationHandler.JingleSessionInitiationEvent.class,
+							   this::onJingleSessionInitiationEvent);
+		multiJaxmpp.addHandler(JingleModule.JingleSessionInfoHandler.JingleSessionInfoEvent.class,
+							   this::onJingleSessionInfoEvent);
+		multiJaxmpp.addHandler(JingleModule.JingleTransportInfoHandler.JingleTransportInfoEvent.class,
+							   this::onJingleTransportInfoEvent);
+
+		IntentFilter filterAccountModifyReceiver = new IntentFilter();
+		filterAccountModifyReceiver.addAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
+		filterAccountModifyReceiver.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
+		registerReceiver(accountModifyReceiver, filterAccountModifyReceiver);
+
+		startKeepAlive();
+
+		updateJaxmppInstances();
+		// connectAllJaxmpp();
+	}
+
+	@Override
+	public void onDestroy() {
+		Log.i("XMPPService", "Service destroyed");
+
+		unregisterReceiver(lastAccountActivityReceiver);
+		unregisterReceiver(screenStateReceiver);
+		unregisterReceiver(connReceiver);
+		unregisterReceiver(presenceChangedReceiver);
+		unregisterReceiver(accountModifyReceiver);
+		unregisterReceiver(pushNotificationChangeReceived);
+
+		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
+
+		disconnectAllJaxmpp(true);
+
+		super.onDestroy();
+		mobileModeFeature = null;
+
+		sendBroadcast(new Intent(ServiceRestarter.ACTION_NAME));
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
+				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
+			messageSender.process(this, intent);
+			//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
+//			String account = intent.getStringExtra("account");
+//			Uri content = intent.getParcelableExtra("content");
+//			String roomJid = intent.getStringExtra("roomJID");
+//			int chatId = intent.getIntExtra("chatId", Integer.MIN_VALUE);
+//			if (roomJid != null) {
+//				uploadFileAndSend(account, content, BareJID.bareJIDInstance(roomJid));
+//			} else if (chatId != Integer.MIN_VALUE) {
+//				uploadFileAndSend(account, content, chatId);
+//			}
+		} else if (intent != null && CONNECT_ALL.equals(intent.getAction())) {
+			final boolean destroyed = intent.getBooleanExtra("destroyed", false);
+			for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
+				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
+				boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
+				if (destroyed && !pushEnabled || !destroyed) {
+					Jaxmpp jaxmpp = getJaxmpp(account.name);
+					connectJaxmpp(jaxmpp, (Date) null);
+				}
+			}
+		} else if (intent != null && CONNECT_SINGLE.equals(intent.getAction())) {
+			String ac = intent.getStringExtra("account");
+			Jaxmpp jaxmpp = getJaxmpp(ac);
+			connectJaxmpp(jaxmpp, (Date) null);
+		} else if (intent != null && KEEPALIVE_ACTION.equals(intent.getAction())) {
+			keepAlive();
+		}
+
+		return super.onStartCommand(intent, flags, startId);
+	}
+
+	public void updateVCardHash(SessionObject sessionObject, BareJID jid, byte[] buffer) {
+		rosterProvider.updateVCardHash(sessionObject, jid, buffer);
+		Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
+		intent.putExtra("jid", jid.toString());
+		XMPPService.this.sendBroadcast(intent);
+	}
+
+	DisconnectionCauses getDisconectionProblemDescription(Account accout) {
+		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
+		if (tmp == null) {
+			return null;
+		} else {
+			return DisconnectionCauses.valueOf(tmp);
+		}
+	}
+
+	void processPresenceUpdate() {
+		taskExecutor.execute(new Runnable() {
+			@Override
+			public void run() {
+				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
+					try {
+						if (!jaxmpp.isConnected()) {
+							connectJaxmpp((Jaxmpp) jaxmpp, (Long) null);
+						} else {
+							jaxmpp.getModule(PresenceModule.class).sendInitialPresence();
+						}
+					} catch (JaxmppException e) {
+						Log.e("TAG", "Can't update presence", e);
+					}
+				}
+			}
+		});
+	}
+
+	void registerInPushService(final Account account) throws JaxmppException {
+		final AdHocCommansModule ah = getJaxmpp(account.name).getModule(AdHocCommansModule.class);
+
+		final String deviceToken = FirebaseInstanceId.getInstance().getToken();
+
+		final JabberDataElement fields = new JabberDataElement(XDataType.submit);
+		fields.addListSingleField("provider", "fcm-xmpp-api");
+		fields.addTextSingleField("device-token", deviceToken);
+
+		ah.execute(PUSH_SERVICE_JID, "register-device", null, fields,
+				   new AdHocCommansModule.AdHocCommansAsyncCallback() {
+					   @Override
+					   public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
+							   throws JaxmppException {
+						   Log.e(TAG, "Error on registration in Push Service: " + errorCondition);
+					   }
+
+					   @Override
+					   public void onTimeout() throws JaxmppException {
+						   Log.e(TAG, "Registration in Push Service timeouted");
+					   }
+
+					   @Override
+					   protected void onResponseReceived(String sessionid, String node, State status,
+														 JabberDataElement data) throws JaxmppException {
+
+						   TextSingleField nodeField = data.getField("node");
+						   String pushServiceNode = nodeField.getFieldValue();
+						   mAccountManager.setUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY,
+													   pushServiceNode);
+
+						   enablePushService(account);
+					   }
+				   });
+	}
+
+	void setDisconnectionProblemDescription(SessionObject sessionObject, DisconnectionCauses cause) {
+		setDisconnectionProblemDescription(
+				AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString()), cause);
+	}
+
+	void setDisconnectionProblemDescription(Account accout, DisconnectionCauses cause) {
+		mAccountManager.setUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY,
+									cause == null ? null : cause.name());
+	}
+
+	protected final Connector.State getState(SessionObject object) {
+		Connector.State state = multiJaxmpp.get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
+		return state == null ? Connector.State.disconnected : state;
+	}
+
+	protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p)
+			throws XMLException {
+		if (p != null) {
+			Element x = p.getChildrenNS("x", "vcard-temp:x:update");
+			if (x != null) {
+				for (Element c : x.getChildren()) {
+					if (c.getName().equals("photo") && c.getValue() != null) {
+						boolean retrieve = false;
+						final String sha = c.getValue();
+						if (sha == null) {
+							continue;
+						}
+						retrieve = !rosterProvider.checkVCardHash(sessionObject, p.getFrom().getBareJid(), sha);
+
+						if (retrieve) {
+							retrieveVCard(sessionObject, p.getFrom().getBareJid());
+						}
+					}
+				}
+			}
+		}
+
+		// Synchronize contact status
+		BareJID from = p.getFrom().getBareJid();
+		PresenceStore store = PresenceModule.getPresenceStore(sessionObject);
+		Presence bestPresence = store.getBestPresence(from);
+		// SyncAdapter.syncContactStatus(getApplicationContext(),
+		// sessionObject.getUserBareJid(), from, bestPresence);
+	}
+
+	private boolean onJingleSessionInitiationEvent(SessionObject sessionObject, JingleSession jingleSession) {
+		Intent intent = new Intent(this, VideoChatActivity.class);
+		intent.putExtra(VideoChatActivity.ACCOUNT_KEY, sessionObject.getUserBareJid().toString());
+		intent.putExtra(VideoChatActivity.JID_KEY, jingleSession.getJid().toString());
+		intent.putExtra(VideoChatActivity.SID_KEY, jingleSession.getSid());
+		intent.putExtra(VideoChatActivity.INITIATOR_KEY, false);
+
+		startActivity(intent);
+		return true;
+	}
+
+	private boolean onJingleTransportInfoEvent(SessionObject sessionObject, JID sender, String sid,
+											   JingleContent content) {
+		return true;
+	}
+
+	private boolean onJingleSessionInfoEvent(SessionObject sessionObject, JID jid, String s, List<Element> elements) {
+		return true;
+	}
+
 	private void connectAllJaxmpp(Long delay) {
 		setUsedNetworkType(getActiveNetworkType());
 		// geolocationFeature.registerLocationListener();
@@ -537,6 +902,7 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new MessageArchivingModule());
 		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
 		jaxmpp.getModulesManager().register(new HttpFileUploadModule());
+		jaxmpp.getModulesManager().register(new JingleModule(jaxmpp.getContext()));
 
 		AndroidChatManager chatManager = new AndroidChatManager(this.chatProvider);
 		MessageModule messageModule = new MessageModule(chatManager);
@@ -660,47 +1026,12 @@ public class XMPPService
 		return info.getType();
 	}
 
-	public CapabilitiesDBCache getCapsCache() {
-		return capsCache;
-	}
-
-	DisconnectionCauses getDisconectionProblemDescription(Account accout) {
-		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
-		if (tmp == null) {
-			return null;
-		} else {
-			return DisconnectionCauses.valueOf(tmp);
-		}
-	}
-
-	public Jaxmpp getJaxmpp(String account) {
-		return this.multiJaxmpp.get(BareJID.bareJIDInstance(account));
-	}
-
-	public Jaxmpp getJaxmpp(BareJID account) {
-		return this.multiJaxmpp.get(account);
-	}
-
-	public MultiJaxmpp getMultiJaxmpp() {
-		return this.multiJaxmpp;
-	}
-
-	protected final Connector.State getState(SessionObject object) {
-		Connector.State state = multiJaxmpp.get(object).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-		return state == null ? Connector.State.disconnected : state;
-	}
-
 	private int getUsedNetworkType() {
 		return this.usedNetworkType;
 	}
 
 	private void setUsedNetworkType(int type) {
 		this.usedNetworkType = type;
-	}
-
-	public boolean isDisabled(SessionObject sessionObject) {
-		Boolean x = sessionObject.getProperty(ACCOUNT_TMP_DISABLED_KEY);
-		return x == null ? false : x;
 	}
 
 	private boolean isLocked(SessionObject sessionObject) {
@@ -750,167 +1081,6 @@ public class XMPPService
 		}
 	}
 
-	public IBinder onBind(Intent intent) {
-		return mBinder;
-	}
-
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		Log.i("XMPPService", "Service started");
-
-		this.mAccountManager = AccountManager.get(this);
-		this.streamFeaturesCache = new PipeliningCache(this);
-
-		getApplication().registerActivityLifecycleCallbacks(mActivityCallbacks);
-
-		this.ownPresenceStanzaFactory = new OwnPresenceFactoryImpl();
-		this.dbHelper = DatabaseHelper.getInstance(this);
-		this.connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		this.dataRemover = new DataRemover(this.dbHelper);
-
-		SSLSessionCache sslSessionCache = new SSLSessionCache(this);
-		this.sslSocketFactory = SSLCertificateSocketFactory.getDefault(0, sslSessionCache);
-
-		this.rosterProvider = new RosterProviderExt(this, dbHelper, new RosterProviderExt.Listener() {
-			@Override
-			public void onChange(Long rosterItemId) {
-				Uri uri = rosterItemId != null
-						  ? ContentUris.withAppendedId(RosterProvider.ROSTER_URI, rosterItemId)
-						  : RosterProvider.ROSTER_URI;
-
-				Log.i(TAG, "Content change: " + uri);
-				getApplicationContext().getContentResolver().notifyChange(uri, null);
-
-			}
-		}, "roster_version");
-		rosterProvider.resetStatus();
-
-		this.presenceHandler = new PresenceHandler(this);
-		this.messageHandler = new MessageHandler(this);
-		this.receiptReceiver = new ReceiptReceiver();
-		this.mamHandler = new MAMHandler(this);
-		this.chatProvider = new org.tigase.messenger.jaxmpp.android.chat.ChatProvider(this, dbHelper,
-																					  new org.tigase.messenger.jaxmpp.android.chat.ChatProvider.Listener() {
-																						  @Override
-																						  public void onChange(
-																								  Long chatId) {
-																							  Uri uri = chatId != null
-																										? ContentUris.withAppendedId(
-																									  ChatProvider.OPEN_CHATS_URI,
-																									  chatId)
-																										: ChatProvider.OPEN_CHATS_URI;
-																							  getApplicationContext().getContentResolver()
-																									  .notifyChange(uri,
-																													null);
-																						  }
-																					  });
-		chatProvider.resetRoomState(CPresence.OFFLINE);
-		this.mucHandler = new MucHandler();
-		this.capsCache = new CapabilitiesDBCache(dbHelper);
-
-		IntentFilter screenStateReceiverFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		screenStateReceiverFilter.addAction(Intent.ACTION_SCREEN_OFF);
-		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
-
-		registerReceiver(lastAccountActivityReceiver, new IntentFilter(LAST_ACCOUNT_ACTIVITY));
-		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
-		registerReceiver(pushNotificationChangeReceived, new IntentFilter(PUSH_NOTIFICATION_CHANGED));
-
-		registerReceiver(connReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
-
-		multiJaxmpp.addHandler(MessageModule.ChatUpdatedHandler.ChatUpdatedEvent.class,
-							   (so, chat) -> chatProvider.updateChat(chat));
-		multiJaxmpp.addHandler(StreamManagementModule.StreamManagementFailedHandler.StreamManagementFailedEvent.class,
-							   new StreamManagementModule.StreamManagementFailedHandler() {
-								   @Override
-								   public void onStreamManagementFailed(final SessionObject sessionObject,
-																		XMPPException.ErrorCondition condition) {
-									   if (condition != null && condition.getElementName().equals("item-not-found")) {
-										   XMPPService.this.rosterProvider.resetStatus(sessionObject);
-									   }
-								   }
-							   });
-		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
-							   streamHandler);
-		multiJaxmpp.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, jaxmppConnectedHandler);
-		multiJaxmpp.addHandler(DiscoveryModule.ServerFeaturesReceivedHandler.ServerFeaturesReceivedEvent.class,
-							   serverFeaturesReceivedHandler);
-		multiJaxmpp.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, jaxmppDisconnectedHandler);
-		// multiJaxmpp.addHandler(SocketConnector.ErrorHandler.ErrorEvent.class,
-		// );
-		//
-		// this.connectorListener = new Connector.ErrorHandler() {
-		//
-		// @Override
-		// public void onError(SessionObject sessionObject, StreamError
-		// condition, Throwable caught) throws JaxmppException {
-		// AbstractSocketXmppSessionLogic.this.processConnectorErrors(condition,
-		// caught);
-		// }
-		// };
-		multiJaxmpp.addHandler(PresenceModule.ContactAvailableHandler.ContactAvailableEvent.class, presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.ContactUnavailableHandler.ContactUnavailableEvent.class, presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.ContactChangedPresenceHandler.ContactChangedPresenceEvent.class,
-							   presenceHandler);
-		multiJaxmpp.addHandler(PresenceModule.SubscribeRequestHandler.SubscribeRequestEvent.class, subscribeHandler);
-
-		multiJaxmpp.addHandler(MessageDeliveryReceiptsExtension.ReceiptReceivedHandler.ReceiptReceivedEvent.class,
-							   receiptReceiver);
-		multiJaxmpp.addHandler(MessageModule.MessageReceivedHandler.MessageReceivedEvent.class, messageHandler);
-		multiJaxmpp.addHandler(
-				MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler.MessageArchiveItemReceivedEvent.class,
-				mamHandler);
-		multiJaxmpp.addHandler(MessageCarbonsModule.CarbonReceivedHandler.CarbonReceivedEvent.class, messageHandler);
-		multiJaxmpp.addHandler(ChatStateExtension.ChatStateChangedHandler.ChatStateChangedEvent.class, messageHandler);
-		multiJaxmpp.addHandler(AuthModule.AuthFailedHandler.AuthFailedEvent.class, new AuthModule.AuthFailedHandler() {
-
-			@Override
-			public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error) throws JaxmppException {
-				processAuthenticationError((Jaxmpp) multiJaxmpp.get(sessionObject));
-			}
-		});
-
-		multiJaxmpp.addHandler(MucModule.MucMessageReceivedHandler.MucMessageReceivedEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.OccupantLeavedHandler.OccupantLeavedEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.MessageErrorHandler.MessageErrorEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.YouJoinedHandler.YouJoinedEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.StateChangeHandler.StateChangeEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.PresenceErrorHandler.PresenceErrorEvent.class, mucHandler);
-		multiJaxmpp.addHandler(MucModule.NewRoomCreatedHandler.NewRoomCreatedEvent.class, mucHandler);
-
-		IntentFilter filterAccountModifyReceiver = new IntentFilter();
-		filterAccountModifyReceiver.addAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
-		filterAccountModifyReceiver.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
-		registerReceiver(accountModifyReceiver, filterAccountModifyReceiver);
-
-		startKeepAlive();
-
-		updateJaxmppInstances();
-		// connectAllJaxmpp();
-	}
-
-	@Override
-	public void onDestroy() {
-		Log.i("XMPPService", "Service destroyed");
-
-		unregisterReceiver(lastAccountActivityReceiver);
-		unregisterReceiver(screenStateReceiver);
-		unregisterReceiver(connReceiver);
-		unregisterReceiver(presenceChangedReceiver);
-		unregisterReceiver(accountModifyReceiver);
-		unregisterReceiver(pushNotificationChangeReceived);
-
-		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
-
-		disconnectAllJaxmpp(true);
-
-		super.onDestroy();
-		mobileModeFeature = null;
-
-		sendBroadcast(new Intent(ServiceRestarter.ACTION_NAME));
-	}
-
 	private void onLastAccountActivityReceived(final String accountName) {
 		final long t = System.currentTimeMillis();
 
@@ -945,42 +1115,6 @@ public class XMPPService
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot enable or disable Push Service", e);
 		}
-	}
-
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
-				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
-			messageSender.process(this, intent);
-			//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
-//			String account = intent.getStringExtra("account");
-//			Uri content = intent.getParcelableExtra("content");
-//			String roomJid = intent.getStringExtra("roomJID");
-//			int chatId = intent.getIntExtra("chatId", Integer.MIN_VALUE);
-//			if (roomJid != null) {
-//				uploadFileAndSend(account, content, BareJID.bareJIDInstance(roomJid));
-//			} else if (chatId != Integer.MIN_VALUE) {
-//				uploadFileAndSend(account, content, chatId);
-//			}
-		} else if (intent != null && CONNECT_ALL.equals(intent.getAction())) {
-			final boolean destroyed = intent.getBooleanExtra("destroyed", false);
-			for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
-				boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
-				if (destroyed && !pushEnabled || !destroyed) {
-					Jaxmpp jaxmpp = getJaxmpp(account.name);
-					connectJaxmpp(jaxmpp, (Date) null);
-				}
-			}
-		} else if (intent != null && CONNECT_SINGLE.equals(intent.getAction())) {
-			String ac = intent.getStringExtra("account");
-			Jaxmpp jaxmpp = getJaxmpp(ac);
-			connectJaxmpp(jaxmpp, (Date) null);
-		} else if (intent != null && KEEPALIVE_ACTION.equals(intent.getAction())) {
-			keepAlive();
-		}
-
-		return super.onStartCommand(intent, flags, startId);
 	}
 
 	private void processAuthenticationError(final Jaxmpp jaxmpp) {
@@ -1071,25 +1205,6 @@ public class XMPPService
 									builder.build());
 	}
 
-	void processPresenceUpdate() {
-		taskExecutor.execute(new Runnable() {
-			@Override
-			public void run() {
-				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
-					try {
-						if (!jaxmpp.isConnected()) {
-							connectJaxmpp((Jaxmpp) jaxmpp, (Long) null);
-						} else {
-							jaxmpp.getModule(PresenceModule.class).sendInitialPresence();
-						}
-					} catch (JaxmppException e) {
-						Log.e("TAG", "Can't update presence", e);
-					}
-				}
-			}
-		});
-	}
-
 	private void processSubscriptionRequest(final SessionObject sessionObject, final Presence stanza,
 											final BareJID jid) {
 		Log.e(TAG, "Subscription request from  " + jid);
@@ -1129,42 +1244,6 @@ public class XMPPService
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(("request:" + sessionObject.getUserBareJid().toString() + ":" + jid).hashCode(),
 									builder.build());
-	}
-
-	void registerInPushService(final Account account) throws JaxmppException {
-		final AdHocCommansModule ah = getJaxmpp(account.name).getModule(AdHocCommansModule.class);
-
-		final String deviceToken = FirebaseInstanceId.getInstance().getToken();
-
-		final JabberDataElement fields = new JabberDataElement(XDataType.submit);
-		fields.addListSingleField("provider", "fcm-xmpp-api");
-		fields.addTextSingleField("device-token", deviceToken);
-
-		ah.execute(PUSH_SERVICE_JID, "register-device", null, fields,
-				   new AdHocCommansModule.AdHocCommansAsyncCallback() {
-					   @Override
-					   public void onError(Stanza stanza, XMPPException.ErrorCondition errorCondition)
-							   throws JaxmppException {
-						   Log.e(TAG, "Error on registration in Push Service: " + errorCondition);
-					   }
-
-					   @Override
-					   protected void onResponseReceived(String sessionid, String node, State status,
-														 JabberDataElement data) throws JaxmppException {
-
-						   TextSingleField nodeField = data.getField("node");
-						   String pushServiceNode = nodeField.getFieldValue();
-						   mAccountManager.setUserData(account, AccountsConstants.PUSH_SERVICE_NODE_KEY,
-													   pushServiceNode);
-
-						   enablePushService(account);
-					   }
-
-					   @Override
-					   public void onTimeout() throws JaxmppException {
-						   Log.e(TAG, "Registration in Push Service timeouted");
-					   }
-				   });
 	}
 
 	private void retrieveVCard(final SessionObject sessionObject, final BareJID jid) {
@@ -1262,16 +1341,6 @@ public class XMPPService
 		}
 
 		notificationHelper.show(this, room, msg);
-	}
-
-	void setDisconnectionProblemDescription(SessionObject sessionObject, DisconnectionCauses cause) {
-		setDisconnectionProblemDescription(
-				AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString()), cause);
-	}
-
-	void setDisconnectionProblemDescription(Account accout, DisconnectionCauses cause) {
-		mAccountManager.setUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY,
-									cause == null ? null : cause.name());
 	}
 
 	private void startKeepAlive() {
@@ -1472,14 +1541,14 @@ public class XMPPService
 					   }
 
 					   @Override
-					   protected void onResponseReceived(String sessionid, String node, State status,
-														 JabberDataElement data) throws JaxmppException {
-						   Log.i(TAG, "Device deregistered from Push Service");
+					   public void onTimeout() throws JaxmppException {
+						   Log.e(TAG, "Error during unregistration from Push Service: timeout");
 					   }
 
 					   @Override
-					   public void onTimeout() throws JaxmppException {
-						   Log.e(TAG, "Error during unregistration from Push Service: timeout");
+					   protected void onResponseReceived(String sessionid, String node, State status,
+														 JabberDataElement data) throws JaxmppException {
+						   Log.i(TAG, "Device deregistered from Push Service");
 					   }
 				   });
 
@@ -1573,43 +1642,6 @@ public class XMPPService
 		}
 
 		dataRemover.removeUnusedData(this);
-	}
-
-	protected synchronized void updateRosterItem(final SessionObject sessionObject, final Presence p)
-			throws XMLException {
-		if (p != null) {
-			Element x = p.getChildrenNS("x", "vcard-temp:x:update");
-			if (x != null) {
-				for (Element c : x.getChildren()) {
-					if (c.getName().equals("photo") && c.getValue() != null) {
-						boolean retrieve = false;
-						final String sha = c.getValue();
-						if (sha == null) {
-							continue;
-						}
-						retrieve = !rosterProvider.checkVCardHash(sessionObject, p.getFrom().getBareJid(), sha);
-
-						if (retrieve) {
-							retrieveVCard(sessionObject, p.getFrom().getBareJid());
-						}
-					}
-				}
-			}
-		}
-
-		// Synchronize contact status
-		BareJID from = p.getFrom().getBareJid();
-		PresenceStore store = PresenceModule.getPresenceStore(sessionObject);
-		Presence bestPresence = store.getBestPresence(from);
-		// SyncAdapter.syncContactStatus(getApplicationContext(),
-		// sessionObject.getUserBareJid(), from, bestPresence);
-	}
-
-	public void updateVCardHash(SessionObject sessionObject, BareJID jid, byte[] buffer) {
-		rosterProvider.updateVCardHash(sessionObject, jid, buffer);
-		Intent intent = new Intent("org.tigase.messenger.phone.pro.AvatarUpdated");
-		intent.putExtra("jid", jid.toString());
-		XMPPService.this.sendBroadcast(intent);
 	}
 
 //	private void uploadFileAndSend(final String account, final Uri content, int chatId) {
