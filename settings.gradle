@@ -1,3 +1,5 @@
+rootProject.name='Tigase Android Messenger'
+
 include ':app'
 include ':documentation'
 include ':bks-creator'
