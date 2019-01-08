@@ -4,44 +4,45 @@ import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class JingleSession {
 
-	private final List<JingleContent> candidates = new ArrayList<>();
+	private final Queue<JingleContent> candidates = new LinkedList<>();
 	private final String id;
+	private final JID initiator;
 	private final JID jid;
-	private final Element jingleElement;
+	private final JingleElement jingleElement;
 	private final String sid;
 
-	public static JingleSession create(String id, JID jid, Element jingleElement) throws XMLException {
-		return new JingleSession(id, jid, jingleElement.getAttribute("sid"), jingleElement);
+	public static JingleSession create(String id, JID jid, JID initiator, Element jingleElement) throws XMLException {
+		return new JingleSession(id, jid, initiator, jingleElement.getAttribute("sid"),
+								 new JingleElement(jingleElement));
 	}
-	JingleSession(String id, JID jid, String sid, Element jingleElement) {
+
+	JingleSession(String id, JID jid, JID initiator, String sid, JingleElement jingleElement) {
 		this.jingleElement = jingleElement;
 		this.sid = sid;
 		this.id = id;
 		this.jid = jid;
+		this.initiator = initiator;
+	}
+
+	public JID getInitiator() {
+		return initiator;
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public Element getJingleElement() {
+	public JingleElement getJingleElement() {
 		return jingleElement;
 	}
 
-	public Element getGroup() throws XMLException {
-		return jingleElement.getChildrenNS("group", "urn:xmpp:jingle:apps:grouping:0");
-	}
-
-	public List<JingleContent> getContents() throws XMLException {
-		return Util.convertAll(jingleElement.getChildren("content"), JingleContent::new);
-	}
-
-	public synchronized List<JingleContent> getCandidates() {
+	public synchronized Queue<JingleContent> getCandidates() {
 		return candidates;
 	}
 

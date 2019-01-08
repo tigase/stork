@@ -24,7 +24,7 @@ public class SDP {
 		return l.substring(15).split(" ");
 	}
 
-	 static boolean findLine(String prefix, String[] sdp, Consumer consumer) {
+	static boolean findLine(String prefix, String[] sdp, Consumer consumer) {
 		String t = findLine(prefix, sdp);
 		if (t != null) {
 			try {
@@ -323,15 +323,15 @@ public class SDP {
 		return join(LINE, sdp);
 	}
 
-	public String toSDP(final JingleSession session) throws XMLException {
+	public String toSDP(final String id, final String sid, final JingleElement jingleElement) throws XMLException {
 		final ArrayList<String> sdp = new ArrayList<>();
 
 		sdp.add("v=0");
-		sdp.add("o=- " + session.getSid() + " " + session.getId() + " IN IP4 0.0.0.0");
+		sdp.add("o=- " + sid + " " + id + " IN IP4 0.0.0.0");
 		sdp.add("s=-");
 		sdp.add("t=0 0");
 
-		final Element group = session.getGroup();
+		final Element group = jingleElement.getGroup();
 		if (group != null) {
 			StringBuilder t = new StringBuilder("a=group:").append(group.getAttribute("semantics"));
 			List<Element> gs = group.getChildren("content");
@@ -343,7 +343,7 @@ public class SDP {
 			sdp.add(t.toString());
 		}
 
-		for (JingleContent content : session.getContents()) {
+		for (JingleContent content : jingleElement.getContents()) {
 			sdp.add(toSDP(content));
 		}
 
@@ -382,9 +382,8 @@ public class SDP {
 		payload.setAttribute("channels", x.length > 2 ? x[2] : "1");
 
 		// parameters
-		String pl = findLine("a=fmtp:" + payloadId, sdp);
-		if (pl != null) {
-			String[] prms = pl.split(" ")[1].split(";");
+		findLine("a=fmtp:" + payloadId, sdp, line -> {
+			String[] prms = line.split(" ")[1].split(";");
 			for (String prm : prms) {
 				String[] z = prm.split("=");
 				Element p = ElementFactory.create("parameter", null, "urn:xmpp:jingle:apps:rtp:1");
@@ -392,21 +391,20 @@ public class SDP {
 				p.setAttribute("name", z[0]);
 				p.setAttribute("value", z[1]);
 			}
-		}
+		});
 
 		// <rtcp-fb type="transport-cc" xmlns="urn:xmpp:jingle:apps:rtp:rtcp-fb:0"/>
-		pl = findLine("a=rtcp-fb:" + payloadId, sdp);
-		if (pl != null) {
+		findLine("a=rtcp-fb:" + payloadId, sdp, line -> {
 			Element p = ElementFactory.create("rtcp-fb", null, "urn:xmpp:jingle:apps:rtp:rtcp-fb:0");
 			payload.addChild(p);
-			String[] tmp = pl.split(" ");
+			String[] tmp = line.split(" ");
 			if (tmp.length > 1) {
 				p.setAttribute("type", tmp[1]);
 			}
 			if (tmp.length > 2) {
 				p.setAttribute("subtype", tmp[2]);
 			}
-		}
+		});
 
 		return payload;
 	}

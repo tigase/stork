@@ -202,6 +202,10 @@ public class ChatItemFragment
 		switch (item.getItemId()) {
 			case R.id.video_chat:
 				Intent i = new Intent(getContext(), VideoChatActivity.class);
+				i.putExtra(VideoChatActivity.ACCOUNT_KEY, mAccount.toString());
+				i.putExtra(VideoChatActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
+				i.putExtra(VideoChatActivity.INITIATOR_KEY, true);
+
 				startActivity(i);
 				return true;
 			case R.id.send_file:

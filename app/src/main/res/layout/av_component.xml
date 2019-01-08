@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:id="@+id/activity_main"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 android:layout_weight="1"
+                 android:orientation="vertical">
+
+
+        <org.webrtc.SurfaceViewRenderer
+                android:id="@+id/remote_gl_surface_view"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:layout_height="match_parent"/>
+
+        <org.webrtc.SurfaceViewRenderer
+                android:id="@+id/local_gl_surface_view"
+                android:layout_width="match_parent"
+                android:layout_gravity="bottom|end"
+                android:layout_height="match_parent"/>
+    </FrameLayout>
+    <LinearLayout android:id="@+id/contact_info_panel"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical"
+                  android:gravity="center"
+                  android:layout_gravity="top">
+        <TextView android:id="@+id/debug_status"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"/>
+        <ImageView
+                android:id="@+id/avatar"
+                android:layout_width="192dp"
+                android:layout_height="192dp"/>
+        <TextView android:id="@+id/name"
+                  android:paddingTop="21dp"
+                  android:gravity="center"
+                  android:textSize="26dp"
+                  android:textColor="#ffffff"
+                  android:shadowColor="#696767"
+                  android:shadowDx="2.0"
+                  android:shadowDy="2.0"
+                  android:shadowRadius="2.0"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <LinearLayout
+            android:layout_marginTop="50dp"
+            android:id="@+id/callAcceptPanel"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_alignParentStart="true" android:layout_below="@+id/contact_info_panel">
+        <android.support.design.widget.FloatingActionButton
+                android:id="@+id/reject_call"
+                style="@style/CallButton.Decline"/>
+        <android.support.design.widget.FloatingActionButton
+                android:id="@+id/accept_call"
+                style="@style/CallButton.Accept"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:orientation="horizontal" android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true">
+        <android.support.design.widget.FloatingActionButton
+                android:id="@+id/end_call"
+                style="@style/CallButton.Decline"
+                android:text="Hangup"/>
+    </LinearLayout>
+</RelativeLayout>

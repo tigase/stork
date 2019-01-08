@@ -36,9 +36,7 @@ import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import com.google.firebase.iid.FirebaseInstanceId;
-import org.tigase.jaxmpp.modules.jingle.JingleContent;
 import org.tigase.jaxmpp.modules.jingle.JingleModule;
-import org.tigase.jaxmpp.modules.jingle.JingleSession;
 import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
 import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
@@ -57,7 +55,6 @@ import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
-import org.tigase.messenger.phone.pro.video.VideoChatActivity;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -143,6 +140,7 @@ public class XMPPService
 	final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
 	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
+	private final JingleAudioVideoListener jingleAudioVideoListener = new JingleAudioVideoListener(this);
 	private final IBinder mBinder = new LocalBinder();
 	private final DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
 
@@ -510,11 +508,15 @@ public class XMPPService
 		multiJaxmpp.addHandler(MucModule.NewRoomCreatedHandler.NewRoomCreatedEvent.class, mucHandler);
 
 		multiJaxmpp.addHandler(JingleModule.JingleSessionInitiationHandler.JingleSessionInitiationEvent.class,
-							   this::onJingleSessionInitiationEvent);
+							   jingleAudioVideoListener);
 		multiJaxmpp.addHandler(JingleModule.JingleSessionInfoHandler.JingleSessionInfoEvent.class,
-							   this::onJingleSessionInfoEvent);
+							   jingleAudioVideoListener);
 		multiJaxmpp.addHandler(JingleModule.JingleTransportInfoHandler.JingleTransportInfoEvent.class,
-							   this::onJingleTransportInfoEvent);
+							   jingleAudioVideoListener);
+		multiJaxmpp.addHandler(JingleModule.JingleSessionAcceptHandler.JingleSessionAcceptEvent.class,
+							   jingleAudioVideoListener);
+		multiJaxmpp.addHandler(JingleModule.JingleSessionTerminateHandler.JingleSessionTerminateEvent.class,
+							   jingleAudioVideoListener);
 
 		IntentFilter filterAccountModifyReceiver = new IntentFilter();
 		filterAccountModifyReceiver.addAction(LoginActivity.ACCOUNT_MODIFIED_MSG);
@@ -698,26 +700,6 @@ public class XMPPService
 		Presence bestPresence = store.getBestPresence(from);
 		// SyncAdapter.syncContactStatus(getApplicationContext(),
 		// sessionObject.getUserBareJid(), from, bestPresence);
-	}
-
-	private boolean onJingleSessionInitiationEvent(SessionObject sessionObject, JingleSession jingleSession) {
-		Intent intent = new Intent(this, VideoChatActivity.class);
-		intent.putExtra(VideoChatActivity.ACCOUNT_KEY, sessionObject.getUserBareJid().toString());
-		intent.putExtra(VideoChatActivity.JID_KEY, jingleSession.getJid().toString());
-		intent.putExtra(VideoChatActivity.SID_KEY, jingleSession.getSid());
-		intent.putExtra(VideoChatActivity.INITIATOR_KEY, false);
-
-		startActivity(intent);
-		return true;
-	}
-
-	private boolean onJingleTransportInfoEvent(SessionObject sessionObject, JID sender, String sid,
-											   JingleContent content) {
-		return true;
-	}
-
-	private boolean onJingleSessionInfoEvent(SessionObject sessionObject, JID jid, String s, List<Element> elements) {
-		return true;
 	}
 
 	private void connectAllJaxmpp(Long delay) {

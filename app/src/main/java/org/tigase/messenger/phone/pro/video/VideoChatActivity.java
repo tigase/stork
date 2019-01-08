@@ -3,31 +3,28 @@ package org.tigase.messenger.phone.pro.video;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.Toast;
-import org.tigase.jaxmpp.modules.jingle.JingleContent;
-import org.tigase.jaxmpp.modules.jingle.JingleModule;
-import org.tigase.jaxmpp.modules.jingle.JingleSession;
-import org.tigase.jaxmpp.modules.jingle.Transport;
+import org.tigase.jaxmpp.modules.jingle.*;
 import org.tigase.messenger.AbstractServiceActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.video.component.AVComponent;
 import org.webrtc.*;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesCache;
+import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.tigase.jaxmpp.modules.jingle.JingleModule.JINGLE_XMLNS;
 
@@ -44,32 +41,38 @@ public class VideoChatActivity
 	MediaConstraints audioConstraints;
 	AudioSource audioSource;
 	boolean gotUserMedia;
-	Button hangup;
 	AudioTrack localAudioTrack;
 	PeerConnection localPeer;
 	VideoTrack localVideoTrack;
-	SurfaceViewRenderer localVideoView;
 	PeerConnectionFactory peerConnectionFactory;
-	SurfaceViewRenderer remoteVideoView;
-	EglBase rootEglBase;
 	MediaConstraints sdpConstraints;
 	MediaConstraints videoConstraints;
 	VideoSource videoSource;
+	private AVComponent avComponent;
+	private final JingleModule.JingleSessionAcceptHandler acceptOfferHandler = (sessionObject, jingleSession, jingle) -> {
+		onAnswerReceived(sessionObject, jingleSession, jingle);
+		return true;
+	};
 	private boolean initiator;
 	private JaxmppCore jaxmpp;
 	private JingleSession session;
-
 	private final JingleModule.JingleTransportInfoHandler jingleTransportHandler = new JingleModule.JingleTransportInfoHandler() {
 		@Override
 		public boolean onJingleTransportInfo(SessionObject sessionObject, JID sender, String sid, JingleContent content)
 				throws JaxmppException {
-			onIceCandidateReceived(session, content);
+			onIceCandidateReceived(session);
 			return true;
 		}
 	};
+	private VideoCapturer videoCapturerAndroid;
+	private final JingleModule.JingleSessionTerminateHandler sessionTerminateHandler = (sessionObject, sender, sid) -> {
+		onRemoteHangUp(sessionObject);
+		return true;
+	};
 
 	private static int findSdpMLineIndex(JingleSession session, String contentName) throws XMLException {
-		String[] sdp = sdpConverter.toSDP(session).split(SDP.LINE);
+		String[] sdp = sdpConverter.toSDP(session.getId(), session.getSid(), session.getJingleElement())
+				.split(SDP.LINE);
 
 		int p0 = -1;
 		for (int i = 0; i < sdp.length; i++) {
@@ -83,7 +86,26 @@ public class VideoChatActivity
 		return -1;
 	}
 
+	protected static String getCapsNode(Presence presence) throws XMLException {
+		if (presence == null) {
+			return null;
+		}
+		Element c = presence.getChildrenNS("c", "http://jabber.org/protocol/caps");
+		if (c == null) {
+			return null;
+		}
+
+		String node = c.getAttribute("node");
+		String ver = c.getAttribute("ver");
+		if (node == null || ver == null) {
+			return null;
+		}
+
+		return node + "#" + ver;
+	}
+
 	public void start() {
+		EglBase rootEglBase = avComponent.getEglBase();
 		//Initialize PeerConnectionFactory globals.
 		PeerConnectionFactory.InitializationOptions initializationOptions = PeerConnectionFactory.InitializationOptions.builder(
 				this).setEnableVideoHwAcceleration(true).createInitializationOptions();
@@ -101,8 +123,7 @@ public class VideoChatActivity
 				.createPeerConnectionFactory();
 
 		//Now create a VideoCapturer instance.
-		VideoCapturer videoCapturerAndroid;
-		videoCapturerAndroid = createCameraCapturer(new Camera1Enumerator(false));
+		this.videoCapturerAndroid = createCameraCapturer(new Camera1Enumerator(false));
 
 		//Create MediaConstraints - Will be useful for specifying video and audio constraints.
 		audioConstraints = new MediaConstraints();
@@ -126,17 +147,49 @@ public class VideoChatActivity
 		if (videoCapturerAndroid != null) {
 			videoCapturerAndroid.startCapture(1024, 720, 30);
 		}
-		localVideoView.setVisibility(View.VISIBLE);
 		// And finally, with our VideoRenderer ready, we
 		// can add our renderer to the VideoTrack.
-		localVideoTrack.addSink(localVideoView);
-
-		localVideoView.setMirror(true);
-		remoteVideoView.setMirror(true);
+		localVideoTrack.addSink(avComponent.getLocalVideoView());
 
 		gotUserMedia = true;
-		if (initiator) {
-			onTryToStart();
+
+	}
+
+	public void stop() {
+		Log.i(TAG, "Stopped. Removing events handlers.");
+
+		jaxmpp.getEventBus().remove(sessionTerminateHandler);
+		jaxmpp.getEventBus().remove(jingleTransportHandler);
+		jaxmpp.getEventBus().remove(acceptOfferHandler);
+
+		avComponent.stop();
+		try {
+			if (localVideoTrack != null) {
+				localVideoTrack.dispose();
+			}
+		} catch (Exception e) {
+			Log.w(TAG, "Cannot dispose localVideoTrack", e);
+		}
+		try {
+			if (localAudioTrack != null) {
+				localAudioTrack.dispose();
+			}
+		} catch (Exception e) {
+			Log.w(TAG, "Cannot dispose localAudioTrack", e);
+		}
+		try {
+			if (audioSource != null) {
+				audioSource.dispose();
+			}
+		} catch (Exception e) {
+			Log.w(TAG, "Cannot dispose audioSource", e);
+		}
+		try {
+			if (videoCapturerAndroid != null) {
+				videoCapturerAndroid.dispose();
+			}
+		} catch (Exception e) {
+			Log.w(TAG, "Cannot dispose videoCapturerAndroid", e);
 		}
 	}
 
@@ -164,7 +217,6 @@ public class VideoChatActivity
 	 */
 	public void onIceCandidateReceived(IceCandidate iceCandidate) {
 		//we have received ice candidate. We can set it to the other peer.
-		// FIXME	SignallingClient.getInstance().emitIceCandidate(iceCandidate);
 
 		try {
 			final Element transport = sdpConverter.fromSDPTransport(iceCandidate.sdp.split(SDP.LINE));
@@ -219,11 +271,6 @@ public class VideoChatActivity
 		showToast("Remote Peer Joined");
 	}
 
-	public void onRemoteHangUp(String msg) {
-		showToast("Remote Peer hungup");
-		runOnUiThread(this::hangup);
-	}
-
 	/**
 	 * SignallingCallback - Called when remote peer sends offer
 	 */
@@ -233,7 +280,7 @@ public class VideoChatActivity
 				onTryToStart();
 			}
 			try {
-				String sdp = sdpConverter.toSDP(session);
+				String sdp = sdpConverter.toSDP(session.getId(), session.getSid(), session.getJingleElement());
 				Log.i(TAG, "Received Offer \n" + sdp);
 
 				localPeer.setRemoteDescription(new CustomSdpObserver(TAG + ":localSetRemote"),
@@ -246,14 +293,19 @@ public class VideoChatActivity
 		});
 	}
 
-	/**
-	 * SignallingCallback - Called when remote peer sends answer to your offer
-	 */
-	public void onAnswerReceived() {
+	public void onAnswerReceived(SessionObject sessionObject, JingleSession jingleSession, JingleElement jingle) {
 		showToast("Received Answer");
-//		FIXME	localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(
-//					SessionDescription.Type.fromCanonicalForm(data.getString("type").toLowerCase()),
-//					data.getString("sdp")));
+
+		try {
+			String sdp = sdpConverter.toSDP(jingleSession.getId(), jingleSession.getSid(), jingle);
+
+			localPeer.setRemoteDescription(new CustomSdpObserver(TAG + ":localSetRemote"),
+										   new SessionDescription(SessionDescription.Type.ANSWER, sdp));
+
+		} catch (XMLException e) {
+			Log.e(TAG, "Cannot convert to SDP", e);
+			e.printStackTrace();
+		}
 		updateVideoViews(true);
 	}
 
@@ -261,33 +313,69 @@ public class VideoChatActivity
 	 * Remote IceCandidate received
 	 *
 	 * @param session
-	 * @param c
 	 */
-	public void onIceCandidateReceived(JingleSession session, JingleContent c) throws XMLException {
-		Transport transport = new Transport(c.getChildrenNS("transport", "urn:xmpp:jingle:transports:ice-udp:1"));
-		String sdp = sdpConverter.toSDP(transport);
-		int idx = findSdpMLineIndex(session, c.getContentName());
-		// FIXME
-		IceCandidate ice = new IceCandidate(transport.getCandidates().get(0).getId(), idx, sdp);
-		Log.i(TAG, "Received IceCandidate " + transport.getAsString() + "\nsdpMid=" + ice.sdpMid + " sdpMLineIndex=" +
-				ice.sdpMLineIndex + " serverUrl=" + ice.serverUrl + "\n" + ice.sdp);
-		localPeer.addIceCandidate(ice);
-	}
+	public synchronized void onIceCandidateReceived(JingleSession session) throws XMLException {
+		Queue<JingleContent> queue = session.getCandidates();
+		JingleContent c;
+		while ((c = queue.poll()) != null) {
+			Transport transport = new Transport(c.getChildrenNS("transport", "urn:xmpp:jingle:transports:ice-udp:1"));
+			String sdp = sdpConverter.toSDP(transport);
+			int idx = findSdpMLineIndex(session, c.getContentName());
+			// FIXME
+			IceCandidate ice = new IceCandidate(transport.getCandidates().get(0).getId(), idx, sdp);
+			Log.i(TAG,
+				  "Received IceCandidate " + transport.getAsString() + "\nsdpMid=" + ice.sdpMid + " sdpMLineIndex=" +
+						  ice.sdpMLineIndex + " serverUrl=" + ice.serverUrl + "\n" + ice.sdp);
+			localPeer.addIceCandidate(ice);
+		}
 
-	/**
-	 * Util Methods
-	 */
-	public int dpToPx(int dp) {
-		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-		return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
 	}
-
-	/**
-	 * Closing up - normal hangup and app destroye
-	 */
 
 	public void showToast(final String msg) {
 		runOnUiThread(() -> Toast.makeText(VideoChatActivity.this, msg, Toast.LENGTH_SHORT).show());
+	}
+
+	public JID findVideoChatClient(final BareJID jid) throws XMLException {
+		Map<String, Presence> pr = PresenceModule.getPresenceStore(jaxmpp.getSessionObject()).getPresences(jid);
+		if (pr == null) {
+			return null;
+		}
+		for (Presence p : pr.values()) {
+			if (isVideoChatAvailable(p.getFrom())) {
+				return p.getFrom();
+			}
+		}
+		return null;
+	}
+
+	public boolean isVideoChatAvailable(final JID jid) {
+		Presence p = PresenceModule.getPresenceStore(jaxmpp.getSessionObject()).getPresence(jid);
+		CapabilitiesModule capsModule = jaxmpp.getModule(CapabilitiesModule.class);
+		CapabilitiesCache capsCache = capsModule.getCache();
+
+		try {
+			String capsNode = getCapsNode(p);
+			Set<String> features = (capsCache != null) ? capsCache.getFeatures(capsNode) : null;
+
+			return (features != null && features.contains(JingleModule.JINGLE_XMLNS) &&
+					features.contains("urn:xmpp:jingle:transports:ice-udp:1") &&
+					features.contains("urn:xmpp:jingle:apps:rtp:video") &&
+					features.contains("urn:xmpp:jingle:apps:rtp:audio") &&
+					features.contains("urn:xmpp:jingle:apps:dtls:0"));
+		} catch (XMLException ex) {
+			return false;
+		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+										   @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+		Log.i(TAG, "permissions: " + Arrays.toString(permissions));
+		Log.i(TAG, "grantResults: " + Arrays.toString(grantResults));
+
+		avComponent.initVideos();
 	}
 
 	@Override
@@ -299,52 +387,54 @@ public class VideoChatActivity
 
 		this.initiator = getIntent().getBooleanExtra(INITIATOR_KEY, false);
 
-		initViews();
-		initVideos();
-	}
+		avComponent = findViewById(R.id.avcomponent);
+		avComponent.setAccount(getIntent().getStringExtra(ACCOUNT_KEY));
+		avComponent.setHangupHandler(this::hangup);
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
+				PackageManager.PERMISSION_GRANTED ||
+				ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
+						PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO,
+																 Manifest.permission.CAMERA}, 1);
+		} else {
+			avComponent.initVideos();
+		}
 	}
 
 	@Override
 	protected void onXMPPServiceConnected() {
 		String account = getIntent().getStringExtra(ACCOUNT_KEY);
+		Log.i(TAG, "XMPP Service Connected. Getting jaxmpp for " + account);
 		this.jaxmpp = getJaxmpp(account);
+
+		if (this.jaxmpp == null) {
+			throw new RuntimeException("Cannot get XMPP Client.");
+		}
+
+		jaxmpp.getEventBus()
+				.addHandler(JingleModule.JingleSessionAcceptHandler.JingleSessionAcceptEvent.class, acceptOfferHandler);
+		jaxmpp.getEventBus()
+				.addHandler(JingleModule.JingleSessionTerminateHandler.JingleSessionTerminateEvent.class,
+							sessionTerminateHandler);
+		jaxmpp.getEventBus()
+				.addHandler(JingleModule.JingleTransportInfoHandler.JingleTransportInfoEvent.class,
+							jingleTransportHandler);
 
 		start();
 
+		final JID jid = JID.jidInstance(getIntent().getStringExtra(JID_KEY));
+		avComponent.setRemoteJid(jid);
+
 		if (!initiator) {
-			JID jid = JID.jidInstance(getIntent().getStringExtra(JID_KEY));
+			// Incomming call. Asking
 			String sid = getIntent().getStringExtra(SID_KEY);
 			this.session = JingleModule.getSession(jaxmpp.getSessionObject(), sid, jid);
 
-			onOfferReceived(session);
+			avComponent.askForPickup(this::handlePickupResult);
 
-			List<JingleContent> z = new ArrayList<>(session.getCandidates());
-			jaxmpp.getEventBus()
-					.addHandler(JingleModule.JingleTransportInfoHandler.JingleTransportInfoEvent.class,
-								jingleTransportHandler);
-			try {
-				for (JingleContent c : z) {
-					onIceCandidateReceived(session, c);
-				}
-			} catch (Exception e) {
-				Log.w(TAG, e);
-			}
-		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
-				PackageManager.PERMISSION_GRANTED) {
-			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
-		}
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
+		} else {
+			onTryToStart();
 		}
 	}
 
@@ -353,19 +443,29 @@ public class VideoChatActivity
 
 	}
 
-	private void initViews() {
-		hangup = findViewById(R.id.end_call);
-		localVideoView = findViewById(R.id.local_gl_surface_view);
-		remoteVideoView = findViewById(R.id.remote_gl_surface_view);
-		hangup.setOnClickListener(v -> hangup());
+	private void onRemoteHangUp(SessionObject msg) {
+		runOnUiThread(() -> showToast("Remote Peer hungup"));
+		runOnUiThread(this::hangup);
 	}
 
-	private void initVideos() {
-		rootEglBase = EglBase.create();
-		localVideoView.init(rootEglBase.getEglBaseContext(), null);
-		remoteVideoView.init(rootEglBase.getEglBaseContext(), null);
-		localVideoView.setZOrderMediaOverlay(true);
-		remoteVideoView.setZOrderMediaOverlay(true);
+	private void handlePickupResult(boolean pickedUp) {
+		if (pickedUp) {
+			acceptIncommingCall();
+		} else {
+			hangup();
+		}
+	}
+
+	private void acceptIncommingCall() {
+		if (session != null) {
+			onOfferReceived(session);
+		}
+
+		try {
+			onIceCandidateReceived(session);
+		} catch (Exception e) {
+			Log.w(TAG, e);
+		}
 	}
 
 	/**
@@ -375,6 +475,7 @@ public class VideoChatActivity
 		PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(peerIceServers);
 		// TCP candidates are only useful when connecting to a server that supports
 		// ICE-TCP.
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.PLAN_B;
 		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
 		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
 		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
@@ -426,7 +527,41 @@ public class VideoChatActivity
 				super.onCreateSuccess(sessionDescription);
 				localPeer.setLocalDescription(new CustomSdpObserver(TAG + ":localSetLocalDesc"), sessionDescription);
 				Log.d("onCreateSuccess", "SignallingClient emit ");
-				// FIXME 		SignallingClient.getInstance().emitMessage(sessionDescription);
+
+				try {
+					JID jid = JID.jidInstance(getIntent().getStringExtra(JID_KEY));
+					if (jid.getResource() == null) {
+						jid = findVideoChatClient(jid.getBareJid());
+						if (jid == null) {
+							Log.e("TAG", "Can't call!!!");
+							throw new RuntimeException("Cannot call to this client");
+						}
+					}
+					Element jingle = sdpConverter.fromSDP(sessionDescription.description);
+
+					VideoChatActivity.this.session = jaxmpp.getModule(JingleModule.class)
+							.initiateSession(jid, jingle, new AsyncCallback() {
+								@Override
+								public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										throws JaxmppException {
+									Log.w(TAG, "Error on initiateSession: " + error);
+								}
+
+								@Override
+								public void onSuccess(Stanza responseStanza) throws JaxmppException {
+									Log.i(TAG, "Session initiated");
+								}
+
+								@Override
+								public void onTimeout() throws JaxmppException {
+									Log.w(TAG, "No response");
+								}
+							});
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(TAG, "O kurwa!", e);
+				}
+
 			}
 		}, sdpConstraints);
 	}
@@ -436,16 +571,17 @@ public class VideoChatActivity
 	 */
 	private void gotRemoteStream(MediaStream stream) {
 		//we have remote video stream. add to the renderer.
-		final VideoTrack videoTrack = stream.videoTracks.get(0);
-		runOnUiThread(() -> {
-			try {
-				remoteVideoView.setVisibility(View.VISIBLE);
-				videoTrack.addSink(remoteVideoView);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
-
+		if (stream != null && stream.videoTracks != null && stream.videoTracks.size() > 0) {
+			final VideoTrack videoTrack = stream.videoTracks.get(0);
+			runOnUiThread(() -> {
+				try {
+					avComponent.setRemoteVideoViewVisible(true);
+					videoTrack.addSink(avComponent.getRemoteVideoView());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		}
 	}
 
 	private void doAnswer(final JingleSession session) {
@@ -456,6 +592,7 @@ public class VideoChatActivity
 				localPeer.setLocalDescription(new CustomSdpObserver(TAG + ":localSetLocal"), sessionDescription);
 
 				try {
+					Log.d(TAG, "Accept session. Local description:\n" + sessionDescription.description);
 					Element jingle = sdpConverter.fromSDP(sessionDescription.description);
 					jaxmpp.getModule(JingleModule.class).acceptSession(session, jingle, new AsyncCallback() {
 						@Override
@@ -483,29 +620,25 @@ public class VideoChatActivity
 
 	private void updateVideoViews(final boolean remoteVisible) {
 		runOnUiThread(() -> {
-			ViewGroup.LayoutParams params = localVideoView.getLayoutParams();
-			if (remoteVisible) {
-				params.height = dpToPx(100);
-				params.width = dpToPx(100);
-			} else {
-				params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-													  ViewGroup.LayoutParams.MATCH_PARENT);
-			}
-			localVideoView.setLayoutParams(params);
+			avComponent.updateVideoViews(remoteVisible);
 		});
-
 	}
 
 	private void hangup() {
 		try {
-			localPeer.close();
-			localPeer = null;
-			// FIXME SignallingClient.getInstance().close();
+			stop();
+			if (localPeer != null) {
+				localPeer.close();
+				localPeer = null;
+			}
 			updateVideoViews(false);
+			jaxmpp.getModule(JingleModule.class).terminateSession(session);
 		} catch (Exception e) {
+			Log.e(TAG, "Hangup problem", e);
 			e.printStackTrace();
+		} finally {
+			finish();
 		}
-
 	}
 
 	private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {

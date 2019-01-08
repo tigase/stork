@@ -46,7 +46,11 @@ public class JingleModule
 	public static final String JINGLE_RTP1_XMLNS = "urn:xmpp:jingle:apps:rtp:1";
 	public static final String JINGLE_XMLNS = "urn:xmpp:jingle:1";
 	public static final Criteria CRIT = ElementCriteria.name("iq").add(ElementCriteria.name("jingle", JINGLE_XMLNS));
-	public static final String[] FEATURES = {JINGLE_XMLNS, JINGLE_RTP1_XMLNS};
+	public static final String[] FEATURES = {JINGLE_XMLNS, JINGLE_RTP1_XMLNS, "urn:xmpp:jingle:transports:ice-udp:1",
+											 "urn:xmpp:jingle:apps:rtp:audio", "urn:xmpp:jingle:apps:rtp:video",
+											 "urn:xmpp:jingle:apps:dtls:0"
+
+	};
 	public static final String JINGLE_SESSIONS = "JingleModule#JINGLE_SESSIONS";
 	protected final Logger log = Logger.getLogger(this.getClass().getName());
 	private Context context;
@@ -169,18 +173,18 @@ public class JingleModule
 		}
 	}
 
-	public void terminateSession(JID jid, String sid, JID initiator) throws JaxmppException {
+	public void terminateSession(JingleSession session) throws JaxmppException {
 		IQ iq = IQ.create();
 
-		iq.setTo(jid);
+		iq.setTo(session.getJid());
 		iq.setType(StanzaType.set);
 
 		Element jingle = ElementFactory.create("jingle");
 		jingle.setXMLNS(JINGLE_XMLNS);
 		jingle.setAttribute("action", "session-terminate");
-		jingle.setAttribute("sid", sid);
+		jingle.setAttribute("sid", session.getSid());
 
-		jingle.setAttribute("initiator", initiator.toString());
+		jingle.setAttribute("initiator", session.getInitiator().toString());
 
 		iq.addChild(jingle);
 
@@ -243,6 +247,29 @@ public class JingleModule
 		context.getWriter().write(iq);
 	}
 
+	public JingleSession initiateSession(final JID jid, final Element jingle, final AsyncCallback asyncCallback)
+			throws JaxmppException {
+		final String id = UIDGenerator.next() + UIDGenerator.next();
+		final JID myJid = ResourceBinderModule.getBindedJID(context.getSessionObject());
+		jingle.setAttribute("sid", id);
+		JingleSession session = JingleSession.create(String.valueOf(System.currentTimeMillis()), jid, myJid, jingle);
+		storeSession(context.getSessionObject(), session);
+
+		jingle.setAttribute("action", "session-initiate");
+		jingle.setAttribute("initiator", myJid.toString());
+
+		IQ iq = IQ.createIQ();
+		iq.setType(StanzaType.set);
+		iq.setId(UIDGenerator.next());
+		iq.setTo(session.getJid());
+
+		iq.addChild(jingle);
+
+		context.getWriter().write(iq, asyncCallback);
+
+		return session;
+	}
+
 	protected synchronized void processIq(final IQ iq) throws JaxmppException {
 		Element jingle = iq.getChildrenNS("jingle", JINGLE_XMLNS);
 
@@ -258,6 +285,14 @@ public class JingleModule
 		String action = jingle.getAttribute("action");
 
 		if ("session-terminate".equals(action)) {
+			JingleSession jingleSession = getSession(context.getSessionObject(), sid, from);
+
+			if (jingleSession == null) {
+				throw new XMPPException(XMPPException.ErrorCondition.unexpected_request, "Unknown SID");
+			}
+
+			removeSession(context.getSessionObject(), jingleSession);
+
 			JingleSessionTerminateHandler.JingleSessionTerminateEvent event = new JingleSessionTerminateHandler.JingleSessionTerminateEvent(
 					context.getSessionObject(), from, sid, (ev) -> processHandled(iq, ev.isHandled()));
 			context.getEventBus().fire(event);
@@ -269,9 +304,7 @@ public class JingleModule
 		} else if ("transport-info".equals(action)) {
 			JingleSession jingleSession = getSession(context.getSessionObject(), sid, from);
 			if (jingleSession == null) {
-				log.warning("Jingle Session " + sid + " not found");
-				processHandled(iq, false);
-				return;
+				throw new XMPPException(XMPPException.ErrorCondition.unexpected_request, "Unknown SID");
 			}
 
 			List<JingleContent> cnt = parseContents(contents);
@@ -286,7 +319,7 @@ public class JingleModule
 		} else {
 			if ("session-initiate".equals(action)) {
 				JingleSession jingleSession = JingleSession.create(String.valueOf(System.currentTimeMillis()), from,
-																   jingle);
+																   from, jingle);
 				storeSession(context.getSessionObject(), jingleSession);
 
 				JingleSessionInitiationHandler.JingleSessionInitiationEvent event = new JingleSessionInitiationHandler.JingleSessionInitiationEvent(
@@ -296,14 +329,11 @@ public class JingleModule
 				JingleSession jingleSession = getSession(context.getSessionObject(), sid, from);
 
 				if (jingleSession == null) {
-					processHandled(iq, false);
-					return;
+					throw new XMPPException(XMPPException.ErrorCondition.unexpected_request, "Unknown SID");
 				}
 
-				List<JingleContent> acceptedContent = parseContents(contents);
-
 				JingleSessionAcceptHandler.JingleSessionAcceptEvent event = new JingleSessionAcceptHandler.JingleSessionAcceptEvent(
-						context.getSessionObject(), jingleSession, acceptedContent,
+						context.getSessionObject(), jingleSession, new JingleElement(jingle),
 						(ev) -> processHandled(iq, ev.isHandled()));
 				context.getEventBus().fire(event);
 			}
@@ -342,26 +372,24 @@ public class JingleModule
 	public interface JingleSessionAcceptHandler
 			extends EventHandler {
 
-		boolean onJingleSessionAccept(SessionObject sessionObject, JingleSession jingleSession,
-									  List<JingleContent> acceptedContents);
+		boolean onJingleSessionAccept(SessionObject sessionObject, JingleSession jingleSession, JingleElement jingle);
 
 		class JingleSessionAcceptEvent
 				extends JaxmppEventWithCallback<JingleSessionAcceptHandler> {
 
-			private final List<JingleContent> acceptedContents;
+			private final JingleElement jingle;
 			private final JingleSession jingleSession;
 			private boolean handled = false;
 
 			public JingleSessionAcceptEvent(SessionObject sessionObject, JingleSession jingleSession,
-											List<JingleContent> acceptedContents,
-											RunAfter<JingleSessionAcceptEvent> runAfter) {
+											JingleElement jingle, RunAfter<JingleSessionAcceptEvent> runAfter) {
 				super(sessionObject, runAfter);
 				this.jingleSession = jingleSession;
-				this.acceptedContents = acceptedContents;
+				this.jingle = jingle;
 			}
 
-			public List<JingleContent> getAcceptedContents() {
-				return acceptedContents;
+			public JingleElement getJingle() {
+				return jingle;
 			}
 
 			public JingleSession getJingleSession() {
@@ -378,7 +406,7 @@ public class JingleModule
 
 			@Override
 			public void dispatch(JingleSessionAcceptHandler handler) {
-				handled = handler.onJingleSessionAccept(sessionObject, jingleSession, acceptedContents);
+				handled = handler.onJingleSessionAccept(sessionObject, jingleSession, jingle);
 			}
 
 		}

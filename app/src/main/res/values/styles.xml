@@ -21,6 +21,28 @@
 
 <resources>
 
+    <!-- Components -->
+
+    <style name="CallButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">bottom|end</item>
+        <item name="android:layout_margin">@dimen/fab_margin</item>
+        <item name="borderWidth">0dp</item>
+        <item name="elevation">6dp</item>
+        <item name="android:tint">#ffffffff</item>
+        <item name="fabSize">normal</item>
+    </style>
+
+    <style name="CallButton.Accept">
+        <item name="backgroundTint">#24d066</item>
+        <item name="android:src">@drawable/ic_call_24dp</item>
+    </style>
+    <style name="CallButton.Decline">
+        <item name="backgroundTint">#e62247</item>
+        <item name="android:src">@drawable/ic_call_end_24dp</item>
+    </style>
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
