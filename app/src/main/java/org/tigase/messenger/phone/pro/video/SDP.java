@@ -1,6 +1,7 @@
 package org.tigase.messenger.phone.pro.video;
 
 import org.tigase.jaxmpp.modules.jingle.*;
+import tigase.jaxmpp.core.client.Base64;
 import tigase.jaxmpp.core.client.UIDGenerator;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -10,11 +11,11 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class SDP {
 
 	public static final String LINE = "\r\n";
+	public static final String TIGASE_SDP_XMLNS = "tigase:sdp:0";
 
 	private static String[] findContentsNames(String[] sdp) {
 		String l = findLine("a=group:BUNDLE ", sdp);
@@ -89,6 +90,15 @@ public class SDP {
 		}
 
 		return Arrays.copyOfRange(sdp, p0, p2);
+	}
+
+	public static String getOriginalSDP(Element jingleElement) throws XMLException {
+		Element oryginalSdp = jingleElement.getChildrenNS("sdp", SDP.TIGASE_SDP_XMLNS);
+		if (oryginalSdp != null) {
+			return new String(Base64.decode(oryginalSdp.getValue()));
+		} else {
+			return null;
+		}
 	}
 
 	static String join(final CharSequence delimiter, final Iterable<? extends CharSequence> elements) {
@@ -178,6 +188,8 @@ public class SDP {
 
 		final Element jingle = ElementFactory.create("jingle");
 		jingle.setXMLNS("urn:xmpp:jingle:1");
+
+//		jingle.addChild(ElementFactory.create("sdp", Base64.encode(sdpData.getBytes()), SDP.TIGASE_SDP_XMLNS));
 
 		String[] groups = findContentsNames(sdp);
 		for (String groupName : groups) {
@@ -326,6 +338,11 @@ public class SDP {
 	public String toSDP(final String id, final String sid, final JingleElement jingleElement) throws XMLException {
 		final ArrayList<String> sdp = new ArrayList<>();
 
+		String oryginalSdp = getOriginalSDP(jingleElement);
+		if (oryginalSdp != null) {
+			return oryginalSdp;
+		}
+
 		sdp.add("v=0");
 		sdp.add("o=- " + sid + " " + id + " IN IP4 0.0.0.0");
 		sdp.add("s=-");
@@ -352,18 +369,18 @@ public class SDP {
 
 	public String toSDP(final Transport transport) throws XMLException {
 		final ArrayList<String> sdp = new ArrayList<>();
-		if (transport.getUfrag() != null) {
-			sdp.add("a=ice-ufrag:" + transport.getUfrag());
-		}
-		if (transport.getPwd() != null) {
-			sdp.add("a=ice-pwd:" + transport.getPwd());
-		}
-
-		Element fng = transport.getFingerprint();
-		if (fng != null) {
-			sdp.add("a=fingerprint:" + fng.getAttribute("hash") + " " + fng.getValue());
-			sdp.add("a=setup:" + fng.getAttribute("setup"));
-		}
+//		if (transport.getUfrag() != null) {
+//			sdp.add("a=ice-ufrag:" + transport.getUfrag());
+//		}
+//		if (transport.getPwd() != null) {
+//			sdp.add("a=ice-pwd:" + transport.getPwd());
+//		}
+//
+//		Element fng = transport.getFingerprint();
+//		if (fng != null) {
+//			sdp.add("a=fingerprint:" + fng.getAttribute("hash") + " " + fng.getValue());
+//			sdp.add("a=setup:" + fng.getAttribute("setup"));
+//		}
 
 		for (Candidate c : transport.getCandidates()) {
 			sdp.add(toSDP(transport, c));
@@ -418,44 +435,29 @@ public class SDP {
 		sdp.add(candidate.getAttribute("ip"));
 		sdp.add(candidate.getAttribute("port"));
 
-		if (transport.getUfrag() != null) {
-			sdp.add("ufrag");
-			sdp.add(transport.getUfrag());
-		}
+//		if (transport.getUfrag() != null) {
+//			sdp.add("ufrag");
+//			sdp.add(transport.getUfrag());
+//		}
 
-		for (Map.Entry<String, String> e : candidate.getAttributes().entrySet()) {
-			switch (e.getKey()) {
-				case "type":
-					sdp.add("typ");
-					sdp.add(e.getValue());
-					break;
-				case "generation":
-					sdp.add("generation");
-					sdp.add(e.getValue());
-					break;
-				case "tcptype":
-					sdp.add("tcptype");
-					sdp.add(e.getValue());
-					break;
-//				case "network-id":
-//					sdp.add("network");
-//					sdp.add(e.getValue());
-//					break;
-				case "rel-addr":
-					sdp.add("raddr");
-					sdp.add(e.getValue());
-					break;
-				case "rel-port":
-					sdp.add("rport");
-					sdp.add(e.getValue());
-					break;
+		addAttributes("type", candidate, "typ", sdp);
+		addAttributes("rel-addr", candidate, "raddr", sdp);
+		addAttributes("rel-port", candidate, "rport", sdp);
 
-				case "network-cost":
-
-			}
-		}
+		addAttributes("generation", candidate, "generation", sdp);
+		addAttributes("tcptype", candidate, "tcptype", sdp);
+		addAttributes("network-id", candidate, "network", sdp);
+		addAttributes("network-cost", candidate, "network-cost", sdp);
 
 		return join(" ", sdp);
+	}
+
+	private void addAttributes(final String candidateName, Candidate candidate, String sdpName, ArrayList<String> sdp)
+			throws XMLException {
+		if (candidate.getAttributes().containsKey(candidateName)) {
+			sdp.add(sdpName);
+			sdp.add(candidate.getAttribute(candidateName));
+		}
 	}
 
 	interface BiConsumer<T, U> {

@@ -196,6 +196,7 @@
     <string name="menu_chat_leaveroom">Leave room</string>
     <string name="main_menu_connectionstatus">Connection info</string>
     <string name="menu_connectionstatus_ping">Ping server</string>
+    <string name="menu_connectionstatus_ack">ACK</string>
     <string name="pref_auto_x_away_after_title">Auto eXtended Away delay (after Away)</string>
     <string name="pref_chat_notifications_title">Chats</string>
     <string name="pref_muc_notifications_title">Groupchats</string>

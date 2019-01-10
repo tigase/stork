@@ -92,8 +92,8 @@ public class AVComponent
 		return localVideoView;
 	}
 
-	public void initVideos() {
-		this.rootEglBase = EglBase.create();
+	public void initVideos(EglBase eglBase) {
+		this.rootEglBase = eglBase;
 		localVideoView.init(rootEglBase.getEglBaseContext(), null);
 		remoteVideoView.init(rootEglBase.getEglBaseContext(), null);
 		localVideoView.setZOrderMediaOverlay(true);

@@ -85,11 +85,12 @@ dependencies {
 	implementation 'com.android.support:design:27.1.1'
 	implementation 'com.android.support:support-v4:27.1.1'
 	implementation 'com.android.support:recyclerview-v7:27.1.1'
-	implementation 'com.google.firebase:firebase-core:16.0.5'
+	implementation 'com.google.firebase:firebase-core:16.0.6'
 	implementation 'com.google.firebase:firebase-messaging:17.3.4'
 	implementation 'com.bignerdranch.android:recyclerview-multiselect:0.2'
-	implementation "me.leolin:ShortcutBadger:1.1.22@aar"
-	implementation 'org.webrtc:google-webrtc:1.0.23995'
+	implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
+	implementation 'org.webrtc:google-webrtc:1.0.26131'
+	//	implementation 'org.whispersystems:webrtc-android-debug:M71'
 }
 
 apply plugin: 'com.google.gms.google-services'
