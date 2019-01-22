@@ -123,7 +123,6 @@ public class XMPPService
 
 	public static final String CONNECT_SINGLE = "connect-single";
 	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
-	public static final String LAST_ACCOUNT_ACTIVITY = "org.tigase.messenger.phone.pro.service.XMPPService.LAST_ACCOUNT_ACTIVITY";
 	public static final String SEND_FILE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.SEND_FILE_ACTION";
 	final static String TAG = "XMPPService";
 	private static final String ON_CONNECT_RUNNABLE_ARRAY_KEY = "ON_CONNECT_RUNNABLE_ARRAY";
@@ -131,7 +130,7 @@ public class XMPPService
 	private static final StanzaExecutor executor = new StanzaExecutor();
 	private static final String ACCOUNT_ID = "ID";
 
-	public static enum DisconnectionCauses {
+	public enum DisconnectionCauses {
 		CERTIFICATE_ERROR,
 		AUTHENTICATION
 	}
@@ -273,13 +272,6 @@ public class XMPPService
 	private long keepaliveInterval = 1000 * 60 * 3;
 	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private AccountManager mAccountManager;
-	private final BroadcastReceiver lastAccountActivityReceiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String account = intent.getStringExtra("account");
-			onLastAccountActivityReceived(account);
-		}
-	};
 	final BroadcastReceiver pushNotificationChangeReceived = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -441,7 +433,6 @@ public class XMPPService
 		screenStateReceiverFilter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(screenStateReceiver, screenStateReceiverFilter);
 
-		registerReceiver(lastAccountActivityReceiver, new IntentFilter(LAST_ACCOUNT_ACTIVITY));
 		registerReceiver(presenceChangedReceiver, new IntentFilter(CLIENT_PRESENCE_CHANGED_ACTION));
 		registerReceiver(pushNotificationChangeReceived, new IntentFilter(PUSH_NOTIFICATION_CHANGED));
 
@@ -495,7 +486,7 @@ public class XMPPService
 
 			@Override
 			public void onAuthFailed(SessionObject sessionObject, SaslModule.SaslError error) throws JaxmppException {
-				processAuthenticationError((Jaxmpp) multiJaxmpp.get(sessionObject));
+				processAuthenticationError(multiJaxmpp.get(sessionObject));
 			}
 		});
 
@@ -533,7 +524,6 @@ public class XMPPService
 	public void onDestroy() {
 		Log.i("XMPPService", "Service destroyed");
 
-		unregisterReceiver(lastAccountActivityReceiver);
 		unregisterReceiver(screenStateReceiver);
 		unregisterReceiver(connReceiver);
 		unregisterReceiver(presenceChangedReceiver);
@@ -569,8 +559,8 @@ public class XMPPService
 			final boolean destroyed = intent.getBooleanExtra("destroyed", false);
 			for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
-				boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
-				if (destroyed && !pushEnabled || !destroyed) {
+				boolean pushEnabled = tmp != null && Boolean.parseBoolean(tmp);
+				if (!destroyed || !pushEnabled) {
 					Jaxmpp jaxmpp = getJaxmpp(account.name);
 					connectJaxmpp(jaxmpp, (Date) null);
 				}
@@ -1063,7 +1053,7 @@ public class XMPPService
 		}
 	}
 
-	private void onLastAccountActivityReceived(final String accountName) {
+	private void updateLastAccountActivity(final String accountName) {
 		final long t = System.currentTimeMillis();
 
 		Jaxmpp jaxmpp = getJaxmpp(accountName);
@@ -1555,7 +1545,7 @@ public class XMPPService
 			jaxmpp.getSessionObject().setProperty("jaxmpp#ThrowedException", null);
 
 			String tmp = mAccountManager.getUserData(account, AccountsConstants.AUTOMATIC_PRIORITIES);
-			final boolean automaticPriorities = tmp == null ? true : Boolean.parseBoolean(tmp);
+			final boolean automaticPriorities = tmp == null || Boolean.parseBoolean(tmp);
 			if (automaticPriorities) {
 				jaxmpp.getSessionObject().setUserProperty(CUSTOM_PRIORITIES_ENTITY_KEY, new PrioritiesEntity());
 			} else {
@@ -1757,7 +1747,7 @@ public class XMPPService
 				String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
 				final String pushNodeKey = mAccountManager.getUserData(account,
 																	   AccountsConstants.PUSH_SERVICE_NODE_KEY);
-				final boolean pushEnabled = tmp == null ? false : Boolean.parseBoolean(tmp);
+				final boolean pushEnabled = tmp != null && Boolean.parseBoolean(tmp);
 
 				if (pushEnabled && pushNodeKey == null) {
 					registerInPushService(account);
@@ -1847,9 +1837,6 @@ public class XMPPService
 				Log.e(TAG, "Exception handling received carbon message", ex);
 			}
 
-			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-			i.putExtra("account", sessionObject.getUserBareJid().toString());
-			context.sendBroadcast(i);
 		}
 
 		@Override
@@ -1878,9 +1865,7 @@ public class XMPPService
 				Log.e(TAG, "Exception handling received message", ex);
 			}
 
-			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-			i.putExtra("account", sessionObject.getUserBareJid().toString());
-			context.sendBroadcast(i);
+			updateLastAccountActivity(sessionObject.getUserBareJid().toString());
 		}
 	}
 

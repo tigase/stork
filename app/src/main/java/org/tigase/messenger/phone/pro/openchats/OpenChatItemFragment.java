@@ -101,6 +101,170 @@ public class OpenChatItemFragment
 	public OpenChatItemFragment() {
 	}
 
+	public Collection<Long> getSelectedIds() {
+		ArrayList<Long> result = new ArrayList<>();
+		for (int pos : mMultiSelector.getSelectedPositions()) {
+			result.add(adapter.getItemId(pos));
+		}
+		return result;
+	}
+
+	@Override
+	public void onAttach(Context context) {
+		Log.v(TAG, "Attaching to context");
+		super.onAttach(context);
+		if (context instanceof MainActivity) {
+
+		}
+		if (context instanceof OnAddChatListener) {
+			mAddChatListener = (OnAddChatListener) context;
+		}
+
+		Intent intent = new Intent(context, XMPPService.class);
+		getActivity().bindService(intent, mConnection, 0);
+
+		getContext().getContentResolver()
+				.registerContentObserver(RosterProvider.ROSTER_URI, true, contactPresenceChangeObserver);
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		this.searchActionMode = new SearchActionMode(getActivity(), txt -> refreshChatlist());
+		setHasOptionsMenu(true);
+		Log.v(TAG, "Fragment is created");
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.openchat_fragment, menu);
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		Log.v(TAG, "Creating view");
+		View root = inflater.inflate(R.layout.fragment_openchatitem_list, container, false);
+
+		FloatingActionButton rosterAddChat = root.findViewById(R.id.roster_add_chat);
+		rosterAddChat.setOnClickListener(listener -> mAddChatListener.onAddChatClick());
+
+		recyclerView = root.findViewById(R.id.openchats_list);
+		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
+		recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, OpenChatItemFragment.this) {
+			@Override
+			protected void onContentChanged() {
+				Log.v(TAG, "Received content changed.");
+
+				refreshChatlist();
+			}
+		};
+		recyclerView.setAdapter(adapter);
+
+		Log.v(TAG, "View created");
+
+		return root;
+	}
+
+	@Override
+	public void onDetach() {
+		Log.v(TAG, "Detaching from context");
+		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
+		recyclerView.setAdapter(null);
+		adapter.changeCursor(null);
+		getActivity().unbindService(mConnection);
+		mAddChatListener = null;
+		super.onDetach();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(final MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_serach: {
+				ActionMode am = startActionMode(this.searchActionMode);
+				return true;
+			}
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		Log.v(TAG, "Resume view");
+		super.onResume();
+		Log.v(TAG, "Resumed view");
+
+		refreshChatlist();
+
+		MessageNotification.cancelSummaryNotification(getContext());
+	}
+
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage(R.string.delete_chat_history_question)
+						.setPositiveButton(R.string.yes, (dialog, which) -> {
+							doDeleteChat(getSelectedIds());
+							stopActionMode();
+						})
+						.setNegativeButton(R.string.no, null)
+						.show();
+
+				return true;
+			case R.id.ac_archive:
+				onArchiveChat(getSelectedIds());
+				stopActionMode();
+				return true;
+			case R.id.ac_leavemuc:
+				onLeaveRoom(getSelectedIds());
+				stopActionMode();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.openchats_action, menu);
+		return true;
+	}
+
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.chat_selected, count, count));
+
+		boolean selectedChats = false;
+		boolean selectedMuc = false;
+		for (int pos : mMultiSelector.getSelectedPositions()) {
+			switch (adapter.getItemViewType(pos)) {
+				case DatabaseContract.OpenChats.TYPE_CHAT:
+					selectedChats = true;
+					break;
+				case DatabaseContract.OpenChats.TYPE_MUC:
+					selectedMuc = true;
+					break;
+			}
+		}
+
+		MenuItem miArchive = actionMode.getMenu().findItem(R.id.ac_archive);
+		MenuItem miDelete = actionMode.getMenu().findItem(R.id.ac_delete);
+		MenuItem miLeaveMuc = actionMode.getMenu().findItem(R.id.ac_leavemuc);
+
+		miArchive.setEnabled(count > 0);
+		miDelete.setEnabled(count > 0);
+		miLeaveMuc.setEnabled(count > 0);
+
+		miDelete.setVisible(count == 0 || (selectedChats & !selectedMuc));
+		miArchive.setVisible(count == 0 || (selectedChats & !selectedMuc));
+		miLeaveMuc.setVisible(count == 0 || (!selectedChats & selectedMuc));
+	}
+
 	private void doDeleteChat(final Collection<Long> chatsId) {
 		XMPPService service = mConnection.getService();
 		if (service == null) {
@@ -129,10 +293,6 @@ public class OpenChatItemFragment
 				return;
 			}
 
-			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-			i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
-			service.sendBroadcast(i);
-
 			new AsyncTask<Void, Void, Void>() {
 				@Override
 				protected Void doInBackground(Void... params) {
@@ -158,41 +318,6 @@ public class OpenChatItemFragment
 					return null;
 				}
 			}.execute();
-		}
-	}
-
-	public Collection<Long> getSelectedIds() {
-		ArrayList<Long> result = new ArrayList<>();
-		for (int pos : mMultiSelector.getSelectedPositions()) {
-			result.add(adapter.getItemId(pos));
-		}
-		return result;
-	}
-
-	@Override
-	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_delete:
-				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-				builder.setMessage(R.string.delete_chat_history_question)
-						.setPositiveButton(R.string.yes, (dialog, which) -> {
-							doDeleteChat(getSelectedIds());
-							stopActionMode();
-						})
-						.setNegativeButton(R.string.no, null)
-						.show();
-
-				return true;
-			case R.id.ac_archive:
-				onArchiveChat(getSelectedIds());
-				stopActionMode();
-				return true;
-			case R.id.ac_leavemuc:
-				onLeaveRoom(getSelectedIds());
-				stopActionMode();
-				return true;
-			default:
-				return false;
 		}
 	}
 
@@ -225,10 +350,6 @@ public class OpenChatItemFragment
 				return;
 			}
 
-			Intent i = new Intent(XMPPService.LAST_ACCOUNT_ACTIVITY);
-			i.putExtra("account", jaxmpp.getSessionObject().getUserBareJid().toString());
-			service.sendBroadcast(i);
-
 			new AsyncTask<Void, Void, Void>() {
 				@Override
 				protected Void doInBackground(Void... params) {
@@ -250,80 +371,6 @@ public class OpenChatItemFragment
 				}
 			}.execute();
 		}
-	}
-
-	@Override
-	public void onAttach(Context context) {
-		Log.v(TAG, "Attaching to context");
-		super.onAttach(context);
-		if (context instanceof MainActivity) {
-
-		}
-		if (context instanceof OnAddChatListener) {
-			mAddChatListener = (OnAddChatListener) context;
-		}
-
-		Intent intent = new Intent(context, XMPPService.class);
-		getActivity().bindService(intent, mConnection, 0);
-
-		getContext().getContentResolver()
-				.registerContentObserver(RosterProvider.ROSTER_URI, true, contactPresenceChangeObserver);
-	}
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.searchActionMode = new SearchActionMode(getActivity(), txt -> refreshChatlist());
-		setHasOptionsMenu(true);
-		Log.v(TAG, "Fragment is created");
-	}
-
-	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.openchats_action, menu);
-		return true;
-	}
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.openchat_fragment, menu);
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.v(TAG, "Creating view");
-		View root = inflater.inflate(R.layout.fragment_openchatitem_list, container, false);
-
-		FloatingActionButton rosterAddChat = (FloatingActionButton) root.findViewById(R.id.roster_add_chat);
-		rosterAddChat.setOnClickListener(listener -> mAddChatListener.onAddChatClick());
-
-		recyclerView = (RecyclerView) root.findViewById(R.id.openchats_list);
-		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
-		recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-		this.adapter = new MyOpenChatItemRecyclerViewAdapter(getContext(), null, OpenChatItemFragment.this) {
-			@Override
-			protected void onContentChanged() {
-				Log.v(TAG, "Received content changed.");
-
-				refreshChatlist();
-			}
-		};
-		recyclerView.setAdapter(adapter);
-
-		Log.v(TAG, "View created");
-
-		return root;
-	}
-
-	@Override
-	public void onDetach() {
-		Log.v(TAG, "Detaching from context");
-		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
-		recyclerView.setAdapter(null);
-		adapter.changeCursor(null);
-		getActivity().unbindService(mConnection);
-		mAddChatListener = null;
-		super.onDetach();
 	}
 
 	private void onLeaveRoom(Collection<Long> chatsId) {
@@ -365,29 +412,6 @@ public class OpenChatItemFragment
 		}
 	}
 
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_serach: {
-				ActionMode am = startActionMode(this.searchActionMode);
-				return true;
-			}
-			default:
-				return super.onOptionsItemSelected(item);
-		}
-	}
-
-	@Override
-	public void onResume() {
-		Log.v(TAG, "Resume view");
-		super.onResume();
-		Log.v(TAG, "Resumed view");
-
-		refreshChatlist();
-
-		MessageNotification.cancelSummaryNotification(getContext());
-	}
-
 	private void refreshChatlist() {
 		Log.v(TAG, "Task: " + (dbUpdateTask == null ? "NONE" : dbUpdateTask.getStatus()));
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
@@ -396,38 +420,6 @@ public class OpenChatItemFragment
 			dbUpdateTask.execute(txt);
 			Log.v(TAG, "Task executed");
 		}
-	}
-
-	@Override
-	protected void updateActionMode(ActionMode actionMode) {
-		final int count = mMultiSelector.getSelectedPositions().size();
-
-		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.chat_selected, count, count));
-
-		boolean selectedChats = false;
-		boolean selectedMuc = false;
-		for (int pos : mMultiSelector.getSelectedPositions()) {
-			switch (adapter.getItemViewType(pos)) {
-				case DatabaseContract.OpenChats.TYPE_CHAT:
-					selectedChats = true;
-					break;
-				case DatabaseContract.OpenChats.TYPE_MUC:
-					selectedMuc = true;
-					break;
-			}
-		}
-
-		MenuItem miArchive = actionMode.getMenu().findItem(R.id.ac_archive);
-		MenuItem miDelete = actionMode.getMenu().findItem(R.id.ac_delete);
-		MenuItem miLeaveMuc = actionMode.getMenu().findItem(R.id.ac_leavemuc);
-
-		miArchive.setEnabled(count > 0);
-		miDelete.setEnabled(count > 0);
-		miLeaveMuc.setEnabled(count > 0);
-
-		miDelete.setVisible(count == 0 || (selectedChats & !selectedMuc));
-		miArchive.setVisible(count == 0 || (selectedChats & !selectedMuc));
-		miLeaveMuc.setVisible(count == 0 || (!selectedChats & selectedMuc));
 	}
 
 	public interface OnAddChatListener {
@@ -467,8 +459,9 @@ public class OpenChatItemFragment
 				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
 
 			}
-			Cursor cursor = getContext().getContentResolver().query(ChatProvider.OPEN_CHATS_URI, cols, selection, args,
-																	ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
+			Cursor cursor = getContext().getContentResolver()
+					.query(ChatProvider.OPEN_CHATS_URI, cols, selection, args,
+						   ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP + " DESC");
 			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
 			return cursor;

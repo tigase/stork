@@ -40,6 +40,111 @@ public class FetchMessageArchiveMAM
 		this.sessionObject = sessionObject;
 	}
 
+	@Override
+	public void run() {
+		Log.i(XMPPService.TAG, "Fetching Messages Archive. Account=" + sessionObject.getUserBareJid());
+		try {
+			this.mAccountManager = AccountManager.get(xmppService);
+			this.account = AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString());
+			this.startDate = getLastMessageDate();
+
+			String autoSync = mAccountManager.getUserData(account, AccountsConstants.MAM_AUTOSYNC);
+			if (autoSync != null && !Boolean.parseBoolean(autoSync)) {
+				Log.i(XMPPService.TAG, "Autosync disabled. Skip.");
+				return;
+			}
+
+			if (startDate == null) {
+				Log.i(XMPPService.TAG, "Start date set to Never. Skip.");
+				return;
+			}
+
+			final Jaxmpp jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
+			final MessageArchivingModule mam = jaxmpp.getModule(MessageArchivingModule.class);
+
+			Criteria cr = new Criteria().setStart(startDate);
+
+			mam.listCollections(cr, new MessageArchivingModule.CollectionAsyncCallback() {
+				@Override
+				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+					Log.i("MAM", "ERROR " + error);
+				}
+
+				@Override
+				public void onTimeout() throws JaxmppException {
+					Log.i("MAM", "TIMEOUT");
+				}
+
+				@Override
+				protected void onCollectionReceived(ResultSet<Chat> chats) throws XMLException {
+					Log.i("MAM", "SUCCESS");
+					for (Chat chat : chats.getItems()) {
+						fetchHistory(jaxmpp, chat, startDate);
+					}
+				}
+			});
+
+//			mam.retrieveCollection(cr, new MessageArchivingModule.ItemsAsyncCallback() {
+//				@Override
+//				protected void onItemsReceived(ChatResultSet chat) throws XMLException {
+//					Log.i("MAM", "SUCCESS");
+//
+//					chat.
+//
+//				}
+//
+//				@Override
+//				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+//					Log.i("MAM", "ERROR " + error);
+//				}
+//
+//				@Override
+//				public void onTimeout() throws JaxmppException {
+//					Log.i("MAM", "TIMEOUT");
+//				}
+//			});
+
+//			try (Cursor cursor = xmppService.getContentResolver()
+//					.query(ChatProvider.OPEN_CHATS_URI, cols, null, null, null)) {
+//				while (cursor.moveToNext()) {
+//					String acc = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
+//					if (!acc.equals(sessionObject.getUserBareJid().toString())) {
+//						continue;
+//					}
+//					String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
+//					System.out.println(acc + ":  " + cursor);
+//
+//					Criteria crit = new Criteria().setWith(JID.jidInstance(jid));
+//
+//					mam.listCollections(crit, new MessageArchivingModule.CollectionAsyncCallback() {
+//						@Override
+//						protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
+//							Log.i("MAM", "SUCCESS");
+//						}
+//
+//						@Override
+//						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+//								throws JaxmppException {
+//							Log.i("MAM", "ERROR " + error);
+//						}
+//
+//						@Override
+//						public void onTimeout() throws JaxmppException {
+//							Log.i("MAM", "TIMEOUT");
+//						}
+//					});
+//
+//				}
+//			}
+
+			// get archive for each
+
+		} catch (Exception e) {
+			Log.e(XMPPService.TAG, "Exception while Fetching Messages Archive on connect for account " +
+					sessionObject.getUserBareJid().toString());
+		}
+	}
+
 	private void fetchHistory(final Jaxmpp jaxmpp, final Chat chat, Date date) {
 		try {
 			final MessageModule mm = jaxmpp.getModule(MessageModule.class);
@@ -138,10 +243,8 @@ public class FetchMessageArchiveMAM
 	}
 
 	private Date getLastMessageDate() {
-		long d1 = getLastMessageDateFromDB();
-		long d2 = getLastMessageDateFromAccount();
-
-		long d = Math.max(d1, d2);
+//		long d1 = getLastMessageDateFromDB();
+		long d = getLastMessageDateFromAccount();
 
 		if (d == -1) {
 			String syncTime = mAccountManager.getUserData(account, AccountsConstants.MAM_SYNC_TIME);
@@ -193,110 +296,5 @@ public class FetchMessageArchiveMAM
 			result = mm.createChat(chat.getWithJid());
 		}
 		return result;
-	}
-
-	@Override
-	public void run() {
-		Log.i(XMPPService.TAG, "Fetching Messages Archive. Account=" + sessionObject.getUserBareJid());
-		try {
-			this.mAccountManager = AccountManager.get(xmppService);
-			this.account = AccountHelper.getAccount(mAccountManager, sessionObject.getUserBareJid().toString());
-			this.startDate = getLastMessageDate();
-
-			String autoSync = mAccountManager.getUserData(account, AccountsConstants.MAM_AUTOSYNC);
-			if (autoSync != null && !Boolean.parseBoolean(autoSync)) {
-				Log.i(XMPPService.TAG, "Autosync disabled. Skip.");
-				return;
-			}
-
-			if (startDate == null) {
-				Log.i(XMPPService.TAG, "Start date set to Never. Skip.");
-				return;
-			}
-
-			final Jaxmpp jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
-			final MessageArchivingModule mam = jaxmpp.getModule(MessageArchivingModule.class);
-
-			Criteria cr = new Criteria().setStart(startDate);
-
-			mam.listCollections(cr, new MessageArchivingModule.CollectionAsyncCallback() {
-				@Override
-				protected void onCollectionReceived(ResultSet<Chat> chats) throws XMLException {
-					Log.i("MAM", "SUCCESS");
-					for (Chat chat : chats.getItems()) {
-						fetchHistory(jaxmpp, chat, startDate);
-					}
-				}
-
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					Log.i("MAM", "ERROR " + error);
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					Log.i("MAM", "TIMEOUT");
-				}
-			});
-
-//			mam.retrieveCollection(cr, new MessageArchivingModule.ItemsAsyncCallback() {
-//				@Override
-//				protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-//					Log.i("MAM", "SUCCESS");
-//
-//					chat.
-//
-//				}
-//
-//				@Override
-//				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-//					Log.i("MAM", "ERROR " + error);
-//				}
-//
-//				@Override
-//				public void onTimeout() throws JaxmppException {
-//					Log.i("MAM", "TIMEOUT");
-//				}
-//			});
-
-//			try (Cursor cursor = xmppService.getContentResolver()
-//					.query(ChatProvider.OPEN_CHATS_URI, cols, null, null, null)) {
-//				while (cursor.moveToNext()) {
-//					String acc = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
-//					if (!acc.equals(sessionObject.getUserBareJid().toString())) {
-//						continue;
-//					}
-//					String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
-//					System.out.println(acc + ":  " + cursor);
-//
-//					Criteria crit = new Criteria().setWith(JID.jidInstance(jid));
-//
-//					mam.listCollections(crit, new MessageArchivingModule.CollectionAsyncCallback() {
-//						@Override
-//						protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
-//							Log.i("MAM", "SUCCESS");
-//						}
-//
-//						@Override
-//						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-//								throws JaxmppException {
-//							Log.i("MAM", "ERROR " + error);
-//						}
-//
-//						@Override
-//						public void onTimeout() throws JaxmppException {
-//							Log.i("MAM", "TIMEOUT");
-//						}
-//					});
-//
-//				}
-//			}
-
-			// get archive for each
-
-		} catch (Exception e) {
-			Log.e(XMPPService.TAG, "Exception while Fetching Messages Archive on connect for account " +
-					sessionObject.getUserBareJid().toString());
-		}
 	}
 }
