@@ -52,6 +52,7 @@ import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import org.tigase.messenger.phone.pro.video.VideoChatActivity;
+import org.tigase.messenger.phone.pro.video.WebRTCClient;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -118,6 +119,19 @@ public class ChatItemFragment
 	}
 
 	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean available;
+		try {
+			Jaxmpp jaxmpp = ((ChatActivity) getActivity()).getServiceConnection().getService().getJaxmpp(this.mAccount);
+			available = WebRTCClient.isVideoAvailable(jaxmpp, ((ChatActivity) getContext()).getJid().getBareJid());
+		} catch (Exception e) {
+			available = false;
+		}
+		menu.findItem(R.id.video_chat).setVisible(available);
+		super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.chatitem_fragment, menu);
 	}
@@ -126,12 +140,12 @@ public class ChatItemFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_chatitem_list, container, false);
 
-		this.swipeRefresh = ((SwipeRefreshLayout) root.findViewById(R.id.swipeRefreshLayout));
+		this.swipeRefresh = root.findViewById(R.id.swipeRefreshLayout);
 		if (swipeRefresh != null) {
 			swipeRefresh.setOnRefreshListener(this::loadMoreHistory);
 		}
 
-		final FloatingActionButton floatingActionButton = (FloatingActionButton) root.findViewById(R.id.scroll_down);
+		final FloatingActionButton floatingActionButton = root.findViewById(R.id.scroll_down);
 		floatingActionButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -140,7 +154,7 @@ public class ChatItemFragment
 		});
 		floatingActionButton.hide();
 
-		recyclerView = (RecyclerView) root.findViewById(R.id.chat_list);
+		recyclerView = root.findViewById(R.id.chat_list);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			this.recyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
 				@Override
@@ -157,8 +171,8 @@ public class ChatItemFragment
 			});
 		}
 
-		message = (EditText) root.findViewById(R.id.messageText);
-		sendButton = (ImageView) root.findViewById(R.id.send_button);
+		message = root.findViewById(R.id.messageText);
+		sendButton = root.findViewById(R.id.send_button);
 
 		message.setOnEditorActionListener((textView, id, keyEvent) -> {
 			if (id == R.id.send || id == EditorInfo.IME_NULL) {

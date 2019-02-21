@@ -123,6 +123,9 @@ public class StatusesRecyclerViewAdapter
 				} else if (item.getItemId() == R.id.menu_connectionstatus_ping) {
 					listener.onPingServer(j.getSessionObject().getUserBareJid().toString());
 					return true;
+				}else if (item.getItemId() == R.id.menu_connectionstatus_ack) {
+					listener.onAckServer(j.getSessionObject().getUserBareJid().toString());
+					return true;
 				} else {
 					return false;
 				}

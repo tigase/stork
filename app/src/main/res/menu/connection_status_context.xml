@@ -5,6 +5,10 @@
             android:orderInCategory="100"
             android:title="@string/menu_connectionstatus_ping"/>
     <item
+            android:id="@+id/menu_connectionstatus_ack"
+            android:orderInCategory="100"
+            android:title="@string/menu_connectionstatus_ack"/>
+    <item
             android:id="@+id/menu_connectionstatus_serverfeatures"
             android:orderInCategory="100"
             android:title="@string/menu_connectionstatus_serverfeatures"/>

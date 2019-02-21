@@ -213,6 +213,7 @@ public class XMPPService
 			if (activity instanceof MucActivity) {
 				XMPPService.this.focusedOnRoomId = null;
 			}
+			sendAcks();
 			autopresenceManager.start();
 		}
 
@@ -1262,19 +1263,17 @@ public class XMPPService
 	}
 
 	private void sendAcks() {
-		taskExecutor.execute(new Runnable() {
-			@Override
-			public void run() {
-				for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
-					try {
-						if (jaxmpp.isConnected()) {
-							Log.d("XMPPService", "Sending ACK for " + jaxmpp.getSessionObject().getUserBareJid());
-							jaxmpp.getModule(StreamManagementModule.class).sendAck();
-						}
-					} catch (JaxmppException ex) {
-						Log.e(TAG, "error sending ACK for = " + jaxmpp.getSessionObject().getUserBareJid().toString(),
-							  ex);
+		taskExecutor.execute(() -> {
+			for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
+				try {
+					if (jaxmpp.isConnected()) {
+						Log.d("XMPPService", "Sending ACK for " + jaxmpp.getSessionObject().getUserBareJid());
+						jaxmpp.getModule(StreamManagementModule.class).sendAck(false);
+						jaxmpp.getModule(StreamManagementModule.class).request(false);
 					}
+				} catch (JaxmppException ex) {
+					Log.e(TAG, "error sending ACK for = " + jaxmpp.getSessionObject().getUserBareJid().toString(),
+						  ex);
 				}
 			}
 		});

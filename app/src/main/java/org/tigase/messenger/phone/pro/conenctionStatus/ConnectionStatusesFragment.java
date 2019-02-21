@@ -29,6 +29,7 @@ import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
+import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class ConnectionStatusesFragment
@@ -80,14 +81,14 @@ public class ConnectionStatusesFragment
 							}
 
 							@Override
-							protected void onPong(long time) {
-								showInfo("Pong from " + jid + ": " + time + " ms");
-							}
-
-							@Override
 							public void onTimeout() throws JaxmppException {
 								showInfo("Pong error from " + jid + " timeouted");
 
+							}
+
+							@Override
+							protected void onPong(long time) {
+								showInfo("Pong from " + jid + ": " + time + " ms");
 							}
 						});
 					} catch (JaxmppException e) {
@@ -103,6 +104,37 @@ public class ConnectionStatusesFragment
 			Intent intent = new Intent(getActivity(), ServerFeaturesActivity.class);
 			intent.putExtra(ServerFeaturesActivity.ACCOUNT_JID, accountJID);
 			startActivity(intent);
+		}
+
+		@Override
+		public void onAckServer(String accountJID) {
+			Log.d("Status", "Ping " + accountJID);
+			if (mConnection == null) {
+				showInfo("Service is not started");
+				return;
+			}
+			final BareJID jid = BareJID.bareJIDInstance(accountJID);
+			Jaxmpp j = mConnection.getService().getJaxmpp(jid);
+			if (j == null) {
+				showInfo("Not connected with " + jid.getDomain());
+				return;
+			}
+
+			final StreamManagementModule pm = j.getModule(StreamManagementModule.class);
+			(new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					try {
+						pm.request(true);
+						pm.sendAck(true);
+						showInfo("ACK sent");
+					} catch (JaxmppException e) {
+						showInfo("Ping error: " + e.getMessage());
+					}
+					return null;
+				}
+			}).execute();
+
 		}
 	};
 	private Runnable refreshRun = new Runnable() {
@@ -195,5 +227,7 @@ public class ConnectionStatusesFragment
 		void onPingServer(String accountJID);
 
 		void onServerFeatures(String accountJID);
+
+		void onAckServer(String toString);
 	}
 }
