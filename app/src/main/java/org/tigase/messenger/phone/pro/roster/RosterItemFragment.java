@@ -46,8 +46,13 @@ import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
+
+import java.util.Collection;
+
+import static org.tigase.messenger.phone.pro.service.XMPPService.ACCOUNT_TMP_DISABLED_KEY;
 
 /**
  * A fragment representing a list of Items.
@@ -55,6 +60,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 public class RosterItemFragment
 		extends MultiSelectFragment {
 
+	final static String TAG = "RosterItemFragment";
 	private static final boolean SHOW_OFFLINE_DEFAULT = true;
 	RecyclerView recyclerView;
 	private MyRosterItemRecyclerViewAdapter adapter;
@@ -104,31 +110,6 @@ public class RosterItemFragment
 	}
 
 	@Override
-	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_delete:
-				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-				builder.setMessage(R.string.roster_delete_contact).setPositiveButton(R.string.yes, (dialog, which) -> {
-
-					final Cursor c = adapter.getCursor();
-					for (int pos : getMultiSelector().getSelectedPositions()) {
-						c.moveToPosition(pos);
-						String account = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ACCOUNT));
-						String jid = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_JID));
-						(new RemoveContactTask(BareJID.bareJIDInstance(account),
-											   BareJID.bareJIDInstance(jid))).execute();
-					}
-
-					mode.finish();
-				}).setNegativeButton(R.string.no, null).show();
-
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	@Override
 	public void onAttach(Context context) {
 		this.sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
 
@@ -143,12 +124,6 @@ public class RosterItemFragment
 		super.onCreate(savedInstanceState);
 		this.searchActionMode = new SearchActionMode(getActivity(), txt -> refreshRoster());
 		setHasOptionsMenu(true);
-	}
-
-	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.roster_context, menu);
-		return true;
 	}
 
 	@Override
@@ -250,6 +225,43 @@ public class RosterItemFragment
 		refreshRoster();
 	}
 
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage(R.string.roster_delete_contact).setPositiveButton(R.string.yes, (dialog, which) -> {
+
+					final Cursor c = adapter.getCursor();
+					for (int pos : getMultiSelector().getSelectedPositions()) {
+						c.moveToPosition(pos);
+						String account = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ACCOUNT));
+						String jid = c.getString(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_JID));
+						(new RemoveContactTask(BareJID.bareJIDInstance(account),
+											   BareJID.bareJIDInstance(jid))).execute();
+					}
+
+					mode.finish();
+				}).setNegativeButton(R.string.no, null).show();
+
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.roster_context, menu);
+		return true;
+	}
+
+	@Override
+	protected void updateActionMode(ActionMode actionMode) {
+		final int count = mMultiSelector.getSelectedPositions().size();
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.roster_selected, count, count));
+	}
+
 	private void refreshRoster() {
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
 			String txt = searchActionMode.getSearchText();
@@ -258,10 +270,23 @@ public class RosterItemFragment
 		}
 	}
 
-	@Override
-	protected void updateActionMode(ActionMode actionMode) {
-		final int count = mMultiSelector.getSelectedPositions().size();
-		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.roster_selected, count, count));
+	private String enabledAccounts() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("'-'");
+		try {
+			Collection<JaxmppCore> accounts = mConnection.getService().getMultiJaxmpp().get();
+			for (JaxmppCore account : accounts) {
+				Boolean disabled = (Boolean) account.getSessionObject().getUserProperty(ACCOUNT_TMP_DISABLED_KEY);
+				if (disabled == null || disabled) {
+					continue;
+				}
+				sb.append(",");
+				sb.append("'").append(account.getSessionObject().getUserBareJid().toString()).append("'");
+			}
+		} catch (Exception e) {
+			Log.wtf(TAG, "Cannot prepare list of active accounts.", e);
+		}
+		return sb.toString();
 	}
 
 	private class DBUpdateTask
@@ -293,6 +318,12 @@ public class RosterItemFragment
 				selection += " AND (" + DatabaseContract.RosterItemsCache.FIELD_NAME + " like ? OR " +
 						DatabaseContract.RosterItemsCache.FIELD_JID + " like ?" + " )";
 				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
+			}
+
+			String enabledAccounts = enabledAccounts();
+			if (enabledAccounts != null) {
+				selection +=
+						" AND (" + DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " IN (" + enabledAccounts + "))";
 			}
 
 			String sort;
