@@ -92,7 +92,6 @@ import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
-import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.*;
 import tigase.jaxmpp.core.client.xmpp.utils.delay.XmppDelay;
 import tigase.jaxmpp.j2se.J2SEPresenceStore;
@@ -777,7 +776,7 @@ public class XMPPService
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
 								jaxmpp.getSessionObject().setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, onConnectTasks);
-								final String actionId = UIDGenerator.next() + "-" + System.currentTimeMillis();
+								final String actionId = UIDGenerator.next() ;
 								jaxmpp.getSessionObject()
 										.setProperty(SessionObject.Scope.session,
 													 CheckConnectionTask.LOGIN_ACTION_ID_KEY, actionId);
@@ -872,7 +871,6 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new VCardModule());
 		jaxmpp.getModulesManager().register(new AdHocCommansModule());
 		jaxmpp.getModulesManager().register(new PushNotificationModule());
-		jaxmpp.getModulesManager().register(new MessageArchivingModule());
 		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
 		jaxmpp.getModulesManager().register(new HttpFileUploadModule());
 		jaxmpp.getModulesManager().register(new JingleModule(jaxmpp.getContext()));
@@ -1272,8 +1270,7 @@ public class XMPPService
 						jaxmpp.getModule(StreamManagementModule.class).request(false);
 					}
 				} catch (JaxmppException ex) {
-					Log.e(TAG, "error sending ACK for = " + jaxmpp.getSessionObject().getUserBareJid().toString(),
-						  ex);
+					Log.e(TAG, "error sending ACK for = " + jaxmpp.getSessionObject().getUserBareJid().toString(), ex);
 				}
 			}
 		});
@@ -1782,17 +1779,8 @@ public class XMPPService
 		@Override
 		public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp,
 										  Message message) throws JaxmppException {
-			final BareJID myJID = sessionObject.getUserBareJid();
-			final JID msgFrom = message.getFrom();
-			final JID msgTo = message.getTo();
-
-			final JID chatJID;
-
-			if (!myJID.equals(msgFrom.getBareJid())) {
-				chatJID = msgFrom;
-			} else if (!myJID.equals(msgTo.getBareJid())) {
-				chatJID = msgTo;
-			} else {
+			final JID chatJID = getChatJID(sessionObject.getUserBareJid(), message.getFrom(), message.getTo());
+			if (chatJID == null) {
 				Log.i(TAG, "Cannot process MAM message: " + message.getAsString());
 				return;
 			}
@@ -1806,7 +1794,22 @@ public class XMPPService
 						.createChat(message.getFrom());
 			}
 
+			String bd = message.getBody();
+			if (bd.startsWith("Po prostu ")) {
+				System.out.println("!!!!!!!!");
+			}
+
 			boolean stored = storeMessage(sessionObject, chat, message, timestamp);
+		}
+
+		private JID getChatJID(final BareJID myJID, final JID msgFrom, final JID msgTo) {
+			if (!myJID.equals(msgFrom.getBareJid())) {
+				return msgFrom;
+			} else if (!myJID.equals(msgTo.getBareJid())) {
+				return msgTo;
+			} else {
+				return null;
+			}
 		}
 	}
 

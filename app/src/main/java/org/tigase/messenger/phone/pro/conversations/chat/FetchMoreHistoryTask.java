@@ -62,7 +62,8 @@ public class FetchMoreHistoryTask
 		q.setWith(this.jid);
 
 		final RSM rsm = new RSM();
-		final String queryId = UIDGenerator.next() + UIDGenerator.next() + UIDGenerator.next();
+		rsm.setLastPage(true);
+		final String queryId = UIDGenerator.next();
 		try {
 			mam.queryItems(q, queryId, rsm, new MessageArchiveManagementModule.ResultCallback() {
 				@Override

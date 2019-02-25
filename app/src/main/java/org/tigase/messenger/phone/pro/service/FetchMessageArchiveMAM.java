@@ -8,18 +8,14 @@ import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
-import tigase.jaxmpp.android.Jaxmpp;
+import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.UIDGenerator;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.xep0136.Chat;
-import tigase.jaxmpp.core.client.xmpp.modules.xep0136.Criteria;
-import tigase.jaxmpp.core.client.xmpp.modules.xep0136.MessageArchivingModule;
-import tigase.jaxmpp.core.client.xmpp.modules.xep0136.ResultSet;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 import tigase.jaxmpp.core.client.xmpp.utils.RSM;
 
@@ -29,10 +25,14 @@ import java.util.Date;
 public class FetchMessageArchiveMAM
 		implements Runnable {
 
+	private final static String TAG = "MAMFetcher";
+
 	private final SessionObject sessionObject;
 	private final XMPPService xmppService;
 	private Account account;
+	private JaxmppCore jaxmpp;
 	private AccountManager mAccountManager;
+	private MessageArchiveManagementModule mam;
 	private Date startDate;
 
 	public FetchMessageArchiveMAM(XMPPService xmppService, SessionObject sessionObject) {
@@ -59,187 +59,52 @@ public class FetchMessageArchiveMAM
 				return;
 			}
 
-			final Jaxmpp jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
-			final MessageArchivingModule mam = jaxmpp.getModule(MessageArchivingModule.class);
+			this.jaxmpp = xmppService.multiJaxmpp.get(sessionObject);
+			this.mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
 
-			Criteria cr = new Criteria().setStart(startDate);
-
-			mam.listCollections(cr, new MessageArchivingModule.CollectionAsyncCallback() {
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					Log.i("MAM", "ERROR " + error);
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					Log.i("MAM", "TIMEOUT");
-				}
-
-				@Override
-				protected void onCollectionReceived(ResultSet<Chat> chats) throws XMLException {
-					Log.i("MAM", "SUCCESS");
-					for (Chat chat : chats.getItems()) {
-						fetchHistory(jaxmpp, chat, startDate);
-					}
-				}
-			});
-
-//			mam.retrieveCollection(cr, new MessageArchivingModule.ItemsAsyncCallback() {
-//				@Override
-//				protected void onItemsReceived(ChatResultSet chat) throws XMLException {
-//					Log.i("MAM", "SUCCESS");
-//
-//					chat.
-//
-//				}
-//
-//				@Override
-//				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-//					Log.i("MAM", "ERROR " + error);
-//				}
-//
-//				@Override
-//				public void onTimeout() throws JaxmppException {
-//					Log.i("MAM", "TIMEOUT");
-//				}
-//			});
-
-//			try (Cursor cursor = xmppService.getContentResolver()
-//					.query(ChatProvider.OPEN_CHATS_URI, cols, null, null, null)) {
-//				while (cursor.moveToNext()) {
-//					String acc = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_ACCOUNT));
-//					if (!acc.equals(sessionObject.getUserBareJid().toString())) {
-//						continue;
-//					}
-//					String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID));
-//					System.out.println(acc + ":  " + cursor);
-//
-//					Criteria crit = new Criteria().setWith(JID.jidInstance(jid));
-//
-//					mam.listCollections(crit, new MessageArchivingModule.CollectionAsyncCallback() {
-//						@Override
-//						protected void onCollectionReceived(ResultSet<Chat> vcard) throws XMLException {
-//							Log.i("MAM", "SUCCESS");
-//						}
-//
-//						@Override
-//						public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-//								throws JaxmppException {
-//							Log.i("MAM", "ERROR " + error);
-//						}
-//
-//						@Override
-//						public void onTimeout() throws JaxmppException {
-//							Log.i("MAM", "TIMEOUT");
-//						}
-//					});
-//
-//				}
-//			}
-
-			// get archive for each
-
+			fetch(null);
 		} catch (Exception e) {
 			Log.e(XMPPService.TAG, "Exception while Fetching Messages Archive on connect for account " +
 					sessionObject.getUserBareJid().toString());
 		}
 	}
 
-	private void fetchHistory(final Jaxmpp jaxmpp, final Chat chat, Date date) {
-		try {
-			final MessageModule mm = jaxmpp.getModule(MessageModule.class);
-			final MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
+	private void fetch(final String beforeId) throws JaxmppException {
+		final String queryId = "mam-" + UIDGenerator.next();
 
-			MessageArchiveManagementModule.Query q = new MessageArchiveManagementModule.Query();
-			q.setStart(date);
-			q.setWith(chat.getWithJid());
+		final RSM rsm = new RSM();
+		rsm.setMax(100);
 
-			final RSM rsm = new RSM();
-			final String queryId = UIDGenerator.next() + UIDGenerator.next() + UIDGenerator.next();
-
-			mam.queryItems(q, queryId, rsm, new MessageArchiveManagementModule.ResultCallback() {
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					Log.i("MAM", "ERROR on retrieve " + error);
-				}
-
-				@Override
-				public void onSuccess(String queryid, boolean complete, RSM rsm) throws JaxmppException {
-					Log.i("MAM", "Done");
-				}
-
-				@Override
-				public void onTimeout() throws JaxmppException {
-					Log.i("MAM", "TIMEOUT on retrieve ");
-
-				}
-			});
-
-//
-//			mam.retrieveCollection(cr, new MessageArchivingModule.ItemsAsyncCallback() {
-//				@Override
-//				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-//					Log.i("MAM", "ERROR on retrieve " + error);
-//
-//				}
-//
-//				@Override
-//				protected void onItemsReceived(final ChatResultSet chatItems) throws XMLException {
-//					Iterator<ChatItem> it = chatItems.getItems().iterator();
-//					if (it.hasNext()) {
-//						it.next();
-//					}
-//					try {
-//						final tigase.jaxmpp.core.client.xmpp.modules.chat.Chat co = getOrCreate(mm, chat);
-//						while (it.hasNext()) {
-//							final ChatItem chatItem = it.next();
-//							try {
-//								String author;
-//								final ContentValues values = new ContentValues();
-//								if (chatItem.getType() == ChatItem.Type.FROM) {
-//									author = chat.getWithJid().toString();
-//									values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-//											   DatabaseContract.ChatHistory.STATE_INCOMING);
-//								} else {
-//									author = sessionObject.getUserBareJid().toString();
-//									values.put(DatabaseContract.ChatHistory.FIELD_STATE,
-//											   DatabaseContract.ChatHistory.STATE_OUT_SENT);
-//								}
-//
-//								values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, author);
-//								values.put(DatabaseContract.ChatHistory.FIELD_JID, chat.getWithJid().toString());
-//								values.put(DatabaseContract.ChatHistory.FIELD_TIMESTAMP, chatItem.getDate().getTime());
-//								values.put(DatabaseContract.ChatHistory.FIELD_BODY, chatItem.getBody());
-//								values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT,
-//										   sessionObject.getUserBareJid().toString());
-//
-//								Uri uri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" + chat
-//										.getWithJid()
-//										.getBareJid());
-//
-//								uri = xmppService.getContentResolver().insert(uri, values);
-//								xmppService.getApplicationContext()
-//										   .getContentResolver()
-//										   .notifyChange(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI,
-//																					co.getId()), null);
-//							} catch (Exception e) {
-//								Log.e("MAM", "Cannot insert message to history?", e);
-//							}
-//						}
-//					} catch (Exception e) {
-//						Log.e("MAM", "Cannot fetch?", e);
-//					}
-//				}
-//
-//				@Override
-//				public void onTimeout() throws JaxmppException {
-//					Log.i("MAM", "TIMEOUT on retrieve");
-//				}
-//			});
-		} catch (Exception e) {
-			Log.e(XMPPService.TAG, "Exception while Fetching Messages Archive on connect for account " +
-					sessionObject.getUserBareJid().toString());
+		if (beforeId == null) {
+			rsm.setLastPage(true);
+		} else {
+			rsm.setBefore(beforeId);
 		}
+
+		final MessageArchiveManagementModule.Query query = new MessageArchiveManagementModule.Query();
+		query.setStart(startDate);
+
+		mam.queryItems(query, queryId, rsm, new MessageArchiveManagementModule.ResultCallback() {
+			@Override
+			public void onSuccess(String queryid, boolean complete, RSM rsm) throws JaxmppException {
+				Log.i(TAG, "Query " + queryId + " complete=" + complete + "; first=" + rsm.getFirst() + "; last=" +
+						rsm.getLast() + "; count=" + rsm.getCount());
+
+				if (!complete) {
+					fetch(rsm.getLast());
+				}
+			}
+
+			@Override
+			public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
+				Log.i(TAG, "Query " + queryId + " error:" + error);
+			}
+
+			@Override
+			public void onTimeout() throws JaxmppException {
+				Log.i(TAG, "Query " + queryId + " timeout.");
+			}
+		});
 	}
 
 	private Date getLastMessageDate() {
