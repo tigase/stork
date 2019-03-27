@@ -67,74 +67,6 @@ public class MucItemFragment
 	};
 	private Uri uri;
 
-	private String grabContent(List<Integer> selectedPositions) {
-		StringBuilder sb = new StringBuilder();
-
-		final Cursor cursor = adapter.getCursor();
-		for (Integer position : selectedPositions) {
-			if (!cursor.moveToPosition(position)) {
-				throw new IllegalStateException("couldn't move cursor to position " + position);
-			}
-			final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-			final String nickname = cursor.getString(
-					cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
-			final long time = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
-			final String timeStr = DateUtils.formatDateTime(getContext(), time,
-															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
-																	DateUtils.FORMAT_SHOW_TIME);
-			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
-			if (selectedPositions.size() == 1) {
-				sb.append(body).append('\n');
-			} else {
-				sb.append("[").append(timeStr).append("] ");
-
-				if (nickname != null) {
-					sb.append(nickname).append(": ");
-				}
-				sb.append(body);
-				sb.append('\n');
-			}
-		}
-		return sb.toString();
-	}
-
-	@Override
-	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_delete:
-				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(
-						getActivity());
-				builder.setMessage(R.string.delete_chat_item_question)
-						.setPositiveButton(R.string.yes, (dialog, which) -> {
-							for (Integer pos : getMultiSelector().getSelectedPositions()) {
-								long id = adapter.getItemId(pos);
-								getContext().getContentResolver()
-										.delete(ChatProvider.CHAT_HISTORY_URI,
-												DatabaseContract.ChatHistory.FIELD_ID + "=?",
-												new String[]{String.valueOf(id)});
-							}
-							getContext().getContentResolver().notifyChange(uri, null);
-							mode.finish();
-						})
-						.setNegativeButton(R.string.no, null)
-						.show();
-
-				return true;
-			case R.id.ac_copy:
-				String body = grabContent(getMultiSelector().getSelectedPositions());
-				ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
-						.getSystemService(Context.CLIPBOARD_SERVICE);
-				ClipData clip = ClipData.newPlainText("Messages from room " + room.getRoomJid(), body);
-
-				clipboard.setPrimaryClip(clip);
-
-				mode.finish();
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -154,12 +86,6 @@ public class MucItemFragment
 	}
 
 	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
-		return true;
-	}
-
-	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.chatitem_fragment, menu);
 	}
@@ -170,12 +96,12 @@ public class MucItemFragment
 							 @Nullable Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_chatitem_list, container, false);
 
-		recyclerView = (RecyclerView) root.findViewById(R.id.chat_list);
-		message = (EditText) root.findViewById(R.id.messageText);
-		sendButton = (ImageView) root.findViewById(R.id.send_button);
+		recyclerView = root.findViewById(R.id.chat_list);
+		message = root.findViewById(R.id.messageText);
+		sendButton = root.findViewById(R.id.send_button);
 		sendButton.setOnClickListener(view -> send());
 
-		final FloatingActionButton floatingActionButton = (FloatingActionButton) root.findViewById(R.id.scroll_down);
+		final FloatingActionButton floatingActionButton = root.findViewById(R.id.scroll_down);
 		floatingActionButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -184,7 +110,7 @@ public class MucItemFragment
 		});
 		floatingActionButton.hide();
 
-		recyclerView = (RecyclerView) root.findViewById(R.id.chat_list);
+		recyclerView = root.findViewById(R.id.chat_list);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			this.recyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
 				@Override
@@ -254,10 +180,6 @@ public class MucItemFragment
 		}
 	}
 
-	private void refreshChatHistory() {
-		(new MucItemFragment.DBUpdateTask()).execute();
-	}
-
 	void send() {
 		String body = this.message.getText().toString();
 		if (body == null || body.trim().isEmpty()) {
@@ -274,18 +196,96 @@ public class MucItemFragment
 		getContext().startService(intent);
 	}
 
-	private void setRoom(Room room) {
-		this.room = room;
-		message.setEnabled(room != null);
-		if (adapter != null) {
-			adapter.setOwnNickname(room.getNickname());
+	@Override
+	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_delete:
+				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(
+						getActivity());
+				builder.setMessage(R.string.delete_chat_item_question)
+						.setPositiveButton(R.string.yes, (dialog, which) -> {
+							for (Integer pos : getMultiSelector().getSelectedPositions()) {
+								long id = adapter.getItemId(pos);
+								getContext().getContentResolver()
+										.delete(ChatProvider.CHAT_HISTORY_URI,
+												DatabaseContract.ChatHistory.FIELD_ID + "=?",
+												new String[]{String.valueOf(id)});
+							}
+							getContext().getContentResolver().notifyChange(uri, null);
+							mode.finish();
+						})
+						.setNegativeButton(R.string.no, null)
+						.show();
+
+				return true;
+			case R.id.ac_copy:
+				String body = grabContent(getMultiSelector().getSelectedPositions());
+				ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
+						.getSystemService(Context.CLIPBOARD_SERVICE);
+				ClipData clip = ClipData.newPlainText("Messages from room " + room.getRoomJid(), body);
+
+				clipboard.setPrimaryClip(clip);
+
+				mode.finish();
+				return true;
+			default:
+				return false;
 		}
+	}
+
+	@Override
+	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
+		return true;
 	}
 
 	@Override
 	protected void updateActionMode(ActionMode actionMode) {
 		final int count = mMultiSelector.getSelectedPositions().size();
 		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
+	}
+
+	private String grabContent(List<Integer> selectedPositions) {
+		StringBuilder sb = new StringBuilder();
+
+		final Cursor cursor = adapter.getCursor();
+		for (Integer position : selectedPositions) {
+			if (!cursor.moveToPosition(position)) {
+				throw new IllegalStateException("couldn't move cursor to position " + position);
+			}
+			final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+			final String nickname = cursor.getString(
+					cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
+			final long time = cursor.getLong(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_TIMESTAMP));
+			final String timeStr = DateUtils.formatDateTime(getContext(), time,
+															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
+																	DateUtils.FORMAT_SHOW_TIME);
+			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
+			if (selectedPositions.size() == 1) {
+				sb.append(body).append('\n');
+			} else {
+				sb.append("[").append(timeStr).append("] ");
+
+				if (nickname != null) {
+					sb.append(nickname).append(": ");
+				}
+				sb.append(body);
+				sb.append('\n');
+			}
+		}
+		return sb.toString();
+	}
+
+	private void refreshChatHistory() {
+		(new MucItemFragment.DBUpdateTask()).execute();
+	}
+
+	private void setRoom(Room room) {
+		this.room = room;
+		message.setEnabled(room != null);
+		if (adapter != null) {
+			adapter.setOwnNickname(room == null ? null : room.getNickname());
+		}
 	}
 
 	private class DBUpdateTask

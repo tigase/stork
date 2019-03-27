@@ -52,52 +52,6 @@ public class JoinMucActivity
 		}
 	};
 
-	private void fillNickname(int i) {
-		if (i < this.accountsList.size()) {
-			BareJID aJid = accountsList.get(i);
-			SessionObject so = mService.getJaxmpp(aJid).getSessionObject();
-			String nn = so.getProperty(SessionObject.NICKNAME);
-			mNickname.setText(nn == null ? aJid.getLocalpart() : nn);
-		}
-	}
-
-	private void onClickJoin() {
-		final BareJID account = BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString());
-		final BareJID jid = BareJID.bareJIDInstance(mRoomJid.getText().toString());
-		final String nickname = mNickname.getText().toString();
-
-		if (jid.getLocalpart() == null || jid.getDomain() == null || jid.getLocalpart().trim().isEmpty() ||
-				jid.getDomain().trim().isEmpty()) {
-			new AlertDialog.Builder(JoinMucActivity.this).setMessage(
-					"Invalid room address, please check and try again.")
-					.setPositiveButton(android.R.string.ok, null)
-					.show();
-			return;
-		}
-
-		(new JoinToRoomTask(account, jid, nickname)).execute();
-
-		(new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				final MucModule mucModule = mService.getJaxmpp(account).getModule(MucModule.class);
-				try {
-					mucModule.join(jid.getLocalpart(), jid.getDomain(), nickname);
-				} catch (JaxmppException e) {
-					Log.e("JoinMuc", "Can't join to MUC", e);
-				}
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(Void aVoid) {
-				super.onPostExecute(aVoid);
-				JoinMucActivity.this.finish();
-			}
-		}).execute();
-
-	}
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -136,6 +90,55 @@ public class JoinMucActivity
 	protected void onStop() {
 		super.onStop();
 		unbindService(mServiceConnection);
+	}
+
+	private void fillNickname(int i) {
+		if (i < this.accountsList.size()) {
+			BareJID aJid = accountsList.get(i);
+			SessionObject so = mService.getJaxmpp(aJid).getSessionObject();
+			String nn = so.getProperty(SessionObject.NICKNAME);
+			mNickname.setText(nn == null ? aJid.getLocalpart() : nn);
+		}
+	}
+
+	private void onClickJoin() {
+		if (mAccountSelector.getSelectedItem() == null) {
+			return;
+		}
+		final BareJID account = BareJID.bareJIDInstance(mAccountSelector.getSelectedItem().toString());
+		final BareJID jid = BareJID.bareJIDInstance(mRoomJid.getText().toString());
+		final String nickname = mNickname.getText().toString();
+
+		if (jid.getLocalpart() == null || jid.getDomain() == null || jid.getLocalpart().trim().isEmpty() ||
+				jid.getDomain().trim().isEmpty()) {
+			new AlertDialog.Builder(JoinMucActivity.this).setMessage(
+					"Invalid room address, please check and try again.")
+					.setPositiveButton(android.R.string.ok, null)
+					.show();
+			return;
+		}
+
+		(new JoinToRoomTask(account, jid, nickname)).execute();
+
+		(new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				final MucModule mucModule = mService.getJaxmpp(account).getModule(MucModule.class);
+				try {
+					mucModule.join(jid.getLocalpart(), jid.getDomain(), nickname);
+				} catch (JaxmppException e) {
+					Log.e("JoinMuc", "Can't join to MUC", e);
+				}
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Void aVoid) {
+				super.onPostExecute(aVoid);
+				JoinMucActivity.this.finish();
+			}
+		}).execute();
+
 	}
 
 	private class JoinToRoomTask

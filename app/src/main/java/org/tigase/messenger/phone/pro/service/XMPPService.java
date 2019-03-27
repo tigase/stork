@@ -776,7 +776,7 @@ public class XMPPService
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
 								jaxmpp.getSessionObject().setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, onConnectTasks);
-								final String actionId = UIDGenerator.next() ;
+								final String actionId = UIDGenerator.next();
 								jaxmpp.getSessionObject()
 										.setProperty(SessionObject.Scope.session,
 													 CheckConnectionTask.LOGIN_ACTION_ID_KEY, actionId);
@@ -2276,6 +2276,9 @@ public class XMPPService
 			Log.i(TAG, "Rejoining to MUC Rooms. Account=" + sessionObject.getUserBareJid());
 			try {
 				Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
+				if (jaxmpp == null) {
+					return;
+				}
 				MucModule mucModule = jaxmpp.getModule(MucModule.class);
 				for (Room room : mucModule.getRooms()) {
 					Log.d(TAG, "Room " + room.getRoomJid() + " is in state " + room.getState());

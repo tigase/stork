@@ -106,17 +106,6 @@ public class MainActivity
 	// return true;
 	// }
 
-	private void doPresenceChange(long presenceId) {
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = sharedPref.edit();
-		editor.putLong("presence", presenceId);
-		editor.commit();
-
-		Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
-		action.putExtra("presence", presenceId);
-		sendBroadcast(action);
-	}
-
 	@Override
 	public void onAddChatClick() {
 		switchMainFragment(R.id.nav_roster);
@@ -124,11 +113,34 @@ public class MainActivity
 
 	@Override
 	public void onBackPressed() {
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		if (drawer.isDrawerOpen(GravityCompat.START)) {
 			drawer.closeDrawer(GravityCompat.START);
 		} else {
 			super.onBackPressed();
+		}
+	}
+
+	@SuppressWarnings("StatementWithEmptyBody")
+	@Override
+	public boolean onNavigationItemSelected(MenuItem menuItem) {
+		// Handle navigation view item clicks here.
+		int id = menuItem.getItemId();
+
+		switchMainFragment(id);
+
+		DrawerLayout drawer = findViewById(R.id.drawer_layout);
+		drawer.closeDrawer(GravityCompat.START);
+		return true;
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		switch (requestCode) {
+			case STORAGE_ACCESS_REQUEST: {
+
+			}
 		}
 	}
 
@@ -137,7 +149,7 @@ public class MainActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		this.toolbar = (Toolbar) findViewById(R.id.toolbar);
+		this.toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		/*
@@ -150,20 +162,20 @@ public class MainActivity
 		 * .setAction("Action", null).show(); } });
 		 */
 
-		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		final DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
 																 R.string.navigation_drawer_close);
 		drawer.setDrawerListener(toggle);
 		toggle.syncState();
 
-		final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		final NavigationView navigationView = findViewById(R.id.nav_view);
 		navigationView.setNavigationItemSelectedListener(this);
 		this.navigationMenu = navigationView.getMenu();
 
 		View headerLayout = navigationView.getHeaderView(0);
-		this.statusSelector = (Spinner) headerLayout.findViewById(R.id.status_selector);
+		this.statusSelector = headerLayout.findViewById(R.id.status_selector);
 
-		this.connectionStatus = (TextView) headerLayout.findViewById(R.id.connection_status);
+		this.connectionStatus = headerLayout.findViewById(R.id.connection_status);
 
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		switch (sharedPref.getString("menu", "roster")) {
@@ -209,33 +221,23 @@ public class MainActivity
 		} else {
 			//do here
 		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		boolean itemVisible = sharedPref.getBoolean("nav_connectionstatus", false);
+
+		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
+		conStat.setVisible(itemVisible);
 
 		Intent ssIntent = new Intent(this, XMPPService.class);
 		ssIntent.setAction(CONNECT_ALL);
 		startService(ssIntent);
-	}
 
-	@SuppressWarnings("StatementWithEmptyBody")
-	@Override
-	public boolean onNavigationItemSelected(MenuItem menuItem) {
-		// Handle navigation view item clicks here.
-		int id = menuItem.getItemId();
-
-		switchMainFragment(id);
-
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawer.closeDrawer(GravityCompat.START);
-		return true;
-	}
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		switch (requestCode) {
-			case STORAGE_ACCESS_REQUEST: {
-
-			}
-		}
+		updateConnectionStatus();
 	}
 
 	// @Override
@@ -254,19 +256,6 @@ public class MainActivity
 	// }
 
 	@Override
-	protected void onResume() {
-		super.onResume();
-
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-		boolean itemVisible = sharedPref.getBoolean("nav_connectionstatus", false);
-
-		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
-		conStat.setVisible(itemVisible);
-
-		updateConnectionStatus();
-	}
-
-	@Override
 	protected void onXMPPServiceConnected() {
 		getServiceConnection().getService()
 				.getMultiJaxmpp()
@@ -283,6 +272,17 @@ public class MainActivity
 	@Override
 	protected void onXMPPServiceDisconnected() {
 		getServiceConnection().getService().getMultiJaxmpp().remove(this.statusHandler);
+	}
+
+	private void doPresenceChange(long presenceId) {
+		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putLong("presence", presenceId);
+		editor.commit();
+
+		Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
+		action.putExtra("presence", presenceId);
+		sendBroadcast(action);
 	}
 
 	private void setStatusText(final String text, final int backgroundColor, final int textColor) {

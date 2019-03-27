@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -51,46 +52,30 @@ public class EditContactActivity
 		}
 	};
 
-	private void onAddButtonClick() {
-		mContactXMPPID.setError(null);
-		BareJID jid;
-		try {
-			if (mContactXMPPID.getText().toString().isEmpty()) {
-				mContactXMPPID.setError(getString(R.string.contact_xmppid_invalid));
-				return;
-			}
-			jid = BareJID.bareJIDInstance(mContactXMPPID.getText().toString());
-		} catch (Exception e) {
-			mContactXMPPID.setError(getString(R.string.contact_xmppid_invalid));
-			return;
-		}
-		if (mService != null) {
-			AddContactTask task = new AddContactTask(this, mService, BareJID.bareJIDInstance(
-					mAccountSelector.getSelectedItem().toString()), jid, mContactName.getText().toString());
-			task.execute();
-		}
-	}
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_contact);
 
-		mAccountSelector = (Spinner) findViewById(R.id.contact_account);
-		mContactXMPPID = (EditText) findViewById(R.id.contact_xmppid);
-		mContactName = (EditText) findViewById(R.id.contact_display_name);
-		progressBar = (ProgressBar) findViewById(R.id.contact_progress);
+		mAccountSelector = findViewById(R.id.contact_account);
+		mContactXMPPID = findViewById(R.id.contact_xmppid);
+		mContactName = findViewById(R.id.contact_display_name);
+		progressBar = findViewById(R.id.contact_progress);
 
-		mContactXMPPID.setOnEditorActionListener((textView, i, keyEvent) -> {
-			onAddButtonClick();
-			return false;
-		});
-		mContactName.setOnEditorActionListener((textView, i, keyEvent) -> {
-			onAddButtonClick();
-			return false;
-		});
+		if (mContactXMPPID != null) {
+			mContactXMPPID.setOnEditorActionListener((textView, i, keyEvent) -> {
+				onAddButtonClick();
+				return false;
+			});
+		}
+		if (mContactName != null) {
+			mContactName.setOnEditorActionListener((textView, i, keyEvent) -> {
+				onAddButtonClick();
+				return false;
+			});
+		}
 
-		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		Button contactAddButton = findViewById(R.id.contact_add_button);
 		contactAddButton.setOnClickListener(view -> onAddButtonClick());
 
 		this.sa = new ArrayAdapter<>(getBaseContext(), R.layout.account_list_item, R.id.account_name, accountsList);
@@ -108,6 +93,30 @@ public class EditContactActivity
 	protected void onStop() {
 		super.onStop();
 		unbindService(mServiceConnection);
+	}
+
+	private void onAddButtonClick() {
+		mContactXMPPID.setError(null);
+		BareJID jid;
+		try {
+			if (mContactXMPPID.getText().toString().isEmpty()) {
+				mContactXMPPID.setError(getString(R.string.contact_xmppid_invalid));
+				return;
+			}
+			if (mAccountSelector.getSelectedItem() == null) {
+				return;
+			}
+			jid = BareJID.bareJIDInstance(mContactXMPPID.getText().toString());
+		} catch (Exception e) {
+			mContactXMPPID.setError(getString(R.string.contact_xmppid_invalid));
+			return;
+		}
+		if (mService != null) {
+			Editable v = mContactName.getText();
+			AddContactTask task = new AddContactTask(this, mService, BareJID.bareJIDInstance(
+					mAccountSelector.getSelectedItem().toString()), jid, v == null ? null : v.toString());
+			task.execute();
+		}
 	}
 
 	private static class AddContactTask

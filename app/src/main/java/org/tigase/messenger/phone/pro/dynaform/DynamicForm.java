@@ -10,6 +10,7 @@ import android.widget.*;
 import cz.destil.settleup.gui.MultiSpinner;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xml.Element;
+import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.*;
 
@@ -31,6 +32,88 @@ public class DynamicForm
 
 	public DynamicForm(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
+	}
+
+	public void clear() {
+		removeAllViews();
+		form = null;
+		this.fields.clear();
+	}
+
+	public JabberDataElement getJabberDataElement() throws XMLException {
+		for (Map.Entry<String, View> entry : this.fields.entrySet()) {
+			final AbstractField<?> field = form.getField(entry.getKey());
+			if (field instanceof ListMultiField) {
+				MultiSpinner editor = (MultiSpinner) entry.getValue();
+				((ListMultiField) field).setFieldValue(editor.getCheckedItems().toArray(new String[]{}));
+				throw new RuntimeException("Unsupported field: " + field);
+			} else if (field instanceof ListSingleField) {
+				Spinner editor = (Spinner) entry.getValue();
+				String value = editor.getSelectedItem() != null ? editor.getSelectedItem().toString() : null;
+				((ListSingleField) field).setFieldValue(value);
+			} else if (field instanceof TextMultiField) {
+				EditText editor = (EditText) entry.getValue();
+				((TextMultiField) field).setFieldValue(getTextValues(editor));
+			} else if (field instanceof JidMultiField) {
+				EditText editor = (EditText) entry.getValue();
+				((JidMultiField) field).setFieldValue(getJidValues(editor));
+			} else if (field instanceof TextSingleField) {
+				EditText editor = (EditText) entry.getValue();
+				((TextSingleField) field).setFieldValue(editor.getText().toString());
+			} else if (field instanceof TextPrivateField) {
+				EditText editor = (EditText) entry.getValue();
+				((TextPrivateField) field).setFieldValue(editor.getText().toString());
+			} else if (field instanceof JidSingleField) {
+				EditText editor = (EditText) entry.getValue();
+				((JidSingleField) field).setFieldValue(JID.jidInstance(editor.getText().toString()));
+			} else if (field instanceof BooleanField) {
+				Switch editor = (Switch) entry.getValue();
+				((BooleanField) field).setFieldValue(editor.isChecked());
+			} else {
+				throw new RuntimeException("Unsupported field: " + field);
+			}
+		}
+
+		return form;
+	}
+
+	public void setJabberDataElement(final JabberDataElement form) {
+		clear();
+		try {
+			this.form = new JabberDataElement(ElementFactory.create(form));
+			if (form.getInstructions() != null) {
+				addInstruction(form.getInstructions());
+			}
+			final ArrayList<AbstractField<?>> fields = form.getFields();
+			for (AbstractField<?> field : fields) {
+				if (field instanceof ListMultiField) {
+					addListMultiField((ListMultiField) field);
+				} else if (field instanceof ListSingleField) {
+					addListSingleField((ListSingleField) field);
+				} else if (field instanceof FixedField) {
+					addFixedField((FixedField) field);
+				} else if (field instanceof TextMultiField) {
+					addTextMultiField((TextMultiField) field);
+				} else if (field instanceof JidMultiField) {
+					addJidMultiField((JidMultiField) field);
+				} else if (field instanceof TextSingleField) {
+					addTextSingleField((TextSingleField) field);
+				} else if (field instanceof TextPrivateField) {
+					addTextPrivateField((TextPrivateField) field);
+				} else if (field instanceof JidSingleField) {
+					addJidSingleField((JidSingleField) field);
+				} else if (field instanceof BooleanField) {
+					addBooleanField((BooleanField) field);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		} finally {
+			forceLayout();
+			refreshDrawableState();
+		}
 	}
 
 	private void addBooleanField(final BooleanField field) throws XMLException {
@@ -247,88 +330,6 @@ public class DynamicForm
 
 		this.fields.put(field.getVar(), editor);
 		addView(wrap(editor));
-	}
-
-	public void clear() {
-		removeAllViews();
-		form = null;
-		this.fields.clear();
-	}
-
-	public JabberDataElement getJabberDataElement() throws XMLException {
-		for (Map.Entry<String, View> entry : this.fields.entrySet()) {
-			final AbstractField<?> field = form.getField(entry.getKey());
-			if (field instanceof ListMultiField) {
-				MultiSpinner editor = (MultiSpinner) entry.getValue();
-				((ListMultiField) field).setFieldValue(editor.getCheckedItems().toArray(new String[]{}));
-				throw new RuntimeException("Unsupported field: " + field);
-			} else if (field instanceof ListSingleField) {
-				Spinner editor = (Spinner) entry.getValue();
-				String value = editor.getSelectedItem() != null ? editor.getSelectedItem().toString() : null;
-				((ListSingleField) field).setFieldValue(value);
-			} else if (field instanceof TextMultiField) {
-				EditText editor = (EditText) entry.getValue();
-				((TextMultiField) field).setFieldValue(getTextValues(editor));
-			} else if (field instanceof JidMultiField) {
-				EditText editor = (EditText) entry.getValue();
-				((JidMultiField) field).setFieldValue(getJidValues(editor));
-			} else if (field instanceof TextSingleField) {
-				EditText editor = (EditText) entry.getValue();
-				((TextSingleField) field).setFieldValue(editor.getText().toString());
-			} else if (field instanceof TextPrivateField) {
-				EditText editor = (EditText) entry.getValue();
-				((TextPrivateField) field).setFieldValue(editor.getText().toString());
-			} else if (field instanceof JidSingleField) {
-				EditText editor = (EditText) entry.getValue();
-				((JidSingleField) field).setFieldValue(JID.jidInstance(editor.getText().toString()));
-			} else if (field instanceof BooleanField) {
-				Switch editor = (Switch) entry.getValue();
-				((BooleanField) field).setFieldValue(editor.isChecked());
-			} else {
-				throw new RuntimeException("Unsupported field: " + field);
-			}
-		}
-
-		return form;
-	}
-
-	public void setJabberDataElement(final JabberDataElement form) {
-		clear();
-		this.form = form;
-		try {
-			if (form.getInstructions() != null) {
-				addInstruction(form.getInstructions());
-			}
-			final ArrayList<AbstractField<?>> fields = form.getFields();
-			for (AbstractField<?> field : fields) {
-				if (field instanceof ListMultiField) {
-					addListMultiField((ListMultiField) field);
-				} else if (field instanceof ListSingleField) {
-					addListSingleField((ListSingleField) field);
-				} else if (field instanceof FixedField) {
-					addFixedField((FixedField) field);
-				} else if (field instanceof TextMultiField) {
-					addTextMultiField((TextMultiField) field);
-				} else if (field instanceof JidMultiField) {
-					addJidMultiField((JidMultiField) field);
-				} else if (field instanceof TextSingleField) {
-					addTextSingleField((TextSingleField) field);
-				} else if (field instanceof TextPrivateField) {
-					addTextPrivateField((TextPrivateField) field);
-				} else if (field instanceof JidSingleField) {
-					addJidSingleField((JidSingleField) field);
-				} else if (field instanceof BooleanField) {
-					addBooleanField((BooleanField) field);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} finally {
-			forceLayout();
-			refreshDrawableState();
-		}
 	}
 
 	private JID[] getJidValues(EditText editor) {

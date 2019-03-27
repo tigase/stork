@@ -23,6 +23,7 @@ package org.tigase.messenger.phone.pro.account;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.app.ProgressDialog;
 import android.content.*;
@@ -55,6 +56,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
 import tigase.jaxmpp.core.client.xmpp.modules.auth.SaslModule;
 
+import java.lang.ref.WeakReference;
 import java.security.cert.X509Certificate;
 
 /**
@@ -128,6 +130,110 @@ public class LoginActivity
 				.show();
 	}
 
+	@Override
+	public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+		return new CursorLoader(this,
+								// Retrieve data rows for the device user's 'profile' contact.
+								Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
+													 ContactsContract.Contacts.Data.CONTENT_DIRECTORY),
+								ProfileQuery.PROJECTION,
+
+								// Select only email addresses.
+								ContactsContract.Contacts.Data.MIMETYPE + " = ?",
+								new String[]{ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE},
+
+								// Show primary email addresses first. Note that there won't be
+								// a primary email address if the user hasn't specified one.
+								ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> cursorLoader) {
+
+	}
+
+	/**
+	 * Callback received when a permissions request has been completed.
+	 */
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+										   @NonNull int[] grantResults) {
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_login);
+
+//		mActiveView = (Switch) findViewById(R.id.account_active);
+		mEmailSignInButton = findViewById(R.id.email_sign_in_button);
+
+		Button cancelButton = findViewById(R.id.cancel_button);
+		cancelButton.setOnClickListener(view -> finish());
+
+		mAccountManager = AccountManager.get(this);
+
+		// Set up the login form.
+		mXMPPIDView = findViewById(R.id.xmppid);
+
+		mPasswordView = findViewById(R.id.password);
+		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+				if (id == R.id.login || id == EditorInfo.IME_NULL) {
+					attemptLogin();
+					return true;
+				}
+				return false;
+			}
+		});
+
+		mResourceView = findViewById(R.id.resource);
+		mHostnameView = findViewById(R.id.host);
+
+		mNicknameView = findViewById(R.id.nickname);
+		mNicknameView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+				if (id == R.id.login || id == EditorInfo.IME_NULL) {
+					attemptLogin();
+					return true;
+				}
+				return false;
+			}
+		});
+		mEmailSignInButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				attemptLogin();
+			}
+		});
+
+//		mProgressView = findViewById(R.id.login_progress);
+
+		final String accountName = getAccountName(getIntent());
+		if (accountName != null) {
+			// edit existing account mode
+			Account account = AccountHelper.getAccount(mAccountManager, accountName);
+			mXMPPIDView.setEnabled(false);
+			mUpdateAccountMode = true;
+			mXMPPIDView.setText(account.name);
+			String tmp = mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE);
+			Log.i("LoginActivity", AccountsConstants.FIELD_ACTIVE + " = " + tmp);
+//			mActiveView.setChecked(Boolean.parseBoolean(tmp == null ? "true" : tmp));
+			mPasswordView.setText(mAccountManager.getPassword(account));
+			mHostnameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
+			mNicknameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME));
+			mResourceView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_RESOURCE));
+
+			mEmailSignInButton.setText(R.string.action_update_account);
+		}
+	}
+
 	/**
 	 * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
 	 * missing fields, etc.), the errors are presented and no actual login attempt is made.
@@ -183,7 +289,8 @@ public class LoginActivity
 						mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
 			}
 
-			mAuthTask = new UserLoginTask(skipLoginTest, xmppID, password, hostname, resource, nickname, active);
+			mAuthTask = new UserLoginTask(getApplicationContext(), LoginActivity.this, skipLoginTest, xmppID, password,
+										  hostname, resource, nickname, active);
 			mAuthTask.execute((Void) null);
 		}
 	}
@@ -207,110 +314,6 @@ public class LoginActivity
 		return email.contains("@");
 	}
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_login);
-
-//		mActiveView = (Switch) findViewById(R.id.account_active);
-		mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-
-		Button cancelButton = (Button) findViewById(R.id.cancel_button);
-		cancelButton.setOnClickListener(view -> finish());
-
-		mAccountManager = AccountManager.get(this);
-
-		// Set up the login form.
-		mXMPPIDView = (EditText) findViewById(R.id.xmppid);
-
-		mPasswordView = (EditText) findViewById(R.id.password);
-		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-				if (id == R.id.login || id == EditorInfo.IME_NULL) {
-					attemptLogin();
-					return true;
-				}
-				return false;
-			}
-		});
-
-		mResourceView = (EditText) findViewById(R.id.resource);
-		mHostnameView = (EditText) findViewById(R.id.host);
-
-		mNicknameView = (EditText) findViewById(R.id.nickname);
-		mNicknameView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-				if (id == R.id.login || id == EditorInfo.IME_NULL) {
-					attemptLogin();
-					return true;
-				}
-				return false;
-			}
-		});
-		mEmailSignInButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				attemptLogin();
-			}
-		});
-
-//		mProgressView = findViewById(R.id.login_progress);
-
-		final String accountName = getAccountName(getIntent());
-		if (accountName != null) {
-			// edit existing account mode
-			Account account = AccountHelper.getAccount(mAccountManager, accountName);
-			mXMPPIDView.setEnabled(false);
-			mUpdateAccountMode = true;
-			mXMPPIDView.setText(account.name);
-			String tmp = mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE);
-			Log.i("LoginActivity", AccountsConstants.FIELD_ACTIVE + " = " + tmp);
-//			mActiveView.setChecked(Boolean.parseBoolean(tmp == null ? "true" : tmp));
-			mPasswordView.setText(mAccountManager.getPassword(account));
-			mHostnameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
-			mNicknameView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME));
-			mResourceView.setText(mAccountManager.getUserData(account, AccountsConstants.FIELD_RESOURCE));
-
-			mEmailSignInButton.setText(R.string.action_update_account);
-		}
-	}
-
-	@Override
-	public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-		return new CursorLoader(this,
-								// Retrieve data rows for the device user's 'profile' contact.
-								Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-													 ContactsContract.Contacts.Data.CONTENT_DIRECTORY),
-								ProfileQuery.PROJECTION,
-
-								// Select only email addresses.
-								ContactsContract.Contacts.Data.MIMETYPE + " = ?",
-								new String[]{ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE},
-
-								// Show primary email addresses first. Note that there won't be
-								// a primary email address if the user hasn't specified one.
-								ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-	}
-
-	@Override
-	public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-	}
-
-	@Override
-	public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
-	}
-
-	/**
-	 * Callback received when a permissions request has been completed.
-	 */
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-										   @NonNull int[] grantResults) {
-	}
-
 	private interface ProfileQuery {
 
 		String[] PROJECTION = {ContactsContract.CommonDataKinds.Email.ADDRESS,
@@ -324,10 +327,13 @@ public class LoginActivity
 	/**
 	 * Represents an asynchronous login/registration task used to authenticate the user.
 	 */
-	public class UserLoginTask
+	public static class UserLoginTask
 			extends AsyncTask<Void, Integer, Boolean> {
 
+		private final WeakReference<LoginActivity> activity;
 		private final ConnectionChecker checker;
+		private final Context context;
+		private final AccountManager mAccountManager;
 		private final boolean mActive;
 		private final String mHostname;
 		private final String mNickname;
@@ -337,8 +343,11 @@ public class LoginActivity
 		private final boolean skipLoginTest;
 		private ProgressDialog progress;
 
-		UserLoginTask(boolean skipLoginTest, String xmppId, String password, String hostname, String resource,
-					  String nickname, boolean active) {
+		UserLoginTask(Context context, LoginActivity activity, boolean skipLoginTest, String xmppId, String password,
+					  String hostname, String resource, String nickname, boolean active) {
+			this.context = context;
+			this.activity = new WeakReference<>(activity);
+			this.mAccountManager = AccountManager.get(context);
 			this.skipLoginTest = skipLoginTest;
 			mXmppId = xmppId;
 			mPassword = password;
@@ -359,7 +368,7 @@ public class LoginActivity
 
 			// TODO: attempt authentication against a network service.
 			try {
-				boolean result = checker.check(getApplicationContext());
+				boolean result = checker.check(context);
 				// Simulate network access.
 				Log.i(TAG, "Connection checking result: " + result);
 				return result;
@@ -371,8 +380,7 @@ public class LoginActivity
 
 		@Override
 		protected void onCancelled() {
-			mAuthTask = null;
-
+			runInActivity(a -> a.mAuthTask = null);
 			if (progress != null) {
 				progress.hide();
 			}
@@ -380,7 +388,7 @@ public class LoginActivity
 
 		@Override
 		protected void onPostExecute(final Boolean success) {
-			mAuthTask = null;
+			runInActivity(a -> a.mAuthTask = null);
 			if (progress != null) {
 				progress.hide();
 				progress.dismiss();
@@ -408,60 +416,67 @@ public class LoginActivity
 					intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
 					intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Authenticator.ACCOUNT_TYPE);
 					// setAccountAuthenticatorResult(intent.getExtras());
-					setResult(RESULT_OK, intent);
+
+					runInActivity(a -> a.setResult(RESULT_OK, intent));
 
 					Intent i = new Intent();
 					i.setAction(ACCOUNT_MODIFIED_MSG);
 					i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 				} catch (Exception e) {
 					Log.e("LoginActivity", "Can't add account", e);
 				}
-				finish();
+				runInActivity(Activity::finish);
 			} else {
 				Log.i(TAG, "Any problem?", checker.getException());
 				SecureTrustManagerFactory.DataCertificateException deepException = getCertException(
 						checker.getException());
 				if (deepException != null) {
 					X509Certificate[] chain = deepException.getChain();
-					showInvalidCertificateDialog(LoginActivity.this, chain, () -> attemptLogin());
+					runInActivity(a -> showInvalidCertificateDialog(context, chain, () -> a.attemptLogin()));
 				} else if (checker.isPasswordInvalid()) {
-					mPasswordView.setError(getString(R.string.error_incorrect_password));
-					mPasswordView.requestFocus();
+					runInActivity(a -> {
+						a.mPasswordView.setError(a.getString(R.string.error_incorrect_password));
+						a.mPasswordView.requestFocus();
+					});
+
 				} else {
-					AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-					builder.setMessage("Connection error.").setPositiveButton(android.R.string.ok, null).show();
+					runInActivity(a -> {
+						AlertDialog.Builder builder = new AlertDialog.Builder(a);
+						builder.setMessage("Connection error.").setPositiveButton(android.R.string.ok, null).show();
+					});
 				}
 			}
 		}
 
 		@Override
 		protected void onPreExecute() {
-			this.progress = new ProgressDialog(LoginActivity.this);
-			progress.setMessage(getResources().getString(R.string.login_checking));
-			progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progress.setIndeterminate(false);
-			progress.setProgress(0);
-			progress.setMax(6);
-
-			progress.show();
+			runInActivity(a -> {
+				this.progress = new ProgressDialog(a);
+				progress.setMessage(context.getResources().getString(R.string.login_checking));
+				progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+				progress.setIndeterminate(false);
+				progress.setProgress(0);
+				progress.setMax(6);
+				progress.show();
+			});
 
 			checker.getContact().getEventBus().addListener(new EventListener() {
 				@Override
 				public void onEvent(Event<? extends EventHandler> event) {
 					if (progress != null) {
 						if (event instanceof StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent) {
-							setMessage(getResources().getString(R.string.login_connected), 1);
+							setMessage(context.getResources().getString(R.string.login_connected), 1);
 						} else if (event instanceof SaslModule.SaslAuthStartHandler.SaslAuthStartEvent) {
-							setMessage(getResources().getString(R.string.login_checking_password), 1);
+							setMessage(context.getResources().getString(R.string.login_checking_password), 1);
 						} else if (event instanceof AuthModule.AuthSuccessHandler) {
-							setMessage(getResources().getString(R.string.login_password_valid), 1);
+							setMessage(context.getResources().getString(R.string.login_password_valid), 1);
 						} else if (event instanceof AuthModule.AuthFailedHandler) {
-							setMessage(getResources().getString(R.string.login_password_invalid), 0);
+							setMessage(context.getResources().getString(R.string.login_password_invalid), 0);
 						} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent) {
 
-							setMessage(getResources().getString(R.string.login_successful), 1);
+							setMessage(context.getResources().getString(R.string.login_successful), 1);
 						}
 					}
 				}
@@ -476,15 +491,21 @@ public class LoginActivity
 			progress.setProgress(progress.getProgress() + values[0]);
 		}
 
-		private void setMessage(final String message, final int p) {
-			LoginActivity.this.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					progress.setMessage(message);
+		private void runInActivity(Fnc<LoginActivity> f) {
+			final LoginActivity x = activity.get();
+			if (x != null && !x.isFinishing()) {
+				f.run(x);
+			}
+		}
 
-				}
-			});
+		private void setMessage(final String message, final int p) {
+			runInActivity(a -> a.runOnUiThread(() -> progress.setMessage(message)));
 			publishProgress(p);
+		}
+
+		interface Fnc<T> {
+
+			void run(T activity);
 		}
 
 	}

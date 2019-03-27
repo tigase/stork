@@ -67,8 +67,18 @@ public class ViewHolderMsg
 		}
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + " '" + mContentView.getText() + "'";
+	}
+
+	@Override
+	protected void onItemClick(View v) {
+
+	}
+
 	private int getColor(String nickname) {
-		final int i = ((Math.abs(nickname.hashCode()) + 3) * 13) % 19;
+		final int i = ((Math.abs(("" + nickname).hashCode()) + 3) * 13) % 19;
 		switch (i) {
 			case 0:
 				return R.color.mucmessage_his_nickname_0;
@@ -115,16 +125,6 @@ public class ViewHolderMsg
 
 		}
 
-	}
-
-	@Override
-	protected void onItemClick(View v) {
-
-	}
-
-	@Override
-	public String toString() {
-		return super.toString() + " '" + mContentView.getText() + "'";
 	}
 
 }
