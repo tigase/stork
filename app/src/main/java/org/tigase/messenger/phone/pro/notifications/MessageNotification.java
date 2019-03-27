@@ -77,78 +77,6 @@ public class MessageNotification {
 		}
 	}
 
-	private UnreadConversation createChatSyle(Context context, Room room) {
-		final String account = room.getSessionObject().getUserBareJid().toString();
-		final String chatJid = room.getRoomJid().toString();
-
-		final NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
-
-		Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chatJid);
-		final String[] chatHistoryCols = new String[]{DatabaseContract.ChatHistory.FIELD_BODY,
-													  DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME};
-
-		try (Cursor chatHistoryCursor = context.getContentResolver()
-				.query(chatHistoryUri, chatHistoryCols, DatabaseContract.ChatHistory.FIELD_STATE + "=?",
-					   new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD},
-					   DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
-			int unread = chatHistoryCursor.getCount();
-			int c = 0;
-			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
-				String txt = chatHistoryCursor.getString(
-						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-				String author = chatHistoryCursor.getString(
-						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
-				style.addLine(" " + author + ": " + txt);
-			}
-			return new UnreadConversation(style, unread);
-		}
-	}
-
-	private UnreadConversation createChatSyle(Context context, Chat chat) {
-		final String account = chat.getSessionObject().getUserBareJid().toString();
-		final String chatJid = chat.getJid().getBareJid().toString();
-
-		final NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
-
-		Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chatJid);
-		final String[] chatHistoryCols = new String[]{DatabaseContract.ChatHistory.FIELD_BODY};
-
-		try (Cursor chatHistoryCursor = context.getContentResolver()
-				.query(chatHistoryUri, chatHistoryCols, DatabaseContract.ChatHistory.FIELD_STATE + "=?",
-					   new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD},
-					   DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
-			int unread = chatHistoryCursor.getCount();
-			int c = 0;
-			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
-				String t = chatHistoryCursor.getString(
-						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-				style.addLine("  " + t);
-			}
-			return new UnreadConversation(style, unread);
-		}
-	}
-
-	private NotificationCompat.Builder createNotificationBuilder(Context context, Uri soundUri, long[] vibrationPattern,
-																 PendingIntent resultPendingIntent) {
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(
-				R.drawable.ic_messenger_icon)
-				.setAutoCancel(true)
-				.setGroup(GROUP_KEY_MESSAGES)
-				.setCategory(Notification.CATEGORY_MESSAGE);
-
-		if (soundUri != null) {
-			builder.setSound(soundUri);
-		}
-		if (vibrationPattern != null) {
-			builder.setVibrate(vibrationPattern);
-		}
-		if (resultPendingIntent != null) {
-			builder.setContentIntent(resultPendingIntent);
-		}
-
-		return builder;
-	}
-
 	public void createNotificationChannel(Context context) {
 		// Create the NotificationChannel, but only on API 26+ because
 		// the NotificationChannel class is new and not in the support library
@@ -289,6 +217,78 @@ public class MessageNotification {
 		int notificationId = ("muc:" + room.getId()).hashCode();
 		notificationManager.notify(notificationId, notification.build());
 		notificationManager.notify(SUMMARY_ID, summaryNotification.build());
+	}
+
+	private UnreadConversation createChatSyle(Context context, Room room) {
+		final String account = room.getSessionObject().getUserBareJid().toString();
+		final String chatJid = room.getRoomJid().toString();
+
+		final NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
+
+		Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chatJid);
+		final String[] chatHistoryCols = new String[]{DatabaseContract.ChatHistory.FIELD_BODY,
+													  DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME};
+
+		try (Cursor chatHistoryCursor = context.getContentResolver()
+				.query(chatHistoryUri, chatHistoryCols, DatabaseContract.ChatHistory.FIELD_STATE + "=?",
+					   new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD},
+					   DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
+			int unread = chatHistoryCursor.getCount();
+			int c = 0;
+			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
+				String txt = chatHistoryCursor.getString(
+						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+				String author = chatHistoryCursor.getString(
+						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
+				style.addLine(" " + author + ": " + txt);
+			}
+			return new UnreadConversation(style, unread);
+		}
+	}
+
+	private UnreadConversation createChatSyle(Context context, Chat chat) {
+		final String account = chat.getSessionObject().getUserBareJid().toString();
+		final String chatJid = chat.getJid().getBareJid().toString();
+
+		final NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
+
+		Uri chatHistoryUri = Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + account + "/" + chatJid);
+		final String[] chatHistoryCols = new String[]{DatabaseContract.ChatHistory.FIELD_BODY};
+
+		try (Cursor chatHistoryCursor = context.getContentResolver()
+				.query(chatHistoryUri, chatHistoryCols, DatabaseContract.ChatHistory.FIELD_STATE + "=?",
+					   new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD},
+					   DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
+			int unread = chatHistoryCursor.getCount();
+			int c = 0;
+			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
+				String t = chatHistoryCursor.getString(
+						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+				style.addLine("  " + t);
+			}
+			return new UnreadConversation(style, unread);
+		}
+	}
+
+	private NotificationCompat.Builder createNotificationBuilder(Context context, Uri soundUri, long[] vibrationPattern,
+																 PendingIntent resultPendingIntent) {
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(
+				R.drawable.ic_messenger_icon)
+				.setAutoCancel(true)
+				.setGroup(GROUP_KEY_MESSAGES)
+				.setCategory(Notification.CATEGORY_MESSAGE);
+
+		if (soundUri != null) {
+			builder.setSound(soundUri);
+		}
+		if (vibrationPattern != null) {
+			builder.setVibrate(vibrationPattern);
+		}
+		if (resultPendingIntent != null) {
+			builder.setContentIntent(resultPendingIntent);
+		}
+
+		return builder;
 	}
 
 	private class UnreadConversation {

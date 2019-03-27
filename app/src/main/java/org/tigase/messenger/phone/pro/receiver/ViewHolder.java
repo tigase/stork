@@ -36,14 +36,6 @@ public class ViewHolder
 
 	}
 
-	private final void addClickable(final View view) {
-		if (view != null) {
-			view.setLongClickable(true);
-			view.setClickable(true);
-			view.setOnClickListener(this);
-		}
-	}
-
 	public void bind(Context context, Cursor cursor) {
 		this.context = context;
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
@@ -62,5 +54,13 @@ public class ViewHolder
 	@Override
 	public void onClick(View v) {
 		selectionHandler.onItemSelected(account, jid);
+	}
+
+	private final void addClickable(final View view) {
+		if (view != null) {
+			view.setLongClickable(true);
+			view.setClickable(true);
+			view.setOnClickListener(this);
+		}
 	}
 }

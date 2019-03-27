@@ -56,6 +56,43 @@ public class ServerFeaturesFragment
 		}
 	};
 
+	@Override
+	public void onAttach(Context context) {
+		super.onAttach(context);
+
+		Intent intent = new Intent(context, XMPPService.class);
+		getActivity().bindService(intent, mConnection, 0);
+	}
+
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+
+	@Nullable
+	@Override
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+		View root = inflater.inflate(R.layout.fragment_serverfeatures, container, false);
+
+		recyclerView = (RecyclerView) root.findViewById(R.id.server_features);
+		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
+		this.adapter = new FeaturesAdapter(getActivity());
+		this.recyclerView.setAdapter(adapter);
+
+		return root;
+	}
+
+	@Override
+	public void onDetach() {
+		recyclerView.setAdapter(null);
+		getActivity().unbindService(mConnection);
+		super.onDetach();
+	}
+
+	public void setAccount(String accountName) {
+		this.accountJID = accountName;
+	}
+
 	private void addFeatures(JaxmppCore jaxmpp, Collection<String> serverFeatures) {
 		adapter.addFeatures(serverFeatures);
 		try {
@@ -111,18 +148,18 @@ public class ServerFeaturesFragment
 							}
 
 							@Override
+							public void onTimeout() throws JaxmppException {
+								Log.w(TAG, "Cannot get server features: timeout");
+
+							}
+
+							@Override
 							protected void onInfoReceived(String node, Collection<DiscoveryModule.Identity> identities,
 														  Collection<String> features) throws XMLException {
 								Log.i(TAG, "Received features");
 								getActivity().runOnUiThread(() -> {
 									addFeatures(jaxmpp, features);
 								});
-							}
-
-							@Override
-							public void onTimeout() throws JaxmppException {
-								Log.w(TAG, "Cannot get server features: timeout");
-
 							}
 						});
 			} catch (Exception e) {
@@ -149,42 +186,5 @@ public class ServerFeaturesFragment
 		} catch (Throwable e) {
 			return Collections.emptySet();
 		}
-	}
-
-	@Override
-	public void onAttach(Context context) {
-		super.onAttach(context);
-
-		Intent intent = new Intent(context, XMPPService.class);
-		getActivity().bindService(intent, mConnection, 0);
-	}
-
-	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-	}
-
-	@Nullable
-	@Override
-	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-		View root = inflater.inflate(R.layout.fragment_serverfeatures, container, false);
-
-		recyclerView = (RecyclerView) root.findViewById(R.id.server_features);
-		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
-		this.adapter = new FeaturesAdapter(getActivity());
-		this.recyclerView.setAdapter(adapter);
-
-		return root;
-	}
-
-	@Override
-	public void onDetach() {
-		recyclerView.setAdapter(null);
-		getActivity().unbindService(mConnection);
-		super.onDetach();
-	}
-
-	public void setAccount(String accountName) {
-		this.accountJID = accountName;
 	}
 }

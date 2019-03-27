@@ -25,17 +25,6 @@ public class DataRemover
 		this.dbHelper = dbHelper;
 	}
 
-	private void doDirtyJob(SQLiteDatabase db, String tableName, String fieldName, ArrayList<String> accounts) {
-		Log.d("DataRemover", "Remove data from " + tableName + ". Given list: " + accounts);
-
-		if (accounts.size() == 0) {
-			db.execSQL("DELETE FROM " + tableName + ";");
-		} else {
-			String args = TextUtils.join(", ", accounts);
-			db.execSQL(String.format("DELETE FROM " + tableName + " WHERE " + fieldName + " NOT IN (%s);", args));
-		}
-	}
-
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Log.d("DataRemover", "Removing data after account remove");
@@ -67,6 +56,17 @@ public class DataRemover
 		} finally {
 			context.getContentResolver().notifyChange(RosterProvider.ROSTER_URI, null);
 			context.getContentResolver().notifyChange(ChatProvider.OPEN_CHATS_URI, null);
+		}
+	}
+
+	private void doDirtyJob(SQLiteDatabase db, String tableName, String fieldName, ArrayList<String> accounts) {
+		Log.d("DataRemover", "Remove data from " + tableName + ". Given list: " + accounts);
+
+		if (accounts.size() == 0) {
+			db.execSQL("DELETE FROM " + tableName + ";");
+		} else {
+			String args = TextUtils.join(", ", accounts);
+			db.execSQL(String.format("DELETE FROM " + tableName + " WHERE " + fieldName + " NOT IN (%s);", args));
 		}
 	}
 }

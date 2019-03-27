@@ -210,29 +210,6 @@ public abstract class CursorRecyclerViewAdapter<VH extends android.support.v7.wi
 		}
 	}
 
-	void init(Cursor c) {
-		boolean cursorPresent = c != null;
-		mCursor = c;
-		mDataValid = cursorPresent;
-		mRowIDColumn = cursorPresent ? c.getColumnIndexOrThrow("_id") : -1;
-
-		mChangeObserver = new ChangeObserver();
-		mDataSetObserver = new MyDataSetObserver();
-
-		if (cursorPresent) {
-			if (mChangeObserver != null) {
-				c.registerContentObserver(mChangeObserver);
-			}
-			if (mDataSetObserver != null) {
-				c.registerDataSetObserver(mDataSetObserver);
-			}
-		}
-	}
-
-	protected boolean isDataValid() {
-		return mDataValid;
-	}
-
 	/**
 	 * This method will move the Cursor to the correct position and call
 	 * {@link #onBindViewHolderCursor(android.support.v7.widget.RecyclerView.ViewHolder, android.database.Cursor)}
@@ -260,16 +237,6 @@ public abstract class CursorRecyclerViewAdapter<VH extends android.support.v7.wi
 	 * @param cursor The cursor from which to get the data. The cursor is already moved to the correct position.
 	 */
 	public abstract void onBindViewHolderCursor(VH holder, Cursor cursor);
-
-	/**
-	 * Called when the {@link ContentObserver} on the cursor receives a change
-	 * notification. Can be implemented by sub-class.
-	 *
-	 * @see ContentObserver#onChange(boolean)
-	 */
-	protected void onContentChanged() {
-
-	}
 
 	/**
 	 * Runs a query with the specified constraint. This query is requested by
@@ -347,6 +314,39 @@ public abstract class CursorRecyclerViewAdapter<VH extends android.support.v7.wi
 			notifyItemRangeRemoved(0, getItemCount());
 		}
 		return oldCursor;
+	}
+
+	void init(Cursor c) {
+		boolean cursorPresent = c != null;
+		mCursor = c;
+		mDataValid = cursorPresent;
+		mRowIDColumn = cursorPresent ? c.getColumnIndexOrThrow("_id") : -1;
+
+		mChangeObserver = new ChangeObserver();
+		mDataSetObserver = new MyDataSetObserver();
+
+		if (cursorPresent) {
+			if (mChangeObserver != null) {
+				c.registerContentObserver(mChangeObserver);
+			}
+			if (mDataSetObserver != null) {
+				c.registerDataSetObserver(mDataSetObserver);
+			}
+		}
+	}
+
+	protected boolean isDataValid() {
+		return mDataValid;
+	}
+
+	/**
+	 * Called when the {@link ContentObserver} on the cursor receives a change
+	 * notification. Can be implemented by sub-class.
+	 *
+	 * @see ContentObserver#onChange(boolean)
+	 */
+	protected void onContentChanged() {
+
 	}
 
 	private class ChangeObserver

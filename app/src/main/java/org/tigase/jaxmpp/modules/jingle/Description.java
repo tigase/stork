@@ -5,7 +5,6 @@ import tigase.jaxmpp.core.client.xml.ElementWrapper;
 import tigase.jaxmpp.core.client.xml.XMLException;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class Description

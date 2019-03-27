@@ -72,6 +72,55 @@ public class SubscriptionRequestActivity
 		}
 	}
 
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_subscription_request);
+
+		xmppId = (EditText) findViewById(R.id.contact_xmppid);
+		mName = (EditText) findViewById(R.id.contact_display_name);
+		avatar = (ImageView) findViewById(R.id.user_avatar);
+		mDetailsForm = (LinearLayout) findViewById(R.id.user_details_form);
+
+		Button contactRejectButton = (Button) findViewById(R.id.contact_reject_button);
+		contactRejectButton.setOnClickListener(view -> onRejectClick());
+
+		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		contactAddButton.setOnClickListener(view -> onAddClick());
+
+		Bundle extras = getIntent().getExtras();
+		this.account = extras.getString("account_name");
+		this.jid = BareJID.bareJIDInstance(extras.getString("jid"));
+
+		xmppId.setText(jid.toString());
+		xmppId.setKeyListener(null);
+
+		registerReceiver(avatarUpdatedListener, new IntentFilter("org.tigase.messenger.phone.pro.AvatarUpdated"));
+
+		mName.setText(jid.getLocalpart());
+		fillAvatar();
+
+	}
+
+	@Override
+	protected void onDestroy() {
+		unregisterReceiver(avatarUpdatedListener);
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Intent service = new Intent(getApplicationContext(), XMPPService.class);
+		bindService(service, mServiceConnection, 0);
+	}
+
+	@Override
+	protected void onStop() {
+		unbindService(mServiceConnection);
+		super.onStop();
+	}
+
 	private void fillAvatar() {
 		AvatarHelper.setAvatarToImageView(jid, avatar);
 	}
@@ -123,42 +172,6 @@ public class SubscriptionRequestActivity
 		finish();
 	}
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_subscription_request);
-
-		xmppId = (EditText) findViewById(R.id.contact_xmppid);
-		mName = (EditText) findViewById(R.id.contact_display_name);
-		avatar = (ImageView) findViewById(R.id.user_avatar);
-		mDetailsForm = (LinearLayout) findViewById(R.id.user_details_form);
-
-		Button contactRejectButton = (Button) findViewById(R.id.contact_reject_button);
-		contactRejectButton.setOnClickListener(view -> onRejectClick());
-
-		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
-		contactAddButton.setOnClickListener(view -> onAddClick());
-
-		Bundle extras = getIntent().getExtras();
-		this.account = extras.getString("account_name");
-		this.jid = BareJID.bareJIDInstance(extras.getString("jid"));
-
-		xmppId.setText(jid.toString());
-		xmppId.setKeyListener(null);
-
-		registerReceiver(avatarUpdatedListener, new IntentFilter("org.tigase.messenger.phone.pro.AvatarUpdated"));
-
-		mName.setText(jid.getLocalpart());
-		fillAvatar();
-
-	}
-
-	@Override
-	protected void onDestroy() {
-		unregisterReceiver(avatarUpdatedListener);
-		super.onDestroy();
-	}
-
 	private void onRejectClick() {
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
@@ -179,19 +192,6 @@ public class SubscriptionRequestActivity
 			}
 		}).execute();
 		finish();
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		Intent service = new Intent(getApplicationContext(), XMPPService.class);
-		bindService(service, mServiceConnection, 0);
-	}
-
-	@Override
-	protected void onStop() {
-		unbindService(mServiceConnection);
-		super.onStop();
 	}
 
 	private void retrieveVCard() {

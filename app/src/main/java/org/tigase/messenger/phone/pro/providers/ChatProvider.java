@@ -246,63 +246,6 @@ public class ChatProvider
 		}
 	}
 
-	private Long isChatMessageAddedAlready(final ContentValues values) {
-		final String[] columns = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
-											  DatabaseContract.ChatHistory.FIELD_STANZA_ID,
-											  DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
-
-		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
-		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
-		final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY);
-		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
-		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
-		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
-		final int itemType = values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE);
-
-		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
-			return null;
-		}
-
-		ArrayList<String> selectionArgs = new ArrayList<>();
-
-		String selection = DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? ";
-		selectionArgs.add(account);
-
-		selection += " AND " + DatabaseContract.ChatHistory.FIELD_JID + "=? ";
-		selectionArgs.add(roomJid);
-
-		if (nickname != null) {
-			selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
-			selectionArgs.add(nickname);
-		}
-
-		if (body != null && stanzaId == null) {
-			selection += " AND " + DatabaseContract.ChatHistory.FIELD_BODY + "=? ";
-			selectionArgs.add(body);
-		}
-
-		long dt = 1000 * 60 * 5;
-		if (stanzaId != null) {
-			selection += " AND " + DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=? ";
-			selectionArgs.add(stanzaId);
-			dt = 1000 * 60 * 60;
-		}
-
-		selection += " AND " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " BETWEEN ? AND ? ";
-		selectionArgs.add(String.valueOf(timestamp - dt));
-		selectionArgs.add(String.valueOf(timestamp + dt));
-
-		try (Cursor c = dbHelper.getReadableDatabase()
-				.query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
-					   selectionArgs.toArray(new String[]{}), null, null, null)) {
-			if (c.moveToNext()) {
-				return c.getLong(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
-			} else {
-				return null;
-			}
-		}
-	}
-
 	@Override
 	public boolean onCreate() {
 		this.dbHelper = DatabaseHelper.getInstance(getContext());
@@ -397,23 +340,6 @@ public class ChatProvider
 		return cursor;
 	}
 
-	private Cursor queryOpenChats(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
-		qb.setProjectionMap(openChatsProjectionMap);
-		qb.setTables(DatabaseContract.OpenChats.TABLE_NAME + " open_chats LEFT JOIN " +
-							 DatabaseContract.RosterItemsCache.TABLE_NAME + " recipient ON recipient." +
-							 DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." +
-							 DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND recipient." +
-							 DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats." +
-							 DatabaseContract.OpenChats.FIELD_JID);
-
-		// may be removed later on production build - left to make tests easier
-		qb.appendWhere("open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " IS NOT NULL");
-
-		return qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null, sortOrder);
-	}
-
 	@Override
 	public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		final Context context = getContext();
@@ -463,5 +389,79 @@ public class ChatProvider
 			default:
 				throw new IllegalArgumentException("Unsupported URI " + uri);
 		}
+	}
+
+	private Long isChatMessageAddedAlready(final ContentValues values) {
+		final String[] columns = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
+											  DatabaseContract.ChatHistory.FIELD_STANZA_ID,
+											  DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
+
+		final String stanzaId = values.getAsString(DatabaseContract.ChatHistory.FIELD_STANZA_ID);
+		final String account = values.getAsString(DatabaseContract.ChatHistory.FIELD_ACCOUNT);
+		final String body = values.getAsString(DatabaseContract.ChatHistory.FIELD_BODY);
+		final String roomJid = values.getAsString(DatabaseContract.ChatHistory.FIELD_JID);
+		final String nickname = values.getAsString(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME);
+		final long timestamp = values.getAsLong(DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+		final int itemType = values.getAsInteger(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE);
+
+		if (itemType == DatabaseContract.ChatHistory.ITEM_TYPE_ERROR) {
+			return null;
+		}
+
+		ArrayList<String> selectionArgs = new ArrayList<>();
+
+		String selection = DatabaseContract.ChatHistory.FIELD_ACCOUNT + "=? ";
+		selectionArgs.add(account);
+
+		selection += " AND " + DatabaseContract.ChatHistory.FIELD_JID + "=? ";
+		selectionArgs.add(roomJid);
+
+		if (nickname != null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME + "=? ";
+			selectionArgs.add(nickname);
+		}
+
+		if (body != null && stanzaId == null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_BODY + "=? ";
+			selectionArgs.add(body);
+		}
+
+		long dt = 1000 * 60 * 5;
+		if (stanzaId != null) {
+			selection += " AND " + DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=? ";
+			selectionArgs.add(stanzaId);
+			dt = 1000 * 60 * 60;
+		}
+
+		selection += " AND " + DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " BETWEEN ? AND ? ";
+		selectionArgs.add(String.valueOf(timestamp - dt));
+		selectionArgs.add(String.valueOf(timestamp + dt));
+
+		try (Cursor c = dbHelper.getReadableDatabase()
+				.query(DatabaseContract.ChatHistory.TABLE_NAME, columns, selection,
+					   selectionArgs.toArray(new String[]{}), null, null, null)) {
+			if (c.moveToNext()) {
+				return c.getLong(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
+			} else {
+				return null;
+			}
+		}
+	}
+
+	private Cursor queryOpenChats(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+		final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+
+		qb.setProjectionMap(openChatsProjectionMap);
+		qb.setTables(DatabaseContract.OpenChats.TABLE_NAME + " open_chats LEFT JOIN " +
+							 DatabaseContract.RosterItemsCache.TABLE_NAME + " recipient ON recipient." +
+							 DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " = open_chats." +
+							 DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND recipient." +
+							 DatabaseContract.RosterItemsCache.FIELD_JID + " = open_chats." +
+							 DatabaseContract.OpenChats.FIELD_JID);
+
+		// may be removed later on production build - left to make tests easier
+		qb.appendWhere("open_chats." + DatabaseContract.OpenChats.FIELD_TYPE + " IS NOT NULL");
+
+		return qb.query(dbHelper.getReadableDatabase(), projection, selection, selectionArgs, null, null, sortOrder);
 	}
 }

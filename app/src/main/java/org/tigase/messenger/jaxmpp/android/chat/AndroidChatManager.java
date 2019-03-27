@@ -66,21 +66,6 @@ public class AndroidChatManager
 		return chat;
 	}
 
-	private Chat createChat(final Cursor c) {
-		final long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
-		Chat chat = new Chat(id, context);
-		BareJID jid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID)));
-		chat.setThreadId(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_THREAD_ID)));
-		final String resource = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_RESOURCE));
-
-		if (resource != null && !resource.isEmpty()) {
-			chat.setJid(JID.jidInstance(jid, resource));
-		} else {
-			chat.setJid(JID.jidInstance(jid));
-		}
-		return chat;
-	}
-
 	@Override
 	public Chat getChat(JID jid, String threadId) {
 		try (Cursor c = provider.getChat(context.getSessionObject(), jid, threadId)) {
@@ -114,6 +99,21 @@ public class AndroidChatManager
 	@Override
 	public boolean isChatOpenFor(BareJID jid) {
 		return provider.isChatOpenFor(context.getSessionObject(), jid);
+	}
+
+	private Chat createChat(final Cursor c) {
+		final long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+		Chat chat = new Chat(id, context);
+		BareJID jid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID)));
+		chat.setThreadId(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_THREAD_ID)));
+		final String resource = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_RESOURCE));
+
+		if (resource != null && !resource.isEmpty()) {
+			chat.setJid(JID.jidInstance(jid, resource));
+		} else {
+			chat.setJid(JID.jidInstance(jid));
+		}
+		return chat;
 	}
 
 }

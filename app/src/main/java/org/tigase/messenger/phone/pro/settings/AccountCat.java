@@ -61,17 +61,6 @@ public class AccountCat
 		setTitle(account.name);
 	}
 
-	private void init() {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options);
-		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-		options.inJustDecodeBounds = false;
-		this.mPlaceHolderBitmap = getCroppedBitmap(
-				BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options));
-		setLayoutResource(R.layout.preference_account_item);
-	}
-
 	@Override
 	protected void onBindView(View view) {
 		try {
@@ -159,6 +148,17 @@ public class AccountCat
 			setSummary(R.string.account_status_unknown);
 			setIcon(R.drawable.ic_account_disconnected);
 		}
+	}
+
+	private void init() {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options);
+		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+		options.inJustDecodeBounds = false;
+		this.mPlaceHolderBitmap = getCroppedBitmap(
+				BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options));
+		setLayoutResource(R.layout.preference_account_item);
 	}
 
 }

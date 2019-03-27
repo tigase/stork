@@ -97,6 +97,15 @@ public class WebRTCClient
 		return node + "#" + ver;
 	}
 
+	public static boolean isVideoAvailable(final JaxmppCore jaxmpp, final BareJID jid) {
+		try {
+			return getAllPotentialResources(jaxmpp, jid).size() > 0;
+		} catch (Exception e) {
+			Log.w(TAG, "Cannot check video availability", e);
+			return false;
+		}
+	}
+
 	private static boolean isVideoChatAvailable(final JaxmppCore jaxmpp, final JID jid) {
 		Presence p = PresenceModule.getPresenceStore(jaxmpp.getSessionObject()).getPresence(jid);
 		CapabilitiesModule capsModule = jaxmpp.getModule(CapabilitiesModule.class);
@@ -133,15 +142,6 @@ public class WebRTCClient
 		jaxmpp.getEventBus()
 				.addHandler(JingleModule.JingleTransportInfoHandler.JingleTransportInfoEvent.class,
 							jingleTransportHandler);
-	}
-
-	public static boolean isVideoAvailable(final JaxmppCore jaxmpp, final BareJID jid) {
-		try {
-			return getAllPotentialResources(jaxmpp, jid).size() > 0;
-		} catch (Exception e) {
-			Log.w(TAG, "Cannot check video availability", e);
-			return false;
-		}
 	}
 
 	public JID getJid() {

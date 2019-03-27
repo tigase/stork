@@ -12,7 +12,8 @@ import android.util.Log;
 
 import java.io.IOException;
 
-public class RingerIncomming implements Ringer{
+public class RingerIncomming
+		implements Ringer {
 
 	public static final String TAG = "RingerOutgoing";
 

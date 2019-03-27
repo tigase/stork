@@ -44,15 +44,6 @@ public class StatusesRecyclerViewAdapter
 		this.mAccountManager = AccountManager.get(context);
 	}
 
-	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
-		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
-		if (tmp == null) {
-			return null;
-		} else {
-			return XMPPService.DisconnectionCauses.valueOf(tmp);
-		}
-	}
-
 	@Override
 	public int getItemCount() {
 		if (jaxmpps == null) {
@@ -123,7 +114,7 @@ public class StatusesRecyclerViewAdapter
 				} else if (item.getItemId() == R.id.menu_connectionstatus_ping) {
 					listener.onPingServer(j.getSessionObject().getUserBareJid().toString());
 					return true;
-				}else if (item.getItemId() == R.id.menu_connectionstatus_ack) {
+				} else if (item.getItemId() == R.id.menu_connectionstatus_ack) {
 					listener.onAckServer(j.getSessionObject().getUserBareJid().toString());
 					return true;
 				} else {
@@ -140,6 +131,15 @@ public class StatusesRecyclerViewAdapter
 		View view = LayoutInflater.from(parent.getContext())
 				.inflate(R.layout.fragment_connectionstatusitem, parent, false);
 		return new ViewHolder(view);
+	}
+
+	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
+		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
+		if (tmp == null) {
+			return null;
+		} else {
+			return XMPPService.DisconnectionCauses.valueOf(tmp);
+		}
 	}
 
 }

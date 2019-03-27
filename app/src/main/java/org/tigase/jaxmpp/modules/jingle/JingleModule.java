@@ -249,7 +249,7 @@ public class JingleModule
 
 	public JingleSession initiateSession(final JID jid, final Element jingle, final AsyncCallback asyncCallback)
 			throws JaxmppException {
-		final String id =  UIDGenerator.next();
+		final String id = UIDGenerator.next();
 		final JID myJid = ResourceBinderModule.getBindedJID(context.getSessionObject());
 		jingle.setAttribute("sid", id);
 		JingleSession session = JingleSession.create(String.valueOf(System.currentTimeMillis()), jid, myJid, jingle);

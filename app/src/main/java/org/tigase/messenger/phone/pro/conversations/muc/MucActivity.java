@@ -25,30 +25,6 @@ public class MucActivity
 	private MarkAsRead markAsRead;
 	private int openChatId;
 
-	private void doPreviewImage(final Intent data) {
-		startWhenBinded(() -> {
-			Intent intent = new Intent(this, PreviewImageActivity.class);
-			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
-			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
-			intent.setData(data.getData());
-
-			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
-		});
-	}
-
-	private void doUploadFile(Intent data) {
-		Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
-		ssIntent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION);
-		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
-
-		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
-		startWhenBinded(() -> {
-			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
-			ssIntent.putExtra(MessageSender.ROOM_JID, getJid().getBareJid().toString());
-			getApplicationContext().startService(ssIntent);
-		});
-	}
-
 	public int getOpenChatId() {
 		return openChatId;
 	}
@@ -92,5 +68,29 @@ public class MucActivity
 		mNotificationManager.cancel(("muc:" + openChatId).hashCode());
 		MessageNotification.cancelSummaryNotification(this);
 		markAsRead.markGroupchatAsRead(this.openChatId, this.getAccount(), this.getJid());
+	}
+
+	private void doPreviewImage(final Intent data) {
+		startWhenBinded(() -> {
+			Intent intent = new Intent(this, PreviewImageActivity.class);
+			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
+			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
+			intent.setData(data.getData());
+
+			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
+		});
+	}
+
+	private void doUploadFile(Intent data) {
+		Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
+		ssIntent.setAction(MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION);
+		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
+
+		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
+		startWhenBinded(() -> {
+			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
+			ssIntent.putExtra(MessageSender.ROOM_JID, getJid().getBareJid().toString());
+			getApplicationContext().startService(ssIntent);
+		});
 	}
 }

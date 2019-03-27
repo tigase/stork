@@ -15,15 +15,6 @@ public abstract class MultiSelectViewHolder
 		addClickable(itemView);
 	}
 
-	protected final void addClickable(final View view) {
-		if (view != null) {
-			view.setLongClickable(true);
-			view.setOnLongClickListener(this);
-			view.setClickable(true);
-			view.setOnClickListener(this);
-		}
-	}
-
 	@Override
 	public void onClick(View v) {
 		if (fragment.getMultiSelector().isSelectable()) {
@@ -33,10 +24,6 @@ public abstract class MultiSelectViewHolder
 			onItemClick(v);
 		}
 	}
-
-	protected abstract void onItemClick(View v);
-
-//	protected abstract boolean onItemLongClick(View v);
 
 	@Override
 	public boolean onLongClick(View v) {
@@ -55,4 +42,17 @@ public abstract class MultiSelectViewHolder
 //			return onItemLongClick(v);
 		}
 	}
+
+	protected final void addClickable(final View view) {
+		if (view != null) {
+			view.setLongClickable(true);
+			view.setOnLongClickListener(this);
+			view.setClickable(true);
+			view.setOnClickListener(this);
+		}
+	}
+
+//	protected abstract boolean onItemLongClick(View v);
+
+	protected abstract void onItemClick(View v);
 }

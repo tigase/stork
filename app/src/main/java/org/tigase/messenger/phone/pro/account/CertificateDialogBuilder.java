@@ -43,6 +43,31 @@ public class CertificateDialogBuilder
 		this.chain = chain;
 	}
 
+	@Override
+	public AlertDialog create() {
+		String cd = buildCertDetails();
+
+		if (this.message != null) {
+			super.setMessage(this.message + " " + cd);
+		} else {
+			super.setMessage(cd);
+		}
+
+		return super.create();
+	}
+
+	@Override
+	public AlertDialog.Builder setMessage(int messageId) {
+		this.message = getContext().getText(messageId);
+		return super.setMessage(this.message);
+	}
+
+	@Override
+	public AlertDialog.Builder setMessage(@Nullable CharSequence message) {
+		this.message = message;
+		return super.setMessage(message);
+	}
+
 	private String buildCertDetails() {
 		Context context = getContext();
 		StringBuilder msg = new StringBuilder(100);
@@ -87,31 +112,6 @@ public class CertificateDialogBuilder
 			}
 		}
 		return msg.toString();
-	}
-
-	@Override
-	public AlertDialog create() {
-		String cd = buildCertDetails();
-
-		if (this.message != null) {
-			super.setMessage(this.message + " " + cd);
-		} else {
-			super.setMessage(cd);
-		}
-
-		return super.create();
-	}
-
-	@Override
-	public AlertDialog.Builder setMessage(int messageId) {
-		this.message = getContext().getText(messageId);
-		return super.setMessage(this.message);
-	}
-
-	@Override
-	public AlertDialog.Builder setMessage(@Nullable CharSequence message) {
-		this.message = message;
-		return super.setMessage(message);
 	}
 
 }

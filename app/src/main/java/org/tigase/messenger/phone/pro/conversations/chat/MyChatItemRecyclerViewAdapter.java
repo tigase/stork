@@ -43,18 +43,6 @@ public class MyChatItemRecyclerViewAdapter
 		this.context = context;
 	}
 
-	private void bindViewHolderImg(ViewHolderImg holder, Cursor cursor) {
-		holder.bind(context, cursor);
-	}
-
-	private void bindViewHolderMsg(ViewHolderMsg holder, Cursor cursor) {
-		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
-		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
-		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-
-		holder.bind(context, cursor);
-	}
-
 	@Override
 	public int getItemViewType(int i) {
 		if (!isDataValid()) {
@@ -126,6 +114,18 @@ public class MyChatItemRecyclerViewAdapter
 				throw new RuntimeException("Unknown view type (t=" + messageType + ", s=" + messageState + ")");
 		}
 		return viewHolder;
+	}
+
+	private void bindViewHolderImg(ViewHolderImg holder, Cursor cursor) {
+		holder.bind(context, cursor);
+	}
+
+	private void bindViewHolderMsg(ViewHolderMsg holder, Cursor cursor) {
+		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
+		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
+		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
+
+		holder.bind(context, cursor);
 	}
 
 }

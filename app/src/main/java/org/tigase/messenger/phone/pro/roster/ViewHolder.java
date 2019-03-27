@@ -78,11 +78,8 @@ public class ViewHolder
 	}
 
 	@Override
-	protected void onItemClick(View v) {
-		Intent intent = new Intent(context, ChatActivity.class);
-		intent.putExtra(ChatActivity.JID_KEY, jid);
-		intent.putExtra(ChatActivity.ACCOUNT_KEY, account);
-		context.startActivity(intent);
+	public String toString() {
+		return super.toString() + " '" + mContactNameView.getText() + "'";
 	}
 
 //	@Deprecated
@@ -101,7 +98,10 @@ public class ViewHolder
 //	}
 
 	@Override
-	public String toString() {
-		return super.toString() + " '" + mContactNameView.getText() + "'";
+	protected void onItemClick(View v) {
+		Intent intent = new Intent(context, ChatActivity.class);
+		intent.putExtra(ChatActivity.JID_KEY, jid);
+		intent.putExtra(ChatActivity.ACCOUNT_KEY, account);
+		context.startActivity(intent);
 	}
 }

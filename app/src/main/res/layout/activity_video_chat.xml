@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.tigase.messenger.phone.pro.video.component.AVComponent
-        android:id="@+id/avcomponent"
         xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/avcomponent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

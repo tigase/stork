@@ -23,10 +23,6 @@ public class MucItemRecyclerViewAdapter
 		this.context = context;
 	}
 
-	private void bindViewHolderImg(ViewHolderImg holder, Cursor cursor) {
-		holder.bind(context, cursor);
-	}
-
 	public void bindViewHolderMsg(ViewHolderMsg holder, Cursor cursor) {
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
@@ -111,6 +107,10 @@ public class MucItemRecyclerViewAdapter
 
 		viewHolder.setOwnNickname(ownNickname);
 		return viewHolder;
+	}
+
+	private void bindViewHolderImg(ViewHolderImg holder, Cursor cursor) {
+		holder.bind(context, cursor);
 	}
 
 }

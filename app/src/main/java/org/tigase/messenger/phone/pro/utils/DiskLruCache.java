@@ -79,10 +79,6 @@ public abstract class DiskLruCache<T> {
 	public DiskLruCache() {
 	}
 
-	protected abstract T decode(Entry e);
-
-	protected abstract void encode(Entry e, T value);
-
 	public T get(String key) {
 		Entry e;
 		synchronized (cacheLock) {
@@ -157,6 +153,10 @@ public abstract class DiskLruCache<T> {
 			size -= e.size;
 		}
 	}
+
+	protected abstract T decode(Entry e);
+
+	protected abstract void encode(Entry e, T value);
 
 	private void trimToSize() {
 		while (size > maxSize) {

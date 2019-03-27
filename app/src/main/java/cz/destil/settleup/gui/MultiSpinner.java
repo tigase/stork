@@ -69,6 +69,24 @@ public class MultiSpinner
 		return true;
 	}
 
+	public void setChecked(int pos, boolean checked) {
+		selected[pos] = checked;
+		refresh();
+	}
+
+	public void setItems(List<String> items, String allText, MultiSpinnerListener listener) {
+		this.items = items;
+		this.defaultText = allText;
+		this.listener = listener;
+
+		// all selected by default
+		selected = new boolean[items.size()];
+		for (int i = 0; i < selected.length; i++) {
+			selected[i] = false;
+		}
+		refresh();
+	}
+
 	private void refresh() {
 		// refresh text on spinner
 		StringBuffer spinnerBuffer = new StringBuffer();
@@ -93,24 +111,6 @@ public class MultiSpinner
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
 																new String[]{spinnerText});
 		setAdapter(adapter);
-	}
-
-	public void setChecked(int pos, boolean checked) {
-		selected[pos] = checked;
-		refresh();
-	}
-
-	public void setItems(List<String> items, String allText, MultiSpinnerListener listener) {
-		this.items = items;
-		this.defaultText = allText;
-		this.listener = listener;
-
-		// all selected by default
-		selected = new boolean[items.size()];
-		for (int i = 0; i < selected.length; i++) {
-			selected[i] = false;
-		}
-		refresh();
 	}
 
 	public interface MultiSpinnerListener {

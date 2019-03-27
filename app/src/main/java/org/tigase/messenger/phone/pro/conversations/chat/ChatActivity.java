@@ -72,49 +72,8 @@ public class ChatActivity
 
 	private Integer rosterId;
 
-	private void doPreviewImage(final Intent data) {
-		startWhenBinded(() -> {
-			Intent intent = new Intent(this, PreviewImageActivity.class);
-			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
-			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
-			intent.setData(data.getData());
-
-			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
-		});
-	}
-
-	private void doUploadFile(Intent data) {
-		final Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
-		ssIntent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
-		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
-
-		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
-		startWhenBinded(() -> {
-			ssIntent.putExtra(MessageSender.CHAT_ID, openChatId);
-			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
-			getApplicationContext().startService(ssIntent);
-		});
-	}
-
-	private Chat findOrCreateChat(BareJID account, JID jid) {
-		try {
-			Jaxmpp jaxmpp = getServiceConnection().getService().getJaxmpp(account);
-			final BareJID bareJID = jid.getBareJid();
-			Chat chat = null;
-			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
-				if (c.getJid().getBareJid().equals(bareJID)) {
-					chat = c;
-					break;
-				}
-			}
-			if (chat == null) {
-				chat = jaxmpp.getModule(MessageModule.class).createChat(jid);
-			}
-			return chat;
-		} catch (JaxmppException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Cannot get Chat instance");
-		}
+	public int getOpenChatId() {
+		return openChatId;
 	}
 
 	String getContactName() {
@@ -129,49 +88,6 @@ public class ChatActivity
 			} else {
 				return getJid().getBareJid().toString();
 			}
-		}
-	}
-
-	public int getOpenChatId() {
-		return openChatId;
-	}
-
-	private void loadContact() {
-		mContactName.setText(getContactName());
-	}
-
-	private Integer loadRosterID(BareJID account, BareJID jid) {
-		Uri u = Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid);
-		Cursor c = getContentResolver().query(u, new String[]{DatabaseContract.RosterItemsCache.FIELD_ID}, null, null,
-											  null);
-		try {
-			if (c.moveToNext()) {
-				return c.getInt(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
-			}
-		} finally {
-			c.close();
-		}
-		return null;
-	}
-
-	private void loadUserPresence() {
-		if (contactUri == null) {
-			return;
-		}
-		Cursor contactCursor = getContentResolver().query(contactUri,
-														  new String[]{DatabaseContract.RosterItemsCache.FIELD_STATUS},
-														  null, null, null);
-		try {
-			if (contactCursor.moveToNext()) {
-				final int status = contactCursor.getInt(
-						contactCursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_STATUS));
-				mContactPresence.setVisibility(View.VISIBLE);
-				mContactPresence.setImageResource(PresenceIconMapper.getPresenceResource(status));
-			} else {
-				mContactPresence.setVisibility(View.INVISIBLE);
-			}
-		} finally {
-			contactCursor.close();
 		}
 	}
 
@@ -272,6 +188,90 @@ public class ChatActivity
 		ChatActivity.this.openChatId = (int) chat.getId();
 
 		loadContact();
+	}
+
+	private void doPreviewImage(final Intent data) {
+		startWhenBinded(() -> {
+			Intent intent = new Intent(this, PreviewImageActivity.class);
+			intent.putExtra(PreviewImageActivity.ACCOUNT_KEY, getAccount().toString());
+			intent.putExtra(PreviewImageActivity.JID_KEY, getJid().getBareJid().toString());
+			intent.setData(data.getData());
+
+			startActivityForResult(intent, PREVIEW_IMAGE_REQUEST_CODE);
+		});
+	}
+
+	private void doUploadFile(Intent data) {
+		final Intent ssIntent = new Intent(getApplicationContext(), XMPPService.class);
+		ssIntent.setAction(MessageSender.SEND_CHAT_MESSAGE_ACTION);
+		ssIntent.putExtra(MessageSender.LOCAL_CONTENT_URI, data.getData());
+
+		ssIntent.putExtra(MessageSender.BODY, data.getStringExtra(TEXT));
+		startWhenBinded(() -> {
+			ssIntent.putExtra(MessageSender.CHAT_ID, openChatId);
+			ssIntent.putExtra(MessageSender.ACCOUNT, getAccount().toString());
+			getApplicationContext().startService(ssIntent);
+		});
+	}
+
+	private Chat findOrCreateChat(BareJID account, JID jid) {
+		try {
+			Jaxmpp jaxmpp = getServiceConnection().getService().getJaxmpp(account);
+			final BareJID bareJID = jid.getBareJid();
+			Chat chat = null;
+			for (Chat c : jaxmpp.getModule(MessageModule.class).getChats()) {
+				if (c.getJid().getBareJid().equals(bareJID)) {
+					chat = c;
+					break;
+				}
+			}
+			if (chat == null) {
+				chat = jaxmpp.getModule(MessageModule.class).createChat(jid);
+			}
+			return chat;
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Cannot get Chat instance");
+		}
+	}
+
+	private void loadContact() {
+		mContactName.setText(getContactName());
+	}
+
+	private Integer loadRosterID(BareJID account, BareJID jid) {
+		Uri u = Uri.parse(RosterProvider.ROSTER_URI + "/" + account + "/" + jid);
+		Cursor c = getContentResolver().query(u, new String[]{DatabaseContract.RosterItemsCache.FIELD_ID}, null, null,
+											  null);
+		try {
+			if (c.moveToNext()) {
+				return c.getInt(c.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_ID));
+			}
+		} finally {
+			c.close();
+		}
+		return null;
+	}
+
+	private void loadUserPresence() {
+		if (contactUri == null) {
+			return;
+		}
+		Cursor contactCursor = getContentResolver().query(contactUri,
+														  new String[]{DatabaseContract.RosterItemsCache.FIELD_STATUS},
+														  null, null, null);
+		try {
+			if (contactCursor.moveToNext()) {
+				final int status = contactCursor.getInt(
+						contactCursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_STATUS));
+				mContactPresence.setVisibility(View.VISIBLE);
+				mContactPresence.setImageResource(PresenceIconMapper.getPresenceResource(status));
+			} else {
+				mContactPresence.setVisibility(View.INVISIBLE);
+			}
+		} finally {
+			contactCursor.close();
+		}
 	}
 
 	private class ContactPresenceChangeObserver

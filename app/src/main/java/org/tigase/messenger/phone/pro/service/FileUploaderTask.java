@@ -117,33 +117,35 @@ public abstract class FileUploaderTask
 				}
 			}
 			this.mimeType = guessMimeType(this.displayName);
-			module.requestUploadSlot(componentJid, displayName, size.longValue(), mimeType, new HttpFileUploadModule.RequestUploadSlotHandler() {
-				@Override
-				public void onError(Stanza responseStanza, XMPPException.ErrorCondition error) throws JaxmppException {
-					FileUploaderTask.this.slot = null;
-					notifyError(error.getType());
-					synchronized (FileUploaderTask.this) {
-						FileUploaderTask.this.notify();
-					}
-				}
+			module.requestUploadSlot(componentJid, displayName, size.longValue(), mimeType,
+									 new HttpFileUploadModule.RequestUploadSlotHandler() {
+										 @Override
+										 public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+												 throws JaxmppException {
+											 FileUploaderTask.this.slot = null;
+											 notifyError(error.getType());
+											 synchronized (FileUploaderTask.this) {
+												 FileUploaderTask.this.notify();
+											 }
+										 }
 
-				@Override
-				public void onSuccess(HttpFileUploadModule.Slot slot) throws JaxmppException {
-					FileUploaderTask.this.slot = slot;
-					synchronized (FileUploaderTask.this) {
-						FileUploaderTask.this.notify();
-					}
-				}
+										 @Override
+										 public void onSuccess(HttpFileUploadModule.Slot slot) throws JaxmppException {
+											 FileUploaderTask.this.slot = slot;
+											 synchronized (FileUploaderTask.this) {
+												 FileUploaderTask.this.notify();
+											 }
+										 }
 
-				@Override
-				public void onTimeout() throws JaxmppException {
-					FileUploaderTask.this.slot = null;
-					notifyError("Server does not respond");
-					synchronized (FileUploaderTask.this) {
-						FileUploaderTask.this.notify();
-					}
-				}
-			});
+										 @Override
+										 public void onTimeout() throws JaxmppException {
+											 FileUploaderTask.this.slot = null;
+											 notifyError("Server does not respond");
+											 synchronized (FileUploaderTask.this) {
+												 FileUploaderTask.this.notify();
+											 }
+										 }
+									 });
 
 			synchronized (FileUploaderTask.this) {
 				try {
@@ -161,48 +163,6 @@ public abstract class FileUploaderTask
 		}
 
 		return null;
-	}
-
-	private JID findUploadComponent() {
-		final JID[] result = new JID[]{null};
-		try {
-			module.findHttpUploadComponents(
-					BareJID.bareJIDInstance(jaxmpp.getSessionObject().getUserBareJid().getDomain()), results -> {
-						if (!results.isEmpty()) {
-							result[0] = results.keySet().iterator().next();
-						}
-
-						synchronized (FileUploaderTask.this) {
-							FileUploaderTask.this.notify();
-						}
-					});
-		} catch (JaxmppException e) {
-			e.printStackTrace();
-		}
-
-		synchronized (FileUploaderTask.this) {
-			try {
-				FileUploaderTask.this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		return result[0];
-	}
-
-	private void notifyError(String message) {
-		this.mBuilder = new NotificationCompat.Builder(context);
-		mBuilder.setContentTitle("File is not send").setContentText(message).setSmallIcon(R.drawable.ic_messenger_icon);
-
-		mNotifyManager.notify(NOTIFICATION_TAG, notificationId, mBuilder.build());
-	}
-
-	private void notifySuccess() {
-//		this.mBuilder = new NotificationCompat.Builder(context);
-//		mBuilder.setContentTitle("File is sent").setSmallIcon(R.drawable.ic_messenger_icon);
-//		mNotifyManager.notify(NOTIFICATION_TAG, notificationId, mBuilder.build());
-
-		mNotifyManager.cancel(NOTIFICATION_TAG, notificationId);
 	}
 
 	@Override
@@ -256,5 +216,47 @@ public abstract class FileUploaderTask
 			e.printStackTrace();
 			notifyError("Error: " + e.getLocalizedMessage());
 		}
+	}
+
+	private JID findUploadComponent() {
+		final JID[] result = new JID[]{null};
+		try {
+			module.findHttpUploadComponents(
+					BareJID.bareJIDInstance(jaxmpp.getSessionObject().getUserBareJid().getDomain()), results -> {
+						if (!results.isEmpty()) {
+							result[0] = results.keySet().iterator().next();
+						}
+
+						synchronized (FileUploaderTask.this) {
+							FileUploaderTask.this.notify();
+						}
+					});
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+		}
+
+		synchronized (FileUploaderTask.this) {
+			try {
+				FileUploaderTask.this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		return result[0];
+	}
+
+	private void notifyError(String message) {
+		this.mBuilder = new NotificationCompat.Builder(context);
+		mBuilder.setContentTitle("File is not send").setContentText(message).setSmallIcon(R.drawable.ic_messenger_icon);
+
+		mNotifyManager.notify(NOTIFICATION_TAG, notificationId, mBuilder.build());
+	}
+
+	private void notifySuccess() {
+//		this.mBuilder = new NotificationCompat.Builder(context);
+//		mBuilder.setContentTitle("File is sent").setSmallIcon(R.drawable.ic_messenger_icon);
+//		mNotifyManager.notify(NOTIFICATION_TAG, notificationId, mBuilder.build());
+
+		mNotifyManager.cancel(NOTIFICATION_TAG, notificationId);
 	}
 }

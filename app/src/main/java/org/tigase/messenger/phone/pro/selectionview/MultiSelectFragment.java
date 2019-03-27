@@ -41,10 +41,6 @@ public abstract class MultiSelectFragment
 		return mMultiSelector;
 	}
 
-	protected abstract boolean onActionItemClicked(ActionMode mode, MenuItem item);
-
-	protected abstract boolean onCreateActionMode(ActionMode actionMode, Menu menu);
-
 	public ActionMode startActionMode() {
 		return ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
 
@@ -69,6 +65,10 @@ public abstract class MultiSelectFragment
 			updateActionMode(actionMode);
 		}
 	}
+
+	protected abstract boolean onActionItemClicked(ActionMode mode, MenuItem item);
+
+	protected abstract boolean onCreateActionMode(ActionMode actionMode, Menu menu);
 
 	protected abstract void updateActionMode(ActionMode actionMode);
 }

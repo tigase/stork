@@ -41,6 +41,18 @@ public class PreviewImageActivity
 	private EditText messageText;
 	private ImageView sendButton;
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				//NavUtils.navigateUpFromSameTask(this);
+				finish();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
 	String getContactName() {
 		try {
 			final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
@@ -97,18 +109,6 @@ public class PreviewImageActivity
 			Log.i(TAG, mime);
 		} catch (IOException e) {
 			Log.e(TAG, "Cannot load image", e);
-		}
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				//NavUtils.navigateUpFromSameTask(this);
-				finish();
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
 		}
 	}
 

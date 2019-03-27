@@ -51,7 +51,7 @@ public class FetchMoreHistoryTask
 	protected Void doInBackground(Void... voids) {
 		String syncTime = mAccountManager.getUserData(account, AccountsConstants.MAM_SYNC_TIME);
 		final int hours = syncTime == null ? 24 : Integer.valueOf(syncTime);
-		
+
 		Calendar endDate = getFirstMessageDate();
 		Calendar startDate = (Calendar) endDate.clone();
 		startDate.add(Calendar.HOUR, -hours);
@@ -90,6 +90,14 @@ public class FetchMoreHistoryTask
 		return null;
 	}
 
+	@Override
+	protected void onPostExecute(Void aVoid) {
+		super.onPostExecute(aVoid);
+		if (this.swipeRefresh != null) {
+			this.swipeRefresh.setRefreshing(false);
+		}
+	}
+
 	private Calendar getFirstMessageDate() {
 		final String[] cols = new String[]{DatabaseContract.ChatHistory.FIELD_ID,
 										   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
@@ -104,13 +112,5 @@ public class FetchMoreHistoryTask
 			}
 		}
 		return Calendar.getInstance();
-	}
-
-	@Override
-	protected void onPostExecute(Void aVoid) {
-		super.onPostExecute(aVoid);
-		if (this.swipeRefresh != null) {
-			this.swipeRefresh.setRefreshing(false);
-		}
 	}
 }

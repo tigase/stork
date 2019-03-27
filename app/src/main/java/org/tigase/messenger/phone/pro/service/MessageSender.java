@@ -77,6 +77,20 @@ public class MessageSender {
 		this.service = xmppService;
 	}
 
+	public void process(Context context, Intent intent) {
+		switch (intent.getAction()) {
+			case SEND_CHAT_MESSAGE_ACTION:
+				sendChatMessage(context, intent);
+				break;
+			case SEND_GROUPCHAT_MESSAGE_ACTION:
+				sendGroupchatMessage(context, intent);
+				break;
+			default:
+				Log.wtf(TAG, "Unknown action: " + intent.getAction());
+				throw new RuntimeException("Unknown action: " + intent.getAction());
+		}
+	}
+
 	private Chat getChat(final BareJID account, int chatId) {
 		if (service == null) {
 			Log.w("ChatItemFragment", "Service is not binded");
@@ -103,20 +117,6 @@ public class MessageSender {
 		}
 
 		return null;
-	}
-
-	public void process(Context context, Intent intent) {
-		switch (intent.getAction()) {
-			case SEND_CHAT_MESSAGE_ACTION:
-				sendChatMessage(context, intent);
-				break;
-			case SEND_GROUPCHAT_MESSAGE_ACTION:
-				sendGroupchatMessage(context, intent);
-				break;
-			default:
-				Log.wtf(TAG, "Unknown action: " + intent.getAction());
-				throw new RuntimeException("Unknown action: " + intent.getAction());
-		}
 	}
 
 	private void sendChatMessage(final Context context, Intent intent) {

@@ -47,13 +47,6 @@ public abstract class AppCompatPreferenceActivity
 		getDelegate().addContentView(view, params);
 	}
 
-	private AppCompatDelegate getDelegate() {
-		if (mDelegate == null) {
-			mDelegate = AppCompatDelegate.create(this, null);
-		}
-		return mDelegate;
-	}
-
 	@Override
 	public MenuInflater getMenuInflater() {
 		return getDelegate().getMenuInflater();
@@ -75,6 +68,21 @@ public abstract class AppCompatPreferenceActivity
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 		getDelegate().onConfigurationChanged(newConfig);
+	}
+
+	@Override
+	public void setContentView(@LayoutRes int layoutResID) {
+		getDelegate().setContentView(layoutResID);
+	}
+
+	@Override
+	public void setContentView(View view) {
+		getDelegate().setContentView(view);
+	}
+
+	@Override
+	public void setContentView(View view, ViewGroup.LayoutParams params) {
+		getDelegate().setContentView(view, params);
 	}
 
 	@Override
@@ -114,18 +122,10 @@ public abstract class AppCompatPreferenceActivity
 		getDelegate().setTitle(title);
 	}
 
-	@Override
-	public void setContentView(@LayoutRes int layoutResID) {
-		getDelegate().setContentView(layoutResID);
-	}
-
-	@Override
-	public void setContentView(View view) {
-		getDelegate().setContentView(view);
-	}
-
-	@Override
-	public void setContentView(View view, ViewGroup.LayoutParams params) {
-		getDelegate().setContentView(view, params);
+	private AppCompatDelegate getDelegate() {
+		if (mDelegate == null) {
+			mDelegate = AppCompatDelegate.create(this, null);
+		}
+		return mDelegate;
 	}
 }

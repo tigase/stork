@@ -89,10 +89,6 @@ public class RosterProvider
 		return addedGroups;
 	}
 
-	private String createKey(SessionObject sessionObject) {
-		return versionKeyPrefix + "." + sessionObject.getUserBareJid();
-	}
-
 	@Override
 	public String getCachedVersion(SessionObject sessionObject) {
 		return prefs.getString(createKey(sessionObject), "");
@@ -250,13 +246,6 @@ public class RosterProvider
 
 	}
 
-	private void removeEmptyGroups(SQLiteDatabase db) {
-		db.delete(DatabaseContract.RosterGroupsCache.TABLE_NAME,
-				  DatabaseContract.RosterGroupsCache.FIELD_ID + " NOT IN (" + "SELECT " +
-						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + " FROM " +
-						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + ")", new String[0]);
-	}
-
 	public void removeItem(SessionObject sessionObject, RosterItem rosterItem) {
 		final SQLiteDatabase db = dbHelper.getWritableDatabase();
 		db.beginTransaction();
@@ -278,6 +267,17 @@ public class RosterProvider
 	@Override
 	public void updateReceivedVersion(SessionObject sessionObject, String ver) {
 		prefs.edit().putString(createKey(sessionObject), ver).commit();
+	}
+
+	private String createKey(SessionObject sessionObject) {
+		return versionKeyPrefix + "." + sessionObject.getUserBareJid();
+	}
+
+	private void removeEmptyGroups(SQLiteDatabase db) {
+		db.delete(DatabaseContract.RosterGroupsCache.TABLE_NAME,
+				  DatabaseContract.RosterGroupsCache.FIELD_ID + " NOT IN (" + "SELECT " +
+						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + " FROM " +
+						  DatabaseContract.RosterItemsGroups.FIELD_GROUP + ")", new String[0]);
 	}
 
 	private Set<String> updateRosterItemGroups(final SQLiteDatabase db, RosterItem rosterItem) {

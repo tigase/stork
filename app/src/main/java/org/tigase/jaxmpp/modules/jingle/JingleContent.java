@@ -1,16 +1,13 @@
 package org.tigase.jaxmpp.modules.jingle;
 
-import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementWrapper;
 import tigase.jaxmpp.core.client.xml.XMLException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class JingleContent
 		extends ElementWrapper {
-
 
 	public JingleContent(Element content) {
 		super(content);

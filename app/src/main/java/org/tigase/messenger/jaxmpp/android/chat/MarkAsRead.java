@@ -20,6 +20,14 @@ public class MarkAsRead {
 		this.context = context.getApplicationContext();
 	}
 
+	public void markChatAsRead(final long chatId, final BareJID account, final JID jid) {
+		intMarkAsRead(ChatProvider.CHAT_HISTORY_URI, chatId, account, jid);
+	}
+
+	public void markGroupchatAsRead(long openChatId, BareJID account, JID jid) {
+		intMarkAsRead(ChatProvider.MUC_HISTORY_URI, openChatId, account, jid);
+	}
+
 	private void intMarkAsRead(final Uri u, final long chatId, final BareJID account, final JID jid) {
 		(new AsyncTask<Void, Void, Void>() {
 			@Override
@@ -51,13 +59,5 @@ public class MarkAsRead {
 				return null;
 			}
 		}).execute();
-	}
-
-	public void markChatAsRead(final long chatId, final BareJID account, final JID jid) {
-		intMarkAsRead(ChatProvider.CHAT_HISTORY_URI, chatId, account, jid);
-	}
-
-	public void markGroupchatAsRead(long openChatId, BareJID account, JID jid) {
-		intMarkAsRead(ChatProvider.MUC_HISTORY_URI, openChatId, account, jid);
 	}
 }

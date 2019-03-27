@@ -32,6 +32,58 @@ public class ReceiverContextActivity
 		}
 	};
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.openchat_fragment, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				//NavUtils.navigateUpFromSameTask(this);
+				finish();
+				return true;
+			case R.id.ac_serach:
+				startSupportActionMode(this.searchActionMode);
+				return true;
+
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		loadData();
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_select_receiver);
+		setTitle("Send to...");
+		this.searchActionMode = new SearchActionMode(this, txt -> loadData());
+
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+		recyclerView = (RecyclerView) findViewById(R.id.contacts_list);
+		recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+		recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+		recyclerView.setAdapter(adapter);
+	}
+
+	@Override
+	protected void onDestroy() {
+		recyclerView.setAdapter(null);
+		adapter.swapCursor(null);
+		super.onDestroy();
+	}
+
 	private void handleSendImageToChat(String account, String chatJid, Intent intent) {
 		Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
 
@@ -78,58 +130,6 @@ public class ReceiverContextActivity
 				handleSendImageToChat(account, chatJid, intent);
 			}
 		}
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_select_receiver);
-		setTitle("Send to...");
-		this.searchActionMode = new SearchActionMode(this, txt -> loadData());
-
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-		recyclerView = (RecyclerView) findViewById(R.id.contacts_list);
-		recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
-		recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-		recyclerView.setAdapter(adapter);
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.openchat_fragment, menu);
-		return true;
-	}
-
-	@Override
-	protected void onDestroy() {
-		recyclerView.setAdapter(null);
-		adapter.swapCursor(null);
-		super.onDestroy();
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				//NavUtils.navigateUpFromSameTask(this);
-				finish();
-				return true;
-			case R.id.ac_serach:
-				startSupportActionMode(this.searchActionMode);
-				return true;
-
-			default:
-				return super.onOptionsItemSelected(item);
-		}
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-		loadData();
 	}
 
 	interface OnItemSelected {

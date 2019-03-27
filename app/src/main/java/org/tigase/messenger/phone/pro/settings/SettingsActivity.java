@@ -165,6 +165,36 @@ public class SettingsActivity
 				Configuration.SCREENLAYOUT_SIZE_XLARGE;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	public void onBuildHeaders(List<Header> target) {
+		loadHeadersFromResource(R.xml.pref_headers, target);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean onIsMultiPane() {
+		return isXLargeTablet(this);
+	}
+
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		int id = item.getItemId();
+		Log.wtf(TAG, "Id=" + id);
+		if (id == android.R.id.home) {
+			Log.wtf(TAG, "HOME?  " + super.onMenuItemSelected(featureId, item));
+			//	NavUtils.navigateUpFromSameTask(this);
+			onBackPressed();
+			return true;
+		}
+		return super.onMenuItemSelected(featureId, item);
+	}
+
 	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
 		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
 		if (tmp == null) {
@@ -172,10 +202,6 @@ public class SettingsActivity
 		} else {
 			return XMPPService.DisconnectionCauses.valueOf(tmp);
 		}
-	}
-
-	private EventBus getEventBus() {
-		return d;
 	}
 
 	Connector.State getState(String account) {
@@ -203,41 +229,11 @@ public class SettingsActivity
 				NotificationPreferenceFragment.class.getName().equals(fragmentName);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public void onBuildHeaders(List<Header> target) {
-		loadHeadersFromResource(R.xml.pref_headers, target);
-	}
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.mAccountManager = AccountManager.get(this);
 		setupActionBar();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean onIsMultiPane() {
-		return isXLargeTablet(this);
-	}
-
-	@Override
-	public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		int id = item.getItemId();
-		Log.wtf(TAG, "Id=" + id);
-		if (id == android.R.id.home) {
-			Log.wtf(TAG, "HOME?  " + super.onMenuItemSelected(featureId, item));
-			//	NavUtils.navigateUpFromSameTask(this);
-			onBackPressed();
-			return true;
-		}
-		return super.onMenuItemSelected(featureId, item);
 	}
 
 	@Override
@@ -251,6 +247,10 @@ public class SettingsActivity
 	protected void onStop() {
 		super.onStop();
 		unbindService(mConnection);
+	}
+
+	private EventBus getEventBus() {
+		return d;
 	}
 
 	/**

@@ -5,7 +5,6 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 public class JingleSession {

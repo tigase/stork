@@ -20,14 +20,6 @@ public class PipeliningCache
 		this.context = context;
 	}
 
-	private File cacheFile(final SessionObject sessionObject) {
-		String domain = sessionObject.getUserBareJid().getDomain();
-		File file = new File(context.getApplicationContext().getDir(".", Context.MODE_PRIVATE),
-							 "features_" + domain + ".cache.xml");
-		Log.d(TAG, "Using cache file " + file);
-		return file;
-	}
-
 	@Override
 	public ArrayList<Element> load(final SessionObject sessionObject) {
 		final File file = cacheFile(sessionObject);
@@ -44,15 +36,6 @@ public class PipeliningCache
 			Log.e(TAG, "Cannot read cache file", e);
 			return null;
 		}
-	}
-
-	private String read(BufferedReader reader) throws IOException {
-		final StringBuilder sb = new StringBuilder();
-		String line;
-		while ((line = reader.readLine()) != null) {
-			sb.append(line);
-		}
-		return sb.toString();
 	}
 
 	@Override
@@ -73,5 +56,22 @@ public class PipeliningCache
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot store cache file", e);
 		}
+	}
+
+	private File cacheFile(final SessionObject sessionObject) {
+		String domain = sessionObject.getUserBareJid().getDomain();
+		File file = new File(context.getApplicationContext().getDir(".", Context.MODE_PRIVATE),
+							 "features_" + domain + ".cache.xml");
+		Log.d(TAG, "Using cache file " + file);
+		return file;
+	}
+
+	private String read(BufferedReader reader) throws IOException {
+		final StringBuilder sb = new StringBuilder();
+		String line;
+		while ((line = reader.readLine()) != null) {
+			sb.append(line);
+		}
+		return sb.toString();
 	}
 }

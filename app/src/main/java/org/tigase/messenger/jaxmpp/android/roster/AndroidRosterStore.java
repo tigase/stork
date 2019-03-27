@@ -36,16 +36,6 @@ public class AndroidRosterStore
 	}
 
 	@Override
-	protected Set<String> addItem(RosterItem item) {
-		return this.provider.addItem(sessionObject, item);
-	}
-
-	@Override
-	protected Set<String> calculateModifiedGroups(HashSet<String> groupsOld) {
-		return groupsOld;
-	}
-
-	@Override
 	public RosterItem get(BareJID jid) {
 		return this.provider.getItem(sessionObject, jid);
 	}
@@ -69,6 +59,16 @@ public class AndroidRosterStore
 	@Override
 	public void removeAll() {
 		this.provider.removeAll(sessionObject);
+	}
+
+	@Override
+	protected Set<String> addItem(RosterItem item) {
+		return this.provider.addItem(sessionObject, item);
+	}
+
+	@Override
+	protected Set<String> calculateModifiedGroups(HashSet<String> groupsOld) {
+		return groupsOld;
 	}
 
 	@Override

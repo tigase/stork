@@ -19,6 +19,13 @@ public class AndroidRoomsManager
 	}
 
 	@Override
+	public boolean remove(Room room) {
+		Log.i("AndroidRoomsManager", "Removing room " + room.getRoomJid() + " (" + room.getId() + ")");
+		provider.close(room.getSessionObject(), room.getId());
+		return super.remove(room);
+	}
+
+	@Override
 	protected Room createRoomInstance(BareJID roomJid, String nickname, String password) {
 		long roomId = provider.createMuc(sessionObject, JID.jidInstance(roomJid), nickname, password);
 		Room room = new Room(roomId, context, roomJid, nickname);
@@ -34,13 +41,6 @@ public class AndroidRoomsManager
 				this.register(room);
 			}
 		}
-	}
-
-	@Override
-	public boolean remove(Room room) {
-		Log.i("AndroidRoomsManager", "Removing room " + room.getRoomJid() + " (" + room.getId() + ")");
-		provider.close(room.getSessionObject(), room.getId());
-		return super.remove(room);
 	}
 
 }

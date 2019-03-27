@@ -68,6 +68,97 @@ public class VCardEditActivity
 		}
 	}
 
+	@Override
+	public void finish() {
+		Intent x = new Intent(VCardEditActivity.this, AccountProperties.class);
+		x.putExtra("account_name", accountName);
+		VCardEditActivity.this.startActivity(x);
+		super.finish();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.vcardeditor_actions, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.ac_ok:
+				send(fillVCard());
+				return true;
+			case android.R.id.home:
+				finish();
+				return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+			Uri imageUri = data.getData();
+			setAvatarFromUri(imageUri);
+		}
+
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		this.accountName = getIntent().getStringExtra("account");
+		setContentView(R.layout.vcard_edit);
+		setValue(this.accountName, R.id.vcard_jid);
+
+		this.avatarImageView = (ImageView) findViewById(R.id.contact_avatar);
+		avatarImageView.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// showAvatarActionDialog();
+				Intent intent = new Intent();
+				intent.setType("image/*");
+				intent.setAction(Intent.ACTION_GET_CONTENT);
+				startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE);
+			}
+		});
+	}
+
+	@Override
+	protected void onXMPPServiceConnected() {
+		if (vcard == null) {
+			loadVCard();
+		}
+	}
+
+	@Override
+	protected void onXMPPServiceDisconnected() {
+
+	}
+
+	protected void showAvatarActionDialog() {
+		android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+		builder.setItems(R.array.vcard_avatar_action, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+					case 0:
+//										 takePictureForAvatar();
+						break;
+					case 1:
+					default:
+						Intent intent = new Intent();
+						intent.setType("image/*");
+						intent.setAction(Intent.ACTION_GET_CONTENT);
+						startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE);
+						break;
+				}
+			}
+		});
+		builder.create().show();
+	}
+
 	private byte[] bitmapToByteArray(Bitmap bmp) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		bmp.compress(Bitmap.CompressFormat.PNG, 0 /* ignored for PNG */, bos);
@@ -139,14 +230,6 @@ public class VCardEditActivity
 		return vcard;
 	}
 
-	@Override
-	public void finish() {
-		Intent x = new Intent(VCardEditActivity.this, AccountProperties.class);
-		x.putExtra("account_name", accountName);
-		VCardEditActivity.this.startActivity(x);
-		super.finish();
-	}
-
 	private Bitmap getScaledImage(Uri uri) {
 		try {
 			// Decode image size
@@ -204,68 +287,6 @@ public class VCardEditActivity
 		} catch (JaxmppException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
-		if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
-			Uri imageUri = data.getData();
-			setAvatarFromUri(imageUri);
-		}
-
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.accountName = getIntent().getStringExtra("account");
-		setContentView(R.layout.vcard_edit);
-		setValue(this.accountName, R.id.vcard_jid);
-
-		this.avatarImageView = (ImageView) findViewById(R.id.contact_avatar);
-		avatarImageView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// showAvatarActionDialog();
-				Intent intent = new Intent();
-				intent.setType("image/*");
-				intent.setAction(Intent.ACTION_GET_CONTENT);
-				startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE);
-			}
-		});
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.vcardeditor_actions, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_ok:
-				send(fillVCard());
-				return true;
-			case android.R.id.home:
-				finish();
-				return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	protected void onXMPPServiceConnected() {
-		if (vcard == null) {
-			loadVCard();
-		}
-	}
-
-	@Override
-	protected void onXMPPServiceDisconnected() {
-
 	}
 
 	private void send(VCard vCard) {
@@ -349,27 +370,6 @@ public class VCardEditActivity
 		} else if (v instanceof TextView) {
 			((TextView) v).setText(value);
 		}
-	}
-
-	protected void showAvatarActionDialog() {
-		android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-		builder.setItems(R.array.vcard_avatar_action, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				switch (which) {
-					case 0:
-//										 takePictureForAvatar();
-						break;
-					case 1:
-					default:
-						Intent intent = new Intent();
-						intent.setType("image/*");
-						intent.setAction(Intent.ACTION_GET_CONTENT);
-						startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE);
-						break;
-				}
-			}
-		});
-		builder.create().show();
 	}
 
 	private void showErrorDialog(String msg) {
