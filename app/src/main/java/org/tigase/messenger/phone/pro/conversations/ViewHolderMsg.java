@@ -47,9 +47,14 @@ public class ViewHolderMsg
 		final String nickname = cursor.getString(
 				cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 
-		mContentView.setText(body);
-		mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
-															   DateUtils.WEEK_IN_MILLIS, 0));
+		if (mContentView != null) {
+			mContentView.setText(body);
+		}
+
+		if (mTimestamp != null) {
+			mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
+																   DateUtils.WEEK_IN_MILLIS, 0));
+		}
 
 		if (mNickname != null) {
 			mNickname.setVisibility(View.VISIBLE);
@@ -80,7 +85,7 @@ public class ViewHolderMsg
 					break;
 			}
 		}
-		if (mAvatar != null) {
+		if (jid != null && mAvatar != null) {
 			AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mAvatar);
 		}
 	}

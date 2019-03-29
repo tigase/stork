@@ -24,11 +24,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 import com.bignerdranch.android.multiselector.ModalMultiSelectorCallback;
 import com.bignerdranch.android.multiselector.MultiSelector;
+import com.bignerdranch.android.multiselector.SelectableHolder;
 
 public abstract class MultiSelectFragment
 		extends android.support.v4.app.Fragment {
 
-	protected final MultiSelector mMultiSelector = new MultiSelector();
+	protected final MultiSelector mMultiSelector = new MultiSelector() {
+		@Override
+		public void setSelected(SelectableHolder holder, boolean isSelected) {
+			if (holder instanceof MultiSelectViewHolder && !((MultiSelectViewHolder) holder).isCanBeSelected()) {
+				super.setSelected(holder, false);
+				return;
+			}
+			super.setSelected(holder, isSelected);
+		}
+
+		@Override
+		public boolean tapSelection(SelectableHolder holder) {
+			if (holder instanceof MultiSelectViewHolder && !((MultiSelectViewHolder) holder).isCanBeSelected()) {
+				return false;
+			}
+			return super.tapSelection(holder);
+		}
+	};
 	protected ActionMode actionMode;
 	protected ModalMultiSelectorCallback mActionModeCallback = new ModalMultiSelectorCallback(mMultiSelector) {
 

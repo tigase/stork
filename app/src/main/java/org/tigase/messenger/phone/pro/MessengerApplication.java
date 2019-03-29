@@ -20,6 +20,7 @@ package org.tigase.messenger.phone.pro;
 
 import android.app.Application;
 import android.content.Intent;
+import android.support.multidex.MultiDexApplication;
 import org.tigase.messenger.phone.pro.service.ServiceRestarter;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
@@ -27,7 +28,7 @@ import org.tigase.messenger.phone.pro.utils.AvatarHelper;
  * Created by bmalkow on 16.03.16.
  */
 public class MessengerApplication
-		extends Application {
+		extends MultiDexApplication {
 
 	@Override
 	public void onCreate() {

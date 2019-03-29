@@ -42,6 +42,7 @@ import android.widget.ImageView;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
+import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
@@ -447,12 +448,15 @@ public class ChatItemFragment
 			if (getContext() == null) {
 				return null;
 			}
-			Cursor cursor = getContext().getContentResolver()
-					.query(uri, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
 
-			Log.d(TAG, "Received cursor. size=" + cursor.getCount());
+			try (Cursor cursor = getContext().getContentResolver()
+					.query(uri, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
+				Log.d(TAG, "Received cursor. size=" + cursor.getCount());
 
-			return cursor;
+				DaysInformCursor c = new DaysInformCursor(getContext().getContentResolver(), cursor,
+														  DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+				return c;
+			}
 		}
 
 		@Override

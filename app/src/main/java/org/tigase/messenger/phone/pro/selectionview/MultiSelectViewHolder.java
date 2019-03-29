@@ -26,6 +26,7 @@ public abstract class MultiSelectViewHolder
 		implements View.OnLongClickListener, View.OnClickListener {
 
 	private final MultiSelectFragment fragment;
+	private boolean canBeSelected = true;
 
 	public MultiSelectViewHolder(View itemView, MultiSelectFragment multiSelectFragment) {
 		super(itemView, multiSelectFragment.getMultiSelector());
@@ -33,10 +34,20 @@ public abstract class MultiSelectViewHolder
 		addClickable(itemView);
 	}
 
+	public boolean isCanBeSelected() {
+		return canBeSelected;
+	}
+
+	public void setCanBeSelected(boolean canBeSelected) {
+		this.canBeSelected = canBeSelected;
+	}
+
 	@Override
 	public void onClick(View v) {
 		if (fragment.getMultiSelector().isSelectable()) {
-			fragment.getMultiSelector().tapSelection(this);
+			if (isSelectable()) {
+				fragment.getMultiSelector().tapSelection(this);
+			}
 			fragment.updateAction();
 		} else {
 			onItemClick(v);
@@ -48,11 +59,15 @@ public abstract class MultiSelectViewHolder
 		if (!fragment.getMultiSelector().isSelectable()) {
 			fragment.startActionMode();
 			fragment.getMultiSelector().setSelectable(true);
-			fragment.getMultiSelector().setSelected(this, true);
+			if (isCanBeSelected()) {
+				fragment.getMultiSelector().setSelected(this, true);
+			}
 			fragment.updateAction();
 			return true;
 		} else if (fragment.getMultiSelector().isSelectable()) {
-			fragment.getMultiSelector().tapSelection(this);
+			if (isCanBeSelected()) {
+				fragment.getMultiSelector().tapSelection(this);
+			}
 			fragment.updateAction();
 			return true;
 		} else {

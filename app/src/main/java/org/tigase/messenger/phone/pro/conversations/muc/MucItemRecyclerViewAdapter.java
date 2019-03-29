@@ -24,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractViewHolder;
+import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.conversations.ViewHolderImg;
 import org.tigase.messenger.phone.pro.conversations.ViewHolderMsg;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -90,37 +91,44 @@ public class MucItemRecyclerViewAdapter
 		final int messageType = viewType & 0x7fff;
 		final int messageState = ((viewType >> 16) & 0x7fff);
 
-		switch (messageState) {
-			case DatabaseContract.ChatHistory.STATE_INCOMING:
-			case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
-				switch (messageType) {
-					case DatabaseContract.ChatHistory.ITEM_TYPE_ERROR:
-						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
-															   .inflate(R.layout.fragment_chatitem_error, parent,
-																		false), getFragment());
-						break;
-					default:
-						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
-															   .inflate(R.layout.fragment_groupchatitem_received,
-																		parent, false), getFragment());
-				}
-				break;
-			case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
-			case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
-			case DatabaseContract.ChatHistory.STATE_OUT_SENT:
-				switch (messageType) {
-					case DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE:
-						viewHolder = new ViewHolderImg(context, LayoutInflater.from(parent.getContext())
-								.inflate(R.layout.fragment_groupchatitem_sent_image, parent, false), getFragment());
-						break;
-					default:
-						viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
-															   .inflate(R.layout.fragment_groupchatitem_sent, parent,
-																		false), getFragment());
-				}
-				break;
-			default:
-				throw new RuntimeException("Unknown view type (t=" + messageType + ", s=" + messageState + ")");
+		if (messageType == DaysInformCursor.ITEM_TYPE_DAY_INFO) {
+			viewHolder = new ViewHolderMsg(
+					LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_chatitem_newday, parent, false),
+					getFragment());
+			viewHolder.setCanBeSelected(false);
+		} else {
+			switch (messageState) {
+				case DatabaseContract.ChatHistory.STATE_INCOMING:
+				case DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD:
+					switch (messageType) {
+						case DatabaseContract.ChatHistory.ITEM_TYPE_ERROR:
+							viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
+																   .inflate(R.layout.fragment_chatitem_error, parent,
+																			false), getFragment());
+							break;
+						default:
+							viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
+																   .inflate(R.layout.fragment_groupchatitem_received,
+																			parent, false), getFragment());
+					}
+					break;
+				case DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT:
+				case DatabaseContract.ChatHistory.STATE_OUT_DELIVERED:
+				case DatabaseContract.ChatHistory.STATE_OUT_SENT:
+					switch (messageType) {
+						case DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE:
+							viewHolder = new ViewHolderImg(context, LayoutInflater.from(parent.getContext())
+									.inflate(R.layout.fragment_groupchatitem_sent_image, parent, false), getFragment());
+							break;
+						default:
+							viewHolder = new ViewHolderMsg(LayoutInflater.from(parent.getContext())
+																   .inflate(R.layout.fragment_groupchatitem_sent,
+																			parent, false), getFragment());
+					}
+					break;
+				default:
+					throw new RuntimeException("Unknown view type (t=" + messageType + ", s=" + messageState + ")");
+			}
 		}
 
 		viewHolder.setOwnNickname(ownNickname);

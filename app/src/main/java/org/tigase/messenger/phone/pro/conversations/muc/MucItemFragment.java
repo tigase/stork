@@ -39,6 +39,7 @@ import android.widget.ImageView;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
+import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
@@ -327,10 +328,12 @@ public class MucItemFragment
 			if (getContext() == null) {
 				return null;
 			}
-			Cursor cursor = getContext().getContentResolver()
-					.query(uri, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC");
-
-			return cursor;
+			try (Cursor cursor = getContext().getContentResolver()
+					.query(uri, cols, null, null, DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC")) {
+				DaysInformCursor c = new DaysInformCursor(getContext().getContentResolver(), cursor,
+														  DatabaseContract.ChatHistory.FIELD_TIMESTAMP);
+				return c;
+			}
 		}
 
 		@Override
