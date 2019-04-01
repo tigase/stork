@@ -23,7 +23,6 @@ allprojects {
 		jcenter()
 		maven {url "http://maven-repo.tigase.org/repository/release/"}
 		maven {url "http://maven-repo.tigase.org/repository/snapshot/"}
-
 	}
 }
 

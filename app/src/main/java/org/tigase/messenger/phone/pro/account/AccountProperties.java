@@ -34,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import org.tigase.messenger.phone.pro.MainActivity;
+import org.tigase.messenger.phone.pro.PushController;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesActivity;
 import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesFragment;
@@ -397,24 +398,29 @@ public class AccountProperties
 				}
 			});
 
-			SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference(
-					"account_push_notification");
-			tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
-			pushNotificationPreference.setChecked(tmp != null && Boolean.parseBoolean(tmp));
-			pushNotificationPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-				@Override
-				public boolean onPreferenceChange(Preference preference, Object newValue) {
-					mAccountManager.setUserData(account, AccountsConstants.PUSH_NOTIFICATION,
-												Boolean.toString((Boolean) newValue));
+			if (!PushController.isAvailable()) {
+				PreferenceCategory pushCat = (PreferenceCategory) findPreference("pref_account_pushnotifications");
+				getPreferenceScreen().removePreference(pushCat);
+			} else {
+				SwitchPreference pushNotificationPreference = (SwitchPreference) findPreference(
+						"account_push_notification");
+				tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
+				pushNotificationPreference.setChecked(tmp != null && Boolean.parseBoolean(tmp));
+				pushNotificationPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+					@Override
+					public boolean onPreferenceChange(Preference preference, Object newValue) {
+						mAccountManager.setUserData(account, AccountsConstants.PUSH_NOTIFICATION,
+													Boolean.toString((Boolean) newValue));
 
-					Intent action = new Intent(XMPPService.PUSH_NOTIFICATION_CHANGED);
-					action.putExtra("account", account);
-					action.putExtra("state", (Boolean) newValue);
-					getActivity().sendBroadcast(action);
+						Intent action = new Intent(PushController.PUSH_NOTIFICATION_CHANGED);
+						action.putExtra("account", account);
+						action.putExtra("state", (Boolean) newValue);
+						getActivity().sendBroadcast(action);
 
-					return true;
-				}
-			});
+						return true;
+					}
+				});
+			}
 
 			this.mamEnabled = (SwitchPreference) findPreference("account_mam_enabled");
 			this.mamAutoSync = (SwitchPreference) findPreference("account_mam_automatic_sync");

@@ -32,6 +32,7 @@ import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 
 import static org.tigase.messenger.phone.pro.service.XMPPService.CONNECT_SINGLE;
+import static org.webrtc.ContextUtils.getApplicationContext;
 
 public class MyFirebaseMessagingService
 		extends FirebaseMessagingService {
@@ -96,7 +97,7 @@ public class MyFirebaseMessagingService
 			String tmp = mAccountManager.getUserData(account, AccountsConstants.PUSH_NOTIFICATION);
 			boolean enabled = tmp == null ? false : Boolean.parseBoolean(tmp);
 
-			Intent action = new Intent(XMPPService.PUSH_NOTIFICATION_CHANGED);
+			Intent action = new Intent(PushController.PUSH_NOTIFICATION_CHANGED);
 			action.putExtra("account", account);
 			action.putExtra("state", (Boolean) enabled);
 			sendBroadcast(action);
