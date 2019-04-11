@@ -1,74 +1,69 @@
-<!--
-  ~ Tigase Android Messenger
-  ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, version 3 of the License.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU Affero General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program. Look for COPYING file in the top folder.
-  ~ If not, see http://www.gnu.org/licenses/.
-  -->
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:background="#ffffff"
-             tools:context="org.tigase.messenger.phone.pro.AboutActivity">
-
-    <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-
-        <TextView
-                android:id="@+id/textView2"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#ffffff"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:fontFamily="sans-serif-black"
-                android:textSize="20dp"
-                android:text="@string/about_application_name"/>
+                android:gravity="center_horizontal"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:orientation="vertical">
 
-        <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:text="@string/about_version_name"/>
+            <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginTop="16dp"
+                    android:textSize="20dp"
+                    android:text="@string/about_application_name"/>
 
-        <ImageView
-                android:id="@+id/app_logo"
-                android:layout_width="128dp"
-                android:layout_height="128dp"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/ic_launcher"/>
+            <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="@string/about_version_name"/>
 
-        <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:text="@string/about_copyright"/>
+            <ImageView
+                    android:id="@+id/app_logo"
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="32dp"
+                    android:layout_centerHorizontal="true"
+                    android:src="@drawable/stork_logo"/>
 
-        <TextView
-                android:id="@+id/textView5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:text="@string/about_rights"/>
-    </LinearLayout>
+            <TextView
+                    android:id="@+id/textView4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="@string/about_copyright"/>
 
+            <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="32dp"
+                    android:text="@string/about_rights"/>
+            <TextView
+                    android:id="@+id/creditsText"
+                    android:linksClickable="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+            />
 
-</FrameLayout>
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

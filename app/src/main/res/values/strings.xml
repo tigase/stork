@@ -1,5 +1,5 @@
 <!--
-  ~ Tigase Android Messenger
+  ~ Stork
   ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
   -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Tigase Messenger</string>
+    <string name="app_name">Stork</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -120,9 +120,9 @@
     <string name="prompt_nickname">Nickname (optional)</string>
 
     <string name="about_activity_title">About</string>
-    <string name="about_application_name">Tigase Messenger</string>
+    <string name="about_application_name">Stork</string>
     <string name="about_version_name">Version %s</string>
-    <string name="about_copyright">ⓒ 2011–2017 Tigase Inc.</string>
+    <string name="about_copyright">ⓒ 2011–2019 Tigase Inc.</string>
     <string name="about_rights">All rights reserved.</string>
     <string name="main_menu_roster">Contacts</string>
     <string name="main_menu_openchats">Chats</string>
@@ -234,6 +234,7 @@
     <string name="channel_name">Messages</string>
     <string name="channel_description">Incomming messages</string>
     <string name="menu_connectionstatus_serverfeatures">Server features</string>
+    <string name="credits_activity_title">Credits</string>
     <string-array name="vcard_avatar_action">
         <item>Take photo</item>
         <item>Pick photo</item>

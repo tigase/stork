@@ -1,5 +1,5 @@
 /*
- * Tigase Android Messenger
+ * Stork
  * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -152,7 +152,8 @@ public class AccountCat
 
 				final AsyncDrawable asyncDrawable = new AsyncDrawable(getContext().getResources(), mPlaceHolderBitmap,
 																	  task);
-				avatarView.setImageDrawable(asyncDrawable);
+//				avatarView.setImageDrawable(asyncDrawable);
+				avatarView.setImageResource(R.drawable.stork_logo);
 				try {
 					task.execute(BareJID.bareJIDInstance(getTitle().toString()));
 				} catch (java.util.concurrent.RejectedExecutionException e) {
@@ -171,11 +172,11 @@ public class AccountCat
 	private void init() {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options);
+		BitmapFactory.decodeResource(getContext().getResources(), R.drawable.stork_logo, options);
 		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 		options.inJustDecodeBounds = false;
 		this.mPlaceHolderBitmap = getCroppedBitmap(
-				BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_launcher, options));
+				BitmapFactory.decodeResource(getContext().getResources(), R.drawable.stork_logo, options));
 		setLayoutResource(R.layout.preference_account_item);
 	}
 

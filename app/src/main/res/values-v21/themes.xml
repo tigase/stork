@@ -1,5 +1,5 @@
 <!--
-  ~ Tigase Android Messenger
+  ~ Stork
   ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,13 @@
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
   -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#FFF59D"/>
-    <stroke android:width="1dp" android:color="#83B1BCBE"/>
-    <corners android:radius="5dp"/>
-    <padding android:left="0dp" android:top="0dp" android:right="0dp" android:bottom="0dp"/>
-</shape>
+
+<resources>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>

@@ -1,5 +1,5 @@
 /*
- * Tigase Android Messenger
+ * Stork
  * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,9 +18,9 @@
 
 package org.tigase.messenger.phone.pro;
 
-import android.app.Application;
 import android.content.Intent;
 import android.support.multidex.MultiDexApplication;
+import android.support.v7.app.AppCompatDelegate;
 import org.tigase.messenger.phone.pro.service.ServiceRestarter;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 
@@ -33,6 +33,7 @@ public class MessengerApplication
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 		AvatarHelper.initilize(this);
 	}
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Tigase Android Messenger
+  ~ Stork
   ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -18,17 +18,16 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/nav_header_height"
-                android:background="@drawable/side_nav_bar"
                 android:gravity="bottom"
                 android:orientation="vertical"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark">
+                android:theme="@style/AppTheme">
 
     <ImageView
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:id="@+id/imageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/stork_logo"
             android:layout_above="@+id/status_selector"
     />
 

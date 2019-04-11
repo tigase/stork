@@ -1,5 +1,5 @@
 /*
- * Tigase Android Messenger
+ * Stork
  * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,14 +20,23 @@ package org.tigase.messenger.phone.pro;
 
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 
 public class AboutActivity
 		extends AppCompatActivity {
@@ -47,6 +56,8 @@ public class AboutActivity
 		if (actionBar != null) {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+
+		putCredits(R.id.creditsText);
 
 		ImageView logo = (ImageView) findViewById(R.id.app_logo);
 		logo.setClickable(true);
@@ -78,6 +89,37 @@ public class AboutActivity
 			tv.setText(getString(R.string.about_version_name, versionName));
 		} catch (Exception e) {
 		}
+	}
+
+	private String convert(InputStream inputStream, Charset charset) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+
+		try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
+			while ((line = bufferedReader.readLine()) != null) {
+				stringBuilder.append(line);
+			}
+		} catch (IOException e) {
+			stringBuilder.append(e.getMessage());
+		}
+
+		return stringBuilder.toString();
+	}
+
+	private void putCredits(int textViewId) {
+		TextView textView = findViewById(textViewId);
+		textView.setLinksClickable(true);
+		textView.setMovementMethod(LinkMovementMethod.getInstance());
+
+		String html = convert(getResources().openRawResource(R.raw.credits), Charset.forName("UTF-8"));
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			textView.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));
+		} else {
+			textView.setText(Html.fromHtml(html));
+		}
+
 	}
 
 }

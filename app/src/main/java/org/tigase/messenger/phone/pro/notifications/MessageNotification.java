@@ -1,5 +1,5 @@
 /*
- * Tigase Android Messenger
+ * Stork
  * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -291,7 +291,7 @@ public class MessageNotification {
 	private NotificationCompat.Builder createNotificationBuilder(Context context, Uri soundUri, long[] vibrationPattern,
 																 PendingIntent resultPendingIntent) {
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(
-				R.drawable.ic_messenger_icon)
+				R.drawable.stork_logo)
 				.setAutoCancel(true)
 				.setGroup(GROUP_KEY_MESSAGES)
 				.setCategory(Notification.CATEGORY_MESSAGE);

@@ -1,4 +1,4 @@
-rootProject.name='Tigase Android Messenger'
+rootProject.name='Stork'
 
 include ':app'
 include ':documentation'

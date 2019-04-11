@@ -1,4 +1,4 @@
-= Tigase Android Messenger
+= Stork
 :author: Tigase Team <team@tigase.net>
 
 :toc:
