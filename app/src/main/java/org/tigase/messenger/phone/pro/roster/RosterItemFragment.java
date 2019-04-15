@@ -18,12 +18,14 @@
 
 package org.tigase.messenger.phone.pro.roster;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ActionMode;
@@ -62,8 +64,14 @@ public class RosterItemFragment
 	RecyclerView recyclerView;
 	private MyRosterItemRecyclerViewAdapter adapter;
 	private DBUpdateTask dbUpdateTask;
-	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
 	private SearchActionMode searchActionMode;
+	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			refreshRoster();
+		}
+	};
 	//	private OnRosterItemDeleteListener mItemLongClickListener = new OnRosterItemDeleteListener() {
 //
 //		@Override
@@ -132,9 +140,9 @@ public class RosterItemFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_rosteritem_list, container, false);
 
-		recyclerView = (RecyclerView) root.findViewById(R.id.roster_list);
+		recyclerView = root.findViewById(R.id.roster_list);
 
-		FloatingActionButton rosterAddContact = (FloatingActionButton) root.findViewById(R.id.roster_add_contact);
+		FloatingActionButton rosterAddContact = root.findViewById(R.id.roster_add_contact);
 		rosterAddContact.setOnClickListener(view -> {
 			Intent intent = new Intent(getContext(), EditContactActivity.class);
 			startActivity(intent);
@@ -219,7 +227,10 @@ public class RosterItemFragment
 	@Override
 	public void onResume() {
 		super.onResume();
-		refreshRoster();
+
+		if (mConnection.getService() != null) {
+			refreshRoster();
+		}
 	}
 
 	@Override
@@ -262,7 +273,7 @@ public class RosterItemFragment
 	private void refreshRoster() {
 		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
 			String txt = searchActionMode.getSearchText();
-			dbUpdateTask = new DBUpdateTask();
+			dbUpdateTask = new DBUpdateTask(enabledAccounts());
 			dbUpdateTask.execute(txt);
 		}
 	}
@@ -271,9 +282,10 @@ public class RosterItemFragment
 		final StringBuilder sb = new StringBuilder();
 		sb.append("'-'");
 		try {
+
 			Collection<JaxmppCore> accounts = mConnection.getService().getMultiJaxmpp().get();
 			for (JaxmppCore account : accounts) {
-				Boolean disabled = (Boolean) account.getSessionObject().getUserProperty(ACCOUNT_TMP_DISABLED_KEY);
+				Boolean disabled = account.getSessionObject().getUserProperty(ACCOUNT_TMP_DISABLED_KEY);
 				if (disabled == null || disabled) {
 					continue;
 				}
@@ -288,6 +300,12 @@ public class RosterItemFragment
 
 	private class DBUpdateTask
 			extends AsyncTask<String, Void, Cursor> {
+
+		private final String enabledAccounts;
+
+		public DBUpdateTask(String enabledAccounts) {
+			this.enabledAccounts = enabledAccounts;
+		}
 
 		@Override
 		protected Cursor doInBackground(String... params) {
@@ -317,7 +335,6 @@ public class RosterItemFragment
 				args = new String[]{"%" + searchText + "%", "%" + searchText + "%"};
 			}
 
-			String enabledAccounts = enabledAccounts();
 			if (enabledAccounts != null) {
 				selection +=
 						" AND (" + DatabaseContract.RosterItemsCache.FIELD_ACCOUNT + " IN (" + enabledAccounts + "))";

@@ -41,7 +41,7 @@
                 <RelativeLayout android:layout_width="match_parent"
                                 android:layout_height="?attr/actionBarSize"
                                 android:gravity="left">
-                    <ImageView
+                    <com.github.abdularis.civ.StorkAvatarView
                             android:id="@+id/contact_avatar"
                             android:layout_width="48dp"
                             android:layout_height="48dp"

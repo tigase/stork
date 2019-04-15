@@ -25,10 +25,11 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-    <ImageView
+    <com.github.abdularis.civ.StorkAvatarView
             android:id="@+id/contact_avatar"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginRight="4dp"
             android:layout_alignTop="@id/message_box"
             android:src="@drawable/user_avatar"/>
 

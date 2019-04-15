@@ -64,7 +64,7 @@
                     android:orientation="vertical">
 
 
-                <ImageView android:layout_width="96dp" android:layout_height="96dp" android:src="@drawable/user_avatar"
+                <com.github.abdularis.civ.StorkAvatarView android:layout_width="96dp" android:layout_height="96dp" android:src="@drawable/user_avatar"
                            android:id="@+id/user_avatar"/>
 
                 <android.support.design.widget.TextInputLayout

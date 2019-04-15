@@ -19,6 +19,7 @@
 package org.tigase.messenger.phone.pro.settings;
 
 import android.accounts.Account;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -79,6 +80,7 @@ public class AccountCat
 		setTitle(account.name);
 	}
 
+	@SuppressLint("MissingSuperCall")
 	@Override
 	protected void onBindView(View view) {
 		try {

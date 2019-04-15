@@ -28,7 +28,8 @@
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
-    <string name="pref_header_general">Status</string>
+    <string name="pref_header_status">Status</string>
+    <string name="pref_header_general">General</string>
 
     <string name="pref_title_social_recommendations">Enable social recommendations</string>
     <string name="pref_description_social_recommendations">Recommendations for people to contact
@@ -235,6 +236,7 @@
     <string name="channel_description">Incomming messages</string>
     <string name="menu_connectionstatus_serverfeatures">Server features</string>
     <string name="credits_activity_title">Credits</string>
+    <string name="pref_title_display_connection_status">Display connection status</string>
     <string-array name="vcard_avatar_action">
         <item>Take photo</item>
         <item>Pick photo</item>

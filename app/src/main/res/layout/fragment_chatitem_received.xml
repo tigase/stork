@@ -17,6 +17,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -25,11 +26,12 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-    <ImageView
+    <com.github.abdularis.civ.StorkAvatarView
             android:id="@+id/contact_avatar"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_alignTop="@id/message_box"
+            android:layout_marginRight="4dp"
             android:src="@drawable/user_avatar"/>
 
     <LinearLayout

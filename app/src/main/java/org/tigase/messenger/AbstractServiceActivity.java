@@ -20,7 +20,9 @@ package org.tigase.messenger;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;

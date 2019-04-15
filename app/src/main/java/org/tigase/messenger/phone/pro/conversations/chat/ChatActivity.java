@@ -63,17 +63,20 @@ public class ChatActivity
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	TextView mContactName;
 	ImageView mContactPresence;
+	private String contactNameCache = null;
 	private Uri contactUri;
 	private MarkAsRead markAsRead;
 	private int openChatId;
-
 	private Integer rosterId;
 
 	public int getOpenChatId() {
 		return openChatId;
 	}
 
-	String getContactName() {
+	public String getContactName() {
+		if (contactNameCache != null) {
+			return contactNameCache;
+		}
 		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
 										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
 										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME};
@@ -81,10 +84,11 @@ public class ChatActivity
 		try (Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId),
 												   cols, null, null, null)) {
 			if (c.moveToNext()) {
-				return c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
+				contactNameCache = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
 			} else {
-				return getJid().getBareJid().toString();
+				contactNameCache = getJid().getBareJid().toString();
 			}
+			return contactNameCache;
 		}
 	}
 
@@ -117,10 +121,10 @@ public class ChatActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
 
-		mContactName = (TextView) findViewById(R.id.contact_display_name);
-		mContactPresence = (ImageView) findViewById(R.id.contact_presence);
+		mContactName = findViewById(R.id.contact_display_name);
+		mContactPresence = findViewById(R.id.contact_presence);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -139,7 +143,7 @@ public class ChatActivity
 
 		Intent intent = getIntent();
 		if (intent != null && intent.getAction() != null && intent.getAction().equals(SEND_TEXT_ACTION)) {
-			EditText v = (EditText) findViewById(R.id.messageText);
+			EditText v = findViewById(R.id.messageText);
 			if (v != null) {
 				v.setText(intent.getStringExtra(TEXT));
 			}
@@ -233,7 +237,10 @@ public class ChatActivity
 	}
 
 	private void loadContact() {
-		mContactName.setText(getContactName());
+		startWhenBinded(() -> {
+			final String name = getContactName();
+			runOnUiThread(() -> mContactName.setText(name));
+		});
 	}
 
 	private Integer loadRosterID(BareJID account, BareJID jid) {

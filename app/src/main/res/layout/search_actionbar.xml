@@ -26,11 +26,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#ffffffff"
+            android:textColor="?attr/editTextColor"
             android:hint="Search..."
-            android:textColorHint="#dedede"
+            android:textColorHint="?attr/colorControlNormal"
             android:background="@android:color/transparent"
-            android:textCursorDrawable="@drawable/searchfield_cursor"
             android:inputType="text">
     </EditText>
 </LinearLayout>

@@ -24,6 +24,7 @@ import android.database.Cursor;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
@@ -36,7 +37,7 @@ public class ViewHolder
 		extends MultiSelectViewHolder {
 
 	private final Context context;
-	ImageView mContactAvatar;
+	StorkAvatarView mContactAvatar;
 	TextView mContactNameView;
 
 	ImageView mContactPresence;
@@ -48,10 +49,10 @@ public class ViewHolder
 		super(itemView, fragment);
 		this.context = context;
 
-		mJidView = (TextView) itemView.findViewById(R.id.contact_jid);
-		mContactNameView = (TextView) itemView.findViewById(R.id.contact_display_name);
-		mContactPresence = (ImageView) itemView.findViewById(R.id.contact_presence);
-		mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+		mJidView = itemView.findViewById(R.id.contact_jid);
+		mContactNameView = itemView.findViewById(R.id.contact_display_name);
+		mContactPresence = itemView.findViewById(R.id.contact_presence);
+		mContactAvatar = itemView.findViewById(R.id.contact_avatar);
 
 		addClickable(mJidView);
 		addClickable(mContactNameView);
@@ -69,9 +70,7 @@ public class ViewHolder
 		mContactNameView.setText(name);
 		mContactPresence.setImageResource(PresenceIconMapper.getPresenceResource(status));
 		mJidView.setText(jid);
-
-		AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
-
+		mContactAvatar.setJID(BareJID.bareJIDInstance(jid), name);
 	}
 
 	@Override

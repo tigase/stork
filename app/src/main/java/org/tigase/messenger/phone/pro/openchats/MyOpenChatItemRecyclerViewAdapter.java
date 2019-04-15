@@ -21,12 +21,15 @@ package org.tigase.messenger.phone.pro.openchats;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.github.abdularis.civ.AvatarImageView;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.conversations.muc.MucActivity;
@@ -101,7 +104,7 @@ public class MyOpenChatItemRecyclerViewAdapter
 		private String account;
 		private int id;
 		private String jid;
-		private ImageView mContactAvatar;
+		private StorkAvatarView mContactAvatar;
 		private TextView mContactName;
 		private ImageView mDeliveryStatus;
 		private TextView mLastMessage;
@@ -113,7 +116,7 @@ public class MyOpenChatItemRecyclerViewAdapter
 
 			this.mContactName = (TextView) itemView.findViewById(R.id.contact_display_name);
 			this.mLastMessage = (TextView) itemView.findViewById(R.id.last_message);
-			this.mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+			this.mContactAvatar = (StorkAvatarView) itemView.findViewById(R.id.contact_avatar);
 			this.mStatus = (ImageView) itemView.findViewById(R.id.contact_presence);
 			this.mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
 
@@ -168,14 +171,17 @@ public class MyOpenChatItemRecyclerViewAdapter
 				case DatabaseContract.OpenChats.TYPE_MUC:
 					mStatus.setVisibility(View.GONE);
 					mContactName.setText(context.getString(R.string.openchats_room, name));
+					mContactAvatar.setJID(BareJID.bareJIDInstance(jid), name);
 //				holder.setContextMenu(R.menu.openchat_groupchat_context, menuListener);
-					mContactAvatar.setImageResource(R.drawable.ic_groupchat_24dp);
+					mContactAvatar.setImageResource(R.drawable.ic_menu_groupchat);
 					break;
 				case DatabaseContract.OpenChats.TYPE_CHAT:
 					mStatus.setImageResource(presenceIconResource);
 					mStatus.setVisibility(View.VISIBLE);
-					mContactName.setText(context.getString(R.string.openchats_chat, name));
-					AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
+					String n = context.getString(R.string.openchats_chat, name);
+					mContactName.setText(n);
+					mContactAvatar.setJID(BareJID.bareJIDInstance(jid), n);
+//					AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mContactAvatar);
 					break;
 			}
 		}

@@ -23,6 +23,7 @@ import android.database.Cursor;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
@@ -30,7 +31,7 @@ import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
 public abstract class AbstractViewHolder
 		extends MultiSelectViewHolder {
 
-	protected final ImageView mAvatar;
+	protected final StorkAvatarView mAvatar;
 	protected final TextView mContentView;
 	protected final ImageView mDeliveryStatus;
 	protected final TextView mNickname;
@@ -39,11 +40,11 @@ public abstract class AbstractViewHolder
 
 	public AbstractViewHolder(View itemView, MultiSelectFragment fragment) {
 		super(itemView, fragment);
-		mContentView = (TextView) itemView.findViewById(R.id.content);
-		mTimestamp = (TextView) itemView.findViewById(R.id.chat_timestamp);
-		mDeliveryStatus = (ImageView) itemView.findViewById(R.id.chat_delivery_status);
-		mAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
-		mNickname = (TextView) itemView.findViewById(R.id.nickname);
+		mContentView = itemView.findViewById(R.id.content);
+		mTimestamp = itemView.findViewById(R.id.chat_timestamp);
+		mDeliveryStatus = itemView.findViewById(R.id.chat_delivery_status);
+		mAvatar = itemView.findViewById(R.id.contact_avatar);
+		mNickname = itemView.findViewById(R.id.nickname);
 
 		addClickable(mContentView);
 		addClickable(mTimestamp);

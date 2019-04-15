@@ -24,13 +24,14 @@
 
     <RelativeLayout android:id="@+id/contact_avatar_frame" android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
-        <ImageView
+        <com.github.abdularis.civ.StorkAvatarView
                 android:id="@+id/contact_avatar"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_alignParentLeft="true"
                 android:scaleType="fitStart"
-                android:src="@drawable/user_avatar"/>
+                android:src="@drawable/user_avatar"
+        />
         <ImageView
                 android:id="@+id/contact_presence"
                 android:layout_width="17sp"

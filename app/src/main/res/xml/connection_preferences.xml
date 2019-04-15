@@ -37,6 +37,6 @@
 
     <EditTextPreference
             android:key="account_resource"
-            android:summary="TigaseMessenger"
+            android:summary="stork"
             android:title="Resource"/>
 </PreferenceScreen>

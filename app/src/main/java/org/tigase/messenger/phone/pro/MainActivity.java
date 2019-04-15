@@ -38,7 +38,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import org.tigase.messenger.AbstractServiceActivity;
@@ -71,7 +75,10 @@ public class MainActivity
 	public Toolbar toolbar;
 	Spinner statusSelector;
 	private TextView connectionStatus;
+	private ImageView headerLogo;
 	private Menu navigationMenu;
+	private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = (sharedPreferences, key) -> MainActivity.this
+			.onSharedPreferenceChanged(sharedPreferences, key);
 
 	private static Connector.State getState(JaxmppCore j) {
 		Connector.State st = j.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
@@ -85,6 +92,12 @@ public class MainActivity
 			return st;
 		}
 	}
+	// @Override
+	// public boolean onCreateOptionsMenu(Menu menu) {
+	// // Inflate the menu; this adds items to the action bar if it is present.
+	// getMenuInflater().inflate(R.menu.main, menu);
+	// return true;
+	// }
 
 	public static boolean hasPermissions(Context context, String... permissions) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
@@ -96,12 +109,6 @@ public class MainActivity
 		}
 		return true;
 	}
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// // Inflate the menu; this adds items to the action bar if it is present.
-	// getMenuInflater().inflate(R.menu.main, menu);
-	// return true;
-	// }
 
 	@Override
 	public void onAddChatClick() {
@@ -173,8 +180,10 @@ public class MainActivity
 		this.statusSelector = headerLayout.findViewById(R.id.status_selector);
 
 		this.connectionStatus = headerLayout.findViewById(R.id.connection_status);
+		this.headerLogo = headerLayout.findViewById(R.id.hdr_logo);
 
 		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		sharedPref.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
 		switch (sharedPref.getString("menu", "roster")) {
 			case "roster":
 				switchMainFragment(R.id.nav_roster);
@@ -209,6 +218,9 @@ public class MainActivity
 			startActivity(intent);
 		}
 
+		boolean statVisible = sharedPref.getBoolean("general_display_connection_status", false);
+		connectionStatus.setVisibility(statVisible ? View.VISIBLE : View.INVISIBLE);
+
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (!hasPermissions(this, STORAGE_PERMISSIONS)) {
 				ActivityCompat.requestPermissions(this, STORAGE_PERMISSIONS, STORAGE_ACCESS_REQUEST);
@@ -218,6 +230,14 @@ public class MainActivity
 		} else {
 			//do here
 		}
+	}
+
+	@Override
+	protected void onStop() {
+		final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		sharedPref.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+
+		super.onStop();
 	}
 
 	@Override
@@ -237,6 +257,20 @@ public class MainActivity
 		updateConnectionStatus();
 	}
 
+	@Override
+	protected void onXMPPServiceConnected() {
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(Connector.StateChangedHandler.StateChangedEvent.class, this.statusHandler);
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, this.statusHandler);
+		getServiceConnection().getService()
+				.getMultiJaxmpp()
+				.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, this.statusHandler);
+		updateConnectionStatus();
+	}
+
 	// @Override
 	// public boolean onOptionsItemSelected(MenuItem item) {
 	// // Handle action bar item clicks here. The action bar will
@@ -253,22 +287,15 @@ public class MainActivity
 	// }
 
 	@Override
-	protected void onXMPPServiceConnected() {
-		getServiceConnection().getService()
-				.getMultiJaxmpp()
-				.addHandler(Connector.StateChangedHandler.StateChangedEvent.class, this.statusHandler);
-		getServiceConnection().getService()
-				.getMultiJaxmpp()
-				.addHandler(JaxmppCore.LoggedOutHandler.LoggedOutEvent.class, this.statusHandler);
-		getServiceConnection().getService()
-				.getMultiJaxmpp()
-				.addHandler(JaxmppCore.LoggedInHandler.LoggedInEvent.class, this.statusHandler);
-		updateConnectionStatus();
-	}
-
-	@Override
 	protected void onXMPPServiceDisconnected() {
 		getServiceConnection().getService().getMultiJaxmpp().remove(this.statusHandler);
+	}
+
+	private void onSharedPreferenceChanged(SharedPreferences sharedPref, String key) {
+		if (connectionStatus != null) {
+			boolean statVisible = sharedPref.getBoolean("general_display_connection_status", false);
+			connectionStatus.setVisibility(statVisible ? View.VISIBLE : View.INVISIBLE);
+		}
 	}
 
 	private void doPresenceChange(long presenceId) {
@@ -280,22 +307,6 @@ public class MainActivity
 		Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
 		action.putExtra("presence", presenceId);
 		sendBroadcast(action);
-	}
-
-	private void setStatusText(final String text, final int backgroundColor, final int textColor) {
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				connectionStatus.setText(text);
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-					connectionStatus.setBackgroundColor(getResources().getColor(backgroundColor, null));
-					connectionStatus.setTextColor(getResources().getColor(textColor, null));
-				} else {
-					connectionStatus.setBackgroundColor(getResources().getColor(backgroundColor));
-					connectionStatus.setTextColor(getResources().getColor(textColor));
-				}
-			}
-		});
 	}
 
 	private void switchMainFragment(final int id) {
@@ -364,42 +375,74 @@ public class MainActivity
 		}
 	}
 
+	private void setConnectionStatus(final Connector.State state) {
+		final String text;
+		final int style;
+		final boolean animation;
+		switch (state) {
+			case connected:
+				text = "Connected";
+				animation = false;
+				style = R.style.ConnectionStatus_Connected;
+				break;
+			case connecting:
+				text = "Connecting…";
+				animation = true;
+				style = R.style.ConnectionStatus_Connecting;
+				break;
+			case disconnected:
+				text = "Disconnected";
+				animation = false;
+				style = R.style.ConnectionStatus_Disconnected;
+				break;
+			case disconnecting:
+				text = "Disconnecting…";
+				animation = true;
+				style = R.style.ConnectionStatus_Disconnecting;
+				break;
+			default:
+				text = "";
+				animation = false;
+				style = R.style.ConnectionStatus_Disconnected;
+		}
+
+		runOnUiThread(() -> {
+			RotateAnimation anim;
+			if (animation) {
+				anim = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+										   0.5f);
+
+				anim.setInterpolator(new LinearInterpolator());
+				anim.setRepeatCount(Animation.INFINITE);
+				anim.setDuration(1000);
+			} else {
+				anim = null;
+			}
+			headerLogo.setAnimation(anim);
+			connectionStatus.setText(text);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				connectionStatus.setTextAppearance(style);
+			} else {
+				connectionStatus.setTextAppearance(MainActivity.this, style);
+			}
+		});
+	}
+
 	private void updateConnectionStatus() {
 		if (connectionStatus == null) {
 			return;
 		}
 		if (getServiceConnection().getService() == null) {
-			setStatusText("Disconnected", R.color.status_background_disconnected,
-						  R.color.status_foreground_disconnected);
+			setConnectionStatus(Connector.State.disconnected);
 			return;
 		}
 
 		Collection<JaxmppCore> accounts = getServiceConnection().getService().getMultiJaxmpp().get();
 		if (accounts.size() == 0) {
-			connectionStatus.setVisibility(View.VISIBLE);
-			setStatusText("Disconnected", R.color.status_background_disconnected,
-						  R.color.status_foreground_disconnected);
+			setConnectionStatus(Connector.State.disconnected);
 		} else if (accounts.size() == 1) {
 			Connector.State st = getState(accounts.iterator().next());
-			connectionStatus.setVisibility(View.VISIBLE);
-			switch (st) {
-				case connected:
-					setStatusText("Connected", R.color.status_background_connected,
-								  R.color.status_foreground_connected);
-					break;
-				case disconnected:
-					setStatusText("Disconnected", R.color.status_background_disconnected,
-								  R.color.status_foreground_disconnected);
-					break;
-				case connecting:
-					setStatusText("Connecting…", R.color.status_background_connecting,
-								  R.color.status_foreground_connecting);
-					break;
-				case disconnecting:
-					setStatusText("Disconnecting…", R.color.status_background_disconnecting,
-								  R.color.status_foreground_disconnecting);
-					break;
-			}
+			setConnectionStatus(st);
 		} else {
 			int connected = 0;
 			int disconnected = 0;
@@ -430,19 +473,15 @@ public class MainActivity
 						break;
 				}
 			}
-			connectionStatus.setVisibility(View.VISIBLE);
 
 			if (connected == accountsAmount) {
-				setStatusText("Connected", R.color.status_background_connected, R.color.status_foreground_connected);
+				setConnectionStatus(Connector.State.connected);
 			} else if (connecting > 0) {
-				setStatusText("Connecting…", R.color.status_background_connecting,
-							  R.color.status_foreground_connecting);
+				setConnectionStatus(Connector.State.connecting);
 			} else if (disconnecting > 0) {
-				setStatusText("Disconnecting…", R.color.status_background_disconnecting,
-							  R.color.status_foreground_disconnecting);
+				setConnectionStatus(Connector.State.disconnecting);
 			} else {
-				setStatusText("Disconnected", R.color.status_background_disconnected,
-							  R.color.status_foreground_disconnected);
+				setConnectionStatus(Connector.State.disconnected);
 			}
 		}
 	}

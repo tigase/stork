@@ -17,12 +17,9 @@
   -->
 
 <resources>
-    <color name="textColorPrimary">#FFFFFF</color>
     <color name="colorPrimary">#003B7A</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#0000FF</color>
-
-    <color name="review_green">#00ff00</color>
 
     <color name="black_overlay">#66000000</color>
 
@@ -47,19 +44,6 @@
     <color name="mucmessage_his_nickname_17">#b4876e</color>
     <color name="mucmessage_his_nickname_18">#c90379</color>
     <color name="mucmessage_his_nickname_19">#ef4b4f</color>
-
-
-    <color name="status_background_disconnected">#303F9F</color>
-    <color name="status_foreground_disconnected">#ffffff</color>
-
-    <color name="status_background_connected">#159c20</color>
-    <color name="status_foreground_connected">#ffffff</color>
-
-    <color name="status_background_connecting">#f5e900</color>
-    <color name="status_foreground_connecting">#000000</color>
-
-    <color name="status_background_disconnecting">#f5e900</color>
-    <color name="status_foreground_disconnecting">#000000</color>
 
 
 </resources>

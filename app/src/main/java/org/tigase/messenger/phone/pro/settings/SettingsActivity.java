@@ -220,6 +220,7 @@ public class SettingsActivity
 	protected boolean isValidFragment(String fragmentName) {
 		return PreferenceFragment.class.getName().equals(fragmentName) ||
 				GeneralPreferenceFragment.class.getName().equals(fragmentName) ||
+				StatusPreferenceFragment.class.getName().equals(fragmentName) ||
 				DataSyncPreferenceFragment.class.getName().equals(fragmentName) ||
 				AccountsPreferenceFragment.class.getName().equals(fragmentName) ||
 				ServerFeaturesFragment.class.getName().equals(fragmentName) ||
@@ -348,9 +349,6 @@ public class SettingsActivity
 		}
 	}
 
-	/**
-	 * This fragment shows general preferences only. It is used when the activity is showing a two-pane settings UI.
-	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment
 			extends AbstractPreferenceFragment {
@@ -361,12 +359,6 @@ public class SettingsActivity
 			addPreferencesFromResource(R.xml.pref_general);
 			setHasOptionsMenu(true);
 
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("away_delay_seconds"));
-			bindPreferenceSummaryToValue(findPreference("xa_delay_seconds"));
 		}
 	}
 
@@ -390,6 +382,28 @@ public class SettingsActivity
 			// guidelines.
 			bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
 			bindPreferenceSummaryToValue(findPreference("notifications_new_groupmessage_ringtone"));
+		}
+	}
+
+	/**
+	 * This fragment shows general preferences only. It is used when the activity is showing a two-pane settings UI.
+	 */
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	public static class StatusPreferenceFragment
+			extends AbstractPreferenceFragment {
+
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			addPreferencesFromResource(R.xml.pref_status);
+			setHasOptionsMenu(true);
+
+			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
+			// to their values. When their values change, their summaries are
+			// updated to reflect the new value, per the Android Design
+			// guidelines.
+			bindPreferenceSummaryToValue(findPreference("away_delay_seconds"));
+			bindPreferenceSummaryToValue(findPreference("xa_delay_seconds"));
 		}
 	}
 }

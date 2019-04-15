@@ -52,7 +52,7 @@
         <TextView android:id="@+id/debug_status"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"/>
-        <ImageView
+        <com.github.abdularis.civ.StorkAvatarView
                 android:id="@+id/avatar"
                 android:layout_width="192dp"
                 android:layout_height="192dp"/>

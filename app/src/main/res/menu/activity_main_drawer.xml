@@ -33,7 +33,7 @@
                 android:title="@string/main_menu_joinroom"/>
         <item
                 android:id="@+id/nav_connectionstatus"
-                android:icon="@drawable/ic_connection_info_24dp"
+                android:icon="@drawable/ic_menu_connection_info"
                 android:title="@string/main_menu_connectionstatus"/>
     </group>
 

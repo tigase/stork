@@ -108,7 +108,7 @@
                         android:inputType="textNoSuggestions"
                         android:maxLines="1"
                         android:singleLine="true"
-                        android:text="TigaseMessenger"/>
+                        android:text="stork"/>
 
             </android.support.design.widget.TextInputLayout>
 

@@ -41,6 +41,16 @@ public class MyChatItemRecyclerViewAdapter
 		this.context = context;
 	}
 
+	public String getContactDisplayName() {
+		return contactDisplayName;
+	}
+
+	public void setContactDisplayName(String contactDisplayName) {
+		this.contactDisplayName = contactDisplayName;
+	}
+
+	private String contactDisplayName;
+
 	@Override
 	public int getItemViewType(int i) {
 		if (!isDataValid()) {

@@ -21,8 +21,14 @@
     <!-- These settings headers are only used on tablets. -->
     <header
             android:fragment="org.tigase.messenger.phone.pro.settings.SettingsActivity$GeneralPreferenceFragment"
-            android:icon="@drawable/ic_info_black_24dp"
+            android:icon="@drawable/ic_settings_general"
             android:title="@string/pref_header_general"/>
+
+    <!-- These settings headers are only used on tablets. -->
+    <header
+            android:fragment="org.tigase.messenger.phone.pro.settings.SettingsActivity$StatusPreferenceFragment"
+            android:icon="@drawable/ic_info_black_24dp"
+            android:title="@string/pref_header_status"/>
 
     <header
             android:fragment="org.tigase.messenger.phone.pro.settings.SettingsActivity$NotificationPreferenceFragment"
@@ -37,7 +43,7 @@
                 -->
     <header
             android:fragment="org.tigase.messenger.phone.pro.settings.SettingsActivity$AccountsPreferenceFragment"
-            android:icon="@drawable/ic_accounts_24dp"
+            android:icon="@drawable/ic_settings_accounts"
             android:title="@string/pref_header_accounts"/>
 
 </preference-headers>

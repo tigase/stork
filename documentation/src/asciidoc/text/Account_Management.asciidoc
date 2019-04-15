@@ -35,7 +35,7 @@ Allows you to change the password on the device.  This is only if you need to ch
 By default the hostname will be the root of your username (server.com of user@server.com).  However, you can specify a FQDN or an IP address if you wish to connect directly.
 
 === Resource
-This will change the resource name of your JID.  The resource is the part after a slash that can denote different devices of the same account.  So user@server.com/TigaseMessenger shows TigaseMessenger is the resource (which is set by default).
+This will change the resource name of your JID.  The resource is the part after a slash that can denote different devices of the same account.  So user@server.com/stork shows TigaseMessenger is the resource (which is set by default).
 
 == Resource priority
 

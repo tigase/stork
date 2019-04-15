@@ -25,16 +25,22 @@ import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.view.View;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class ViewHolderMsg
 		extends AbstractViewHolder {
 
+	private String contactDisplayName;
+
 	public ViewHolderMsg(View itemView, MultiSelectFragment fragment) {
 		super(itemView, fragment);
+
+		if (fragment.getActivity() instanceof ChatActivity) {
+			contactDisplayName = ((ChatActivity) fragment.getActivity()).getContactName();
+		}
 	}
 
 	@Override
@@ -86,7 +92,7 @@ public class ViewHolderMsg
 			}
 		}
 		if (jid != null && mAvatar != null) {
-			AvatarHelper.setAvatarToImageView(BareJID.bareJIDInstance(jid), mAvatar);
+			mAvatar.setJID(BareJID.bareJIDInstance(jid), contactDisplayName);
 		}
 	}
 

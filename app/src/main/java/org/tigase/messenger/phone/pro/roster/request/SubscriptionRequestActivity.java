@@ -28,11 +28,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.BareJID;
@@ -49,7 +48,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 public class SubscriptionRequestActivity
 		extends AppCompatActivity {
 
-	ImageView avatar;
+	StorkAvatarView avatar;
 	LinearLayout mDetailsForm;
 	EditText mName;
 	EditText xmppId;
@@ -95,15 +94,15 @@ public class SubscriptionRequestActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_subscription_request);
 
-		xmppId = (EditText) findViewById(R.id.contact_xmppid);
-		mName = (EditText) findViewById(R.id.contact_display_name);
-		avatar = (ImageView) findViewById(R.id.user_avatar);
-		mDetailsForm = (LinearLayout) findViewById(R.id.user_details_form);
+		xmppId = findViewById(R.id.contact_xmppid);
+		mName = findViewById(R.id.contact_display_name);
+		avatar = findViewById(R.id.user_avatar);
+		mDetailsForm = findViewById(R.id.user_details_form);
 
-		Button contactRejectButton = (Button) findViewById(R.id.contact_reject_button);
+		Button contactRejectButton = findViewById(R.id.contact_reject_button);
 		contactRejectButton.setOnClickListener(view -> onRejectClick());
 
-		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		Button contactAddButton = findViewById(R.id.contact_add_button);
 		contactAddButton.setOnClickListener(view -> onAddClick());
 
 		Bundle extras = getIntent().getExtras();
@@ -140,13 +139,13 @@ public class SubscriptionRequestActivity
 	}
 
 	private void fillAvatar() {
-		AvatarHelper.setAvatarToImageView(jid, avatar);
+		avatar.setJID(jid, null);
 	}
 
 	private void fillVCard(VCard vcard) {
 		String fn = vcard.getFullName();
 		set(R.id.contact_vcard_name, fn);
-		if (fn != null && !fn.toString().isEmpty() && mName.getText().toString().equals(jid.getLocalpart())) {
+		if (fn != null && !fn.isEmpty() && mName.getText().toString().equals(jid.getLocalpart())) {
 			mName.setText(fn);
 		}
 		set(R.id.contact_vcard_nickname, vcard.getNickName());
@@ -272,7 +271,7 @@ public class SubscriptionRequestActivity
 	}
 
 	private void set(int id, String value) {
-		EditText f = (EditText) findViewById(id);
+		EditText f = findViewById(id);
 		set(f, value);
 	}
 
