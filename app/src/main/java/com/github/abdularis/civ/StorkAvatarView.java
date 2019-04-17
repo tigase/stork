@@ -43,12 +43,6 @@ public class StorkAvatarView
 		initialize();
 	}
 
-	private void initialize(){
-		setAvatarBackgroundColor(0xff607D8B);
-		setStrokeWidth(1);
-		setStrokeColor(0xffcdcdcd);
-	}
-
 	@Override
 	public void setText(@Nullable String text) {
 		super.setText(text == null ? null : text.toUpperCase());
@@ -57,7 +51,7 @@ public class StorkAvatarView
 	public void setJID(final BareJID jid, final String name) {
 		Bitmap avatar = getAvatar(jid);
 		setAvatarBackgroundColor(0xff000000 | COLORS[Math.abs(jid.hashCode()) % COLORS.length]);
-		String normalizedName = name.replaceAll("[^a-zA-Z0-9]", "");
+		String normalizedName = name == null ? null : name.replaceAll("[^a-zA-Z0-9]", "");
 		setText(name == normalizedName || normalizedName.isEmpty() ? jid.toString() : normalizedName);
 		if (avatar != null) {
 			setImageBitmap(avatar);
@@ -65,6 +59,12 @@ public class StorkAvatarView
 		} else {
 			setState(AvatarImageView.SHOW_INITIAL);
 		}
+	}
+
+	private void initialize() {
+		setAvatarBackgroundColor(0xff607D8B);
+		setStrokeWidth(1);
+		setStrokeColor(0xffcdcdcd);
 	}
 
 	private Bitmap getAvatar(final BareJID jid) {
