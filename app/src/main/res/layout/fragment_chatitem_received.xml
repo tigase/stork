@@ -17,7 +17,6 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -64,6 +63,10 @@
                 android:layout_gravity="right"
                 android:layout_marginRight="3dp"
                 android:orientation="horizontal">
+
+            <ImageView android:id="@+id/encryption_indicator" android:layout_width="16dp" android:layout_height="16dp"
+                       android:visibility="gone"
+                       android:src="@drawable/ic_encryprted_message"            />
 
             <TextView
                     android:id="@+id/chat_timestamp"

@@ -102,6 +102,17 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".conversations.chat.OMEMOStartActivity"
+                  android:label="Encryption"
+                  android:theme="@style/ChatStyle"
+                  android:parentActivityName=".conversations.chat.ChatActivity"
+        />
+
+        <activity android:name=".roster.contact.ContactInfoActivity"
+                  android:label="Contact Info"
+                  android:theme="@style/ChatStyle">
+        </activity>
+
         <receiver
                 android:name=".AutoStart"
                 android:enabled="true"
@@ -132,16 +143,6 @@
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
-        </activity>
-        <activity
-                android:name=".CreditsViewActivity"
-                android:configChanges="orientation|keyboardHidden|screenSize"
-                android:label="@string/credits_activity_title"
-                android:parentActivityName=".AboutActivity"
-                android:theme="@style/FullscreenTheme">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="org.tigase.messenger.phone.pro.AboutActivity"/>
         </activity>
 
         <service

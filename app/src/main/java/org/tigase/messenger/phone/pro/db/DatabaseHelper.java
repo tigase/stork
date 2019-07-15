@@ -25,6 +25,7 @@ import android.util.Log;
 import org.tigase.messenger.jaxmpp.android.caps.CapsDbHelper;
 import org.tigase.messenger.jaxmpp.android.chat.OpenChatDbHelper;
 import org.tigase.messenger.jaxmpp.android.roster.RosterDbHelper;
+import org.tigase.messenger.phone.pro.omemo.OMEMODbHelper;
 
 public class DatabaseHelper
 		extends SQLiteOpenHelper {
@@ -50,8 +51,8 @@ public class DatabaseHelper
 		Log.i("DatabaseHelper", "Create database");
 		RosterDbHelper.onCreate(db);
 		OpenChatDbHelper.onCreate(db);
-
 		CapsDbHelper.onCreate(db);
+		new OMEMODbHelper().onCreate(db);
 
 		db.execSQL("ALTER TABLE " + DatabaseContract.RosterItemsCache.TABLE_NAME + " ADD COLUMN " +
 						   DatabaseContract.RosterItemsCache.FIELD_STATUS + " INTEGER DEFAULT 0;");
@@ -68,7 +69,7 @@ public class DatabaseHelper
 	}
 
 	@Override
-	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+	public void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
 		Log.i("DatabaseHelper", "Update database from " + oldVersion + " to " + newVersion);
 		if (oldVersion == 6 && newVersion == 7) {
 			db.execSQL("DROP INDEX " + DatabaseContract.ChatHistory.INDEX_JID);
@@ -107,5 +108,12 @@ public class DatabaseHelper
 							   DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + "=7");
 		}
 
+		new OMEMODbHelper().onUpgrade(db, oldVersion, newVersion);
+		if (oldVersion <= 10) {
+			db.execSQL("ALTER TABLE " + DatabaseContract.ChatHistory.TABLE_NAME + " ADD " +
+							   DatabaseContract.ChatHistory.FIELD_ENCRYPTION + " INTEGER");
+			db.execSQL("ALTER TABLE " + DatabaseContract.OpenChats.TABLE_NAME + " ADD " +
+							   DatabaseContract.OpenChats.FIELD_ENCRYPTION + " INTEGER DEFAULT 0");
+		}
 	}
 }

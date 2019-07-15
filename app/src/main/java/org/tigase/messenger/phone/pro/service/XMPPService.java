@@ -48,10 +48,13 @@ import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 import org.tigase.messenger.phone.pro.db.RosterProviderExt;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
+import org.tigase.messenger.phone.pro.omemo.OMEMOStore;
+import org.tigase.messenger.phone.pro.omemo.OMEMOStoreImpl;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
+import org.whispersystems.libsignal.util.KeyHelper;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -78,8 +81,13 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.XMucUserElement;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.JaXMPPSignalProtocolStore;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOMessage;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.XmppOMEMOSession;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
+import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.push.PushNotificationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
@@ -535,7 +543,15 @@ public class XMPPService
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
+		if (intent != null && "RESET_OMEMO_SESSION".equals(intent.getAction())) {
+			String ac = intent.getStringExtra("account");
+			BareJID jid = BareJID.bareJIDInstance(intent.getStringExtra("jid"));
+
+			Jaxmpp jaxmpp = getJaxmpp(ac);
+			JaXMPPSignalProtocolStore store = OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
+
+			store.deleteAllSessions(jid.toString());
+		} else if (intent != null && (MessageSender.SEND_CHAT_MESSAGE_ACTION.equals(intent.getAction()) ||
 				MessageSender.SEND_GROUPCHAT_MESSAGE_ACTION.equals(intent.getAction()))) {
 			messageSender.process(this, intent);
 			//		} else if (intent != null && SEND_FILE_ACTION.equals(intent.getAction())) {
@@ -729,6 +745,7 @@ public class XMPPService
 								onConnectTasks.add(new RejoinToMucRooms(jaxmpp.getSessionObject()));
 								onConnectTasks.add(
 										new FetchMessageArchiveMAM(XMPPService.this, jaxmpp.getSessionObject()));
+								onConnectTasks.add(new SubscribeOwnOMEMODevices(jaxmpp));
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
@@ -844,6 +861,10 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new MucModule(new AndroidRoomsManager(this.chatProvider)));
 		jaxmpp.getModulesManager().register(new PingModule());
 		jaxmpp.getModulesManager().register(new EntityTimeModule());
+		jaxmpp.getModulesManager().register(new PubSubModule());
+		jaxmpp.getModulesManager().register(new OmemoModule());
+
+		jaxmpp.getModule(MessageModule.class).addExtension(jaxmpp.getModule(OmemoModule.class).getExtension());
 
 		CapabilitiesModule capsModule = new CapabilitiesModule();
 		capsModule.setCache(capsCache);
@@ -1332,6 +1353,9 @@ public class XMPPService
 		}
 		values.put(DatabaseContract.ChatHistory.FIELD_ACCOUNT, sessionObject.getUserBareJid().toString());
 
+		int encryptionStatus = (msg instanceof OMEMOMessage && ((OMEMOMessage) msg).isSecured()) ? 1 : 0;
+		values.put(DatabaseContract.ChatHistory.FIELD_ENCRYPTION, encryptionStatus);
+
 		// DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
 
 		if (sessionObject.getUserBareJid().equals(authorJid)) {
@@ -1442,6 +1466,14 @@ public class XMPPService
 
 			MobileModeFeature.updateSettings(account, jaxmpp, this);
 
+			String omemoId = mAccountManager.getUserData(account, AccountsConstants.FIELD_OMEMO_REGISTRATION_ID);
+			OMEMOStore omemoStore = createOMEMOStore(omemoId, accountJid);
+			OmemoModule.setSignalProtocolStore(jaxmpp.getSessionObject(), omemoStore);
+			if (omemoId == null) {
+				mAccountManager.setUserData(account, AccountsConstants.FIELD_OMEMO_REGISTRATION_ID,
+											String.valueOf(omemoStore.getLocalRegistrationId()));
+			}
+
 			boolean disabled = !Boolean.parseBoolean(
 					mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));
 			jaxmpp.getSessionObject().setUserProperty(ACCOUNT_TMP_DISABLED_KEY, disabled);
@@ -1483,6 +1515,17 @@ public class XMPPService
 		}
 
 		dataRemover.removeUnusedData(this);
+	}
+
+	private OMEMOStore createOMEMOStore(final String omemoId, BareJID accountJid) {
+		final int id;
+		if (omemoId == null) {
+			id = KeyHelper.generateRegistrationId(true);
+		} else {
+			id = Integer.valueOf(omemoId);
+		}
+		return OMEMOStoreImpl.create(this, dbHelper, accountJid, id);
+//		return InMemoryOMEMOStoreImpl.create(this, dbHelper, accountJid, id);
 	}
 
 //	private void uploadFileAndSend(final String account, final Uri content, int chatId) {
@@ -1636,12 +1679,6 @@ public class XMPPService
 				chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class)
 						.createChat(message.getFrom());
 			}
-
-			String bd = message.getBody();
-			if (bd.startsWith("Po prostu ")) {
-				System.out.println("!!!!!!!!");
-			}
-
 			boolean stored = storeMessage(sessionObject, chat, message, timestamp);
 		}
 

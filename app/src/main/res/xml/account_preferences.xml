@@ -43,6 +43,12 @@
         </PreferenceScreen>
 
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="OMEMO">
+        <org.tigase.messenger.phone.pro.settings.FingerprintPreference android:key="omemo_fingerprint"
+                                                                       android:text="KKK" android:title="Key"/>
+    </PreferenceCategory>
+
     <PreferenceCategory
             android:title="Resource priority">
         <SwitchPreference

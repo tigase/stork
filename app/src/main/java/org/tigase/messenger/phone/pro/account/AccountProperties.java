@@ -42,12 +42,15 @@ import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.AccountCat;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
+import org.tigase.messenger.phone.pro.settings.FingerprintPreference;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
+import org.whispersystems.libsignal.state.SignalProtocolStore;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 import java.security.cert.X509Certificate;
@@ -266,6 +269,12 @@ public class AccountProperties
 		private boolean modified = false;
 
 		public void checkMAM() {
+			FingerprintPreference omemoFingerprint = (FingerprintPreference) findPreference("omemo_fingerprint");
+
+			SignalProtocolStore omemoStore = OmemoModule.getSignalProtocolStore(
+					((AccountProperties) getActivity()).getJaxmpp().getSessionObject());
+			omemoFingerprint.setFingerprint(omemoStore.getIdentityKeyPair().getPublicKey().serialize(), 1);
+
 			try {
 				Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
 				MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);

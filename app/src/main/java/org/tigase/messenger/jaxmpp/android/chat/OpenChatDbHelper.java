@@ -28,7 +28,9 @@ public class OpenChatDbHelper {
 					DatabaseContract.OpenChats.FIELD_JID + " TEXT, " + DatabaseContract.OpenChats.FIELD_TIMESTAMP +
 					" DATETIME, " + DatabaseContract.OpenChats.FIELD_TYPE + " INTEGER, " +
 					DatabaseContract.OpenChats.FIELD_THREAD_ID + " TEXT, " + DatabaseContract.OpenChats.FIELD_RESOURCE +
-					" TEXT," + DatabaseContract.OpenChats.FIELD_NICKNAME + " TEXT, " +
+					" TEXT," +
+					DatabaseContract.OpenChats.FIELD_NICKNAME + " TEXT, " +
+					DatabaseContract.OpenChats.FIELD_ENCRYPTION + " INTEGER DEFAULT 0, " +
 					DatabaseContract.OpenChats.FIELD_PASSWORD + " TEXT, " +
 					DatabaseContract.OpenChats.FIELD_ROOM_STATE + " INTEGER" + ");";
 

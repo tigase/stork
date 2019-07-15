@@ -105,6 +105,9 @@ public class ChatProvider
 			put(DatabaseContract.OpenChats.FIELD_NICKNAME,
 				"open_chats." + DatabaseContract.OpenChats.FIELD_NICKNAME + " as " +
 						DatabaseContract.OpenChats.FIELD_NICKNAME);
+			put(DatabaseContract.OpenChats.FIELD_ENCRYPTION,
+				"open_chats." + DatabaseContract.OpenChats.FIELD_ENCRYPTION + " as " +
+						DatabaseContract.OpenChats.FIELD_ENCRYPTION);
 		}
 	};
 

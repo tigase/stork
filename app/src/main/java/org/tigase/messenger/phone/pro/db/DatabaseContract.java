@@ -22,7 +22,7 @@ import android.provider.BaseColumns;
 
 public final class DatabaseContract {
 
-	public static final int DATABASE_VERSION = 9;
+	public static final int DATABASE_VERSION = 12;
 
 	public static final String DATABASE_NAME = "mobile_messenger2.db";
 
@@ -80,7 +80,10 @@ public final class DatabaseContract {
 		public static final String FIELD_THREAD_ID = "thread_id";
 		public static final String FIELD_STANZA_ID = "stanza_id";
 		public static final String FIELD_TIMESTAMP = "timestamp";
-
+		/**
+		 * <ul><li><code>0</code> - none</li><li><code>1</code> - OMEMO</li></ul>
+		 */
+		public static final String FIELD_ENCRYPTION = "encryption";
 		/**
 		 * Description of values for FIELD_ITEM_TYPE (item_type) <ul> <li><code>0</code> - message</li>
 		 * <li><code>1</code> - locality</li> <li><code>2</code> - file</li> <li><code>3</code> - image</li>
@@ -135,9 +138,9 @@ public final class DatabaseContract {
 				"CREATE TABLE " + TABLE_NAME + " (" + FIELD_ID + " INTEGER PRIMARY KEY, " + FIELD_ACCOUNT + " TEXT, " +
 						FIELD_THREAD_ID + " TEXT, " + FIELD_JID + " TEXT, " + FIELD_AUTHOR_JID + " TEXT, " +
 						FIELD_AUTHOR_NICKNAME + " TEXT, " + FIELD_TIMESTAMP + " DATETIME, " + FIELD_BODY + " TEXT, " +
-						FIELD_ITEM_TYPE + " INTEGER, " + FIELD_CHAT_TYPE + " INTEGER, " + FIELD_DATA + " TEXT, " +
-						FIELD_INTERNAL_CONTENT_URI + " TEXT, " + FIELD_STANZA_ID + " TEXT, " + FIELD_STATE +
-						" INTEGER" + ");";
+						FIELD_ENCRYPTION + " INTEGER DEFAULT 0, " + FIELD_ITEM_TYPE + " INTEGER, " + FIELD_CHAT_TYPE +
+						" INTEGER, " + FIELD_DATA + " TEXT, " + FIELD_INTERNAL_CONTENT_URI + " TEXT, " +
+						FIELD_STANZA_ID + " TEXT, " + FIELD_STATE + " INTEGER" + ");";
 
 		public static final String CREATE_INDEX_JID =
 				"CREATE INDEX IF NOT EXISTS " + INDEX_JID + " ON " + TABLE_NAME + " (" + FIELD_ACCOUNT + ", " +
@@ -167,6 +170,11 @@ public final class DatabaseContract {
 		// for chat
 		public static final String FIELD_RESOURCE = "resource";
 		public static final String FIELD_THREAD_ID = "thread_id";
+
+		/**
+		 * <ul><li><code>0</code> - none</li><li><code>1</code> - OMEMO</li></ul>
+		 */
+		public static final String FIELD_ENCRYPTION = "encryption";
 
 		// for muc
 		public static final String FIELD_NICKNAME = "nickname";

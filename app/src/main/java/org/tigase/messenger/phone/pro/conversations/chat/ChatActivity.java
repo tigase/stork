@@ -52,6 +52,8 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 
+import static org.tigase.messenger.phone.pro.conversations.chat.ChatItemFragment.START_OMEMO_REQUEST;
+
 public class ChatActivity
 		extends AbstractConversationActivity {
 
@@ -63,38 +65,35 @@ public class ChatActivity
 	private final ContactPresenceChangeObserver contactPresenceChangeObserver = new ContactPresenceChangeObserver();
 	TextView mContactName;
 	ImageView mContactPresence;
-	private String contactNameCache = null;
+	private String contactDisplayName;
 	private Uri contactUri;
+	private boolean encryptChat = false;
 	private MarkAsRead markAsRead;
 	private int openChatId;
 	private Integer rosterId;
+
+	public String getContactDisplayName() {
+		return contactDisplayName;
+	}
+
+	public boolean isEncryptChat() {
+		return encryptChat;
+	}
+
+	void setEncryptChat(boolean s) {
+		this.encryptChat = s;
+		invalidateOptionsMenu();
+	}
 
 	public int getOpenChatId() {
 		return openChatId;
 	}
 
-	public String getContactName() {
-		if (contactNameCache != null) {
-			return contactNameCache;
-		}
-		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
-										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
-										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME};
-
-		try (Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId),
-												   cols, null, null, null)) {
-			if (c.moveToNext()) {
-				contactNameCache = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
-			} else {
-				contactNameCache = getJid().getBareJid().toString();
-			}
-			return contactNameCache;
-		}
-	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == PREVIEW_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+		if (requestCode == START_OMEMO_REQUEST) {
+			runOnUiThread(() -> setEncryptChat(resultCode == OMEMOStartActivity.RESULT_ENABLED));
+		} else if (requestCode == PREVIEW_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
 			doUploadFile(data);
 		} else if (requestCode == FILE_UPLOAD_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
 			// doUploadFile(data, resultCode);
@@ -237,9 +236,24 @@ public class ChatActivity
 	}
 
 	private void loadContact() {
+		final String[] cols = new String[]{DatabaseContract.OpenChats.FIELD_ID,
+										   DatabaseContract.OpenChats.FIELD_ACCOUNT,
+										   DatabaseContract.OpenChats.FIELD_ENCRYPTION,
+										   DatabaseContract.OpenChats.FIELD_JID, ChatProvider.FIELD_NAME};
+
+		try (Cursor c = getContentResolver().query(ContentUris.withAppendedId(ChatProvider.OPEN_CHATS_URI, openChatId),
+												   cols, null, null, null)) {
+			if (c.moveToNext()) {
+				contactDisplayName = c.getString(c.getColumnIndex(ChatProvider.FIELD_NAME));
+				encryptChat = c.getInt(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ENCRYPTION)) == 1;
+			} else {
+				contactDisplayName = getJid().getBareJid().toString();
+				encryptChat = false;
+			}
+		}
+
 		startWhenBinded(() -> {
-			final String name = getContactName();
-			runOnUiThread(() -> mContactName.setText(name));
+			runOnUiThread(() -> mContactName.setText(contactDisplayName));
 		});
 	}
 

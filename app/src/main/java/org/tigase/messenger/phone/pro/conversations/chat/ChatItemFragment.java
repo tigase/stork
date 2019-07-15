@@ -45,6 +45,7 @@ import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
+import org.tigase.messenger.phone.pro.roster.contact.ContactInfoActivity;
 import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -61,6 +62,7 @@ public class ChatItemFragment
 		extends MultiSelectFragment {
 
 	private static final String TAG = "ChatFragment";
+	public static int START_OMEMO_REQUEST = 1000;
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -118,14 +120,24 @@ public class ChatItemFragment
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		boolean available;
+		boolean videoChatAvailable;
 		try {
 			Jaxmpp jaxmpp = ((ChatActivity) getActivity()).getServiceConnection().getService().getJaxmpp(this.mAccount);
-			available = WebRTCClient.isVideoAvailable(jaxmpp, ((ChatActivity) getContext()).getJid().getBareJid());
+			videoChatAvailable = WebRTCClient.isVideoAvailable(jaxmpp,
+															   ((ChatActivity) getContext()).getJid().getBareJid());
 		} catch (Exception e) {
-			available = false;
+			videoChatAvailable = false;
 		}
-		menu.findItem(R.id.video_chat).setVisible(available);
+		menu.findItem(R.id.video_chat).setVisible(videoChatAvailable);
+
+		if (((ChatActivity) getContext()).isEncryptChat()) {
+			menu.findItem(R.id.encrypt_chat).setChecked(true);
+			menu.findItem(R.id.encrypt_chat).setIcon(R.drawable.ic_encryption_on);
+		} else {
+			menu.findItem(R.id.encrypt_chat).setChecked(false);
+			menu.findItem(R.id.encrypt_chat).setIcon(R.drawable.ic_encryption_off);
+		}
+
 		super.onPrepareOptionsMenu(menu);
 	}
 
@@ -212,6 +224,26 @@ public class ChatItemFragment
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+			case R.id.contact_info:
+				Intent contactInfoIntent = new Intent(getContext(), ContactInfoActivity.class);
+				contactInfoIntent.putExtra(ContactInfoActivity.ACCOUNT_KEY, mAccount.toString());
+				contactInfoIntent.putExtra(ContactInfoActivity.JID_KEY,
+										   ((ChatActivity) getContext()).getJid().toString());
+				startActivity(contactInfoIntent);
+				return true;
+			case R.id.encrypt_chat:
+				boolean s = !((ChatActivity) getContext()).isEncryptChat();
+
+				Intent encIntent = new Intent(getContext(), OMEMOStartActivity.class);
+				encIntent.putExtra(OMEMOStartActivity.ACCOUNT_KEY, mAccount.toString());
+				encIntent.putExtra(OMEMOStartActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
+				encIntent.putExtra(OMEMOStartActivity.CHAT_ID_KEY, ((ChatActivity) getContext()).getOpenChatId());
+				encIntent.putExtra(OMEMOStartActivity.STATUS_KEY, s);
+//				getContext().startService(encIntent);
+
+				((ChatActivity) getContext()).startActivityForResult(encIntent, START_OMEMO_REQUEST);
+
+				return true;
 			case R.id.video_chat:
 				Intent i = new Intent(getContext(), VideoChatActivity.class);
 				i.putExtra(VideoChatActivity.ACCOUNT_KEY, mAccount.toString());
@@ -317,7 +349,7 @@ public class ChatItemFragment
 		Account account = AccountHelper.getAccount(accountManager,
 												   ((ChatActivity) getActivity()).getAccount().toString());
 
-		final String theirName = ((ChatActivity) getActivity()).getContactName();
+		final String theirName = ((ChatActivity) getActivity()).getContactDisplayName();
 		String myNickname = accountManager.getUserData(account, AccountsConstants.FIELD_NICKNAME);
 
 		if (myNickname == null || myNickname.trim().isEmpty()) {
@@ -412,7 +444,7 @@ public class ChatItemFragment
 
 	private void send() {
 		String body = this.message.getText().toString();
-		if (body == null || body.trim().isEmpty()) {
+		if (body.trim().isEmpty()) {
 			return;
 		}
 
@@ -421,6 +453,7 @@ public class ChatItemFragment
 		intent.putExtra(MessageSender.BODY, body);
 		intent.putExtra(MessageSender.CHAT_ID, ((ChatActivity) getContext()).getOpenChatId());
 		intent.putExtra(MessageSender.ACCOUNT, mAccount.toString());
+		intent.putExtra(MessageSender.ENCRYPT_MESSAGE, ((ChatActivity) getContext()).isEncryptChat());
 
 		this.message.getText().clear();
 		getContext().startService(intent);
@@ -440,6 +473,7 @@ public class ChatItemFragment
 												   DatabaseContract.ChatHistory.FIELD_STATE,
 												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
 												   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI,
+												   DatabaseContract.ChatHistory.FIELD_ENCRYPTION,
 												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		@Override

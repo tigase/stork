@@ -13,8 +13,8 @@ android {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 19
 		targetSdkVersion 28
-		versionCode 80 
-		versionName "3.0.17"
+		versionCode 81
+		versionName "3.0.18"
 		multiDexEnabled true
 
 //		jackOptions {
@@ -98,6 +98,7 @@ dependencies {
 	implementation 'tigase:jaxmpp-xep0136:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-mam:3.3.0-SNAPSHOT'
 	implementation 'tigase:jaxmpp-httpfileupload:3.3.0-SNAPSHOT'
+	implementation 'tigase:jaxmpp-omemo:3.3.0-SNAPSHOT'
 	implementation 'com.android.support:appcompat-v7:28.0.0'
 	implementation 'com.android.support:design:28.0.0'
 	implementation 'com.android.support:support-v4:28.0.0'
@@ -107,6 +108,7 @@ dependencies {
 	implementation 'org.webrtc:google-webrtc:1.0.26131'
 	implementation 'com.android.support:multidex:1.0.3'
 	playstoreImplementation('com.google.firebase:firebase-messaging:17.5.0')
+	implementation 'org.jetbrains:annotations:15.0'
 }
 
 afterEvaluate {project ->

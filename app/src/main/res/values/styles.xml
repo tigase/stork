@@ -59,6 +59,14 @@
         <item name="android:text">Disconnecting...</item>
     </style>
 
+    <style name="TextAppearance.Stork.Title" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="TextAppearance.Stork.Body1" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColorLink">?android:textColorPrimary</item>
+    </style>
+
 
 
 </resources>

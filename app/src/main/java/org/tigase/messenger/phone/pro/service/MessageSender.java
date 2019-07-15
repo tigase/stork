@@ -42,6 +42,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOEncryptableMessage;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOMessage;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 
 import java.io.FileDescriptor;
@@ -59,6 +61,7 @@ public class MessageSender {
 	 * Local content to send URI.
 	 */
 	public final static String LOCAL_CONTENT_URI = "LOCAL_CONTENT_URI";
+	public final static String ENCRYPT_MESSAGE = "ENCRYPT_MESSAGE";
 	public final static String ROOM_JID = "ROOM_JID";
 	private final static String TAG = "MessageSender";
 	private final XMPPService service;
@@ -142,6 +145,7 @@ public class MessageSender {
 		final String body = intent.getStringExtra(BODY);
 		final BareJID account = BareJID.bareJIDInstance(intent.getStringExtra(ACCOUNT));
 		final Uri localContentUri = intent.getParcelableExtra(LOCAL_CONTENT_URI);
+		final boolean encryption = intent.getBooleanExtra(ENCRYPT_MESSAGE, false);
 
 //		if (localContentUri != null) {
 //			context.getContentResolver()
@@ -152,6 +156,7 @@ public class MessageSender {
 		final Chat chat = getChat(account, chatId);
 
 		int state;
+		int encryptionStatus;
 		Message msg;
 		String stanzaId = null;
 		final ContentValues values = new ContentValues();
@@ -165,6 +170,7 @@ public class MessageSender {
 
 			if (localContentUri != null) {
 				state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
+				encryptionStatus = encryption ? 1 : 0;
 				final String mimeType = getMimeType(context, localContentUri);
 				if (mimeType.startsWith("image/")) {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_IMAGE;
@@ -174,20 +180,26 @@ public class MessageSender {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_FILE;
 				}
 			} else if (jaxmpp.isConnected()) {
-				m.sendMessage(msg);
+					msg = new OMEMOEncryptableMessage(msg);
+				((OMEMOEncryptableMessage)msg).setEncryption(encryption? OMEMOEncryptableMessage.Encryption.Required: OMEMOEncryptableMessage.Encryption.Disabled);
+				msg = m.sendMessage(msg);
 				state = DatabaseContract.ChatHistory.STATE_OUT_SENT;
 				itemType = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
+				encryptionStatus = (msg instanceof OMEMOMessage && ((OMEMOMessage) msg).isSecured()) ? 1 : 0;
 			} else {
 				state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
 				itemType = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
+				encryptionStatus = encryption ? 1 : 0;
 			}
 		} catch (Exception e) {
 			state = DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT;
+			encryptionStatus = encryption ? 1 : 0;
 			Log.w("ChatItemFragment", "Cannot send message", e);
 		}
 
 		final JID recipient = chat.getJid();
 
+		values.put(DatabaseContract.ChatHistory.FIELD_ENCRYPTION, encryptionStatus);
 		values.put(DatabaseContract.ChatHistory.FIELD_CHAT_TYPE, DatabaseContract.ChatHistory.CHAT_TYPE_P2P);
 		values.put(DatabaseContract.ChatHistory.FIELD_AUTHOR_JID, chat.getSessionObject().getUserBareJid().toString());
 		values.put(DatabaseContract.ChatHistory.FIELD_JID, recipient.getBareJid().toString());

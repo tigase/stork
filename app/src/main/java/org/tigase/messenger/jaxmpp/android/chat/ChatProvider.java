@@ -110,6 +110,7 @@ public class ChatProvider {
 		values.put(DatabaseContract.OpenChats.FIELD_JID, fromJid.getBareJid().toString());
 		values.put(DatabaseContract.OpenChats.FIELD_TIMESTAMP, (new Date()).getTime());
 		values.put(DatabaseContract.OpenChats.FIELD_TYPE, DatabaseContract.OpenChats.TYPE_CHAT);
+		values.put(DatabaseContract.OpenChats.FIELD_ENCRYPTION, 0);
 
 		if (fromJid.getResource() != null) {
 			values.put(DatabaseContract.OpenChats.FIELD_RESOURCE, fromJid.getResource());
@@ -133,6 +134,7 @@ public class ChatProvider {
 		values.put(DatabaseContract.OpenChats.FIELD_JID, fromJid.getBareJid().toString());
 		values.put(DatabaseContract.OpenChats.FIELD_TIMESTAMP, (new Date()).getTime());
 		values.put(DatabaseContract.OpenChats.FIELD_TYPE, DatabaseContract.OpenChats.TYPE_MUC);
+		values.put(DatabaseContract.OpenChats.FIELD_ENCRYPTION, 0);
 
 		if (nickname != null) {
 			values.put(DatabaseContract.OpenChats.FIELD_NICKNAME, nickname);

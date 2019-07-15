@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Stork
+  ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, version 3 of the License.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program. Look for COPYING file in the top folder.
+  ~ If not, see http://www.gnu.org/licenses/.
+  -->
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <android.support.v7.widget.Toolbar
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:title="Contact Info"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
+    <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_below="@id/toolbar"
+            android:layout_height="wrap_content">
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                <com.github.abdularis.civ.StorkAvatarView
+                        android:id="@+id/contact_avatar"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_alignParentLeft="true"
+                        android:scaleType="fitStart"
+                        android:src="@drawable/user_avatar"/>
+
+                <TextView android:id="@+id/contact_name"
+                          android:layout_width="match_parent"
+                          android:layout_height="52dp"
+                          android:layout_toRightOf="@id/contact_avatar"
+                          android:layout_marginLeft="16dp"
+                          android:paddingBottom="4dp"
+                          android:gravity="center_vertical"
+                          android:textAppearance="@style/TextAppearance.Stork.Title"/>
+
+                <TextView android:id="@+id/contact_jid"
+                          android:layout_width="wrap_content"
+                          android:layout_height="match_parent"
+                          android:layout_toRightOf="@id/contact_avatar"
+                          android:layout_below="@id/contact_avatar"
+                          android:layout_marginLeft="16dp"
+                          android:textAppearance="@style/TextAppearance.Stork.Body1"/>
+            </RelativeLayout>
+
+
+            <LinearLayout android:id="@+id/contact_fingerprint"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="16dp">
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

@@ -39,12 +39,14 @@ public class ViewHolderMsg
 		super(itemView, fragment);
 
 		if (fragment.getActivity() instanceof ChatActivity) {
-			contactDisplayName = ((ChatActivity) fragment.getActivity()).getContactName();
+			contactDisplayName = ((ChatActivity) fragment.getActivity()).getContactDisplayName();
 		}
 	}
 
 	@Override
 	public void bind(Context context, Cursor cursor) {
+		final boolean encrypted =
+				cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ENCRYPTION)) == 1;
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
 		final String jid = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID));
 		final String body = cursor.getString(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
@@ -67,6 +69,10 @@ public class ViewHolderMsg
 			int col = ContextCompat.getColor(context, getColor(nickname));
 			mNickname.setTextColor(col);
 			mNickname.setText(nickname);
+		}
+
+		if (mEncryptionStatus != null) {
+			mEncryptionStatus.setVisibility(encrypted ? View.VISIBLE : View.GONE);
 		}
 
 		boolean mentioned = (state == DatabaseContract.ChatHistory.STATE_INCOMING ||

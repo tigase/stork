@@ -33,6 +33,8 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.ElementBuilder;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOEncryptableMessage;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOMessage;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
@@ -56,6 +58,7 @@ public class SendUnsentMessages
 											   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
 											   DatabaseContract.ChatHistory.FIELD_STANZA_ID,
 											   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI,
+											   DatabaseContract.ChatHistory.FIELD_ENCRYPTION,
 											   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 	private final Context context;
 	private final Jaxmpp jaxmpp;
@@ -105,6 +108,7 @@ public class SendUnsentMessages
 			return;
 		}
 		final int id = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
+		final int encryption = c.getInt(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ENCRYPTION));
 		final JID toJid = JID.jidInstance(c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_JID)));
 		final String threadId = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_THREAD_ID));
 		final String body = c.getString(c.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
@@ -116,7 +120,10 @@ public class SendUnsentMessages
 
 		try {
 			final ContentValues values = new ContentValues();
-			final Message msg = Message.create();
+			final OMEMOEncryptableMessage msg = new OMEMOEncryptableMessage(Message.create());
+			msg.setEncryption(encryption == 1
+							  ? OMEMOEncryptableMessage.Encryption.Required
+							  : OMEMOEncryptableMessage.Encryption.Disabled);
 			msg.setTo(toJid);
 			msg.setType(StanzaType.chat);
 			msg.setThread(threadId);
@@ -152,14 +159,17 @@ public class SendUnsentMessages
 		}
 	}
 
-	private void send(final int id, final Message msg, final ContentValues values) throws JaxmppException {
+	private void send(final int id, final Message msgToSend, final ContentValues values) throws JaxmppException {
 		final MessageModule messageModule = jaxmpp.getModule(MessageModule.class);
 
-		messageModule.sendMessage(msg);
+		Message sentMsg = messageModule.sendMessage(msgToSend);
+		int encryptionStatus = (sentMsg instanceof OMEMOMessage && ((OMEMOMessage) sentMsg).isSecured()) ? 1 : 0;
+
 		values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_SENT);
+		values.put(DatabaseContract.ChatHistory.FIELD_ENCRYPTION, encryptionStatus);
 		context.getContentResolver()
 				.update(Uri.parse(ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
-										  msg.getTo().getBareJid() + "/" + id), values, null, null);
+										  sentMsg.getTo().getBareJid() + "/" + id), values, null, null);
 	}
 
 }

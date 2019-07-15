@@ -44,10 +44,12 @@ import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
 import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.whispersystems.libsignal.state.SignalProtocolStore;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.eventbus.DefaultEventBus;
 import tigase.jaxmpp.core.client.eventbus.EventBus;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 
 import java.util.List;
 
@@ -198,6 +200,15 @@ public class SettingsActivity
 			return null;
 		} else {
 			return XMPPService.DisconnectionCauses.valueOf(tmp);
+		}
+	}
+
+	SignalProtocolStore getOMEMOStore(String account) {
+		XMPPService s = mConnection.getService();
+		if (s != null) {
+			return OmemoModule.getSignalProtocolStore(s.getJaxmpp(account).getSessionObject());
+		} else {
+			return null;
 		}
 	}
 
