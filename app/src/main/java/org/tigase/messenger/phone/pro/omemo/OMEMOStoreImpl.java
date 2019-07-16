@@ -81,6 +81,11 @@ public class OMEMOStoreImpl
 	}
 
 	@Override
+	public void removeSession(XmppOMEMOSession session) {
+		this.sesssions.remove(session.getJid());
+	}
+
+	@Override
 	public boolean isOMEMORequired(BareJID jid) {
 		try (Cursor c = helper.getReadableDatabase()
 				.query(DatabaseContract.OpenChats.TABLE_NAME, new String[]{DatabaseContract.OpenChats.FIELD_ENCRYPTION},

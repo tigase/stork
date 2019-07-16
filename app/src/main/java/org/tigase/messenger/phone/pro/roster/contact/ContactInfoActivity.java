@@ -103,19 +103,21 @@ public class ContactInfoActivity
 	}
 
 	private void showOMEMOFingerprints(final JaXMPPSignalProtocolStore store) {
-		List<Integer> ids = store.getSubDeviceSessions(jid.toString());
-		if (ids == null || ids.size() == 0) {
-			return;
-		}
 
 //		XmppOMEMOSession session = jaxmpp.getModule(OmemoModule.class).getOMEMOSession(jid, true);
-
 //		if (session == null) {
 //			return;
+//		} else if (!session.hasCiphers()) {
+//			OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject()).removeSession(session);
 //		}
+//		for (final SignalProtocolAddress addr : session.getDeviceCiphers().keySet()) {
 
-		for (final int id : ids) {
-			SignalProtocolAddress addr = new SignalProtocolAddress(jid.toString(), id);
+		List<Integer> ids = OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject()).getSubDevice(jid.toString());
+		for (Integer id : ids) {
+			final SignalProtocolAddress addr = new SignalProtocolAddress(jid.toString(), id);
+			if (!addr.getName().equals(jid.toString())) {
+				continue;
+			}
 			final IdentityKey identity = store.getIdentity(addr);
 			final boolean trusted = store.isTrustedIdentity(addr, identity, IdentityKeyStore.Direction.RECEIVING);
 
