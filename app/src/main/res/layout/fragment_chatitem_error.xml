@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:autoLink="web"
                     android:text="wczoraj"
-                    android:textColor="#bdbdbd"
+                    android:textColor="#912D23"
                     android:textSize="12sp"/>
 
             <ImageView

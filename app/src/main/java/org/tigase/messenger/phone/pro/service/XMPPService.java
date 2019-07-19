@@ -83,8 +83,8 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.XMucUserElement;
 import tigase.jaxmpp.core.client.xmpp.modules.omemo.JaXMPPSignalProtocolStore;
 import tigase.jaxmpp.core.client.xmpp.modules.omemo.OMEMOMessage;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoExtension;
 import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
-import tigase.jaxmpp.core.client.xmpp.modules.omemo.XmppOMEMOSession;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
@@ -1290,7 +1290,11 @@ public class XMPPService
 
 		FileDownloaderTask fileDownloaderTask = null;
 
-		if (msg.getType() == StanzaType.error) {
+		if (msg.hasFlag(OmemoExtension.OMEMO_ERROR_FLAG)) {
+			String body = "Can't decrypt message:\n" + msg.getBody();
+			values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
+			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
+		} else if (msg.getType() == StanzaType.error) {
 
 			if (chat == null) {
 				Log.e(TAG, "Error message from " + jid + " has no Chat. Skipping store.");

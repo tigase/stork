@@ -131,28 +131,32 @@ public class OMEMOStartActivity
 
 	private void showFingerprintCard(final XmppOMEMOSession session, final JaXMPPSignalProtocolStore store,
 									 final BareJID jid, final String account) {
-		handler.post(() -> {
-			cardFingerprint.setVisibility(View.VISIBLE);
-			final LinearLayout fgpsPanel = findViewById(R.id.omemo_fingerprints_panel);
+		if (!session.hasCiphers()) {
+			showErrorCard("Can't create session.");
+		} else {
+			handler.post(() -> {
+				cardFingerprint.setVisibility(View.VISIBLE);
+				final LinearLayout fgpsPanel = findViewById(R.id.omemo_fingerprints_panel);
 
-			List<Integer> ids = store.getSubDeviceSessions(jid.toString());
+				List<Integer> ids = store.getSubDeviceSessions(jid.toString());
 
-			for (Integer id : ids) {
-				final SignalProtocolAddress addr = new SignalProtocolAddress(jid.toString(), id);
-				IdentityKey identity = store.getIdentity(addr);
+				for (Integer id : ids) {
+					final SignalProtocolAddress addr = new SignalProtocolAddress(jid.toString(), id);
+					IdentityKey identity = store.getIdentity(addr);
 
-				FingerprintView f = new FingerprintView(this);
-				f.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-				f.setFingerprint(identity.getPublicKey().serialize(), 1);
+					FingerprintView f = new FingerprintView(this);
+					f.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+					f.setFingerprint(identity.getPublicKey().serialize(), 1);
 
-				fgpsPanel.addView(f);
+					fgpsPanel.addView(f);
 
-				f.requestLayout();
-				fgpsPanel.requestLayout();
-			}
+					f.requestLayout();
+					fgpsPanel.requestLayout();
+				}
 
-			enableAndClose();
-		});
+				enableAndClose();
+			});
+		}
 	}
 
 	private void turnItOn() {
