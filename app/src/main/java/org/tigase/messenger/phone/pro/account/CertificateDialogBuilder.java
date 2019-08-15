@@ -30,11 +30,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
-public class CertificateDialogBuilder
-		extends AlertDialog.Builder {
+public class CertificateDialogBuilder {
 
 	private final static String TAG = "CertificateDialog";
+	private final AlertDialog.Builder builder;
 	private final X509Certificate[] chain;
+	private final Context context;
 	private CharSequence message;
 
 	private static String bytesToHex(byte[] bytes) {
@@ -52,42 +53,40 @@ public class CertificateDialogBuilder
 	}
 
 	public CertificateDialogBuilder(@NonNull Context context, X509Certificate[] chain) {
-		super(context);
+		this.context = context;
 		this.chain = chain;
+		this.builder = new AlertDialog.Builder(context);
+
 	}
 
-	public CertificateDialogBuilder(@NonNull Context context, int themeResId, X509Certificate[] chain) {
-		super(context, themeResId);
-		this.chain = chain;
-	}
-
-	@Override
 	public AlertDialog create() {
 		String cd = buildCertDetails();
 
 		if (this.message != null) {
-			super.setMessage(this.message + " " + cd);
+			builder.setMessage(this.message + " " + cd);
 		} else {
-			super.setMessage(cd);
+			builder.setMessage(cd);
 		}
 
-		return super.create();
+		return builder.create();
 	}
 
-	@Override
 	public AlertDialog.Builder setMessage(int messageId) {
-		this.message = getContext().getText(messageId);
-		return super.setMessage(this.message);
+		this.message = context.getText(messageId);
+		return builder.setMessage(this.message);
 	}
 
-	@Override
 	public AlertDialog.Builder setMessage(@Nullable CharSequence message) {
 		this.message = message;
-		return super.setMessage(message);
+		return builder.setMessage(message);
+	}
+
+	public AlertDialog.Builder setTitle(String string) {
+		builder.setTitle(string);
+		return builder;
 	}
 
 	private String buildCertDetails() {
-		Context context = getContext();
 		StringBuilder msg = new StringBuilder(100);
 
 		MessageDigest sha1 = null;

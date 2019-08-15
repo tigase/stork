@@ -28,7 +28,6 @@ import android.widget.*;
 import cz.destil.settleup.gui.MultiSpinner;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xml.Element;
-import tigase.jaxmpp.core.client.xml.ElementFactory;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.forms.*;
 
@@ -98,7 +97,7 @@ public class DynamicForm
 	public void setJabberDataElement(final JabberDataElement form) {
 		clear();
 		try {
-			this.form = new JabberDataElement(ElementFactory.create(form));
+			this.form = form;
 			if (form.getInstructions() != null) {
 				addInstruction(form.getInstructions());
 			}

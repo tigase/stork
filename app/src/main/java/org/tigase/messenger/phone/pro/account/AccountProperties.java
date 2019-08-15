@@ -218,7 +218,7 @@ public class AccountProperties
 		final String account = intent.getExtras().getString("account_name");
 		X509Certificate[] chain = (X509Certificate[]) intent.getExtras().getSerializable("chain");
 
-		final CertificateDialogBuilder builder = new CertificateDialogBuilder(this, chain);
+		final CertificateDialogBuilder builder = new CertificateDialogBuilder(AccountProperties.this, chain);
 		builder.setTitle(this.getString(R.string.account_certificate_info_title))
 				.setMessage(R.string.account_certificate_info_description)
 				.setCancelable(true)

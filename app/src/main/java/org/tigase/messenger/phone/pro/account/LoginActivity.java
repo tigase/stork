@@ -105,26 +105,30 @@ public class LoginActivity
 
 	static void showInvalidCertificateDialog(final Context context, final X509Certificate[] chain,
 											 Runnable afterAccept) {
-		new CertificateDialogBuilder(context, chain).setTitle(
-				context.getString(R.string.account_certificate_info_title))
-				.setMessage(R.string.account_certificate_info_description)
-				.setCancelable(true)
-				.setPositiveButton(context.getString(R.string.account_certificate_info_button_accept),
-								   new DialogInterface.OnClickListener() {
-									   public void onClick(DialogInterface dialog, int which) {
-										   acceptCertificate(context, chain[0]);
-										   if (afterAccept != null) {
-											   afterAccept.run();
+		try {
+			new CertificateDialogBuilder(context, chain).setTitle(
+					context.getString(R.string.account_certificate_info_title))
+					.setMessage(R.string.account_certificate_info_description)
+					.setCancelable(true)
+					.setPositiveButton(context.getString(R.string.account_certificate_info_button_accept),
+									   new DialogInterface.OnClickListener() {
+										   public void onClick(DialogInterface dialog, int which) {
+											   acceptCertificate(context, chain[0]);
+											   if (afterAccept != null) {
+												   afterAccept.run();
+											   }
 										   }
-									   }
-								   })
-				.setNegativeButton(context.getString(R.string.account_certificate_info_button_reject),
-								   new DialogInterface.OnClickListener() {
-									   public void onClick(DialogInterface dialog, int which) {
-									   }
-								   })
-				.create()
-				.show();
+									   })
+					.setNegativeButton(context.getString(R.string.account_certificate_info_button_reject),
+									   new DialogInterface.OnClickListener() {
+										   public void onClick(DialogInterface dialog, int which) {
+										   }
+									   })
+					.create()
+					.show();
+		} catch (IllegalStateException e) {
+			Log.e(TAG, "Cannot show certificate dialog", e);
+		}
 	}
 
 	@Override

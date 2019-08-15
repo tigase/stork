@@ -321,6 +321,7 @@ public class MucItemFragment
 												   DatabaseContract.ChatHistory.FIELD_STATE,
 												   DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI,
 												   DatabaseContract.ChatHistory.FIELD_THREAD_ID,
+												   DatabaseContract.ChatHistory.FIELD_ENCRYPTION,
 												   DatabaseContract.ChatHistory.FIELD_TIMESTAMP};
 
 		@Override

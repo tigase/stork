@@ -168,7 +168,7 @@ public class CreateAccountActivity
 					runOnUiThread(() -> {
 						progress.dismiss();
 						progress = null;
-						AlertDialog.Builder builder = new AlertDialog.Builder(context);
+						AlertDialog.Builder builder = new AlertDialog.Builder(activity.get());
 						builder.setMessage("Server doesn't support registration.")
 								.setPositiveButton(android.R.string.ok, null)
 								.show();
@@ -185,7 +185,7 @@ public class CreateAccountActivity
 						runOnUiThread(() -> {
 							progress.dismiss();
 							progress = null;
-							AlertDialog.Builder builder = new AlertDialog.Builder(context);
+							AlertDialog.Builder builder = new AlertDialog.Builder(activity.get());
 							builder.setMessage("Registration error: " + errorCondition)
 									.setPositiveButton(android.R.string.ok, null)
 									.show();
@@ -204,7 +204,7 @@ public class CreateAccountActivity
 						runOnUiThread(() -> {
 							progress.dismiss();
 							progress = null;
-							AlertDialog.Builder builder = new AlertDialog.Builder(context);
+							AlertDialog.Builder builder = new AlertDialog.Builder(activity.get());
 							builder.setMessage("No server response")
 									.setPositiveButton(android.R.string.ok, null)
 									.show();
@@ -259,7 +259,7 @@ public class CreateAccountActivity
 
 				if (deepException != null) {
 					X509Certificate[] chain = deepException.getChain();
-					LoginActivity.showInvalidCertificateDialog(context, chain,
+					LoginActivity.showInvalidCertificateDialog(activity.get(), chain,
 															   () -> runInActivity(a -> a.startConnection(hostname)));
 				} else {
 					final String msg;
@@ -269,7 +269,7 @@ public class CreateAccountActivity
 						msg = accountCreator.getErrorMessage();
 					}
 					runOnUiThread(() -> {
-						AlertDialog.Builder builder = new AlertDialog.Builder(context);
+						AlertDialog.Builder builder = new AlertDialog.Builder(activity.get());
 						builder.setMessage(msg).setPositiveButton(android.R.string.ok, null).show();
 					});
 				}

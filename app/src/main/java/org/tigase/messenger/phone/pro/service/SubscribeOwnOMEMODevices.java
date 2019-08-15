@@ -36,10 +36,12 @@ public class SubscribeOwnOMEMODevices
 	@Override
 	public void run() {
 		OmemoModule module = jaxmpp.getModule(OmemoModule.class);
-		try {
-			module.subscribeForDeviceList(jaxmpp.getSessionObject().getUserBareJid());
-		} catch (JaxmppException e) {
-			Log.e(TAG, "Cannot subscribe own OMEMO devices", e);
+		if (jaxmpp.isConnected()) {
+			try {
+				module.subscribeForDeviceList(jaxmpp.getSessionObject().getUserBareJid());
+			} catch (JaxmppException e) {
+				Log.e(TAG, "Cannot subscribe own OMEMO devices", e);
+			}
 		}
 	}
 }

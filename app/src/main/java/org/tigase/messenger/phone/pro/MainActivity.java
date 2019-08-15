@@ -250,9 +250,13 @@ public class MainActivity
 		MenuItem conStat = this.navigationMenu.findItem(R.id.nav_connectionstatus);
 		conStat.setVisible(itemVisible);
 
-		Intent ssIntent = new Intent(this, XMPPService.class);
-		ssIntent.setAction(CONNECT_ALL);
-		startService(ssIntent);
+		try {
+			Intent ssIntent = new Intent(this, XMPPService.class);
+			ssIntent.setAction(CONNECT_ALL);
+			startService(ssIntent);
+		} catch (IllegalStateException e) {
+			Log.e("MainActivity", "Cannot start XMPPService?", e);
+		}
 
 		updateConnectionStatus();
 	}
