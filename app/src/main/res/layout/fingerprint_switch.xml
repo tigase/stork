@@ -26,6 +26,7 @@
               android:textStyle="bold"
               android:includeFontPadding="true"
               android:textSize="16sp"
+              style="@android:"
               android:layout_toLeftOf="@id/switcher"
               android:typeface="monospace"/>
 

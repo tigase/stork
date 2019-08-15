@@ -44,9 +44,12 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="OMEMO">
+    <PreferenceCategory android:key="omemo_category" android:title="OMEMO">
         <org.tigase.messenger.phone.pro.settings.FingerprintPreference android:key="omemo_fingerprint"
                                                                        android:text="KKK" android:title="Key"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:key="omemo_other" android:title="Other Devices with OMEMO" >
     </PreferenceCategory>
 
     <PreferenceCategory

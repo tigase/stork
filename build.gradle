@@ -2,24 +2,24 @@
 
 buildscript {
 	repositories {
-		google()
 		mavenLocal()
+		google()
 		jcenter()
 	}
 	dependencies {
-		classpath 'com.android.tools.build:gradle:3.3.2'
-		classpath 'com.google.firebase:firebase-plugins:1.2.0'
+		classpath 'com.android.tools.build:gradle:3.4.2'
+		classpath 'com.google.firebase:firebase-plugins:2.0.0'
 
 		// NOTE: Do not place your application dependencies here; they belong
 		// in the individual module build.gradle files
-		classpath 'com.google.gms:google-services:4.2.0'
+		classpath 'com.google.gms:google-services:4.3.0'
 	}
 }
 
 allprojects {
 	repositories {
-		google()
 		mavenLocal()
+		google()
 		jcenter()
 		maven {url "http://maven-repo.tigase.org/repository/release/"}
 		maven {url "http://maven-repo.tigase.org/repository/snapshot/"}

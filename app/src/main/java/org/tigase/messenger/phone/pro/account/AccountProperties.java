@@ -44,12 +44,14 @@ import org.tigase.messenger.phone.pro.settings.AccountCat;
 import org.tigase.messenger.phone.pro.settings.AppCompatPreferenceActivity;
 import org.tigase.messenger.phone.pro.settings.FingerprintPreference;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
-import org.whispersystems.libsignal.state.SignalProtocolStore;
+import org.whispersystems.libsignal.IdentityKey;
+import org.whispersystems.libsignal.SignalProtocolAddress;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.mam.MessageArchiveManagementModule;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.JaXMPPSignalProtocolStore;
 import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
@@ -268,51 +270,6 @@ public class AccountProperties
 		private ListPreference mamSynchronizationTime;
 		private boolean modified = false;
 
-		public void checkMAM() {
-			FingerprintPreference omemoFingerprint = (FingerprintPreference) findPreference("omemo_fingerprint");
-
-			SignalProtocolStore omemoStore = OmemoModule.getSignalProtocolStore(
-					((AccountProperties) getActivity()).getJaxmpp().getSessionObject());
-			omemoFingerprint.setFingerprint(omemoStore.getIdentityKeyPair().getPublicKey().serialize(), 1);
-
-			try {
-				Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
-				MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
-				mam.retrieveSettings(new MessageArchiveManagementModule.SettingsCallback() {
-					@Override
-					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-							throws JaxmppException {
-						try {
-							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
-						} catch (Exception e) {
-							Log.w(TAG, "Cannot update switch", e);
-						}
-					}
-
-					@Override
-					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
-										  List<JID> never) throws JaxmppException {
-						try {
-							setMamSwitch(true, defValue);
-						} catch (Exception e) {
-							Log.w(TAG, "Cannot update switch", e);
-						}
-					}
-
-					@Override
-					public void onTimeout() throws JaxmppException {
-						try {
-							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
-						} catch (Exception e) {
-							Log.w(TAG, "Cannot update switch", e);
-						}
-					}
-				});
-			} catch (Exception e) {
-				Log.e(TAG, "Cannot check MAM status", e);
-			}
-		}
-
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			String tmp;
@@ -336,8 +293,7 @@ public class AccountProperties
 					getActivity().startActivity(i);
 					getActivity().finish();
 				} catch (Exception e) {
-					e.printStackTrace();
-					Log.e("X", "CHuj!", e);
+					Log.e("X", "WHY????", e);
 				}
 				return true;
 			});
@@ -459,6 +415,80 @@ public class AccountProperties
 				sendBroadcast(true);
 			}
 			super.onPause();
+		}
+
+		void checkMAM() {
+			showOMEMODetails();
+			try {
+				Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
+				MessageArchiveManagementModule mam = jaxmpp.getModule(MessageArchiveManagementModule.class);
+				mam.retrieveSettings(new MessageArchiveManagementModule.SettingsCallback() {
+					@Override
+					public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+							throws JaxmppException {
+						try {
+							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
+					}
+
+					@Override
+					public void onSuccess(MessageArchiveManagementModule.DefaultValue defValue, List<JID> always,
+										  List<JID> never) throws JaxmppException {
+						try {
+							setMamSwitch(true, defValue);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
+					}
+
+					@Override
+					public void onTimeout() throws JaxmppException {
+						try {
+							setMamSwitch(false, MessageArchiveManagementModule.DefaultValue.never);
+						} catch (Exception e) {
+							Log.w(TAG, "Cannot update switch", e);
+						}
+					}
+				});
+			} catch (Exception e) {
+				Log.e(TAG, "Cannot check MAM status", e);
+			}
+		}
+
+		private void showOMEMODetails() {
+			final Jaxmpp jaxmpp = ((AccountProperties) getActivity()).getJaxmpp();
+			final JaXMPPSignalProtocolStore omemoStore = OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
+			final String jid = jaxmpp.getSessionObject().getUserBareJid().toString();
+			final int localId = omemoStore.getLocalRegistrationId();
+
+			FingerprintPreference omemoFingerprint = (FingerprintPreference) findPreference("omemo_fingerprint");
+			omemoFingerprint.setFingerprint(omemoStore.getIdentityKeyPair().getPublicKey().serialize(), 1);
+
+			PreferenceCategory otherDevices = (PreferenceCategory) findPreference("omemo_other");
+
+			List<Integer> ids = omemoStore.getSubDevice(jid);
+			boolean added = false;
+			for (Integer id : ids) {
+				if (id == localId) {
+					continue;
+				}
+				FingerprintPreference checkBoxPref = new FingerprintPreference(getContext());
+
+				checkBoxPref.setTitle("title");
+				checkBoxPref.setSummary("summary");
+				IdentityKey identity = omemoStore.getIdentity(new SignalProtocolAddress(jid, id));
+				checkBoxPref.setFingerprint(identity.getPublicKey().serialize(), 1);
+
+				otherDevices.addPreference(checkBoxPref);
+				added = true;
+			}
+
+			if (!added) {
+				getPreferenceScreen().removePreference(otherDevices);
+			}
+
 		}
 
 		private void sendBroadcast(boolean forceDisconnect) {
