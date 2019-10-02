@@ -165,6 +165,7 @@ public class MessageSender {
 		try {
 			jaxmpp = service.getJaxmpp(chat.getSessionObject().getUserBareJid());
 			msg = chat.createMessage(body);
+
 			stanzaId = msg.getId();
 			MessageModule m = jaxmpp.getModule(MessageModule.class);
 

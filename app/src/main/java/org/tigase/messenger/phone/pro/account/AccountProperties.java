@@ -479,6 +479,12 @@ public class AccountProperties
 				checkBoxPref.setTitle("title");
 				checkBoxPref.setSummary("summary");
 				IdentityKey identity = omemoStore.getIdentity(new SignalProtocolAddress(jid, id));
+
+				if (identity == null) {
+					Log.w(TAG, "Whe the hell there is no Identity for " + jid + ":" + id + "?");
+					continue;
+				}
+
 				checkBoxPref.setFingerprint(identity.getPublicKey().serialize(), 1);
 
 				otherDevices.addPreference(checkBoxPref);

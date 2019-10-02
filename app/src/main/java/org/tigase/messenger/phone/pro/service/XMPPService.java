@@ -26,6 +26,7 @@ import android.content.*;
 import android.content.pm.PackageInfo;
 import android.net.*;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -99,7 +100,16 @@ import tigase.jaxmpp.j2se.J2SEPresenceStore;
 import tigase.jaxmpp.j2se.J2SESessionObject;
 import tigase.jaxmpp.j2se.connectors.socket.SocketConnector;
 
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLSocketFactory;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -327,12 +337,11 @@ public class XMPPService
 	private JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
 		@Override
 		public void onLoggedOut(SessionObject sessionObject) {
-			Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
+			final Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
 			Log.i("XMPPService", "JAXMPP disconnected " + sessionObject.getUserBareJid());
-			if (getUsedNetworkType() != -1) {
-				if (jaxmpp != null) {
-					XMPPService.this.connectJaxmpp(jaxmpp, 5 * 1000L);
-				}
+			if (jaxmpp != null) {
+				Log.i(TAG, "JaXMPP " + sessionObject.getUserBareJid() + " will be reconnect...");
+				XMPPService.this.connectJaxmpp(jaxmpp, 5 * 1000L);
 			}
 		}
 	};
@@ -517,7 +526,7 @@ public class XMPPService
 
 		startKeepAlive();
 
-		updateJaxmppInstances();
+		updateJaxmppInstances(false);
 		// connectAllJaxmpp();
 	}
 
@@ -534,6 +543,7 @@ public class XMPPService
 		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
 
 		disconnectAllJaxmpp(true);
+		this.multiJaxmpp.reset();
 
 		super.onDestroy();
 		mobileModeFeature = null;
@@ -576,6 +586,7 @@ public class XMPPService
 			}
 		} else if (intent != null && CONNECT_SINGLE.equals(intent.getAction())) {
 			String ac = intent.getStringExtra("account");
+			Log.i(TAG, "Starting specific account " + ac);
 			Jaxmpp jaxmpp = getJaxmpp(ac);
 			connectJaxmpp(jaxmpp, (Date) null);
 		} else if (intent != null && KEEPALIVE_ACTION.equals(intent.getAction())) {
@@ -691,7 +702,8 @@ public class XMPPService
 		final Runnable r = new Runnable() {
 			@Override
 			public void run() {
-				Log.v(TAG, "Trying to connect account  " + jaxmpp.getSessionObject().getUserBareJid());
+				Log.v(TAG, "Trying to connect account  " + jaxmpp.getSessionObject().getUserBareJid() + "#" +
+						jaxmpp.hashCode());
 
 				lock(jaxmpp.getSessionObject(), false);
 				if (isDisabled(jaxmpp.getSessionObject())) {
@@ -745,7 +757,7 @@ public class XMPPService
 								onConnectTasks.add(new RejoinToMucRooms(jaxmpp.getSessionObject()));
 								onConnectTasks.add(
 										new FetchMessageArchiveMAM(XMPPService.this, jaxmpp.getSessionObject()));
-								onConnectTasks.add(new SubscribeOwnOMEMODevices(jaxmpp));
+//								onConnectTasks.add(new SubscribeOwnOMEMODevices(jaxmpp));
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
@@ -778,10 +790,12 @@ public class XMPPService
 		lock(jaxmpp.getSessionObject(), true);
 
 		if (date == null) {
-			Log.d(TAG, "Starting connection NOW");
+			Log.d(TAG,
+				  "Starting connection NOW: " + jaxmpp.hashCode() + "  " + jaxmpp.getSessionObject().getUserBareJid());
 			r.run();
 		} else {
-			Log.d(TAG, "Starting connection LATER");
+			Log.d(TAG, "Starting connection LATER: " + jaxmpp.hashCode() + "  " +
+					jaxmpp.getSessionObject().getUserBareJid());
 			timer.schedule(new TimerTask() {
 				@Override
 				public void run() {
@@ -862,7 +876,22 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new PingModule());
 		jaxmpp.getModulesManager().register(new EntityTimeModule());
 		jaxmpp.getModulesManager().register(new PubSubModule());
-		jaxmpp.getModulesManager().register(new OmemoModule());
+
+		final OmemoModule omemoModule = new OmemoModule();
+		omemoModule.setCustomCipherFactory(new OmemoModule.CipherFactory() {
+			@Override
+			public Cipher cipherInstance(int mode, SecretKeySpec secretKey, byte[] iv)
+					throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
+						   InvalidAlgorithmParameterException, InvalidKeyException {
+				Cipher cipher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+								? Cipher.getInstance(OmemoExtension.CIPHER_NAME)
+								: Cipher.getInstance(OmemoExtension.CIPHER_NAME, "BC");
+				AlgorithmParameterSpec ivSpec = new IvParameterSpec(iv);
+				cipher.init(mode, secretKey, ivSpec);
+				return cipher;
+			}
+		});
+		jaxmpp.getModulesManager().register(omemoModule);
 
 		jaxmpp.getModule(MessageModule.class).addExtension(jaxmpp.getModule(OmemoModule.class).getExtension());
 
@@ -1312,13 +1341,27 @@ public class XMPPService
 						body += errorCondition.getElementName();
 					}
 				}
+			} else {
+				// skipping because no error element
+				return false;
 			}
+
+			if (msg.getId() != null) {
+				boolean updated = updateMessageAsError(sessionObject, msg, error);
+				if (updated) {
+					return true;
+				}
+			}
+
 			if (msg.getBody() != null) {
 				body += "\n ------ \n";
 				body += msg.getBody();
 			}
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, body);
 			values.put(DatabaseContract.ChatHistory.FIELD_ITEM_TYPE, DatabaseContract.ChatHistory.ITEM_TYPE_ERROR);
+
+			// Naaah… We don't need error message if not linked with sent message
+			return false;
 		} else {
 			values.put(DatabaseContract.ChatHistory.FIELD_BODY, msg.getBody());
 
@@ -1394,6 +1437,25 @@ public class XMPPService
 		return true;
 	}
 
+	private boolean updateMessageAsError(SessionObject sessionObject, Message message, ErrorElement error)
+			throws XMLException {
+		final Uri chatHistoryUri = Uri.parse(
+				ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
+						message.getFrom().getBareJid());
+		final String msgId = message.getId();
+
+		ContentValues values = new ContentValues();
+		values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT);
+
+		int r = getContentResolver().update(chatHistoryUri, values, DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=?",
+											new String[]{msgId});
+		if (r > 0) {
+			Log.d(TAG, "Msg marked as not sent id=" + msgId);
+			getApplicationContext().getContentResolver().notifyChange(chatHistoryUri, null);
+		}
+		return r != 0;
+	}
+
 	private void storeMucSysMsg(SessionObject sessionObject, Room room, String body) {
 		try {
 			if (body == null || body == null || room == null) {
@@ -1424,7 +1486,7 @@ public class XMPPService
 
 	}
 
-	private final void updateJaxmppInstances() {
+	private final void updateJaxmppInstances(final boolean connect) {
 		final HashSet<BareJID> accountsJids = new HashSet<BareJID>();
 		for (JaxmppCore jaxmpp : multiJaxmpp.get()) {
 			accountsJids.add(jaxmpp.getSessionObject().getUserBareJid());
@@ -1487,7 +1549,7 @@ public class XMPPService
 					this.disconnectJaxmpp(jaxmpp, true);
 				}
 			} else {
-				if (!jaxmpp.isConnected()) {
+				if (connect && !jaxmpp.isConnected()) {
 					this.connectJaxmpp(jaxmpp, 1L);
 				}
 			}
@@ -1584,7 +1646,7 @@ public class XMPPService
 				}
 			}
 
-			updateJaxmppInstances();
+			updateJaxmppInstances(true);
 			for (JaxmppCore j : multiJaxmpp.get()) {
 				Connector.State st = getState(j.getSessionObject());
 				if (st == Connector.State.disconnected || st == null) {
@@ -1660,6 +1722,8 @@ public class XMPPService
 	private class MAMHandler
 			implements MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler {
 
+		private final String TAG = "MAMHandler";
+
 		private final Context context;
 
 		public MAMHandler(XMPPService xmppService) {
@@ -1669,6 +1733,7 @@ public class XMPPService
 		@Override
 		public void onArchiveItemReceived(SessionObject sessionObject, String queryid, String messageId, Date timestamp,
 										  Message message) throws JaxmppException {
+			Log.i(TAG, "Processing MAM: " + message.getAsString());
 			final JID chatJID = getChatJID(sessionObject.getUserBareJid(), message.getFrom(), message.getTo());
 			if (chatJID == null) {
 				Log.i(TAG, "Cannot process MAM message: " + message.getAsString());
@@ -1680,8 +1745,7 @@ public class XMPPService
 
 			if (chat == null) {
 				Log.d(TAG, "No chat found!");
-				chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class)
-						.createChat(message.getFrom());
+				chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class).createChat(chatJID);
 			}
 			boolean stored = storeMessage(sessionObject, chat, message, timestamp);
 		}

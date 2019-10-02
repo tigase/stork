@@ -55,6 +55,7 @@ public class OMEMOStartActivity
 	private final Handler handler = new Handler();
 	private View cardError;
 	private View cardFingerprint;
+	private View cardProgress;
 
 	@Override
 	public boolean onSupportNavigateUp() {
@@ -78,6 +79,8 @@ public class OMEMOStartActivity
 		cardFingerprint.setVisibility(View.GONE);
 		this.cardError = findViewById(R.id.card_omemo_error);
 		cardError.setVisibility(View.GONE);
+		this.cardProgress = findViewById(R.id.card_omemo_progress);
+		cardProgress.setVisibility(View.VISIBLE);
 
 		((Button) findViewById(R.id.button_close_error)).setOnClickListener(v -> disableAndClose());
 
@@ -124,6 +127,7 @@ public class OMEMOStartActivity
 
 	private void showErrorCard(String errorMessage) {
 		handler.post(() -> {
+			cardProgress.setVisibility(View.GONE);
 			cardError.setVisibility(View.VISIBLE);
 			TextView errorText = findViewById(R.id.omemo_error_message);
 		});
@@ -135,6 +139,7 @@ public class OMEMOStartActivity
 			showErrorCard("Can't create session.");
 		} else {
 			handler.post(() -> {
+				cardProgress.setVisibility(View.GONE);
 				cardFingerprint.setVisibility(View.VISIBLE);
 				final LinearLayout fgpsPanel = findViewById(R.id.omemo_fingerprints_panel);
 
@@ -143,6 +148,10 @@ public class OMEMOStartActivity
 				for (Integer id : ids) {
 					final SignalProtocolAddress addr = new SignalProtocolAddress(jid.toString(), id);
 					IdentityKey identity = store.getIdentity(addr);
+
+					if (identity == null) {
+						continue;
+					}
 
 					FingerprintView f = new FingerprintView(this);
 					f.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));

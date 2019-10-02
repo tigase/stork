@@ -29,4 +29,8 @@
             android:id="@+id/menu_connectionstatus_serverfeatures"
             android:orderInCategory="100"
             android:title="@string/menu_connectionstatus_serverfeatures"/>
+    <item
+            android:id="@+id/menu_connectionstatus_republishomemo"
+            android:orderInCategory="100"
+            android:title="Republish OMEMO keys"/>
 </menu>

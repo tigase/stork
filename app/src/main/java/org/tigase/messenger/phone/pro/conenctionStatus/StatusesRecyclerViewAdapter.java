@@ -126,7 +126,10 @@ public class StatusesRecyclerViewAdapter
 		PopupMenu.OnMenuItemClickListener menuListener = new PopupMenu.OnMenuItemClickListener() {
 			@Override
 			public boolean onMenuItemClick(MenuItem item) {
-				if (item.getItemId() == R.id.menu_connectionstatus_serverfeatures) {
+				if (item.getItemId() == R.id.menu_connectionstatus_republishomemo) {
+					listener.onRepublishOMEMO(j.getSessionObject().getUserBareJid().toString());
+					return true;
+				} else if (item.getItemId() == R.id.menu_connectionstatus_serverfeatures) {
 					listener.onServerFeatures(j.getSessionObject().getUserBareJid().toString());
 					return true;
 				} else if (item.getItemId() == R.id.menu_connectionstatus_ping) {

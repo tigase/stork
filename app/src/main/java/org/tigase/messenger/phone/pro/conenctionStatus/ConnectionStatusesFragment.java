@@ -47,6 +47,7 @@ import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
+import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
@@ -154,6 +155,24 @@ public class ConnectionStatusesFragment
 			}).execute();
 
 		}
+
+		@Override
+		public void onRepublishOMEMO(String jid) {
+			(new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					try {
+						Jaxmpp j = mConnection.getService().getJaxmpp(jid);
+						j.getModule(OmemoModule.class).publishDeviceList();
+					} catch (Exception e) {
+						Log.w("ConnectionStatus","Cannot publish",e);
+						showInfo("Publish errior: " + e.getMessage());
+					}
+					return null;
+				}
+			}).execute();
+
+		}
 	};
 	private Runnable refreshRun = new Runnable() {
 		@Override
@@ -247,5 +266,7 @@ public class ConnectionStatusesFragment
 		void onServerFeatures(String accountJID);
 
 		void onAckServer(String toString);
+
+		void onRepublishOMEMO(String accoutJID);
 	}
 }

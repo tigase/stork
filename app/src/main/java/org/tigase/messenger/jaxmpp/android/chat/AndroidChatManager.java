@@ -18,6 +18,7 @@
 package org.tigase.messenger.jaxmpp.android.chat;
 
 import android.database.Cursor;
+import android.util.Log;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -33,6 +34,7 @@ import java.util.List;
 public class AndroidChatManager
 		extends AbstractChatManager {
 
+	private final static String TAG = "AChatManager";
 	private ChatProvider provider;
 
 	public AndroidChatManager(ChatProvider provider) {
@@ -52,9 +54,10 @@ public class AndroidChatManager
 
 	@Override
 	public Chat createChat(JID fromJid, String threadId) throws JaxmppException {
+		Log.d(TAG, "Create chat object and database entry JID=" + fromJid);
 		SessionObject sessionObject = context.getSessionObject();
 		long id = provider.createChat(sessionObject, fromJid, threadId);
-		Chat chat = new Chat(id, context);
+		Chat chat = new AndroidChat(id, context);
 		chat.setJid(fromJid);
 		chat.setThreadId(threadId);
 
@@ -68,6 +71,7 @@ public class AndroidChatManager
 
 	@Override
 	public Chat getChat(JID jid, String threadId) {
+		Log.d(TAG, "Searching chat jid=" + jid + " threadId=" + threadId);
 		try (Cursor c = provider.getChat(context.getSessionObject(), jid, threadId)) {
 			if (c.moveToNext()) {
 				return createChat(c);
@@ -77,6 +81,7 @@ public class AndroidChatManager
 	}
 
 	public Chat getChat(final int chatId) {
+		Log.d(TAG, "Searching chat id=" + chatId);
 		try (Cursor c = provider.getChat(context.getSessionObject(), chatId)) {
 			if (c.moveToNext()) {
 				return createChat(c);
@@ -102,9 +107,10 @@ public class AndroidChatManager
 	}
 
 	private Chat createChat(final Cursor c) {
-		final long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
-		Chat chat = new Chat(id, context);
 		BareJID jid = BareJID.bareJIDInstance(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_JID)));
+		Log.d(TAG, "Create chat object from cursor. jid=" + jid);
+		final long id = c.getLong(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_ID));
+		Chat chat = new AndroidChat(id, context);
 		chat.setThreadId(c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_THREAD_ID)));
 		final String resource = c.getString(c.getColumnIndex(DatabaseContract.OpenChats.FIELD_RESOURCE));
 

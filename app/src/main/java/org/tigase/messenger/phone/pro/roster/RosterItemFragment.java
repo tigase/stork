@@ -65,7 +65,7 @@ public class RosterItemFragment
 	private MyRosterItemRecyclerViewAdapter adapter;
 	private DBUpdateTask dbUpdateTask;
 	private SearchActionMode searchActionMode;
-	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			super.onServiceConnected(name, service);
@@ -271,7 +271,8 @@ public class RosterItemFragment
 	}
 
 	private void refreshRoster() {
-		if (dbUpdateTask == null || dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
+		if (mConnection.getService() != null && dbUpdateTask == null ||
+				dbUpdateTask.getStatus() == AsyncTask.Status.FINISHED) {
 			String txt = searchActionMode.getSearchText();
 			dbUpdateTask = new DBUpdateTask(enabledAccounts());
 			dbUpdateTask.execute(txt);
@@ -282,7 +283,6 @@ public class RosterItemFragment
 		final StringBuilder sb = new StringBuilder();
 		sb.append("'-'");
 		try {
-
 			Collection<JaxmppCore> accounts = mConnection.getService().getMultiJaxmpp().get();
 			for (JaxmppCore account : accounts) {
 				Boolean disabled = account.getSessionObject().getUserProperty(ACCOUNT_TMP_DISABLED_KEY);

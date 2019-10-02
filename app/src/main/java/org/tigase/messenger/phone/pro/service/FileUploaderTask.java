@@ -150,6 +150,7 @@ public abstract class FileUploaderTask
 										 @Override
 										 public void onSuccess(HttpFileUploadModule.Slot slot) throws JaxmppException {
 											 FileUploaderTask.this.slot = slot;
+											 Log.i("FileUploader", "Slot: "+slot.getPutUri());
 											 synchronized (FileUploaderTask.this) {
 												 FileUploaderTask.this.notify();
 											 }

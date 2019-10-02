@@ -148,6 +148,7 @@
         <service
                 android:name=".service.XMPPService"
                 android:enabled="true"
+                android:singleUser="true"
                 android:exported="false"/>
 
         <receiver

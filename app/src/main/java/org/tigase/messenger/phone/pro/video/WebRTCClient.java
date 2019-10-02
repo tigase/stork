@@ -89,9 +89,11 @@ public class WebRTCClient
 			throws XMLException {
 		final HashSet<JID> result = new HashSet<>();
 		Map<String, Presence> pr = PresenceModule.getPresenceStore(jaxmpp.getSessionObject()).getPresences(jid);
-		for (Presence p : pr.values()) {
-			if (isVideoChatAvailable(jaxmpp, p.getFrom())) {
-				result.add(p.getFrom());
+		if (pr != null) {
+			for (Presence p : pr.values()) {
+				if (isVideoChatAvailable(jaxmpp, p.getFrom())) {
+					result.add(p.getFrom());
+				}
 			}
 		}
 		return result;
