@@ -30,7 +30,7 @@ public class PushController {
 
 	public static final String PUSH_NOTIFICATION_CHANGED = "org.tigase.messenger.phone.pro.PUSH_NOTIFICATION_CHANGED";
 
-	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.org");
+	public static final JID PUSH_SERVICE_JID = JID.jidInstance("push.tigase.im");
 
 	public static String TAG = "PushController";
 	private final AccountManager mAccountManager;
