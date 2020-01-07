@@ -17,7 +17,7 @@
   -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Stork</string>
+    <string name="app_name">Stork IM</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -121,7 +121,7 @@
     <string name="prompt_nickname">Nickname (optional)</string>
 
     <string name="about_activity_title">About</string>
-    <string name="about_application_name">Stork</string>
+    <string name="about_application_name">Stork IM</string>
     <string name="about_version_name">Version %s</string>
     <string name="about_copyright">ⓒ 2011–2019 Tigase Inc.</string>
     <string name="about_rights">All rights reserved.</string>
