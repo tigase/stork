@@ -687,6 +687,9 @@ public class XMPPService
 	}
 
 	private void connectJaxmpp(final Jaxmpp jaxmpp, final Date date) {
+		if (jaxmpp == null) {
+			return;
+		}
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
 		if (presenceId == CPresence.OFFLINE) {

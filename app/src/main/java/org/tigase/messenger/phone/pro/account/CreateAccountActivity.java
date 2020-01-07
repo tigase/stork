@@ -138,24 +138,26 @@ public class CreateAccountActivity
 	}
 
 	private void startConnection(String host) {
-		mAuthTask = new AccountCreationTask(this, getApplicationContext(), mAccountManager);
-		mAuthTask.execute(host);
+		mAuthTask = new AccountCreationTask(this, getApplicationContext(), mAccountManager, host);
+		mAuthTask.execute();
 	}
 
 	public static class AccountCreationTask
-			extends AsyncTask<String, Integer, Boolean> {
+			extends AsyncTask<Void, Integer, Boolean> {
 
 		private final WeakReference<CreateAccountActivity> activity;
 		private final Context context;
 		private final AccountManager mAccountManager;
-		private AccountCreator accountCreator;
-		private String hostname;
+		private final AccountCreator accountCreator;
+		private final String hostname;
 		private ProgressDialog progress;
 
-		public AccountCreationTask(CreateAccountActivity activity, Context context, AccountManager mAccountManager) {
+		public AccountCreationTask(CreateAccountActivity activity, Context context, AccountManager mAccountManager, String hostname) {
+			this.hostname = hostname;
 			this.activity = new WeakReference<>(activity);
 			this.context = context;
 			this.mAccountManager = mAccountManager;
+			accountCreator = new AccountCreator(hostname);
 		}
 
 		public void useForm(UnifiedRegistrationForm jabberDataElement) throws JaxmppException {
@@ -219,9 +221,7 @@ public class CreateAccountActivity
 		}
 
 		@Override
-		protected Boolean doInBackground(String... hostname) {
-			accountCreator = new AccountCreator(hostname[0]);
-			this.hostname = hostname[0];
+		protected Boolean doInBackground(Void... _) {
 			accountCreator.getEventBus()
 					.addHandler(
 							InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,
