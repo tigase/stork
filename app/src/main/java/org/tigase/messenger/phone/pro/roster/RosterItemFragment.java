@@ -117,11 +117,7 @@ public class RosterItemFragment
 	@Override
 	public void onAttach(Context context) {
 		this.sharedPref = getContext().getSharedPreferences("RosterPreferences", Context.MODE_PRIVATE);
-
 		super.onAttach(context);
-
-		Intent intent = new Intent(context, XMPPService.class);
-		getActivity().bindService(intent, mConnection, 0);
 	}
 
 	@Override
@@ -168,7 +164,6 @@ public class RosterItemFragment
 		sharedPref = null;
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
-		getActivity().unbindService(mConnection);
 		super.onDetach();
 	}
 
@@ -231,6 +226,18 @@ public class RosterItemFragment
 		if (mConnection.getService() != null) {
 			refreshRoster();
 		}
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		getActivity().bindService(new Intent(getContext(), XMPPService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onStop() {
+		getActivity().unbindService(mConnection);
+		super.onStop();
 	}
 
 	@Override

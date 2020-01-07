@@ -19,10 +19,9 @@
 package org.tigase.messenger;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -79,7 +78,7 @@ public abstract class AbstractServiceActivity
 	protected void onStart() {
 		super.onStart();
 		Intent service = new Intent(getApplicationContext(), XMPPService.class);
-		bindService(service, mServiceConnection, 0);
+		bindService(service, mServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override

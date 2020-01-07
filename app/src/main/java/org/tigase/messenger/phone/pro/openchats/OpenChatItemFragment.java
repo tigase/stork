@@ -117,9 +117,6 @@ public class OpenChatItemFragment
 			mAddChatListener = (OnAddChatListener) context;
 		}
 
-		Intent intent = new Intent(context, XMPPService.class);
-		getActivity().bindService(intent, mConnection, 0);
-
 		getContext().getContentResolver()
 				.registerContentObserver(RosterProvider.ROSTER_URI, true, contactPresenceChangeObserver);
 	}
@@ -169,9 +166,20 @@ public class OpenChatItemFragment
 		getContext().getContentResolver().unregisterContentObserver(contactPresenceChangeObserver);
 		recyclerView.setAdapter(null);
 		adapter.changeCursor(null);
-		getActivity().unbindService(mConnection);
 		mAddChatListener = null;
 		super.onDetach();
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		getActivity().bindService(new Intent(getContext(), XMPPService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onStop() {
+		getActivity().unbindService(mConnection);
+		super.onStop();
 	}
 
 	@Override

@@ -538,8 +538,9 @@ public class XMPPService
 		unregisterReceiver(connReceiver);
 		unregisterReceiver(presenceChangedReceiver);
 		unregisterReceiver(accountModifyReceiver);
-		unregisterReceiver(pushNotificationChangeReceived);
-
+		if (PushController.isAvailable()) {
+			unregisterReceiver(pushNotificationChangeReceived);
+		}
 		getApplication().unregisterActivityLifecycleCallbacks(mActivityCallbacks);
 
 		disconnectAllJaxmpp(true);
@@ -861,7 +862,7 @@ public class XMPPService
 		jaxmpp.getModulesManager().register(new PresenceModule());
 		jaxmpp.getModulesManager().register(new VCardModule());
 		jaxmpp.getModulesManager().register(new AdHocCommansModule());
-		if (pushController.isAvailable()) {
+		if (PushController.isAvailable()) {
 			jaxmpp.getModulesManager().register(new PushNotificationModule());
 		}
 		jaxmpp.getModulesManager().register(new MessageArchiveManagementModule());
