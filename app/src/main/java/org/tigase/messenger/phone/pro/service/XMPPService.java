@@ -692,7 +692,7 @@ public class XMPPService
 			return;
 		}
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-		long presenceId = sharedPref.getLong("presence", CPresence.OFFLINE);
+		long presenceId = sharedPref.getLong("presence", CPresence.ONLINE);
 		if (presenceId == CPresence.OFFLINE) {
 			return;
 		}
