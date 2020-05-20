@@ -33,6 +33,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.capabilities.CapabilitiesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -127,11 +128,19 @@ public class WebRTCClient
 	}
 
 	private static boolean isVideoChatAvailable(final JaxmppCore jaxmpp, final JID jid) {
+		if (jid == null || jid.getResource() == null) {
+			return false;
+		}
 		Presence p = PresenceModule.getPresenceStore(jaxmpp.getSessionObject()).getPresence(jid);
 		CapabilitiesModule capsModule = jaxmpp.getModule(CapabilitiesModule.class);
 		CapabilitiesCache capsCache = capsModule.getCache();
 
 		try {
+			StanzaType presenceType = p.getType();
+			if (presenceType == StanzaType.error) {
+				return false;
+			}
+
 			String capsNode = getCapsNode(p);
 			Set<String> features = (capsCache != null) ? capsCache.getFeatures(capsNode) : null;
 
