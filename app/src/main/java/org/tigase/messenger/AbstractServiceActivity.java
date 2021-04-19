@@ -21,6 +21,7 @@ package org.tigase.messenger;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.MainActivity;
@@ -75,16 +76,16 @@ public abstract class AbstractServiceActivity
 	}
 
 	@Override
-	protected void onStart() {
-		super.onStart();
+	protected void onCreate( @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		Intent service = new Intent(getApplicationContext(), XMPPService.class);
 		bindService(service, mServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
-	protected void onStop() {
-		super.onStop();
+	protected void onDestroy() {
 		unbindService(mServiceConnection);
+		super.onDestroy();
 	}
 
 	protected abstract void onXMPPServiceConnected();
