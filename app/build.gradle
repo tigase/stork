@@ -79,7 +79,7 @@ android {
 
 dependencies {
 	implementation fileTree(include: ['*.jar'], dir: 'libs')
-	testImplementation 'junit:junit:4.12'
+	testImplementation 'junit:junit:4.13.2'
 	implementation 'tigase:jaxmpp-android:3.3.0'
 	implementation 'tigase:jaxmpp-muc:3.3.0'
 	implementation 'tigase:jaxmpp-chat:3.3.0'
@@ -107,7 +107,7 @@ dependencies {
 	implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
 	implementation 'org.webrtc:google-webrtc:1.0.26131'
 	implementation 'com.android.support:multidex:1.0.3'
-	playstoreImplementation('com.google.firebase:firebase-messaging:17.5.0')
+	playstoreImplementation('com.google.firebase:firebase-messaging:21.1.0')
 	implementation 'org.jetbrains:annotations:15.0'
 }
 
