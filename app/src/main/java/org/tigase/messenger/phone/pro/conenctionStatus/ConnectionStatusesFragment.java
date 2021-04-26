@@ -24,19 +24,18 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
@@ -54,24 +53,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 public class ConnectionStatusesFragment
 		extends Fragment {
 
-	RecyclerView recyclerView;
-	private StatusesRecyclerViewAdapter adapter;
-	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-			adapter.setMultiJaxmpp(getService().getMultiJaxmpp());
-			getService().getMultiJaxmpp().addListener(listener);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			getService().getMultiJaxmpp().remove(listener);
-			super.onServiceDisconnected(name);
-			adapter.setMultiJaxmpp(null);
-		}
-	};
-	private OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
+	private final OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
 		@Override
 		public void onPingServer(String accountJID) {
 			Log.d("Status", "Ping " + accountJID);
@@ -119,13 +101,6 @@ public class ConnectionStatusesFragment
 		}
 
 		@Override
-		public void onServerFeatures(String accountJID) {
-			Intent intent = new Intent(getActivity(), ServerFeaturesActivity.class);
-			intent.putExtra(ServerFeaturesActivity.ACCOUNT_JID, accountJID);
-			startActivity(intent);
-		}
-
-		@Override
 		public void onAckServer(String accountJID) {
 			Log.d("Status", "Ping " + accountJID);
 			if (mConnection == null) {
@@ -165,7 +140,7 @@ public class ConnectionStatusesFragment
 						Jaxmpp j = mConnection.getService().getJaxmpp(jid);
 						j.getModule(OmemoModule.class).publishDeviceList();
 					} catch (Exception e) {
-						Log.w("ConnectionStatus","Cannot publish",e);
+						Log.w("ConnectionStatus", "Cannot publish", e);
 						showInfo("Publish errior: " + e.getMessage());
 					}
 					return null;
@@ -174,7 +149,24 @@ public class ConnectionStatusesFragment
 
 		}
 	};
-	private Runnable refreshRun = new Runnable() {
+	RecyclerView recyclerView;
+	private StatusesRecyclerViewAdapter adapter;
+	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			adapter.setMultiJaxmpp(getService().getMultiJaxmpp());
+			getService().getMultiJaxmpp().addListener(listener);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			getService().getMultiJaxmpp().remove(listener);
+			super.onServiceDisconnected(name);
+			adapter.setMultiJaxmpp(null);
+		}
+	};
+	private final Runnable refreshRun = new Runnable() {
 		@Override
 		public void run() {
 			adapter.notifyDataSetChanged();
@@ -212,7 +204,7 @@ public class ConnectionStatusesFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View root = inflater.inflate(R.layout.fragment_connectionstatus_list, container, false);
 
-		recyclerView = (RecyclerView) root.findViewById(R.id.servers_list);
+		recyclerView = root.findViewById(R.id.servers_list);
 
 		// Set the adapter
 		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
@@ -262,8 +254,6 @@ public class ConnectionStatusesFragment
 	public interface OnListFragmentInteractionListener {
 
 		void onPingServer(String accountJID);
-
-		void onServerFeatures(String accountJID);
 
 		void onAckServer(String toString);
 

@@ -18,157 +18,163 @@
 
 package org.tigase.messenger.phone.pro.settings;
 
-import android.accounts.Account;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.preference.Preference;
-import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceViewHolder;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.tigase.messenger.phone.pro.utils.AsyncDrawable;
-import org.tigase.messenger.phone.pro.utils.BitmapWorkerTask;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.Connector;
 
 import static org.tigase.messenger.phone.pro.utils.AvatarHelper.getCroppedBitmap;
 
+@Deprecated
 public class AccountCat
 		extends Preference {
 
-	private Account account;
-	private SettingsActivity activity;
+	private String accountName;
+	private AppCompatTextView accountNameView;
+	private boolean active;
+	private StorkAvatarView avatarImage;
+	private XMPPService.DisconnectionCauses cause;
 	private Bitmap mPlaceHolderBitmap;
+	private Connector.State state = Connector.State.disconnected;
+	//	@Override
+//	public void onBindViewHolder(PreferenceViewHolder holder) {
+//		super.onBindViewHolder(holder);
+//		((AppCompatTextView) holder.findViewById(R.id.account_name)).setText(accountName);
+//		this.statusImage = (ImageView) holder.findViewById(R.id.account_status);
+//	}
+	private AppCompatTextView summaryView;
 
-	public static AccountCat instance(Context context, Account account, SettingsActivity activity) {
-		AccountCat result = new AccountCat(context);
-		result.setTitle(account.name);
-		result.activity = activity;
-		result.account = account;
+	public AccountCat(Context context) {
+		super(context);
+		init();
+		setLayoutResource(R.layout.preference_account_item);
+	}
 
-		return result;
+	public AccountCat(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+		super(context, attrs, defStyleAttr, defStyleRes);
+		init();
+		setLayoutResource(R.layout.preference_account_item);
 	}
 
 	public AccountCat(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 		init();
+		setLayoutResource(R.layout.preference_account_item);
 	}
 
 	public AccountCat(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
+		setLayoutResource(R.layout.preference_account_item);
 	}
 
-	public AccountCat(Context context) {
-		super(context);
-		init();
+	public boolean isActive() {
+		return active;
 	}
 
-	public Account getAccount() {
-		return account;
+	public void setActive(boolean active) {
+		this.active = active;
+		updateStatusImage();
 	}
 
-	public void setAccount(Account account) {
-		this.account = account;
-		setTitle(account.name);
+	public XMPPService.DisconnectionCauses getCause() {
+		return cause;
 	}
 
-	@SuppressLint("MissingSuperCall")
+	public void setCause(XMPPService.DisconnectionCauses cause) {
+		this.cause = cause;
+	}
+
+	public Connector.State getState() {
+		return state;
+	}
+
+	public void setState(Connector.State newState) {
+		this.state = newState;
+		updateStatusImage();
+	}
+
+	public String getAccountName() {
+		return accountName;
+	}
+
+	public void setAccountName(String accountName) {
+		this.accountName = accountName;
+	}
+
 	@Override
-	protected void onBindView(View view) {
-		try {
-			if (activity != null) {
-				boolean active = activity.isAccountActive(account);
+	public void onBindViewHolder(PreferenceViewHolder view) {
+		this.avatarImage = (StorkAvatarView) view.findViewById(R.id.contact_avatar);
+		this.accountNameView = (AppCompatTextView) view.findViewById(R.id.account_name);
+//		this.summaryView = (AppCompatTextView) view.findViewById(R.id.summary);
 
-				if (!active) {
-					setSummary(R.string.account_status_disabled);
-					setIcon(R.drawable.ic_account_disconnected);
-				} else {
-					final Connector.State state = activity.getState(account.name);
-					XMPPService.DisconnectionCauses cause = activity.getDisconectionProblemDescription(account);
-					switch (state) {
-						case connected:
-							setSummary(R.string.account_status_connected);
-							setIcon(R.drawable.ic_account_connected);
-							break;
-						case connecting:
-							setSummary(R.string.account_status_connecting);
-							setIcon(R.drawable.ic_account_connected);
-							break;
-						case disconnecting:
-							setSummary(R.string.account_status_disconnecting);
-							setIcon(R.drawable.ic_account_disconnected);
-							break;
-						default:
-						case disconnected:
-							setSummary(SettingsActivity.getDisconnectedCauseMessage(getContext(), cause));
-							setIcon(R.drawable.ic_account_disconnected);
-							break;
-					}
-				}
-			}
+		this.accountNameView.setText(accountName);
+		updateStatusImage();
 
-			final TextView titleView = (TextView) view.findViewById(R.id.account_name);
-			if (titleView != null) {
-				final CharSequence title = getTitle();
-				if (!TextUtils.isEmpty(title)) {
-					titleView.setText(title);
-					titleView.setVisibility(View.VISIBLE);
-				} else {
-					titleView.setVisibility(View.GONE);
-				}
-			}
-
-			final TextView summaryView = (TextView) view.findViewById(R.id.summary);
-			if (summaryView != null) {
-				final CharSequence summary = getSummary();
-				if (!TextUtils.isEmpty(summary)) {
-					summaryView.setText(summary);
-					summaryView.setVisibility(View.VISIBLE);
-				} else {
-					summaryView.setVisibility(View.GONE);
-				}
-			}
-
-			ImageView statusView = (ImageView) view.findViewById(R.id.account_status);
-			if (statusView != null) {
-				Drawable ic = getIcon();
-				if (ic != null) {
-					statusView.setImageDrawable(ic);
-					statusView.setVisibility(View.VISIBLE);
-				} else {
-					statusView.setVisibility(View.GONE);
-				}
-			}
-
-			ImageView avatarView = (ImageView) view.findViewById(R.id.contact_avatar);
-			if (avatarView != null) {
-				final BitmapWorkerTask task = new BitmapWorkerTask(getContext(), avatarView, null);
-
-				final AsyncDrawable asyncDrawable = new AsyncDrawable(getContext().getResources(), mPlaceHolderBitmap,
-																	  task);
+//		try {
+//
+//
+//
+//			ImageView avatarView = (ImageView) view.findViewById(R.id.contact_avatar);
+//			if (avatarView != null) {
+//				final BitmapWorkerTask task = new BitmapWorkerTask(getContext(), avatarView, null);
+//
+//				final AsyncDrawable asyncDrawable = new AsyncDrawable(getContext().getResources(), mPlaceHolderBitmap,
+//																	  task);
 //				avatarView.setImageDrawable(asyncDrawable);
-				avatarView.setImageResource(R.drawable.stork_logo);
-				try {
-					task.execute(BareJID.bareJIDInstance(getTitle().toString()));
-				} catch (java.util.concurrent.RejectedExecutionException e) {
-					// ignoring: probably avatar big as cow
-					Log.e("Settings", "Cannot load avatar for account " + getTitle(), e);
-				}
-			}
+//				avatarView.setImageResource(R.drawable.stork_logo);
+//				try {
+//					task.execute(BareJID.bareJIDInstance(getTitle().toString()));
+//				} catch (java.util.concurrent.RejectedExecutionException e) {
+//					// ignoring: probably avatar big as cow
+//					Log.e("Settings", "Cannot load avatar for account " + getTitle(), e);
+//				}
+//			}
+//
+//		} catch (Exception e) {
+//			Log.wtf("SettingsActivity", e);
+//			setSummary(R.string.account_status_unknown);
+//			setIcon(R.drawable.ic_account_disconnected);
+//		}
 
-		} catch (Exception e) {
-			Log.wtf("SettingsActivity", e);
-			setSummary(R.string.account_status_unknown);
-			setIcon(R.drawable.ic_account_disconnected);
-		}
+	}
+
+	private void updateStatusImage() {
+//		if (summaryView == null || statusImage == null) {
+//			return;
+//		}
+//		if (!active) {
+//			summaryView.setText(R.string.account_status_disabled);
+//			statusImage.setImageResource(R.drawable.ic_account_disconnected);
+//		} else {
+//			switch (state) {
+//				case connected:
+//					summaryView.setText(R.string.account_status_connected);
+//					statusImage.setImageResource(R.drawable.ic_account_connected);
+//					break;
+//				case connecting:
+//					summaryView.setText(R.string.account_status_connecting);
+//					statusImage.setImageResource(R.drawable.ic_account_connected);
+//					break;
+//				case disconnecting:
+//					summaryView.setText(R.string.account_status_disconnecting);
+//					statusImage.setImageResource(R.drawable.ic_account_disconnected);
+//					break;
+//				default:
+//				case disconnected:
+//					summaryView.setText(SettingsActivity.getDisconnectedCauseMessage(getContext(), cause));
+//					statusImage.setImageResource(R.drawable.ic_account_disconnected);
+//					break;
+//			}
+//		}
 	}
 
 	private void init() {
@@ -179,7 +185,5 @@ public class AccountCat
 		options.inJustDecodeBounds = false;
 		this.mPlaceHolderBitmap = getCroppedBitmap(
 				BitmapFactory.decodeResource(getContext().getResources(), R.drawable.stork_logo, options));
-		setLayoutResource(R.layout.preference_account_item);
 	}
-
 }

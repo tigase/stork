@@ -32,12 +32,16 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
 
-        <LinearLayout android:id="@+id/content"
-                      android:orientation="vertical"
-                      android:layout_width="match_parent"
-                      android:layout_height="wrap_content">
+        <LinearLayout
+                android:id="@+id/content"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
                 <com.github.abdularis.civ.StorkAvatarView
                         android:id="@+id/contact_avatar"
                         android:layout_width="64dp"
@@ -46,7 +50,7 @@
                         android:scaleType="fitStart"
                         android:src="@drawable/user_avatar"/>
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/vcard_jid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -54,82 +58,89 @@
                         android:textColor="#000000"
                         android:textSize="17sp"
                         android:fontFamily="sans-serif"
-                        android:layout_centerVertical="true" android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true"
                         android:layout_toEndOf="@+id/contact_avatar"/>
 
             </RelativeLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_fullname"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Full name"
                         android:inputType="textPersonName"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_nickname"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Nickname"
                         android:inputType="textPersonName"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_email"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Email address"
                         android:inputType="textEmailAddress"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_birthday"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Birthday"
                         android:inputType="date"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_mobilephone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Mobile phone"
                         android:inputType="phone"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <EditText
+
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/vcard_workphone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Work phone"
                         android:inputType="phone"
                         android:maxLines="1"/>
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
     </ScrollView>
 

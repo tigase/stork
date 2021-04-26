@@ -23,6 +23,8 @@ import android.database.Cursor;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.roster.PresenceIconMapper;
@@ -30,10 +32,10 @@ import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class ViewHolder
-		extends android.support.v7.widget.RecyclerView.ViewHolder
+		extends RecyclerView.ViewHolder
 		implements View.OnClickListener {
 
-	private final ImageView mContactAvatar;
+	private final StorkAvatarView mContactAvatar;
 	private final TextView mContactNameView;
 	private final ImageView mContactPresence;
 	private final TextView mJidView;
@@ -45,10 +47,10 @@ public class ViewHolder
 	public ViewHolder(View itemView, ReceiverContextActivity.OnItemSelected selectionHandler) {
 		super(itemView);
 		this.selectionHandler = selectionHandler;
-		this.mJidView = (TextView) itemView.findViewById(R.id.contact_jid);
-		this.mContactNameView = (TextView) itemView.findViewById(R.id.contact_display_name);
-		this.mContactPresence = (ImageView) itemView.findViewById(R.id.contact_presence);
-		this.mContactAvatar = (ImageView) itemView.findViewById(R.id.contact_avatar);
+		this.mJidView = itemView.findViewById(R.id.contact_jid);
+		this.mContactNameView = itemView.findViewById(R.id.contact_display_name);
+		this.mContactPresence = itemView.findViewById(R.id.contact_presence);
+		this.mContactAvatar = itemView.findViewById(R.id.contact_avatar);
 
 		addClickable(itemView);
 

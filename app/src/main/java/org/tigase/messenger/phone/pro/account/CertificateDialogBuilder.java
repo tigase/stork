@@ -19,10 +19,11 @@
 package org.tigase.messenger.phone.pro.account;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
+import android.content.DialogInterface;
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import org.tigase.messenger.phone.pro.R;
 
 import java.security.MessageDigest;
@@ -55,7 +56,7 @@ public class CertificateDialogBuilder {
 	public CertificateDialogBuilder(@NonNull Context context, X509Certificate[] chain) {
 		this.context = context;
 		this.chain = chain;
-		this.builder = new AlertDialog.Builder(context);
+		this.builder = new AlertDialog.Builder(context, R.style.Theme_AppCompat_DayNight);
 
 	}
 
@@ -71,19 +72,38 @@ public class CertificateDialogBuilder {
 		return builder.create();
 	}
 
-	public AlertDialog.Builder setMessage(int messageId) {
+	public CertificateDialogBuilder setMessage(int messageId) {
 		this.message = context.getText(messageId);
-		return builder.setMessage(this.message);
+		builder.setMessage(this.message);
+		return this;
 	}
 
-	public AlertDialog.Builder setMessage(@Nullable CharSequence message) {
+	public CertificateDialogBuilder setMessage(@Nullable CharSequence message) {
 		this.message = message;
-		return builder.setMessage(message);
+		builder.setMessage(message);
+		return this;
 	}
 
-	public AlertDialog.Builder setTitle(String string) {
+	public CertificateDialogBuilder setTitle(String string) {
 		builder.setTitle(string);
-		return builder;
+		return this;
+	}
+
+	public CertificateDialogBuilder setCancelable(boolean b) {
+		builder.setCancelable(b);
+		return this;
+	}
+
+	public CertificateDialogBuilder setPositiveButton(CharSequence text,
+													  final DialogInterface.OnClickListener listener) {
+		builder.setPositiveButton(text, listener);
+		return this;
+	}
+
+	public CertificateDialogBuilder setNegativeButton(CharSequence text,
+													  final DialogInterface.OnClickListener listener) {
+		builder.setNegativeButton(text, listener);
+		return this;
 	}
 
 	private String buildCertDetails() {

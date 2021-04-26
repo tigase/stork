@@ -19,17 +19,17 @@
 package org.tigase.messenger.phone.pro.conversations.chat;
 
 import android.content.Context;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class OnlyVerticalSwipeRefreshLayout
 		extends SwipeRefreshLayout {
 
 	private boolean declined;
 	private float prevX;
-	private int touchSlop;
+	private final int touchSlop;
 
 	public OnlyVerticalSwipeRefreshLayout(Context context) {
 		super(context);

@@ -27,13 +27,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,6 +38,13 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
+import com.google.android.material.navigation.NavigationView;
 import org.tigase.messenger.AbstractServiceActivity;
 import org.tigase.messenger.phone.pro.account.Authenticator;
 import org.tigase.messenger.phone.pro.account.NewAccountActivity;
@@ -52,7 +52,7 @@ import org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragmen
 import org.tigase.messenger.phone.pro.conversations.muc.JoinMucActivity;
 import org.tigase.messenger.phone.pro.db.CPresence;
 import org.tigase.messenger.phone.pro.openchats.OpenChatItemFragment;
-import org.tigase.messenger.phone.pro.roster.RosterItemFragment;
+import org.tigase.messenger.phone.pro.roster.view.RosterFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.settings.SettingsActivity;
 import tigase.jaxmpp.core.client.Connector;
@@ -75,10 +75,10 @@ public class MainActivity
 	public Toolbar toolbar;
 	Spinner statusSelector;
 	private TextView connectionStatus;
+	private final SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = (sharedPreferences, key) -> MainActivity.this
+			.onSharedPreferenceChanged(sharedPreferences, key);
 	private ImageView headerLogo;
 	private Menu navigationMenu;
-	private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = (sharedPreferences, key) -> MainActivity.this
-			.onSharedPreferenceChanged(sharedPreferences, key);
 
 	private static Connector.State getState(JaxmppCore j) {
 		Connector.State st = j.getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
@@ -306,7 +306,7 @@ public class MainActivity
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putLong("presence", presenceId);
-		editor.commit();
+		editor.apply();
 
 		Intent action = new Intent(XMPPService.CLIENT_PRESENCE_CHANGED_ACTION);
 		action.putExtra("presence", presenceId);
@@ -318,64 +318,46 @@ public class MainActivity
 
 		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-		switch (id) {
-			case R.id.nav_about: {
-				Intent intent = new Intent(this, AboutActivity.class);
-				startActivity(intent);
-				break;
-			}
-			case R.id.nav_connectionstatus: {
-				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction()
-						.replace(R.id.flContent, ConnectionStatusesFragment.newInstance())
-						.commit();
+		if (id == R.id.nav_about) {
+			Intent intent = new Intent(this, AboutActivity.class);
+			startActivity(intent);
+		} else if (id == R.id.nav_connectionstatus) {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction()
+					.replace(R.id.flContent, ConnectionStatusesFragment.newInstance())
+					.commit();
 
-				SharedPreferences.Editor editor = sharedPref.edit();
-				editor.putString("menu", "connectionstatus");
-				editor.commit();
-				menuItem.setChecked(true);
-				setTitle(menuItem.getTitle());
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "connectionstatus");
+			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
+		} else if (id == R.id.nav_roster) {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(R.id.flContent, new RosterFragment()).commit();
 
-				break;
-			}
-			case R.id.nav_roster: {
-				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction()
-						.replace(R.id.flContent, RosterItemFragment.newInstance(getServiceConnection()))
-						.commit();
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "roster");
+			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
+		} else if (id == R.id.nav_chats) {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction()
+					.replace(R.id.flContent, OpenChatItemFragment.newInstance(getServiceConnection()))
+					.commit();
 
-				SharedPreferences.Editor editor = sharedPref.edit();
-				editor.putString("menu", "roster");
-				editor.commit();
-				menuItem.setChecked(true);
-				setTitle(menuItem.getTitle());
-
-				break;
-			}
-			case R.id.nav_chats: {
-				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction()
-						.replace(R.id.flContent, OpenChatItemFragment.newInstance(getServiceConnection()))
-						.commit();
-
-				SharedPreferences.Editor editor = sharedPref.edit();
-				editor.putString("menu", "chats");
-				editor.commit();
-				menuItem.setChecked(true);
-				setTitle(menuItem.getTitle());
-
-				break;
-			}
-			case R.id.nav_joinmuc: {
-				Intent intent = new Intent(this, JoinMucActivity.class);
-				startActivity(intent);
-				break;
-			}
-			case R.id.nav_settings: {
-				Intent intent = new Intent(this, SettingsActivity.class);
-				startActivity(intent);
-				break;
-			}
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putString("menu", "chats");
+			editor.commit();
+			menuItem.setChecked(true);
+			setTitle(menuItem.getTitle());
+		} else if (id == R.id.nav_joinmuc) {
+			Intent intent = new Intent(this, JoinMucActivity.class);
+			startActivity(intent);
+		} else if (id == R.id.nav_settings) {
+			Intent intent = new Intent(this, SettingsActivity.class);
+			startActivity(intent);
 		}
 	}
 
@@ -514,6 +496,10 @@ public class MainActivity
 			Log.i("MainActivity", "Service unbinded");
 			mService = null;
 		}
+
+		public void destroy() {
+		}
+
 	}
 
 	private class StatusHandler

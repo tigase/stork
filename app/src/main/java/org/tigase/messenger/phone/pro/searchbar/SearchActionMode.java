@@ -19,8 +19,6 @@
 package org.tigase.messenger.phone.pro.searchbar;
 
 import android.content.Context;
-import android.support.v7.view.ActionMode;
-import android.support.v7.view.ActionMode.Callback;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -29,10 +27,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import androidx.appcompat.view.ActionMode;
 import org.tigase.messenger.phone.pro.R;
 
 public class SearchActionMode
-		implements Callback {
+		implements ActionMode.Callback {
 
 	private final Context context;
 	private SearchCallback searchCallback;
@@ -65,7 +64,7 @@ public class SearchActionMode
 		View customNav = LayoutInflater.from(context).inflate(R.layout.search_actionbar, null);
 		am.setCustomView(customNav);
 
-		this.searchField = (EditText) customNav.findViewById(R.id.text_search);
+		this.searchField = customNav.findViewById(R.id.text_search);
 		this.searchField.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {

@@ -23,6 +23,7 @@
                 android:paddingBottom="3dp"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
+                android:background="@drawable/selectable_item_background"
                 android:paddingTop="3dp">
 
     <com.github.abdularis.civ.StorkAvatarView
@@ -43,7 +44,7 @@
             android:background="@drawable/message_bubble_received"
             android:orientation="vertical">
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -64,11 +65,14 @@
                 android:layout_marginRight="3dp"
                 android:orientation="horizontal">
 
-            <ImageView android:id="@+id/encryption_indicator" android:layout_width="16dp" android:layout_height="16dp"
-                       android:visibility="gone"
-                       android:src="@drawable/ic_encryprted_message"            />
+            <ImageView
+                    android:id="@+id/encryption_indicator"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:visibility="gone"
+                    android:src="@drawable/ic_encryprted_message"/>
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/chat_timestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

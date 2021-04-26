@@ -30,19 +30,18 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
-import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.IdRes;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationCompat;
+import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.AbstractServiceActivity;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.*;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -63,7 +62,7 @@ public class VCardEditActivity
 	private static final int PICK_IMAGE = 1;
 	private static final int TAKE_PHOTO = 3;
 	private String accountName;
-	private ImageView avatarImageView;
+	private StorkAvatarView avatarImageView;
 	private VCard vcard;
 
 	private static void dismissDialog(Activity activity, Dialog dialog) {
@@ -102,13 +101,13 @@ public class VCardEditActivity
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_ok:
-				send(fillVCard());
-				return true;
-			case android.R.id.home:
-				finish();
-				return true;
+		int itemId = item.getItemId();
+		if (itemId == R.id.ac_ok) {
+			send(fillVCard());
+			return true;
+		} else if (itemId == android.R.id.home) {
+			finish();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -131,7 +130,7 @@ public class VCardEditActivity
 		setContentView(R.layout.vcard_edit);
 		setValue(this.accountName, R.id.vcard_jid);
 
-		this.avatarImageView = (ImageView) findViewById(R.id.contact_avatar);
+		this.avatarImageView = findViewById(R.id.contact_avatar);
 		avatarImageView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -194,29 +193,18 @@ public class VCardEditActivity
 		}
 	}
 
-	private void fillForm(final VCard vcard) {
+	private void fillForm(final SessionObject sessionObject, final VCard vcard) {
 		if (vcard == null) {
 			return;
 		}
 
 		try {
 			if (vcard.getPhotoVal() != null && vcard.getPhotoVal().length() > 0) {
-				byte[] avatar = tigase.jaxmpp.core.client.Base64.decode(vcard.getPhotoVal());
+				byte[] base64converted = tigase.jaxmpp.core.client.Base64.decode(vcard.getPhotoVal());
+				getServiceConnection().getService()
+						.updateVCardHash(sessionObject, sessionObject.getUserBareJid(), base64converted);
 
-				BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inJustDecodeBounds = true;
-				Bitmap bmp1 = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-				if (bmp1 != null) {
-					bmp1.recycle();
-				}
-				// options.inSampleSize = calculateSize(options, 96, 96);
-				options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-				options.inSampleSize = AvatarHelper.calculateSize(options, 50, 50);
-				options.inJustDecodeBounds = false;
-				Bitmap bmp = BitmapFactory.decodeByteArray(avatar, 0, avatar.length, options);
-
-				ImageView a = (ImageView) findViewById(R.id.contact_avatar);
-				a.setImageBitmap(bmp);
+				avatarImageView.setJID(BareJID.bareJIDInstance(accountName), null);
 			}
 		} catch (Exception e) {
 			Log.e(TAG, "WTF?", e);
@@ -299,7 +287,7 @@ public class VCardEditActivity
 
 				@Override
 				protected void onVCardReceived(VCard vcard) throws XMLException {
-					runOnUiThread(() -> fillForm(vcard == null ? new VCard() : vcard));
+					runOnUiThread(() -> fillForm(jaxmpp.getSessionObject(), vcard == null ? new VCard() : vcard));
 				}
 			});
 		} catch (JaxmppException e) {

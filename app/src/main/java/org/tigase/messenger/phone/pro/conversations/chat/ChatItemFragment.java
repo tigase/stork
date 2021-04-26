@@ -20,25 +20,30 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.*;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.view.ActionMode;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.selection.Selection;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import org.jetbrains.annotations.NotNull;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
@@ -46,7 +51,7 @@ import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.roster.contact.ContactInfoActivity;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
+import org.tigase.messenger.phone.pro.roster.multiselect.SelectionFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
@@ -56,30 +61,17 @@ import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
-import java.util.List;
-
 public class ChatItemFragment
-		extends MultiSelectFragment {
+		extends SelectionFragment<MyChatItemRecyclerViewAdapter> {
 
 	private static final String TAG = "ChatFragment";
 	public static int START_OMEMO_REQUEST = 1000;
-	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			super.onServiceDisconnected(name);
-		}
-	};
-	EditText message;
-	RecyclerView recyclerView;
-	ImageView sendButton;
-	private MyChatItemRecyclerViewAdapter adapter;
+	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
 	private DBUpdateTask dbUpdateTask;
+	private FloatingActionButton floatingActionButton;
 	private BareJID mAccount;
+	private EditText message;
+	private ImageView sendButton;
 	private SwipeRefreshLayout swipeRefresh;
 	private Uri uri;
 
@@ -97,6 +89,7 @@ public class ChatItemFragment
 	 * changes).
 	 */
 	public ChatItemFragment() {
+		super(R.layout.fragment_chatitem_list);
 	}
 
 	@Override
@@ -147,45 +140,28 @@ public class ChatItemFragment
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View root = inflater.inflate(R.layout.fragment_chatitem_list, container, false);
-
-		this.swipeRefresh = root.findViewById(R.id.swipeRefreshLayout);
+	public void onViewCreated(@NonNull @NotNull View view,
+							  @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		this.swipeRefresh = view.findViewById(R.id.swipeRefreshLayout);
 		if (swipeRefresh != null) {
 			swipeRefresh.setOnRefreshListener(this::loadMoreHistory);
 		}
 
-		final FloatingActionButton floatingActionButton = root.findViewById(R.id.scroll_down);
+		this.floatingActionButton = view.findViewById(R.id.scroll_down);
 		floatingActionButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				recyclerView.smoothScrollToPosition(0);
+				getRecyclerView().smoothScrollToPosition(0);
 			}
 		});
 		floatingActionButton.hide();
 
-		recyclerView = root.findViewById(R.id.chat_list);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			this.recyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-				@Override
-				public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-					LinearLayoutManager myLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-					final boolean shouldBeVisible = myLayoutManager.findFirstVisibleItemPosition() > 0;
-
-					if (shouldBeVisible) {
-						floatingActionButton.show();
-					} else {
-						floatingActionButton.hide();
-					}
-				}
-			});
-		}
-
-		message = root.findViewById(R.id.messageText);
-		sendButton = root.findViewById(R.id.send_button);
+		message = view.findViewById(R.id.messageText);
+		sendButton = view.findViewById(R.id.send_button);
 
 		message.setOnEditorActionListener((textView, id, keyEvent) -> {
-			if (id == R.id.send || id == EditorInfo.IME_NULL) {
+			if (id == R.integer.action_send || id == EditorInfo.IME_NULL) {
 				send();
 				return true;
 			}
@@ -194,87 +170,66 @@ public class ChatItemFragment
 
 		sendButton.setOnClickListener(v -> send());
 
-		// recyclerView.addItemDecoration(new
-		// DividerItemDecoration(getActivity(),
-		// DividerItemDecoration.VERTICAL_LIST));
-
-		LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-		linearLayoutManager.setReverseLayout(true);
-
-		recyclerView.setLayoutManager(linearLayoutManager);
-		this.adapter = new MyChatItemRecyclerViewAdapter(getContext(), null, this) {
-			@Override
-			protected void onContentChanged() {
-				refreshChatHistory();
-			}
-		};
-		recyclerView.setAdapter(adapter);
-
-		return root;
 	}
 
 	@Override
 	public void onDetach() {
-		recyclerView.setAdapter(null);
-		adapter.changeCursor(null);
 		getActivity().unbindService(mConnection);
 		super.onDetach();
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.contact_info:
-				Intent contactInfoIntent = new Intent(getContext(), ContactInfoActivity.class);
-				contactInfoIntent.putExtra(ContactInfoActivity.ACCOUNT_KEY, mAccount.toString());
-				contactInfoIntent.putExtra(ContactInfoActivity.JID_KEY,
-										   ((ChatActivity) getContext()).getJid().toString());
-				startActivity(contactInfoIntent);
-				return true;
-			case R.id.encrypt_chat:
-				boolean s = !((ChatActivity) getContext()).isEncryptChat();
+		int itemId = item.getItemId();
+		if (itemId == R.id.contact_info) {
+			Intent contactInfoIntent = new Intent(getContext(), ContactInfoActivity.class);
+			contactInfoIntent.putExtra(ContactInfoActivity.ACCOUNT_KEY, mAccount.toString());
+			contactInfoIntent.putExtra(ContactInfoActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
+			startActivity(contactInfoIntent);
+			return true;
+		} else if (itemId == R.id.encrypt_chat) {
+			boolean s = !((ChatActivity) getContext()).isEncryptChat();
 
-				Intent encIntent = new Intent(getContext(), OMEMOStartActivity.class);
-				encIntent.putExtra(OMEMOStartActivity.ACCOUNT_KEY, mAccount.toString());
-				encIntent.putExtra(OMEMOStartActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
-				encIntent.putExtra(OMEMOStartActivity.CHAT_ID_KEY, ((ChatActivity) getContext()).getOpenChatId());
-				encIntent.putExtra(OMEMOStartActivity.STATUS_KEY, s);
+			Intent encIntent = new Intent(getContext(), OMEMOStartActivity.class);
+			encIntent.putExtra(OMEMOStartActivity.ACCOUNT_KEY, mAccount.toString());
+			encIntent.putExtra(OMEMOStartActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
+			encIntent.putExtra(OMEMOStartActivity.CHAT_ID_KEY, ((ChatActivity) getContext()).getOpenChatId());
+			encIntent.putExtra(OMEMOStartActivity.STATUS_KEY, s);
 //				getContext().startService(encIntent);
 
-				((ChatActivity) getContext()).startActivityForResult(encIntent, START_OMEMO_REQUEST);
+			((ChatActivity) getContext()).startActivityForResult(encIntent, START_OMEMO_REQUEST);
+
+			return true;
+		} else if (itemId == R.id.video_chat) {
+			Intent i = new Intent(getContext(), VideoChatActivity.class);
+			i.putExtra(VideoChatActivity.ACCOUNT_KEY, mAccount.toString());
+			i.putExtra(VideoChatActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
+			i.putExtra(VideoChatActivity.INITIATOR_KEY, true);
+
+			startActivity(i);
+			return true;
+		} else if (itemId == R.id.send_file) {
+			if (!MainActivity.hasPermissions(getContext(), MainActivity.STORAGE_PERMISSIONS)) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+				builder.setTitle(R.string.warning).setMessage(R.string.no_permissions).create().show();
 
 				return true;
-			case R.id.video_chat:
-				Intent i = new Intent(getContext(), VideoChatActivity.class);
-				i.putExtra(VideoChatActivity.ACCOUNT_KEY, mAccount.toString());
-				i.putExtra(VideoChatActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
-				i.putExtra(VideoChatActivity.INITIATOR_KEY, true);
+			}
 
-				startActivity(i);
-				return true;
-			case R.id.send_file:
-				if (!MainActivity.hasPermissions(getContext(), MainActivity.STORAGE_PERMISSIONS)) {
-					AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-
-					builder.setTitle(R.string.warning).setMessage(R.string.no_permissions).create().show();
-
-					return true;
-				}
-
-				Intent intent = new Intent();
-				if (Build.VERSION.SDK_INT < 19) {
-					intent.setAction(Intent.ACTION_GET_CONTENT);
-				} else {
-					//KitKat 4.4 o superior
-					intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-					intent.addCategory(Intent.CATEGORY_OPENABLE);
-				}
-				intent.setType("image/*");
-				getActivity().startActivityForResult(intent, ChatActivity.FILE_UPLOAD_REQUEST_CODE);
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+			Intent intent = new Intent();
+			if (Build.VERSION.SDK_INT < 19) {
+				intent.setAction(Intent.ACTION_GET_CONTENT);
+			} else {
+				//KitKat 4.4 o superior
+				intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+			}
+			intent.setType("image/*");
+			getActivity().startActivityForResult(intent, ChatActivity.FILE_UPLOAD_REQUEST_CODE);
+			return true;
 		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
@@ -286,6 +241,40 @@ public class ChatItemFragment
 		refreshChatHistory();
 	}
 
+	@Override
+	protected @NotNull RecyclerView findRecyclerView(@NotNull View view) {
+
+		RecyclerView recyclerView = view.findViewById(R.id.chat_list);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			recyclerView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+				LinearLayoutManager myLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+				final boolean shouldBeVisible = myLayoutManager.findFirstVisibleItemPosition() > 0;
+
+				if (shouldBeVisible) {
+					floatingActionButton.show();
+				} else {
+					floatingActionButton.hide();
+				}
+			});
+		}
+		LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+		linearLayoutManager.setReverseLayout(true);
+
+		recyclerView.setLayoutManager(linearLayoutManager);
+
+		return recyclerView;
+	}
+
+	@Override
+	protected @NotNull MyChatItemRecyclerViewAdapter createAdapterInstance() {
+		return new MyChatItemRecyclerViewAdapter() {
+			@Override
+			protected void onContentChanged() {
+				refreshChatHistory();
+			}
+		};
+	}
+
 	protected void loadMoreHistory() {
 		Jaxmpp jaxmpp = ((ChatActivity) getActivity()).getServiceConnection().getService().getJaxmpp(this.mAccount);
 		(new FetchMoreHistoryTask(getActivity(), this.swipeRefresh, jaxmpp, ((ChatActivity) getContext()).getJid(),
@@ -293,15 +282,51 @@ public class ChatItemFragment
 	}
 
 	@Override
-	protected boolean onActionItemClicked(final ActionMode mode, final MenuItem item) {
+	protected ActionMode.Callback getActionModeCallback() {
+		return new ActionMode.Callback() {
+			@Override
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				mode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
+				return true;
+			}
+
+			@Override
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				return false;
+			}
+
+			@Override
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+				return ChatItemFragment.this.onActionItemClicked(mode, item);
+			}
+
+			@Override
+			public void onDestroyActionMode(ActionMode mode) {
+			}
+		};
+	}
+
+	@Override
+	protected void doOnSelectionChange() {
+		super.doOnSelectionChange();
+
+		final int count = getSelection().size();
+		final ActionMode actionMode = getActionMode();
+		if (actionMode == null) {
+			return;
+		}
+
+		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
+	}
+
+	private boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.ac_delete:
 				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 				builder.setMessage(R.string.delete_chat_item_question)
 						.setPositiveButton(R.string.yes, (dialog, which) -> {
-							for (Integer pos : getMultiSelector().getSelectedPositions()) {
-								long id = adapter.getItemId(pos);
-								getContext().getContentResolver()
+							for (long id : getSelection()) {
+								requireContext().getContentResolver()
 										.delete(ChatProvider.CHAT_HISTORY_URI,
 												DatabaseContract.ChatHistory.FIELD_ID + "=?",
 												new String[]{String.valueOf(id)});
@@ -314,7 +339,7 @@ public class ChatItemFragment
 				return true;
 			case R.id.ac_copy:
 				final JID jid = ((ChatActivity) getActivity()).getJid();
-				String body = grabContent(getMultiSelector().getSelectedPositions());
+				String body = grabContent(getSelection());
 
 				ClipboardManager clipboard = (ClipboardManager) ChatItemFragment.this.getContext()
 						.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -330,19 +355,7 @@ public class ChatItemFragment
 		}
 	}
 
-	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
-		return true;
-	}
-
-	@Override
-	protected void updateActionMode(ActionMode actionMode) {
-		final int count = mMultiSelector.getSelectedPositions().size();
-		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
-	}
-
-	private String grabContent(List<Integer> selectedPositions) {
+	private String grabContent(final Selection<Long> selectedIds) {
 		StringBuilder sb = new StringBuilder();
 
 		AccountManager accountManager = AccountManager.get(getContext());
@@ -356,8 +369,9 @@ public class ChatItemFragment
 			myNickname = "Me";
 		}
 
-		final Cursor cursor = adapter.getCursor();
-		for (Integer position : selectedPositions) {
+		final Cursor cursor = getAdapter().getCursor();
+		for (Long id : selectedIds) {
+			int position = getStableIdKeyProvider().getPosition(id);
 			if (!cursor.moveToPosition(position)) {
 				throw new IllegalStateException("couldn't move cursor to position " + position);
 			}
@@ -367,7 +381,7 @@ public class ChatItemFragment
 															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
 																	DateUtils.FORMAT_SHOW_TIME);
 			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
-			if (selectedPositions.size() == 1) {
+			if (selectedIds.size() == 1) {
 				sb.append(body).append('\n');
 			} else {
 				sb.append("[").append(timeStr).append("] ");
@@ -495,7 +509,7 @@ public class ChatItemFragment
 
 		@Override
 		protected void onPostExecute(Cursor cursor) {
-			adapter.changeCursor(cursor);
+			getAdapter().swapCursor(cursor);
 //			recyclerView.smoothScrollToPosition(0);
 		}
 	}

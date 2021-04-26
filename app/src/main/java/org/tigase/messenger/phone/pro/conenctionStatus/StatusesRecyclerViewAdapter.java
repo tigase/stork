@@ -21,12 +21,12 @@ package org.tigase.messenger.phone.pro.conenctionStatus;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import androidx.recyclerview.widget.RecyclerView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -130,7 +130,7 @@ public class StatusesRecyclerViewAdapter
 					listener.onRepublishOMEMO(j.getSessionObject().getUserBareJid().toString());
 					return true;
 				} else if (item.getItemId() == R.id.menu_connectionstatus_serverfeatures) {
-					listener.onServerFeatures(j.getSessionObject().getUserBareJid().toString());
+//					listener.onServerFeatures(j.getSessionObject().getUserBareJid().toString());
 					return true;
 				} else if (item.getItemId() == R.id.menu_connectionstatus_ping) {
 					listener.onPingServer(j.getSessionObject().getUserBareJid().toString());

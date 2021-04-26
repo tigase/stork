@@ -26,7 +26,6 @@ import org.tigase.messenger.phone.pro.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class FeaturesProvider {
@@ -36,12 +35,7 @@ public class FeaturesProvider {
 	public List<FeatureItem> get(final Context context) {
 		if (items == null) {
 			read(context);
-			Collections.sort(items, new Comparator<FeatureItem>() {
-				@Override
-				public int compare(FeatureItem o1, FeatureItem o2) {
-					return o1.getXep().compareTo(o2.getXep());
-				}
-			});
+			Collections.sort(items, (o1, o2) -> o1.getXep().compareTo(o2.getXep()));
 		}
 		return Collections.unmodifiableList(this.items);
 	}

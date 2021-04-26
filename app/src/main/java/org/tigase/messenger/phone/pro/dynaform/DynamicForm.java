@@ -19,12 +19,13 @@
 package org.tigase.messenger.phone.pro.dynaform;
 
 import android.content.Context;
-import android.support.design.widget.TextInputLayout;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputLayout;
 import cz.destil.settleup.gui.MultiSpinner;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xml.Element;
@@ -84,7 +85,7 @@ public class DynamicForm
 				EditText editor = (EditText) entry.getValue();
 				((JidSingleField) field).setFieldValue(JID.jidInstance(editor.getText().toString()));
 			} else if (field instanceof BooleanField) {
-				Switch editor = (Switch) entry.getValue();
+				SwitchMaterial editor = (SwitchMaterial) entry.getValue();
 				((BooleanField) field).setFieldValue(editor.isChecked());
 			} else {
 				throw new RuntimeException("Unsupported field: " + field);
@@ -134,10 +135,10 @@ public class DynamicForm
 	}
 
 	private void addBooleanField(final BooleanField field) throws XMLException {
-		Switch editor = new Switch(getContext());
+		SwitchMaterial editor = new SwitchMaterial(getContext());
 		editor.setTextAppearance(getContext(), android.R.style.TextAppearance_Medium);
 		Boolean v = field.getFieldValue();
-		editor.setChecked(v != null && v.booleanValue());
+		editor.setChecked(v != null && v);
 		editor.setHint(field.getLabel());
 		editor.setText(field.getLabel());
 		editor.setPadding(14, 35, 14, 38);
@@ -166,17 +167,17 @@ public class DynamicForm
 
 	private void addJidMultiField(final JidMultiField field) throws XMLException {
 		EditText editor = new EditText(getContext());
-		String v = "";
+		StringBuilder v = new StringBuilder();
 		JID[] jids = field.getFieldValue();
 		if (jids != null) {
 			for (int i = 0; i < jids.length; i++) {
 				if (i > 0) {
-					v += "\n";
+					v.append("\n");
 				}
-				v += jids[i];
+				v.append(jids[i]);
 			}
 		}
-		editor.setText(v);
+		editor.setText(v.toString());
 		editor.setHint(field.getLabel());
 //					editor.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
 		editor.setLayoutParams(
@@ -213,27 +214,20 @@ public class DynamicForm
 		spinner.setPadding(14, 5, 14, 38);
 
 		List<String> values = new ArrayList<>();
-		List<String> labels = new ArrayList<>();
+//		List<String> labels = new ArrayList<>();
 		try {
 
 			for (Element element : field.getChildren("option")) {
 				String ll = element.getAttribute("label");
 				String vv = element.getFirstChild("value").getValue();
 
-				labels.add(ll == null ? vv : ll);
+//				labels.add(ll == null ? vv : ll);
 				values.add(vv);
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		spinner.setItems(labels, "All", new MultiSpinner.MultiSpinnerListener() {
-			@Override
-			public void onItemsSelected(boolean[] selected) {
-				System.out.println(Arrays.toString(selected));
-			}
-		});
 
 		try {
 			for (Element element : field.getChildren("value")) {
@@ -251,7 +245,7 @@ public class DynamicForm
 				new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 		label.setText(field.getLabel());
 		// @style/TextAppearance.AppCompat.Medium
-		label.setTextAppearance(getContext(), android.support.design.R.styleable.TextInputLayout_hintTextAppearance);
+//		label.setTextAppearance(getContext(), androidx.core.R.styleable..TextInputLayout_hintTextAppearance);
 		layout.addView(label);
 
 		layout.addView(spinner);
@@ -290,7 +284,7 @@ public class DynamicForm
 				new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 		label.setText(field.getLabel());
 		// @style/TextAppearance.AppCompat.Medium
-		label.setTextAppearance(getContext(), android.support.design.R.styleable.TextInputLayout_hintTextAppearance);
+//		label.setTextAppearance(getContext(), android.support.design.R.styleable.TextInputLayout_hintTextAppearance);
 		layout.addView(label);
 
 		layout.addView(spinner);
@@ -301,17 +295,17 @@ public class DynamicForm
 
 	private void addTextMultiField(final TextMultiField field) throws XMLException {
 		EditText editor = new EditText(getContext());
-		String v = "";
+		StringBuilder v = new StringBuilder();
 		String[] lines = field.getFieldValue();
 		if (lines != null) {
 			for (int i = 0; i < lines.length; i++) {
 				if (i > 0) {
-					v += "\n";
+					v.append("\n");
 				}
-				v += lines[i];
+				v.append(lines[i]);
 			}
 		}
-		editor.setText(v);
+		editor.setText(v.toString());
 		editor.setHint(field.getLabel());
 		editor.setLayoutParams(
 				new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -363,16 +357,12 @@ public class DynamicForm
 
 	private String[] getTextValues(EditText editor) {
 		String t = editor.getText().toString();
-		if (t == null) {
-			return null;
-		}
 		ArrayList<String> result = new ArrayList<>();
-		String[] lines = t.trim().split("\n");
-		return lines;
+		return t.trim().split("\n");
 	}
 
 	private TextInputLayout wrap(View view) {
-		android.support.design.widget.TextInputLayout l = new TextInputLayout(getContext());
+		TextInputLayout l = new TextInputLayout(getContext());
 		l.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 		l.addView(view);
 

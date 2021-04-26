@@ -47,23 +47,24 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="6dp"
                     android:text="Account"/>
-            <Spinner
+
+            <androidx.appcompat.widget.AppCompatSpinner
                     android:id="@+id/contact_account"
                     android:textAppearance="?android:attr/textAppearanceMedium"
 
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/join_room_jid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -71,14 +72,14 @@
                         android:inputType="textEmailAddress"
                         android:maxLines="1"
                         android:singleLine="true"
-                />
-            </android.support.design.widget.TextInputLayout>
+                        />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/join_room_nickname"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -87,10 +88,10 @@
                         android:maxLines="1"
                         android:singleLine="true"
 
-                />
-            </android.support.design.widget.TextInputLayout>
+                        />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/contact_add_button"
                     style="?android:textAppearanceSmall"
                     android:layout_width="match_parent"

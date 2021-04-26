@@ -18,33 +18,32 @@
 
 package org.tigase.messenger.phone.pro.conversations;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
-import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import android.view.View;
+import androidx.core.content.ContextCompat;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class ViewHolderMsg
 		extends AbstractViewHolder {
 
-	private String contactDisplayName;
+	private final String contactDisplayName = "?";
 
-	public ViewHolderMsg(View itemView, MultiSelectFragment fragment) {
-		super(itemView, fragment);
-
-		if (fragment.getActivity() instanceof ChatActivity) {
-			contactDisplayName = ((ChatActivity) fragment.getActivity()).getContactDisplayName();
-		}
+	public ViewHolderMsg(View itemView) {
+		super(itemView);
 	}
 
 	@Override
-	public void bind(Context context, Cursor cursor) {
+	public String toString() {
+		return super.toString() + " '" + mContentView.getText() + "'";
+	}
+
+	@Override
+	protected void bind(int adapterPosition, Cursor cursor, boolean selected) {
+		itemView.setSelected(selected);
 		final boolean encrypted =
 				cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ENCRYPTION)) == 1;
 		final int id = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_ID));
@@ -60,13 +59,14 @@ public class ViewHolderMsg
 		}
 
 		if (mTimestamp != null) {
-			mTimestamp.setText(DateUtils.getRelativeDateTimeString(context, timestampt, DateUtils.MINUTE_IN_MILLIS,
-																   DateUtils.WEEK_IN_MILLIS, 0));
+			mTimestamp.setText(
+					DateUtils.getRelativeDateTimeString(itemView.getContext(), timestampt, DateUtils.MINUTE_IN_MILLIS,
+														DateUtils.WEEK_IN_MILLIS, 0));
 		}
 
 		if (mNickname != null) {
 			mNickname.setVisibility(View.VISIBLE);
-			int col = ContextCompat.getColor(context, getColor(nickname));
+			int col = ContextCompat.getColor(itemView.getContext(), getColor(nickname));
 			mNickname.setTextColor(col);
 			mNickname.setText(nickname);
 		}
@@ -100,16 +100,6 @@ public class ViewHolderMsg
 		if (jid != null && mAvatar != null) {
 			mAvatar.setJID(BareJID.bareJIDInstance(jid), contactDisplayName);
 		}
-	}
-
-	@Override
-	public String toString() {
-		return super.toString() + " '" + mContentView.getText() + "'";
-	}
-
-	@Override
-	protected void onItemClick(View v) {
-
 	}
 
 	private int getColor(String nickname) {

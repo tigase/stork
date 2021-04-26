@@ -25,7 +25,7 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
->
+        >
 
     <!-- Login progress -->
     <ProgressBar
@@ -47,11 +47,11 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/xmppid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -60,32 +60,32 @@
                         android:maxLines="1"
                         android:singleLine="true"/>
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_password"
-                        android:imeActionId="@+id/login"
+                        android:imeActionId="@integer/action_login"
                         android:imeActionLabel="@string/action_sign_in"
                         android:imeOptions="actionUnspecified"
                         android:inputType="textPassword"
                         android:maxLines="1"
                         android:singleLine="true"/>
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/host"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -94,13 +94,13 @@
                         android:maxLines="1"
                         android:singleLine="true"/>
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/resource"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -110,13 +110,13 @@
                         android:singleLine="true"
                         android:text="stork"/>
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                <EditText
+                <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/nickname"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -125,19 +125,24 @@
                         android:maxLines="1"
                         android:singleLine="true"/>
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
 
         </LinearLayout>
     </ScrollView>
 
-    <LinearLayout android:id="@+id/buttonBar"
-                  style="?android:attr/buttonBarStyle"
-                  android:orientation="horizontal"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content" android:layout_alignParentBottom="true"
-                  android:layout_centerHorizontal="true" android:layout_marginBottom="16dp">
-        <Button style="?android:attr/buttonBarButtonStyle"
+    <LinearLayout
+            android:id="@+id/buttonBar"
+            style="?android:attr/buttonBarStyle"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="16dp">
+
+        <androidx.appcompat.widget.AppCompatButton
+                style="?android:attr/buttonBarButtonStyle"
                 android:background="@drawable/selectable_item_background"
                 android:id="@+id/cancel_button"
                 android:layout_width="0dp"
@@ -145,7 +150,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/action_sign_in_cancel"/>
-        <Button
+
+        <androidx.appcompat.widget.AppCompatButton
                 style="?android:attr/buttonBarButtonStyle"
                 android:background="@drawable/selectable_item_background"
                 android:id="@+id/email_sign_in_button"

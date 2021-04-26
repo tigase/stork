@@ -19,19 +19,22 @@ package com.github.abdularis.civ;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
-import android.support.v4.util.LruCache;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.collection.LruCache;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 import tigase.jaxmpp.core.client.BareJID;
 
 public class StorkAvatarView
 		extends AvatarImageView {
 
-	private final static int[] COLORS = {0xf44336, 0xE91E63, 0x9C27B0, 0x673AB7, 0x3F51B5, 0x2196F3, 0x03A9F4, 0x00BCD4,
-										 0x009688, 0x4CAF50, 0x8BC34A, 0xFF9800, 0xFF5722, 0x795548, 0x9E9E9E,
-										 0x607D8B};
 	protected static LruCache<BareJID, Bitmap> memCache = memCache = new LruCache<>(1024 * 1024 * 10);
+
+	@DrawableRes
+	private Integer statusResource = null;
 
 	public StorkAvatarView(Context context) {
 		super(context);
@@ -50,14 +53,34 @@ public class StorkAvatarView
 
 	public void setJID(final BareJID jid, final String name) {
 		Bitmap avatar = getAvatar(jid);
-		setAvatarBackgroundColor(0xff000000 | COLORS[Math.abs(jid.hashCode()) % COLORS.length]);
-		String normalizedName = name == null ? null : name.replaceAll("[^a-zA-Z0-9]", "");
-		setText(name == normalizedName || normalizedName.isEmpty() ? jid.toString() : normalizedName);
+		setAvatarBackgroundColor(AvatarHelper.getAvatarBackgroundColor(jid));
+		setText(AvatarHelper.getInitials(jid, name));
 		if (avatar != null) {
 			setImageBitmap(avatar);
 			setState(AvatarImageView.SHOW_IMAGE);
 		} else {
 			setState(AvatarImageView.SHOW_INITIAL);
+		}
+	}
+
+	public void setJID(final BareJID jid, final String name, @DrawableRes final int statusDrawableId) {
+		this.statusResource = statusDrawableId;
+		setJID(jid, name);
+	}
+
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+
+		if (statusResource != null) {
+			Drawable dr = getResources().getDrawable(statusResource);
+			int dh = getHeight() / (48 / 14);
+			int dw = getWidth() / (48 / 14);
+			int marginX = 3;
+			int marginY = 3;
+			dr.setBounds(getWidth() - dw - marginX, getHeight() - dh - marginY, getWidth() - marginX,
+						 getHeight() - marginY);
+			dr.draw(canvas);
 		}
 	}
 

@@ -24,11 +24,11 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -50,7 +50,7 @@ public class JoinMucActivity
 	private EditText mRoomJid;
 	private XMPPService mService;
 	private ArrayAdapter<BareJID> sa;
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
+	private final ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
@@ -75,11 +75,11 @@ public class JoinMucActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_join_muc);
 
-		mAccountSelector = (Spinner) findViewById(R.id.contact_account);
-		mRoomJid = (EditText) findViewById(R.id.join_room_jid);
-		mNickname = (EditText) findViewById(R.id.join_room_nickname);
+		mAccountSelector = findViewById(R.id.contact_account);
+		mRoomJid = findViewById(R.id.join_room_jid);
+		mNickname = findViewById(R.id.join_room_nickname);
 
-		Button contactAddButton = (Button) findViewById(R.id.contact_add_button);
+		Button contactAddButton = findViewById(R.id.contact_add_button);
 		contactAddButton.setOnClickListener(view -> onClickJoin());
 
 		this.sa = new ArrayAdapter<>(getBaseContext(), R.layout.account_list_item, R.id.account_name, accountsList);

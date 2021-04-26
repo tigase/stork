@@ -25,14 +25,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.dynaform.DynamicForm;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
@@ -145,14 +145,15 @@ public class CreateAccountActivity
 	public static class AccountCreationTask
 			extends AsyncTask<Void, Integer, Boolean> {
 
+		private final AccountCreator accountCreator;
 		private final WeakReference<CreateAccountActivity> activity;
 		private final Context context;
-		private final AccountManager mAccountManager;
-		private final AccountCreator accountCreator;
 		private final String hostname;
+		private final AccountManager mAccountManager;
 		private ProgressDialog progress;
 
-		public AccountCreationTask(CreateAccountActivity activity, Context context, AccountManager mAccountManager, String hostname) {
+		public AccountCreationTask(CreateAccountActivity activity, Context context, AccountManager mAccountManager,
+								   String hostname) {
 			this.hostname = hostname;
 			this.activity = new WeakReference<>(activity);
 			this.context = context;
@@ -221,7 +222,7 @@ public class CreateAccountActivity
 		}
 
 		@Override
-		protected Boolean doInBackground(Void... _) {
+		protected Boolean doInBackground(Void... ignore) {
 			accountCreator.getEventBus()
 					.addHandler(
 							InBandRegistrationModule.ReceivedRequestedFieldsHandler.ReceivedRequestedFieldsEvent.class,

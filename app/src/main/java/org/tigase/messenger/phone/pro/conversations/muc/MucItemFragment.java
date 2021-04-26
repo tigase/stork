@@ -26,16 +26,18 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.view.ActionMode;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.*;
 import android.widget.EditText;
 import android.widget.ImageView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.selection.Selection;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import org.jetbrains.annotations.NotNull;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
@@ -43,7 +45,7 @@ import org.tigase.messenger.phone.pro.conversations.DaysInformCursor;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
+import org.tigase.messenger.phone.pro.roster.multiselect.SelectionFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -51,17 +53,13 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 
-import java.util.List;
-
 public class MucItemFragment
-		extends MultiSelectFragment {
+		extends SelectionFragment<MucItemRecyclerViewAdapter> {
 
-	EditText message;
-	RecyclerView recyclerView;
-	ImageView sendButton;
-	private MucItemRecyclerViewAdapter adapter;
-
+	private FloatingActionButton floatingActionButton;
+	private EditText message;
 	private Room room;
+
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -84,6 +82,7 @@ public class MucItemFragment
 			super.onServiceDisconnected(name);
 		}
 	};
+	private ImageView sendButton;
 	private Uri uri;
 
 	@Override
@@ -109,65 +108,26 @@ public class MucItemFragment
 		inflater.inflate(R.menu.chatitem_fragment, menu);
 	}
 
-	@Nullable
 	@Override
-	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-							 @Nullable Bundle savedInstanceState) {
-		View root = inflater.inflate(R.layout.fragment_chatitem_list, container, false);
+	public void onViewCreated(@NonNull @NotNull View view,
+							  @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
 
-		recyclerView = root.findViewById(R.id.chat_list);
-		message = root.findViewById(R.id.messageText);
-		sendButton = root.findViewById(R.id.send_button);
-		sendButton.setOnClickListener(view -> send());
-
-		final FloatingActionButton floatingActionButton = root.findViewById(R.id.scroll_down);
-		floatingActionButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				recyclerView.smoothScrollToPosition(0);
-			}
-		});
-		floatingActionButton.hide();
-
-		recyclerView = root.findViewById(R.id.chat_list);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			this.recyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-				@Override
-				public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-					LinearLayoutManager myLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-					final boolean shouldBeVisible = myLayoutManager.findFirstVisibleItemPosition() > 0;
-
-					if (shouldBeVisible) {
-						floatingActionButton.show();
-					} else {
-						floatingActionButton.hide();
-					}
-				}
-			});
-		}
+		message = view.findViewById(R.id.messageText);
+		sendButton = view.findViewById(R.id.send_button);
+		sendButton.setOnClickListener(v -> send());
 
 		message.setEnabled(false);
 
-		LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-		linearLayoutManager.setReverseLayout(true);
-
-		recyclerView.setLayoutManager(linearLayoutManager);
-		this.adapter = new MucItemRecyclerViewAdapter(getContext(), null, this) {
-			@Override
-			protected void onContentChanged() {
-				refreshChatHistory();
-			}
-		};
-		recyclerView.setAdapter(adapter);
+		this.floatingActionButton = view.findViewById(R.id.scroll_down);
+		floatingActionButton.setOnClickListener(v -> getRecyclerView().smoothScrollToPosition(0));
+		floatingActionButton.hide();
 
 		refreshChatHistory();
-		return root;
 	}
 
 	@Override
 	public void onDetach() {
-		recyclerView.setAdapter(null);
-		adapter.changeCursor(null);
 		getActivity().unbindService(mConnection);
 		super.onDetach();
 	}
@@ -216,59 +176,112 @@ public class MucItemFragment
 	}
 
 	@Override
-	protected boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.ac_delete:
-				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(
-						getActivity());
-				builder.setMessage(R.string.delete_chat_item_question)
-						.setPositiveButton(R.string.yes, (dialog, which) -> {
-							for (Integer pos : getMultiSelector().getSelectedPositions()) {
-								long id = adapter.getItemId(pos);
-								getContext().getContentResolver()
-										.delete(ChatProvider.CHAT_HISTORY_URI,
-												DatabaseContract.ChatHistory.FIELD_ID + "=?",
-												new String[]{String.valueOf(id)});
-							}
-							getContext().getContentResolver().notifyChange(uri, null);
-							mode.finish();
-						})
-						.setNegativeButton(R.string.no, null)
-						.show();
+	protected @NotNull RecyclerView findRecyclerView(@NotNull View view) {
+		RecyclerView recyclerView = view.findViewById(R.id.chat_list);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			recyclerView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+				LinearLayoutManager myLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+				final boolean shouldBeVisible = myLayoutManager.findFirstVisibleItemPosition() > 0;
 
-				return true;
-			case R.id.ac_copy:
-				String body = grabContent(getMultiSelector().getSelectedPositions());
-				ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
-						.getSystemService(Context.CLIPBOARD_SERVICE);
-				ClipData clip = ClipData.newPlainText("Messages from room " + room.getRoomJid(), body);
-
-				clipboard.setPrimaryClip(clip);
-
-				mode.finish();
-				return true;
-			default:
-				return false;
+				if (shouldBeVisible) {
+					floatingActionButton.show();
+				} else {
+					floatingActionButton.hide();
+				}
+			});
 		}
+
+		LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+		linearLayoutManager.setReverseLayout(true);
+		recyclerView.setLayoutManager(linearLayoutManager);
+
+		return recyclerView;
 	}
 
 	@Override
-	protected boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-		actionMode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
-		return true;
+	protected ActionMode.Callback getActionModeCallback() {
+		return new ActionMode.Callback() {
+			@Override
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				mode.getMenuInflater().inflate(R.menu.chathistory_action, menu);
+				return true;
+			}
+
+			@Override
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				return false;
+			}
+
+			@Override
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+				return MucItemFragment.this.onActionItemClicked(mode, item);
+			}
+
+			@Override
+			public void onDestroyActionMode(ActionMode mode) {
+			}
+		};
 	}
 
 	@Override
-	protected void updateActionMode(ActionMode actionMode) {
-		final int count = mMultiSelector.getSelectedPositions().size();
+	protected void doOnSelectionChange() {
+		super.doOnSelectionChange();
+
+		final int count = getSelection().size();
+		final ActionMode actionMode = getActionMode();
+		if (actionMode == null) {
+			return;
+		}
+
 		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
 	}
 
-	private String grabContent(List<Integer> selectedPositions) {
+	@Override
+	protected @NotNull MucItemRecyclerViewAdapter createAdapterInstance() {
+		return new MucItemRecyclerViewAdapter() {
+			@Override
+			protected void onContentChanged() {
+				refreshChatHistory();
+			}
+
+		};
+	}
+
+	private boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.ac_delete) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			builder.setMessage(R.string.delete_chat_item_question).setPositiveButton(R.string.yes, (dialog, which) -> {
+				for (long id : getSelection()) {
+					getContext().getContentResolver()
+							.delete(ChatProvider.CHAT_HISTORY_URI, DatabaseContract.ChatHistory.FIELD_ID + "=?",
+									new String[]{String.valueOf(id)});
+				}
+				getContext().getContentResolver().notifyChange(uri, null);
+				mode.finish();
+			}).setNegativeButton(R.string.no, null).show();
+
+			return true;
+		} else if (itemId == R.id.ac_copy) {
+			String body = grabContent(getSelection());
+			ClipboardManager clipboard = (ClipboardManager) MucItemFragment.this.getContext()
+					.getSystemService(Context.CLIPBOARD_SERVICE);
+			ClipData clip = ClipData.newPlainText("Messages from room " + room.getRoomJid(), body);
+
+			clipboard.setPrimaryClip(clip);
+
+			mode.finish();
+			return true;
+		}
+		return false;
+	}
+
+	private String grabContent(final Selection<Long> selectedIds) {
 		StringBuilder sb = new StringBuilder();
 
-		final Cursor cursor = adapter.getCursor();
-		for (Integer position : selectedPositions) {
+		final Cursor cursor = getAdapter().getCursor();
+		for (Long id : selectedIds) {
+			int position = getStableIdKeyProvider().getPosition(id);
 			if (!cursor.moveToPosition(position)) {
 				throw new IllegalStateException("couldn't move cursor to position " + position);
 			}
@@ -280,7 +293,7 @@ public class MucItemFragment
 															DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR |
 																	DateUtils.FORMAT_SHOW_TIME);
 			final int state = cursor.getInt(cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_STATE));
-			if (selectedPositions.size() == 1) {
+			if (selectedIds.size() == 1) {
 				sb.append(body).append('\n');
 			} else {
 				sb.append("[").append(timeStr).append("] ");
@@ -302,8 +315,8 @@ public class MucItemFragment
 	private void setRoom(Room room) {
 		this.room = room;
 		message.setEnabled(room != null);
-		if (adapter != null) {
-			adapter.setOwnNickname(room == null ? null : room.getNickname());
+		if (getAdapter() != null) {
+			getAdapter().setOwnNickname(room == null ? null : room.getNickname());
 		}
 	}
 
@@ -339,8 +352,8 @@ public class MucItemFragment
 
 		@Override
 		protected void onPostExecute(Cursor cursor) {
-			adapter.changeCursor(cursor);
-			recyclerView.smoothScrollToPosition(0);
+			getAdapter().swapCursor(cursor);
+			getRecyclerView().smoothScrollToPosition(0);
 		}
 	}
 }

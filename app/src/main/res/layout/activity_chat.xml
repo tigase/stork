@@ -16,40 +16,39 @@
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
   -->
-<android.support.design.widget.CoordinatorLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        tools:context=".conversations.chat.ChatActivity">
+        android:fitsSystemWindows="true">
 
-    <android.support.design.widget.AppBarLayout
+    <com.google.android.material.appbar.AppBarLayout
             android:layout_height="wrap_content"
             android:layout_width="match_parent">
 
-        <android.support.v7.widget.Toolbar
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
+        <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
 
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+                android:background="?attr/colorPrimary">
 
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
-                            android:gravity="center_vertical">
-                <ImageView android:layout_width="16dp"
-                           android:layout_height="match_parent"
-                           android:id="@+id/contact_presence"
-                           android:src="@drawable/presence_away"
-                           android:layout_centerVertical="true"
-                           android:layout_marginRight="5dp"
-                />
+            <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:gravity="center_vertical">
 
-                <TextView
+                <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="match_parent"
+                        android:id="@+id/contact_presence"
+                        android:src="@drawable/presence_away"
+                        android:layout_centerVertical="true"
+                        android:layout_marginRight="5dp"
+                        />
+
+                <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/contact_display_name"
                         android:orientation="horizontal"
                         android:layout_width="wrap_content"
@@ -59,14 +58,15 @@
                         android:singleLine="true"
                         android:textColor="?attr/colorControlNormal"
                         style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse"
-                        android:layout_centerVertical="true" android:layout_toEndOf="@+id/contact_presence"
-                />
+                        android:layout_centerVertical="true"
+                        android:layout_toEndOf="@+id/contact_presence"
+                        />
 
             </RelativeLayout>
-        </android.support.v7.widget.Toolbar>
+        </androidx.appcompat.widget.Toolbar>
 
-    </android.support.design.widget.AppBarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_chat"/>
 
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

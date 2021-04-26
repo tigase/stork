@@ -20,5 +20,7 @@
     <item android:drawable="@drawable/item_pressed" android:state_pressed="true"/>
     <item android:drawable="@drawable/item_focused" android:state_focused="true"/>
     <item android:drawable="@drawable/item_focused" android:state_selected="true"/>
+    <!--    <item android:drawable="@android:color/holo_blue_light" android:state_activated="true"/>-->
+    <item android:drawable="@drawable/item_focused" android:state_activated="true"/>
     <item android:drawable="@android:color/transparent"/>
 </selector>

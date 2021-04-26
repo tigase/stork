@@ -17,43 +17,36 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
+                android:background="@drawable/selectable_item_background"
                 android:padding="8dp">
 
-    <RelativeLayout android:id="@+id/contact_avatar_frame" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-        <com.github.abdularis.civ.StorkAvatarView
-                android:id="@+id/contact_avatar"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_alignParentLeft="true"
-                android:scaleType="fitStart"
-                android:src="@drawable/user_avatar"
-        />
-        <ImageView
-                android:id="@+id/contact_presence"
-                android:layout_width="17sp"
-                android:layout_marginRight="3dp"
-                android:layout_height="17sp"
-                android:layout_marginLeft="-17sp"
-                android:src="@drawable/presence_unknown"
-                android:layout_alignBottom="@id/contact_avatar"
-                android:layout_toRightOf="@id/contact_avatar"/>
-    </RelativeLayout>
+
+    <com.github.abdularis.civ.StorkAvatarView
+            android:id="@+id/contact_avatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
+            android:scaleType="fitStart"
+            android:src="@drawable/user_avatar"/>
+
 
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/contact_avatar_frame"
+            android:layout_toRightOf="@+id/contact_avatar"
             android:orientation="vertical"
             android:paddingLeft="8dp">
 
 
-        <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView
+        <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/contact_display_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -61,17 +54,25 @@
                     android:text="Contact"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:fontFamily="sans-serif" android:gravity="center_vertical"/>
+                    android:fontFamily="sans-serif"
+                    android:gravity="center_vertical"/>
         </RelativeLayout>
 
-        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
-                      android:orientation="horizontal" android:layout_marginRight="3dp">
-            <ImageView android:id="@+id/chat_delivery_status" android:layout_width="12dp"
-                       android:layout_height="match_parent"
-                       android:src="@drawable/ic_message_sent_24dp"
-                       android:layout_marginRight="3dp"
-                       android:tint="#000000"/>
-            <TextView
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_marginRight="3dp">
+
+            <ImageView
+                    android:id="@+id/chat_delivery_status"
+                    android:layout_width="12dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_message_sent_24dp"
+                    android:layout_marginRight="3dp"
+                    app:tint="#000000"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/last_message"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

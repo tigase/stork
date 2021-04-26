@@ -20,15 +20,16 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent">
-    <android.support.v7.widget.RecyclerView
+
+    <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/openchats_list"
             android:name="org.tigase.messenger.phone.pro.OpenChatItemFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layoutManager="LinearLayoutManager"
             tools:context=".openchats.OpenChatItemFragment"
             tools:listitem="@layout/fragment_openchatitem"/>
-    <android.support.design.widget.FloatingActionButton
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/roster_add_chat"
             android:layout_width="wrap_content"

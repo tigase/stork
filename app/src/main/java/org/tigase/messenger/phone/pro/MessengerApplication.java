@@ -19,8 +19,8 @@
 package org.tigase.messenger.phone.pro;
 
 import android.content.Intent;
-import android.support.multidex.MultiDexApplication;
-import android.support.v7.app.AppCompatDelegate;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.multidex.MultiDexApplication;
 import org.tigase.messenger.phone.pro.service.ServiceRestarter;
 import org.tigase.messenger.phone.pro.utils.AvatarHelper;
 

@@ -16,7 +16,7 @@
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
   -->
-<android.support.design.widget.CoordinatorLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
@@ -24,12 +24,12 @@
         android:fitsSystemWindows="true"
         tools:context=".conversations.muc.MucActivity">
 
-    <android.support.design.widget.AppBarLayout
+    <com.google.android.material.appbar.AppBarLayout
             android:layout_height="wrap_content"
             android:layout_width="match_parent">
 
 
-        <android.support.v7.widget.Toolbar
+        <androidx.appcompat.widget.Toolbar
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/toolbar"
@@ -40,11 +40,13 @@
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
-                            android:gravity="center_vertical">
+            <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:gravity="center_vertical">
 
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/contact_display_name"
                         android:orientation="horizontal"
                         android:layout_width="wrap_content"
@@ -54,13 +56,12 @@
                         android:textColor="?attr/colorControlNormal"
                         style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse"
                         android:layout_centerVertical="true"
-                />
+                        />
 
             </RelativeLayout>
-        </android.support.v7.widget.Toolbar>
-
-    </android.support.design.widget.AppBarLayout>
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_muc"/>
 
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

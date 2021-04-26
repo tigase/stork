@@ -24,13 +24,13 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import org.tigase.messenger.AbstractServiceActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
@@ -95,7 +95,7 @@ public class PreviewImageActivity
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_preview_image);
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -105,11 +105,11 @@ public class PreviewImageActivity
 		this.account = getIntent().getStringExtra(ACCOUNT_KEY);
 		this.data = getIntent().getData();
 
-		this.contactAvatar = (ImageView) findViewById(R.id.contact_avatar);
-		this.contactName = (TextView) findViewById(R.id.contact_display_name);
-		this.imagePreview = (ImageView) findViewById(R.id.imageView);
-		this.messageText = (EditText) findViewById(R.id.messageText);
-		this.sendButton = (ImageView) findViewById(R.id.send_button);
+		this.contactAvatar = findViewById(R.id.contact_avatar);
+		this.contactName = findViewById(R.id.contact_display_name);
+		this.imagePreview = findViewById(R.id.imageView);
+		this.messageText = findViewById(R.id.messageText);
+		this.sendButton = findViewById(R.id.send_button);
 
 		this.sendButton.setOnClickListener(v -> send());
 

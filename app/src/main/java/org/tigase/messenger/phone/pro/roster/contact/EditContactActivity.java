@@ -24,11 +24,11 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
@@ -52,7 +52,7 @@ public class EditContactActivity
 	ProgressBar progressBar;
 	private XMPPService mService;
 	private ArrayAdapter<Object> sa;
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
+	private final ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;
@@ -144,8 +144,8 @@ public class EditContactActivity
 		private final BareJID jid;
 		private final String name;
 		private final WeakReference<EditContactActivity> weakActivity;
-		private XMPPException.ErrorCondition error = null;
-		private XMPPService mService;
+		private final XMPPException.ErrorCondition error = null;
+		private final XMPPService mService;
 		private boolean result = false;
 
 		public AddContactTask(EditContactActivity activity, XMPPService mService, BareJID account, BareJID jid,

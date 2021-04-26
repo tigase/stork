@@ -17,6 +17,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -25,7 +26,7 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,7 +42,7 @@
             android:minWidth="150sp"
             android:orientation="vertical">
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -59,7 +60,7 @@
                 android:layout_marginRight="3dp"
                 android:orientation="horizontal">
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/chat_timestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -73,7 +74,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:src="@android:drawable/presence_busy"
-                    android:tint="#bdbdbd"
+                    app:tint="#bdbdbd"
                     android:visibility="gone"/>
 
         </LinearLayout>

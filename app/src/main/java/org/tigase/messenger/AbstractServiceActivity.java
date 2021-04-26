@@ -23,7 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.core.client.BareJID;
@@ -76,7 +76,7 @@ public abstract class AbstractServiceActivity
 	}
 
 	@Override
-	protected void onCreate( @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+	protected void onCreate(@org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Intent service = new Intent(getApplicationContext(), XMPPService.class);
 		bindService(service, mServiceConnection, Context.BIND_AUTO_CREATE);

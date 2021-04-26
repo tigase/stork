@@ -22,17 +22,16 @@
              android:layout_height="match_parent">
 
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/servers_list"
             android:name="org.tigase.messenger.phone.pro.conenctionStatus.ConnectionStatusesFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clickable="false"
-            app:layoutManager="LinearLayoutManager"
             tools:context=".conenctionStatus.ConnectionStatusesFragment"
             tools:listitem="@layout/fragment_connectionstatusitem"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/connectionstatus_refresh"
             android:layout_width="wrap_content"

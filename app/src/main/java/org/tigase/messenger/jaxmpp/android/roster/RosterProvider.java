@@ -266,7 +266,7 @@ public class RosterProvider
 
 	@Override
 	public void updateReceivedVersion(SessionObject sessionObject, String ver) {
-		prefs.edit().putString(createKey(sessionObject), ver).commit();
+		prefs.edit().putString(createKey(sessionObject), ver).apply();
 	}
 
 	private String createKey(SessionObject sessionObject) {

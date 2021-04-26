@@ -21,7 +21,7 @@
               android:layout_height="wrap_content"
               android:orientation="horizontal">
 
-    <EditText
+    <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/text_search"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -30,6 +30,5 @@
             android:hint="Search..."
             android:textColorHint="?attr/colorControlNormal"
             android:background="@android:color/transparent"
-            android:inputType="text">
-    </EditText>
+            android:inputType="text"/>
 </LinearLayout>

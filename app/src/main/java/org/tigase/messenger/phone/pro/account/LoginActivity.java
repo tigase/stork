@@ -29,9 +29,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -41,6 +38,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.MobileModeFeature;
 import org.tigase.messenger.phone.pro.service.SecureTrustManagerFactory;
@@ -185,7 +185,7 @@ public class LoginActivity
 		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-				if (id == R.id.login || id == EditorInfo.IME_NULL) {
+				if (id == R.integer.action_login || id == EditorInfo.IME_NULL) {
 					attemptLogin();
 					return true;
 				}
@@ -200,7 +200,7 @@ public class LoginActivity
 		mNicknameView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-				if (id == R.id.login || id == EditorInfo.IME_NULL) {
+				if (id == R.integer.action_login || id == EditorInfo.IME_NULL) {
 					attemptLogin();
 					return true;
 				}
@@ -290,7 +290,7 @@ public class LoginActivity
 						mAccountManager.getUserData(account, AccountsConstants.FIELD_HOSTNAME));
 			}
 
-			mAuthTask = new UserLoginTask(getApplicationContext(), LoginActivity.this, skipLoginTest, xmppID, password,
+			mAuthTask = new UserLoginTask( LoginActivity.this, skipLoginTest, xmppID, password,
 										  hostname, resource, nickname, active);
 			mAuthTask.execute((Void) null);
 		}
@@ -333,7 +333,6 @@ public class LoginActivity
 
 		private final WeakReference<LoginActivity> activity;
 		private final ConnectionChecker checker;
-		private final Context context;
 		private final AccountManager mAccountManager;
 		private final boolean mActive;
 		private final String mHostname;
@@ -344,11 +343,10 @@ public class LoginActivity
 		private final boolean skipLoginTest;
 		private ProgressDialog progress;
 
-		UserLoginTask(Context context, LoginActivity activity, boolean skipLoginTest, String xmppId, String password,
+		UserLoginTask( LoginActivity activity, boolean skipLoginTest, String xmppId, String password,
 					  String hostname, String resource, String nickname, boolean active) {
-			this.context = context;
 			this.activity = new WeakReference<>(activity);
-			this.mAccountManager = AccountManager.get(context);
+			this.mAccountManager = AccountManager.get(activity);
 			this.skipLoginTest = skipLoginTest;
 			mXmppId = xmppId;
 			mPassword = password;
@@ -369,7 +367,7 @@ public class LoginActivity
 
 			// TODO: attempt authentication against a network service.
 			try {
-				boolean result = checker.check(context);
+				boolean result = checker.check(activity.get());
 				// Simulate network access.
 				Log.i(TAG, "Connection checking result: " + result);
 				return result;
@@ -423,7 +421,7 @@ public class LoginActivity
 					Intent i = new Intent();
 					i.setAction(ACCOUNT_MODIFIED_MSG);
 					i.putExtra(AccountManager.KEY_ACCOUNT_NAME, mXmppId);
-					context.sendBroadcast(i);
+					activity.get().sendBroadcast(i);
 
 				} catch (Exception e) {
 					Log.e("LoginActivity", "Can't add account", e);
@@ -435,7 +433,7 @@ public class LoginActivity
 						checker.getException());
 				if (deepException != null) {
 					X509Certificate[] chain = deepException.getChain();
-					runInActivity(a -> showInvalidCertificateDialog(context, chain, () -> a.attemptLogin()));
+					runInActivity(a -> showInvalidCertificateDialog(activity.get(), chain, () -> a.attemptLogin()));
 				} else if (checker.isPasswordInvalid()) {
 					runInActivity(a -> {
 						a.mPasswordView.setError(a.getString(R.string.error_incorrect_password));
@@ -455,7 +453,7 @@ public class LoginActivity
 		protected void onPreExecute() {
 			runInActivity(a -> {
 				this.progress = new ProgressDialog(a);
-				progress.setMessage(context.getResources().getString(R.string.login_checking));
+				progress.setMessage(activity.get().getResources().getString(R.string.login_checking));
 				progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 				progress.setIndeterminate(false);
 				progress.setProgress(0);
@@ -468,15 +466,15 @@ public class LoginActivity
 				public void onEvent(Event<? extends EventHandler> event) {
 					if (progress != null) {
 						if (event instanceof StreamFeaturesModule.StreamFeaturesReceivedHandler.StreamFeaturesReceivedEvent) {
-							setMessage(context.getResources().getString(R.string.login_connected), 1);
+							setMessage(activity.get().getResources().getString(R.string.login_connected), 1);
 						} else if (event instanceof SaslModule.SaslAuthStartHandler.SaslAuthStartEvent) {
-							setMessage(context.getResources().getString(R.string.login_checking_password), 1);
+							setMessage(activity.get().getResources().getString(R.string.login_checking_password), 1);
 						} else if (event instanceof AuthModule.AuthSuccessHandler) {
-							setMessage(context.getResources().getString(R.string.login_password_valid), 1);
+							setMessage(activity.get().getResources().getString(R.string.login_password_valid), 1);
 						} else if (event instanceof AuthModule.AuthFailedHandler) {
-							setMessage(context.getResources().getString(R.string.login_password_invalid), 0);
+							setMessage(activity.get().getResources().getString(R.string.login_password_invalid), 0);
 						} else if (event instanceof ResourceBinderModule.ResourceBindSuccessHandler.ResourceBindSuccessEvent) {
-							setMessage(context.getResources().getString(R.string.login_successful), 1);
+							setMessage(activity.get().getResources().getString(R.string.login_successful), 1);
 						}
 					}
 				}
@@ -494,7 +492,7 @@ public class LoginActivity
 		private void runInActivity(Fnc<LoginActivity> f) {
 			final LoginActivity x = activity.get();
 			if (x != null && !x.isFinishing()) {
-				f.run(x);
+				activity.get().runOnUiThread(() -> f.run(x));
 			}
 		}
 

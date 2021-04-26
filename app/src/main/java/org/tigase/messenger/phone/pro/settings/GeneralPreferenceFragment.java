@@ -1,6 +1,6 @@
 /*
  * Stork
- * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
+ * Copyright (C) 2021 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -15,23 +15,17 @@
  * along with this program. Look for COPYING file in the top folder.
  * If not, see http://www.gnu.org/licenses/.
  */
+package org.tigase.messenger.phone.pro.settings;
 
-package org.tigase.messenger.phone.pro.selectionview;
+import android.os.Bundle;
+import androidx.preference.PreferenceFragmentCompat;
+import org.tigase.messenger.phone.pro.R;
 
-import android.database.Cursor;
-import org.tigase.messenger.phone.pro.db.CursorRecyclerViewAdapter;
+public class GeneralPreferenceFragment
+		extends PreferenceFragmentCompat {
 
-public abstract class CursorMultiSelectViewAdapter<VH extends android.support.v7.widget.RecyclerView.ViewHolder>
-		extends CursorRecyclerViewAdapter<VH> {
-
-	private final MultiSelectFragment fragment;
-
-	public CursorMultiSelectViewAdapter(Cursor cursor, MultiSelectFragment fragment) {
-		super(cursor);
-		this.fragment = fragment;
-	}
-
-	public MultiSelectFragment getFragment() {
-		return fragment;
+	@Override
+	public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+		setPreferencesFromResource(R.xml.pref_general, rootKey);
 	}
 }

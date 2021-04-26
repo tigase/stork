@@ -43,31 +43,39 @@
                 android:layout_gravity="bottom|end"
                 android:layout_height="match_parent"/>
     </FrameLayout>
-    <LinearLayout android:id="@+id/contact_info_panel"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical"
-                  android:gravity="center"
-                  android:layout_gravity="top">
-        <TextView android:id="@+id/debug_status"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"/>
+
+    <LinearLayout
+            android:id="@+id/contact_info_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_gravity="top">
+
+        <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/debug_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
         <com.github.abdularis.civ.StorkAvatarView
                 android:id="@+id/avatar"
                 android:layout_width="192dp"
                 android:layout_height="192dp"/>
-        <TextView android:id="@+id/name"
-                  android:paddingTop="21dp"
-                  android:gravity="center"
-                  android:textSize="26dp"
-                  android:textColor="#ffffff"
-                  android:shadowColor="#696767"
-                  android:shadowDx="2.0"
-                  android:shadowDy="2.0"
-                  android:shadowRadius="2.0"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/name"
+                android:paddingTop="21dp"
+                android:gravity="center"
+                android:textSize="26dp"
+                android:textColor="#ffffff"
+                android:shadowColor="#696767"
+                android:shadowDx="2.0"
+                android:shadowDy="2.0"
+                android:shadowRadius="2.0"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
     </LinearLayout>
+
     <LinearLayout
             android:layout_marginTop="50dp"
             android:id="@+id/callAcceptPanel"
@@ -77,11 +85,14 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal"
-            android:layout_alignParentStart="true" android:layout_below="@+id/contact_info_panel">
-        <android.support.design.widget.FloatingActionButton
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/contact_info_panel">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/reject_call"
                 style="@style/CallButton.Decline"/>
-        <android.support.design.widget.FloatingActionButton
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/accept_call"
                 style="@style/CallButton.Accept"/>
     </LinearLayout>
@@ -92,9 +103,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:gravity="center"
-            android:orientation="horizontal" android:layout_alignParentStart="true"
+            android:orientation="horizontal"
+            android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true">
-        <android.support.design.widget.FloatingActionButton
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/end_call"
                 style="@style/CallButton.Decline"
                 android:text="Hangup"/>

@@ -22,13 +22,13 @@ import android.content.*;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import androidx.appcompat.app.AppCompatActivity;
 import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.service.XMPPService;
@@ -54,7 +54,7 @@ public class SubscriptionRequestActivity
 	EditText xmppId;
 	private String account;
 	private BareJID jid;
-	private BroadcastReceiver avatarUpdatedListener = new BroadcastReceiver() {
+	private final BroadcastReceiver avatarUpdatedListener = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getStringExtra("jid").equals(jid.toString())) {
@@ -63,7 +63,7 @@ public class SubscriptionRequestActivity
 		}
 	};
 	private XMPPService mService;
-	private ServiceConnection mServiceConnection = new ServiceConnection() {
+	private final ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			XMPPService.LocalBinder binder = (XMPPService.LocalBinder) service;

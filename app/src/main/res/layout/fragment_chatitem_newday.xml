@@ -25,7 +25,7 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/id"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
             android:gravity="center"
             android:orientation="vertical">
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

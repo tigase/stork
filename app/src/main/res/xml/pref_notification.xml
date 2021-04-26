@@ -16,7 +16,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
             android:title="@string/pref_chat_notifications_title"
@@ -24,7 +24,7 @@
 
         <!-- A 'parent' preference, which enables/disables child preferences (below)
              when checked/unchecked. -->
-        <SwitchPreference
+        <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:key="notifications_new_message"
                 android:title="@string/pref_title_new_message_notifications"/>
@@ -32,7 +32,7 @@
         <!-- Allows the user to choose a ringtone in the 'notification' category. -->
         <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
         <!-- NOTE: RingtonePreference's summary should be set to its value by the activity code. -->
-        <RingtonePreference
+        <Preference
                 android:defaultValue="content://settings/system/notification_sound"
                 android:dependency="notifications_new_message"
                 android:key="notifications_new_message_ringtone"
@@ -40,7 +40,7 @@
                 android:title="@string/pref_title_ringtone"/>
 
         <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
-        <SwitchPreference
+        <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:dependency="notifications_new_message"
                 android:key="notifications_new_message_vibrate"
@@ -53,7 +53,7 @@
             android:title="@string/pref_muc_notifications_title"
             android:key="pref_muc_notification_settings">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:key="notifications_new_groupmessage"
                 android:title="@string/pref_title_new_message_notifications"/>
@@ -61,7 +61,7 @@
         <!-- Allows the user to choose a ringtone in the 'notification' category. -->
         <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
         <!-- NOTE: RingtonePreference's summary should be set to its value by the activity code. -->
-        <RingtonePreference
+        <Preference
                 android:defaultValue="content://settings/system/notification_sound"
                 android:dependency="notifications_new_groupmessage"
                 android:key="notifications_new_groupmessage_ringtone"
@@ -69,11 +69,11 @@
                 android:title="@string/pref_title_ringtone"/>
 
         <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
-        <SwitchPreference
+        <SwitchPreferenceCompat
                 android:defaultValue="true"
                 android:dependency="notifications_new_groupmessage"
                 android:key="notifications_new_groupmessage_vibrate"
                 android:title="@string/pref_title_vibrate"/>
 
     </PreferenceCategory>
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

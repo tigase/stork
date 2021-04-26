@@ -23,20 +23,21 @@ import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class AboutActivity
 		extends AppCompatActivity {
@@ -50,7 +51,7 @@ public class AboutActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_about);
 
-		tv = (TextView) findViewById(R.id.textView3);
+		tv = findViewById(R.id.textView3);
 
 		ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null) {
@@ -59,7 +60,7 @@ public class AboutActivity
 
 		putCredits(R.id.creditsText);
 
-		ImageView logo = (ImageView) findViewById(R.id.app_logo);
+		ImageView logo = findViewById(R.id.app_logo);
 		logo.setClickable(true);
 		logo.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -74,7 +75,7 @@ public class AboutActivity
 
 					SharedPreferences.Editor editor = sharedPref.edit();
 					editor.putBoolean("nav_connectionstatus", itemVisible);
-					editor.commit();
+					editor.apply();
 
 					Toast.makeText(getApplicationContext(),
 								   itemVisible ? "Connection info enabled" : "Connection info disabled",
@@ -112,7 +113,7 @@ public class AboutActivity
 		textView.setLinksClickable(true);
 		textView.setMovementMethod(LinkMovementMethod.getInstance());
 
-		String html = convert(getResources().openRawResource(R.raw.credits), Charset.forName("UTF-8"));
+		String html = convert(getResources().openRawResource(R.raw.credits), StandardCharsets.UTF_8);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 			textView.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT));

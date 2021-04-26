@@ -105,7 +105,7 @@ public class AutopresenceManager {
 		} else {
 			editor.putLong("auto_presence", presenceId);
 		}
-		editor.commit();
+		editor.apply();
 	}
 
 	private synchronized void start(final long presenceId, long delayInMilis) {

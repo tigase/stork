@@ -20,11 +20,12 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight">
         <!-- Customize your theme here. -->
+        <item name="windowActionModeOverlay">true</item>
 
-<!--        <item name="actionMenuTextColor">@color/textColorPrimary</item>-->
-<!--        <item name="colorPrimary">@color/mucmessage_his_nickname_2</item>-->
-<!--        <item name="colorPrimaryDark">@color/mucmessage_his_nickname_0</item>-->
-<!--        <item name="colorAccent">@color/mucmessage_his_nickname_9</item>-->
+        <!--        <item name="actionMenuTextColor">@color/textColorPrimary</item>-->
+        <!--        <item name="colorPrimary">@color/mucmessage_his_nickname_2</item>-->
+        <!--        <item name="colorPrimaryDark">@color/mucmessage_his_nickname_0</item>-->
+        <!--        <item name="colorAccent">@color/mucmessage_his_nickname_9</item>-->
     </style>
 
 
@@ -34,7 +35,6 @@
         <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
         <item name="android:windowActionBarOverlay">true</item>
     </style>
-
 
 
     <style name="FullscreenTheme" parent="AppTheme">
@@ -54,6 +54,7 @@
         <item name="windowActionBar">false</item>
         <item name="windowActionModeOverlay">true</item>
     </style>
+
     <style name="mySettingsTheme" parent="Theme.AppCompat.Light">
 
     </style>

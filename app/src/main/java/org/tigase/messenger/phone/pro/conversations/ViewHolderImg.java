@@ -18,7 +18,6 @@
 
 package org.tigase.messenger.phone.pro.conversations;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -27,27 +26,24 @@ import android.view.View;
 import android.widget.ImageView;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
 import org.tigase.messenger.phone.pro.service.MessageSender;
 
 public class ViewHolderImg
 		extends ViewHolderMsg {
 
-	private final Context context;
 	ImageView mImage;
 
-	public ViewHolderImg(Context contex, View itemView, MultiSelectFragment fragment) {
-		super(itemView, fragment);
-		this.context = contex;
-		mImage = (ImageView) itemView.findViewById(R.id.image);
-		mImage.setClickable(true);
-		mImage.setLongClickable(true);
-		mImage.setOnLongClickListener(this);
+	public ViewHolderImg(View itemView) {
+		super(itemView);
+		mImage = itemView.findViewById(R.id.image);
+//		mImage.setClickable(true);
+//		mImage.setLongClickable(true);
+//		mImage.setOnLongClickListener(this);
 	}
 
 	@Override
-	public void bind(Context context, Cursor cursor) {
-		super.bind(context, cursor);
+	protected void bind(int adapterPosition, Cursor cursor, boolean selected) {
+		super.bind(adapterPosition, cursor, selected);
 		final String contentUri = cursor.getString(
 				cursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_INTERNAL_CONTENT_URI));
 		setImageContent(contentUri);
@@ -64,7 +60,7 @@ public class ViewHolderImg
 		if (mImage != null) {
 			mImage.setOnClickListener(v -> {
 				if (datUri != null) {
-					context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(datUri)));
+					itemView.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(datUri)));
 				}
 			});
 			mImage.post(() -> {
@@ -73,7 +69,7 @@ public class ViewHolderImg
 					return;
 				}
 				try {
-					Bitmap bmp = MessageSender.getBitmapFromUri(context, Uri.parse(datUri));
+					Bitmap bmp = MessageSender.getBitmapFromUri(itemView.getContext(), Uri.parse(datUri));
 					mImage.setImageBitmap(bmp);
 
 				} catch (Throwable e) {

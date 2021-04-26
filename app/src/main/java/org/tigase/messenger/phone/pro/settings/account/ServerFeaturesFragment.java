@@ -1,6 +1,6 @@
 /*
  * Stork
- * Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
+ * Copyright (C) 2021 Tigase, Inc. (office@tigase.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,26 +16,22 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 
-package org.tigase.messenger.phone.pro.serverfeatures;
+package org.tigase.messenger.phone.pro.settings.account;
 
-import android.app.Fragment;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import org.tigase.messenger.phone.pro.DividerItemDecoration;
-import org.tigase.messenger.phone.pro.MainActivity;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceScreen;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.account.AccountProperties;
+import org.tigase.messenger.phone.pro.serverfeatures.FeatureItem;
+import org.tigase.messenger.phone.pro.serverfeatures.FeaturesProvider;
 import org.tigase.messenger.phone.pro.service.XMPPService;
+import org.tigase.messenger.phone.pro.settings.AbstractServicePreferencesActivity;
+import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException;
@@ -44,7 +40,6 @@ import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.StreamFeaturesModule;
 import tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule;
-import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 import java.util.Collection;
@@ -55,83 +50,31 @@ import java.util.Set;
 import static tigase.jaxmpp.core.client.xmpp.modules.disco.DiscoveryModule.SERVER_FEATURES_KEY;
 
 public class ServerFeaturesFragment
-		extends Fragment {
+		extends PreferenceFragmentCompat
+		implements AbstractServicePreferencesActivity.XmppServiceAware {
 
 	private static final String TAG = "ServerFeaturesFragment";
+	private final FeaturesProvider featuresProvider = new FeaturesProvider();
 	private String accountJID;
-	private FeaturesAdapter adapter;
-	private RecyclerView recyclerView;
-	private MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-			fill();
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			super.onServiceDisconnected(name);
-		}
-	};
+	private Jaxmpp jaxmpp;
 
 	@Override
-	public void onAttach(Context context) {
-		super.onAttach(context);
-
-		Intent intent = new Intent(context, XMPPService.class);
-		getActivity().bindService(intent, mConnection, 0);
-	}
-
-	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-	}
-
-	@Nullable
-	@Override
-	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-		View root = inflater.inflate(R.layout.fragment_serverfeatures, container, false);
-
-		recyclerView = (RecyclerView) root.findViewById(R.id.server_features);
-		recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
-		this.adapter = new FeaturesAdapter(getActivity());
-		this.recyclerView.setAdapter(adapter);
-
-		return root;
-	}
-
-	@Override
-	public void onDetach() {
-		recyclerView.setAdapter(null);
-		getActivity().unbindService(mConnection);
-		super.onDetach();
+	public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+		setPreferencesFromResource(R.xml.pref_accounts_list, rootKey);
 	}
 
 	public void setAccount(String accountName) {
 		this.accountJID = accountName;
 	}
 
-	private void addFeatures(JaxmppCore jaxmpp, Collection<String> serverFeatures) {
-		adapter.addFeatures(serverFeatures);
-		try {
-			if (jaxmpp != null) {
-				adapter.addFeatures(getStreamFeaturesXMLNS(jaxmpp.getSessionObject()));
-				if (StreamManagementModule.isStreamManagementAvailable(jaxmpp.getSessionObject())) {
-					adapter.addFeature(StreamManagementModule.XMLNS);
-				}
-			}
-		} catch (Exception e) {
-			Log.d(TAG, "", e);
-		}
-
-		recyclerView.post(() -> adapter.notifyDataSetChanged());
+	@Override
+	public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		this.accountJID = ((AccountProperties) getActivity()).getAccount().name;
 	}
 
-	private void fill() {
-		if (accountJID == null) {
-			this.accountJID = AccountProperties.getAccountName(getActivity().getIntent());
-		}
-
+	@Override
+	public void setXmppService(XMPPService service) {
 		if (accountJID == null) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 			builder.setMessage("Cannot show server features.")
@@ -141,8 +84,7 @@ public class ServerFeaturesFragment
 			return;
 		}
 
-		final JaxmppCore jaxmpp = mConnection.getService().getJaxmpp(accountJID);
-
+		Jaxmpp jaxmpp = service.getJaxmpp(accountJID);
 		if (jaxmpp == null || !jaxmpp.isConnected()) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 			builder.setMessage("Client must be connected to server")
@@ -150,6 +92,49 @@ public class ServerFeaturesFragment
 					})
 					.show();
 
+			return;
+		}
+		this.jaxmpp = jaxmpp;
+		fill();
+	}
+
+	private boolean isOnServerFeaturesList(final FeatureItem item, Collection<String> serverFeatures) {
+		if (item.getXmlns().contains("*")) {
+			final String t = item.getXmlns().substring(0, item.getXmlns().length() - 1);
+
+			for (String serverFeature : serverFeatures) {
+				if (serverFeature.startsWith(t)) {
+					return true;
+				}
+			}
+
+			return false;
+		} else {
+			return serverFeatures.contains(item.getXmlns());
+		}
+	}
+
+	private void addFeatures(JaxmppCore jaxmpp, Collection<String> serverFeatures) {
+		PreferenceScreen screen = getPreferenceScreen();
+		screen.removeAll();
+
+		for (FeatureItem item : featuresProvider.get(getContext())) {
+			if (isOnServerFeaturesList(item, serverFeatures)) {
+				Preference p = new Preference(getContext());
+				p.setIconSpaceReserved(false);
+				p.setTitle(item.getXep() + ": " + item.getName());
+				p.setSummary(item.getDescription());
+				screen.addPreference(p);
+			}
+		}
+	}
+
+	private void fill() {
+		if (jaxmpp == null) {
+			return;
+		}
+
+		if (getPreferenceScreen() == null) {
 			return;
 		}
 

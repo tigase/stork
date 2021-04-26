@@ -25,8 +25,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.OpenableColumns;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import androidx.core.app.NotificationCompat;
 import org.tigase.messenger.phone.pro.R;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
@@ -150,7 +150,7 @@ public abstract class FileUploaderTask
 										 @Override
 										 public void onSuccess(HttpFileUploadModule.Slot slot) throws JaxmppException {
 											 FileUploaderTask.this.slot = slot;
-											 Log.i("FileUploader", "Slot: "+slot.getPutUri());
+											 Log.i("FileUploader", "Slot: " + slot.getPutUri());
 											 synchronized (FileUploaderTask.this) {
 												 FileUploaderTask.this.notify();
 											 }

@@ -1,0 +1,43 @@
+<!--
+  ~ Stork
+  ~ Copyright (C) 2019 Tigase, Inc. (office@tigase.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, version 3 of the License.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program. Look for COPYING file in the top folder.
+  ~ If not, see http://www.gnu.org/licenses/.
+  -->
+
+<androidx.preference.PreferenceScreen
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.PreferenceScreen
+            app:fragment="org.tigase.messenger.phone.pro.settings.GeneralPreferenceFragment"
+            app:icon="@drawable/ic_settings_general"
+            app:title="@string/pref_header_general"/>
+
+    <androidx.preference.PreferenceScreen
+            app:fragment="org.tigase.messenger.phone.pro.settings.StatusPreferenceFragment"
+            app:icon="@drawable/ic_info_black_24dp"
+            app:title="@string/pref_header_status"/>
+
+    <androidx.preference.PreferenceScreen
+            app:fragment="org.tigase.messenger.phone.pro.settings.NotificationPreferenceFragment"
+            app:icon="@drawable/ic_notifications_black_24dp"
+            app:title="@string/pref_header_notifications"/>
+
+    <androidx.preference.PreferenceScreen
+            app:fragment="org.tigase.messenger.phone.pro.settings.AccountsPreferenceFragment"
+            app:icon="@drawable/ic_settings_accounts"
+            app:title="@string/pref_header_accounts"/>
+
+
+</androidx.preference.PreferenceScreen>

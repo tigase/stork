@@ -18,27 +18,29 @@
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
-    <TextView android:id="@+id/fingerprint"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:textStyle="bold"
-              android:includeFontPadding="true"
-              android:textSize="16sp"
-              style="@android:"
-              android:layout_toLeftOf="@id/switcher"
-              android:typeface="monospace"/>
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/fingerprint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:includeFontPadding="true"
+            android:textSize="16sp"
+            android:layout_toLeftOf="@id/switcher"
+            android:typeface="monospace"/>
 
-    <TextView android:id="@+id/title"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:layout_below="@id/fingerprint"
-              android:text="Fingerprint"/>
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/fingerprint"
+            android:text="Fingerprint"/>
 
-    <Switch android:id="@+id/switcher"
+    <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switcher"
             android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"/>
 
 </RelativeLayout>

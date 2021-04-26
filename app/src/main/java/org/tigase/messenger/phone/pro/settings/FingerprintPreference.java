@@ -20,10 +20,10 @@ package org.tigase.messenger.phone.pro.settings;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.preference.Preference;
-import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.view.View;
+import androidx.annotation.RequiresApi;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceViewHolder;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.omemo.FingerprintView;
 
@@ -61,10 +61,10 @@ public class FingerprintPreference
 	}
 
 	@Override
-	protected void onBindView(View view) {
-		super.onBindView(view);
+	public void onBindViewHolder(PreferenceViewHolder view) {
+		super.onBindViewHolder(view);
 
-		final FingerprintView fpView = view.findViewById(R.id.fingerprint_view);
+		final FingerprintView fpView = (FingerprintView) view.findViewById(R.id.fingerprint_view);
 		fpView.setFingerprint(this.fingerprint, this.offset);
 	}
 

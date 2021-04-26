@@ -16,11 +16,11 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <SwitchPreference
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        >
+    <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="general_display_connection_status"
             android:title="@string/pref_title_display_connection_status"/>
 
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

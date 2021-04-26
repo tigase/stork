@@ -23,6 +23,7 @@
                 android:paddingBottom="3dp"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
+                android:background="@drawable/selectable_item_background"
                 android:paddingTop="3dp">
 
     <com.github.abdularis.civ.StorkAvatarView
@@ -52,7 +53,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/image_placeholder"/>
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -73,7 +74,7 @@
                 android:layout_marginRight="3dp"
                 android:orientation="horizontal">
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/chat_timestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

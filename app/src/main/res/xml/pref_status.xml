@@ -16,7 +16,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
        <SwitchPreference
@@ -40,7 +40,7 @@
     <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
-    <ListPreference
+    <DropDownPreference
             android:defaultValue="60"
             android:entries="@array/pref_auto_away_after_labels"
             android:entryValues="@array/pref_auto_away_after_values"
@@ -49,7 +49,7 @@
             android:positiveButtonText="@null"
             android:title="@string/pref_auto_away_after_title"/>
 
-    <ListPreference
+    <DropDownPreference
             android:defaultValue="90"
             android:entries="@array/pref_auto_away_after_labels"
             android:entryValues="@array/pref_auto_away_after_values"
@@ -60,4 +60,4 @@
             android:dependency="away_delay_seconds"
             android:title="@string/pref_auto_x_away_after_title"/>
 
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

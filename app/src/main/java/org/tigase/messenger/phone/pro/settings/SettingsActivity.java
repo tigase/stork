@@ -18,133 +18,21 @@
 
 package org.tigase.messenger.phone.pro.settings;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.annotation.TargetApi;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.preference.*;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.MenuItem;
-import android.widget.BaseAdapter;
-import org.tigase.messenger.phone.pro.MainActivity;
+import androidx.preference.PreferenceFragmentCompat;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.account.AccountProperties;
-import org.tigase.messenger.phone.pro.account.AccountsConstants;
-import org.tigase.messenger.phone.pro.account.Authenticator;
-import org.tigase.messenger.phone.pro.account.NewAccountActivity;
-import org.tigase.messenger.phone.pro.serverfeatures.ServerFeaturesFragment;
 import org.tigase.messenger.phone.pro.service.XMPPService;
-import org.whispersystems.libsignal.state.SignalProtocolStore;
-import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.eventbus.DefaultEventBus;
 import tigase.jaxmpp.core.client.eventbus.EventBus;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
-import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 
-import java.util.List;
-
-/**
- * A {@link PreferenceActivity} that presents a set of application settings. On handset devices, settings are presented
- * as a single list. On tablets, settings are split by category, with category headers shown to the left of the list of
- * settings.
- * <p/>
- * See <a href="http://developer.android.com/design/patterns/settings.html"> Android Design: Settings</a> for design
- * guidelines and the <a href="http://developer.android.com/guide/topics/ui/settings.html">Settings API Guide</a> for
- * more information on developing a Settings UI.
- */
 public class SettingsActivity
-		extends AppCompatPreferenceActivity {
+		extends AbstractServicePreferencesActivity {
 
 	private final static String TAG = "SettingsActivity";
-
-	/**
-	 * A preference value change listener that updates the preference's summary to reflect its new value.
-	 */
-	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = (preference, value) -> {
-		String stringValue = value.toString();
-
-		if (preference instanceof ListPreference) {
-			// For list preferences, look up the correct display value in
-			// the preference's 'entries' list.
-			ListPreference listPreference = (ListPreference) preference;
-			int index = listPreference.findIndexOfValue(stringValue);
-
-			// Set the summary to reflect the new value.
-			preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
-
-		} else if (preference instanceof RingtonePreference) {
-			// For ringtone preferences, look up the correct display value
-			// using RingtoneManager.
-			if (TextUtils.isEmpty(stringValue)) {
-				// Empty values correspond to 'silent' (no ringtone).
-				preference.setSummary(R.string.pref_ringtone_silent);
-
-			} else {
-				Ringtone ringtone = RingtoneManager.getRingtone(preference.getContext(), Uri.parse(stringValue));
-
-				if (ringtone == null) {
-					// Clear the summary if there was a lookup error.
-					preference.setSummary(null);
-				} else {
-					// Set the summary to reflect the new ringtone display
-					// name.
-					String name = ringtone.getTitle(preference.getContext());
-					preference.setSummary(name);
-				}
-			}
-
-		} else {
-			// For all other preferences, set the summary to the value's
-			// simple string representation.
-			preference.setSummary(stringValue);
-		}
-		return true;
-	};
-	private final DefaultEventBus d = new DefaultEventBus();
-	private final EventListener eventsRepeater = SettingsActivity.this.d::fire;
-	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-			getService().getMultiJaxmpp().addListener(eventsRepeater);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			getService().getMultiJaxmpp().remove(eventsRepeater);
-			super.onServiceDisconnected(name);
-		}
-	};
-	private AccountManager mAccountManager;
-
-	/**
-	 * Binds a preference's summary to its value. More specifically, when the preference's value is changed, its summary
-	 * (line of text below the preference title) is updated to reflect the value. The summary is also immediately
-	 * updated upon calling this method. The exact display format is dependent on the type of preference.
-	 *
-	 * @see #sBindPreferenceSummaryToValueListener
-	 */
-	private static void bindPreferenceSummaryToValue(Preference preference) {
-		// Set the listener to watch for value changes.
-		preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-
-		// Trigger the listener immediately with the preference's
-		// current value.
-		sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-																 PreferenceManager.getDefaultSharedPreferences(
-																		 preference.getContext())
-																		 .getString(preference.getKey(), ""));
-	}
+	private final static String SCREEN_TITLE = "SCREEN_TITLE";
+	private final DefaultEventBus localEventBus = new DefaultEventBus();
+	private final EventListener eventsRepeater = SettingsActivity.this.localEventBus::fire;
 
 	public static String getDisconnectedCauseMessage(Context c, final XMPPService.DisconnectionCauses cause) {
 		if (cause == XMPPService.DisconnectionCauses.AUTHENTICATION) {
@@ -156,265 +44,25 @@ public class SettingsActivity
 		}
 	}
 
-	/**
-	 * Helper method to determine if the device has an extra-large screen. For example, 10" tablets are extra-large.
-	 */
-	private static boolean isXLargeTablet(Context context) {
-		return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >=
-				Configuration.SCREENLAYOUT_SIZE_XLARGE;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public void onBuildHeaders(List<Header> target) {
-		loadHeadersFromResource(R.xml.pref_headers, target);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean onIsMultiPane() {
-		return isXLargeTablet(this);
+	public EventBus getEventBus() {
+		return this.localEventBus;
 	}
 
 	@Override
-	public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		int id = item.getItemId();
-		Log.wtf(TAG, "Id=" + id);
-		if (id == android.R.id.home) {
-			Log.wtf(TAG, "HOME?  " + super.onMenuItemSelected(featureId, item));
-			//	NavUtils.navigateUpFromSameTask(this);
-			onBackPressed();
-			return true;
-		}
-		return super.onMenuItemSelected(featureId, item);
-	}
-
-	XMPPService.DisconnectionCauses getDisconectionProblemDescription(Account accout) {
-		String tmp = mAccountManager.getUserData(accout, AccountsConstants.DISCONNECTION_CAUSE_KEY);
-		if (tmp == null) {
-			return null;
-		} else {
-			return XMPPService.DisconnectionCauses.valueOf(tmp);
-		}
-	}
-
-	SignalProtocolStore getOMEMOStore(String account) {
-		XMPPService s = mConnection.getService();
-		if (s != null) {
-			return OmemoModule.getSignalProtocolStore(s.getJaxmpp(account).getSessionObject());
-		} else {
-			return null;
-		}
-	}
-
-	Connector.State getState(String account) {
-		XMPPService s = mConnection.getService();
-		if (s != null) {
-			Connector.State r = s.getJaxmpp(account).getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY);
-			return r == null ? Connector.State.disconnected : r;
-		}
-		return Connector.State.disconnected;
-	}
-
-	boolean isAccountActive(Account account) {
-		return Boolean.parseBoolean(mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));
-	}
-
-	/**
-	 * This method stops fragment injection in malicious applications. Make sure to deny any unknown fragments here.
-	 */
-	protected boolean isValidFragment(String fragmentName) {
-		return PreferenceFragment.class.getName().equals(fragmentName) ||
-				GeneralPreferenceFragment.class.getName().equals(fragmentName) ||
-				StatusPreferenceFragment.class.getName().equals(fragmentName) ||
-				DataSyncPreferenceFragment.class.getName().equals(fragmentName) ||
-				AccountsPreferenceFragment.class.getName().equals(fragmentName) ||
-				ServerFeaturesFragment.class.getName().equals(fragmentName) ||
-				NotificationPreferenceFragment.class.getName().equals(fragmentName);
+	protected void onServiceConnected() {
+		super.onServiceConnected();
+		mConnection.getService().getMultiJaxmpp().addListener(eventsRepeater);
 	}
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.mAccountManager = AccountManager.get(this);
-		setupActionBar();
+	protected void onServiceConnectionDestroy() {
+		mConnection.getService().getMultiJaxmpp().remove(eventsRepeater);
+		super.onServiceConnectionDestroy();
 	}
 
 	@Override
-	protected void onStart() {
-		super.onStart();
-		Intent service = new Intent(getApplicationContext(), XMPPService.class);
-		bindService(service, mConnection, 0);
+	protected PreferenceFragmentCompat getDefaultFragment() {
+		return new MainPreferenceFragment();
 	}
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-		unbindService(mConnection);
-	}
-
-	private EventBus getEventBus() {
-		return d;
-	}
-
-	/**
-	 * Set up the {@link android.app.ActionBar}, if the API is available.
-	 */
-	private void setupActionBar() {
-		getSupportActionBar().setDisplayShowHomeEnabled(true);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-	}
-
-	public abstract static class AbstractPreferenceFragment
-			extends PreferenceFragment {
-
-//		@Override
-//		public boolean onOptionsItemSelected(MenuItem item) {
-////			int id = item.getItemId();
-////			if (id == android.R.id.home) {
-////				Log.d(TAG, "Home on AbstractPreferenceFragment");
-////				NavUtils.navigateUpFromSameTask(getActivity());
-//////				startActivity(new Intent(getActivity(), SettingsActivity.class));
-////
-////				return true;
-////			}
-//			return super.onOptionsItemSelected(item);
-//		}
-
-	}
-
-	/**
-	 * This fragment shows data and sync preferences only. It is used when the activity is showing a two-pane settings
-	 * UI.
-	 */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class AccountsPreferenceFragment
-			extends AbstractPreferenceFragment {
-
-		private PreferenceScreen screen;
-
-		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_accounts_list);
-			this.screen = this.getPreferenceScreen();
-			((SettingsActivity) getActivity()).getEventBus()
-					.addListener(Connector.StateChangedHandler.StateChangedEvent.class, event -> {
-						BaseAdapter adapter = (BaseAdapter) screen.getRootAdapter();
-						if (getActivity() != null) {
-							getActivity().runOnUiThread(adapter::notifyDataSetChanged);
-						}
-					});
-		}
-
-		@Override
-		public void onResume() {
-			super.onResume();
-			screen.removeAll();
-
-			setHasOptionsMenu(true);
-
-			AccountManager am = AccountManager.get(screen.getContext());
-
-			for (Account account : am.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
-				AccountCat category = AccountCat.instance(screen.getContext(), account,
-														  (SettingsActivity) getActivity());
-				Intent x = new Intent(screen.getContext(), AccountProperties.class);
-				x.putExtra("account_name", account.name);
-				category.setIntent(x);
-				screen.addPreference(category);
-			}
-
-			Preference addAccountPref = new Preference(screen.getContext());
-			addAccountPref.setIntent(new Intent(screen.getContext(), NewAccountActivity.class));
-			addAccountPref.setTitle(getActivity().getString(R.string.pref_accounts_newaccount));
-			addAccountPref.setIcon(android.R.drawable.ic_input_add);
-			screen.addPreference(addAccountPref);
-		}
-	}
-
-	/**
-	 * This fragment shows data and sync preferences only. It is used when the activity is showing a two-pane settings
-	 * UI.
-	 */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class DataSyncPreferenceFragment
-			extends AbstractPreferenceFragment {
-
-		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_data_sync);
-			setHasOptionsMenu(true);
-
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-		}
-	}
-
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class GeneralPreferenceFragment
-			extends AbstractPreferenceFragment {
-
-		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_general);
-			setHasOptionsMenu(true);
-
-		}
-	}
-
-	/**
-	 * This fragment shows notification preferences only. It is used when the activity is showing a two-pane settings
-	 * UI.
-	 */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class NotificationPreferenceFragment
-			extends AbstractPreferenceFragment {
-
-		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_notification);
-			setHasOptionsMenu(true);
-
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-			bindPreferenceSummaryToValue(findPreference("notifications_new_groupmessage_ringtone"));
-		}
-	}
-
-	/**
-	 * This fragment shows general preferences only. It is used when the activity is showing a two-pane settings UI.
-	 */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class StatusPreferenceFragment
-			extends AbstractPreferenceFragment {
-
-		@Override
-		public void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_status);
-			setHasOptionsMenu(true);
-
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("away_delay_seconds"));
-			bindPreferenceSummaryToValue(findPreference("xa_delay_seconds"));
-		}
-	}
 }

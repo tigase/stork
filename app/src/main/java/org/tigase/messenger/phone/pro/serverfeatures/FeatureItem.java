@@ -18,21 +18,16 @@
 
 package org.tigase.messenger.phone.pro.serverfeatures;
 
-class FeatureItem {
+import java.util.Objects;
+
+public class FeatureItem {
 
 	private final String xmlns;
 	private String description;
 	private String name;
 	private String xep;
 
-	public FeatureItem(String xmlns, String xep, String name, String description) {
-		this.description = description;
-		this.name = name;
-		this.xep = xep;
-		this.xmlns = xmlns;
-	}
-
-	public FeatureItem(String xmlns) {
+	FeatureItem(String xmlns) {
 		this.description = description;
 		this.name = name;
 		this.xep = xep;
@@ -44,20 +39,23 @@ class FeatureItem {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof FeatureItem)) {
 			return false;
 		}
-
 		FeatureItem that = (FeatureItem) o;
+		return xmlns.equals(that.xmlns) && Objects.equals(xep, that.xep);
+	}
 
-		return xmlns.equals(that.xmlns);
+	@Override
+	public int hashCode() {
+		return Objects.hash(xmlns, xep);
 	}
 
 	public String getDescription() {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	void setDescription(String description) {
 		this.description = description == null ? null : description.trim();
 	}
 
@@ -65,7 +63,7 @@ class FeatureItem {
 		return name;
 	}
 
-	public void setName(String name) {
+	void setName(String name) {
 		this.name = name == null ? null : name.trim();
 	}
 
@@ -73,7 +71,7 @@ class FeatureItem {
 		return xep;
 	}
 
-	public void setXep(String xep) {
+	void setXep(String xep) {
 		this.xep = xep == null ? null : xep.trim();
 	}
 
@@ -81,8 +79,4 @@ class FeatureItem {
 		return xmlns;
 	}
 
-	@Override
-	public int hashCode() {
-		return xmlns.hashCode();
-	}
 }

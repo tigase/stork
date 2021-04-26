@@ -16,7 +16,7 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+                android:layout_width="match_parent"
                 android:layout_height="@dimen/nav_header_height"
                 android:gravity="bottom"
                 android:orientation="vertical"
@@ -28,7 +28,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:src="@drawable/stork_logo"
-    />
+            />
 
     <Spinner
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
@@ -38,21 +38,25 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_below="@id/hdr_logo"
-    />
+            />
 
 
-    <FrameLayout android:id="@+id/status_panel"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:paddingRight="13dp"
-                 android:layout_alignBottom="@id/hdr_logo"
-                 android:layout_toEndOf="@+id/hdr_logo"                 >
-        <TextView android:id="@+id/connection_status"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:textAlignment="center"
-                  android:padding="3dp"
-                  android:visibility="visible" android:layout_alignStart="@+id/status_panel"/>
+    <FrameLayout
+            android:id="@+id/status_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingRight="13dp"
+            android:layout_alignBottom="@id/hdr_logo"
+            android:layout_toEndOf="@+id/hdr_logo">
+
+        <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/connection_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:padding="3dp"
+                android:visibility="visible"
+                android:layout_alignStart="@+id/status_panel"/>
     </FrameLayout>
 
 

@@ -30,9 +30,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import androidx.core.app.NotificationCompat;
 import org.tigase.jaxmpp.modules.jingle.JingleModule;
 import org.tigase.messenger.jaxmpp.android.caps.CapabilitiesDBCache;
 import org.tigase.messenger.jaxmpp.android.chat.AndroidChatManager;
@@ -91,6 +91,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.pubsub.PubSubModule;
 import tigase.jaxmpp.core.client.xmpp.modules.push.PushNotificationModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterStore;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCard;
 import tigase.jaxmpp.core.client.xmpp.modules.vcard.VCardModule;
@@ -129,6 +130,7 @@ public class XMPPService
 	public static final String CONNECT_SINGLE = "connect-single";
 	public static final String ACCOUNT_TMP_DISABLED_KEY = "ACC:DISABLED";
 	public static final String SEND_FILE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.SEND_FILE_ACTION";
+	public static final String DELETE_ROSTER_ITEMS_COMMAND = "DELETE_ROSTER_ITEMS";
 	final static String TAG = "XMPPService";
 	private static final String ON_CONNECT_RUNNABLE_ARRAY_KEY = "ON_CONNECT_RUNNABLE_ARRAY";
 	private static final String KEEPALIVE_ACTION = "org.tigase.messenger.phone.pro.service.XMPPService.KEEP_ALIVE";
@@ -143,9 +145,14 @@ public class XMPPService
 	protected final Timer timer = new Timer();
 	final MultiJaxmpp multiJaxmpp = new MultiJaxmpp();
 	final ScreenStateReceiver screenStateReceiver = new ScreenStateReceiver();
+	private final AccountModifyReceiver accountModifyReceiver = new AccountModifyReceiver();
 	private final AutopresenceManager autopresenceManager = new AutopresenceManager(this);
 	private final JingleAudioVideoListener jingleAudioVideoListener = new JingleAudioVideoListener(this);
+	private final long keepaliveInterval = 1000 * 60 * 3;
+	private final HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private final IBinder mBinder = new LocalBinder();
+	private final MessageSender messageSender = new MessageSender(this);
+	private final MessageNotification notificationHelper = new MessageNotification();
 	private final DiscoveryModule.ServerFeaturesReceivedHandler streamHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
 
 		@Override
@@ -189,7 +196,22 @@ public class XMPPService
 
 	};
 	private final Executor taskExecutor = Executors.newFixedThreadPool(1);
-	private AccountModifyReceiver accountModifyReceiver = new AccountModifyReceiver();
+	private final JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
+		@Override
+		public void onLoggedIn(SessionObject sessionObject) {
+			Log.i("XMPPService", "JAXMPP connected " + sessionObject.getUserBareJid());
+			List<Runnable> todo = sessionObject.getProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY);
+			try {
+				if (todo != null) {
+					for (Runnable runnable : todo) {
+						taskExecutor.execute(runnable);
+					}
+				}
+			} finally {
+				sessionObject.setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, null);
+			}
+		}
+	};
 	private CapabilitiesDBCache capsCache;
 	private org.tigase.messenger.jaxmpp.android.chat.ChatProvider chatProvider;
 	private ConnectivityManager connManager;
@@ -259,31 +281,11 @@ public class XMPPService
 			// sendAcks();
 		}
 	};
-	private JaxmppCore.LoggedInHandler jaxmppConnectedHandler = new JaxmppCore.LoggedInHandler() {
-		@Override
-		public void onLoggedIn(SessionObject sessionObject) {
-			Log.i("XMPPService", "JAXMPP connected " + sessionObject.getUserBareJid());
-			List<Runnable> todo = sessionObject.getProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY);
-			try {
-				if (todo != null) {
-					for (Runnable runnable : todo) {
-						taskExecutor.execute(runnable);
-					}
-				}
-			} finally {
-				sessionObject.setProperty(ON_CONNECT_RUNNABLE_ARRAY_KEY, null);
-			}
-		}
-	};
-	private long keepaliveInterval = 1000 * 60 * 3;
-	private HashSet<SessionObject> locked = new HashSet<SessionObject>();
 	private AccountManager mAccountManager;
 	private MessageArchiveManagementModule.MessageArchiveItemReceivedEventHandler mamHandler;
 	private MessageHandler messageHandler;
-	private MessageSender messageSender = new MessageSender(this);
 	private MobileModeFeature mobileModeFeature = new MobileModeFeature(this);
 	private MucHandler mucHandler;
-	private MessageNotification notificationHelper = new MessageNotification();
 	private OwnPresenceFactoryImpl ownPresenceStanzaFactory;
 	private PresenceHandler presenceHandler;
 	private PushController pushController;
@@ -295,6 +297,12 @@ public class XMPPService
 			onNotificationServiceStateChanges(account, pushEnabled);
 		}
 	};
+	private final DiscoveryModule.ServerFeaturesReceivedHandler serverFeaturesReceivedHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
+		@Override
+		public void onServerFeaturesReceived(SessionObject sessionObject, IQ iq, String[] strings) {
+			pushController.checkPushNotificationStatus(sessionObject);
+		}
+	};
 	private ReceiptReceiver receiptReceiver;
 	private RosterProviderExt rosterProvider;
 	private final PresenceModule.SubscribeRequestHandler subscribeHandler = new PresenceModule.SubscribeRequestHandler() {
@@ -303,12 +311,6 @@ public class XMPPService
 			XMPPService.this.processSubscriptionRequest(sessionObject, stanza, jid);
 		}
 
-	};
-	private DiscoveryModule.ServerFeaturesReceivedHandler serverFeaturesReceivedHandler = new DiscoveryModule.ServerFeaturesReceivedHandler() {
-		@Override
-		public void onServerFeaturesReceived(SessionObject sessionObject, IQ iq, String[] strings) {
-			pushController.checkPushNotificationStatus(sessionObject);
-		}
 	};
 	private SSLSocketFactory sslSocketFactory;
 	private StreamFeaturesModule.CacheProvider streamFeaturesCache;
@@ -334,7 +336,7 @@ public class XMPPService
 		}
 
 	};
-	private JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
+	private final JaxmppCore.LoggedOutHandler jaxmppDisconnectedHandler = new JaxmppCore.LoggedOutHandler() {
 		@Override
 		public void onLoggedOut(SessionObject sessionObject) {
 			final Jaxmpp jaxmpp = multiJaxmpp.get(sessionObject);
@@ -373,7 +375,7 @@ public class XMPPService
 
 	public boolean isDisabled(SessionObject sessionObject) {
 		Boolean x = sessionObject.getProperty(ACCOUNT_TMP_DISABLED_KEY);
-		return x == null ? false : x;
+		return x != null && x;
 	}
 
 	public IBinder onBind(Intent intent) {
@@ -554,7 +556,19 @@ public class XMPPService
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if (intent != null && "RESET_OMEMO_SESSION".equals(intent.getAction())) {
+		if (intent != null && DELETE_ROSTER_ITEMS_COMMAND.equals(intent.getAction())) {
+			final String account = intent.getStringExtra("account");
+			final Jaxmpp jaxmpp = getJaxmpp(account);
+			final RosterStore store = RosterModule.getRosterStore(jaxmpp.getSessionObject());
+			final ArrayList<String> jidsToRemove = intent.getStringArrayListExtra("jids");
+			for (String jid : jidsToRemove) {
+				try {
+					store.remove(BareJID.bareJIDInstance(jid));
+				} catch (JaxmppException e) {
+					Log.e(TAG, "Cannot remove roster item " + jid + " at " + account, e);
+				}
+			}
+		} else if (intent != null && "RESET_OMEMO_SESSION".equals(intent.getAction())) {
 			String ac = intent.getStringExtra("account");
 			BareJID jid = BareJID.bareJIDInstance(intent.getStringExtra("jid"));
 
@@ -1744,8 +1758,9 @@ public class XMPPService
 				return;
 			}
 
-			Chat chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class).
-					getChatManager().getChat(chatJID, message.getThread());
+			Chat chat = getJaxmpp(sessionObject.getUserBareJid()).getModule(MessageModule.class)
+					.getChatManager()
+					.getChat(chatJID, message.getThread());
 
 			if (chat == null) {
 				Log.d(TAG, "No chat found!");

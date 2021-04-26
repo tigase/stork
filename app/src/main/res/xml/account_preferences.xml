@@ -16,8 +16,8 @@
   ~ along with this program. Look for COPYING file in the top folder.
   ~ If not, see http://www.gnu.org/licenses/.
   -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <org.tigase.messenger.phone.pro.settings.AccountCat
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
             android:key="pref_account_vcard"/>
     <PreferenceCategory
             android:key="pref_account_general"
@@ -25,31 +25,33 @@
         <SwitchPreference
                 android:key="accountEnabled"
                 android:title="Enabled"/>
-        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                          android:enabled="true"
-                          android:key="pref_account_server_features"
-                          android:title="Server features">
-            <intent android:action="ACCOUNT_SETTINGS_SERVER_FEATURES"
-                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
-                    android:targetPackage="org.tigase.messenger.phone.pro"/>
-        </PreferenceScreen>
-        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                          android:enabled="true"
-                          android:key="pref_account_connection"
-                          android:title="Change account settings">
-            <intent android:action="ACCOUNT_SETTINGS_SCREEN"
-                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
-                    android:targetPackage="org.tigase.messenger.phone.pro"/>
-        </PreferenceScreen>
+        <androidx.preference.PreferenceScreen
+                android:fragment="org.tigase.messenger.phone.pro.settings.account.ServerFeaturesFragment"
+                android:enabled="true"
+                android:key="pref_account_server_features"
+                android:title="Server features">
+        </androidx.preference.PreferenceScreen>
+        <androidx.preference.PreferenceScreen
+                android:fragment="org.tigase.messenger.phone.pro.settings.account.ConnectionSettingsFragment"
+                android:enabled="true"
+                android:key="pref_account_connection"
+                android:title="Change account settings">
+        </androidx.preference.PreferenceScreen>
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:key="omemo_category" android:title="OMEMO">
-        <org.tigase.messenger.phone.pro.settings.FingerprintPreference android:key="omemo_fingerprint"
-                                                                       android:text="KKK" android:title="Key"/>
+    <PreferenceCategory
+            android:key="omemo_category"
+            android:title="OMEMO">
+        <org.tigase.messenger.phone.pro.settings.FingerprintPreference
+                android:key="omemo_fingerprint"
+                android:text="KKK"
+                android:title="Key"/>
     </PreferenceCategory>
 
-    <PreferenceCategory android:key="omemo_other" android:title="Other Devices with OMEMO" >
+    <PreferenceCategory
+            android:key="omemo_other"
+            android:title="Other Devices with OMEMO">
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -57,14 +59,12 @@
         <SwitchPreference
                 android:key="account_priorites_enabled"
                 android:title="Automatic priorities"/>
-        <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                          android:enabled="true"
-                          android:key="account_priorites_screen"
-                          android:title="Custom resource priorities">
-            <intent
-                    android:action="PRIORITIES_SCREEN"
-                    android:targetClass="org.tigase.messenger.phone.pro.account.AccountProperties"
-                    android:targetPackage="org.tigase.messenger.phone.pro"/>
+        <PreferenceScreen
+                android:fragment="org.tigase.messenger.phone.pro.settings.account.PrioritiesFragment"
+                android:enabled="true"
+                android:key="account_priorites_screen"
+                android:title="Custom resource priorities">
+
         </PreferenceScreen>
     </PreferenceCategory>
     <PreferenceCategory
@@ -78,11 +78,13 @@
             android:key="pref_account_others"
             android:title="Message Archiving">
 
-        <SwitchPreference android:key="account_mam_enabled"
-                          android:title="Enabled"/>
+        <SwitchPreference
+                android:key="account_mam_enabled"
+                android:title="Enabled"/>
 
-        <SwitchPreference android:key="account_mam_automatic_sync"
-                          android:title="Automatic synchronization"/>
+        <SwitchPreference
+                android:key="account_mam_automatic_sync"
+                android:title="Automatic synchronization"/>
 
         <ListPreference
                 android:key="account_mam_synchronization"
@@ -100,4 +102,4 @@
                 android:key="account_nickname"
                 android:title="Nickname"/>
     </PreferenceCategory>
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

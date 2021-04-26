@@ -31,7 +31,7 @@
         tools:context="org.tigase.messenger.phone.pro.account.NewAccountActivity">
 
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             android:textSize="20dp"
             android:text="@string/about_application_name"/>
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -55,7 +55,7 @@
             android:src="@drawable/stork_logo"/>
 
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/new_account_login"
@@ -63,7 +63,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="68dp"/>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/new_account_create"
@@ -71,7 +71,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="18dp"/>
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView4"
             android:layout_marginTop="18dp"
             android:layout_width="wrap_content"
@@ -79,7 +79,7 @@
             android:layout_centerHorizontal="true"
             android:text="@string/about_copyright"/>
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

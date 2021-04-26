@@ -26,8 +26,8 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.support.v4.util.LruCache;
 import android.util.Log;
+import androidx.collection.LruCache;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -52,8 +52,8 @@ public class ImageHelper {
 
 	public static float density = 1;
 	protected static LruCache<String, Bitmap> memCache = null;
-	private static ConcurrentHashMap<String, BitmapDiskLruCache> diskCaches = new ConcurrentHashMap<String, BitmapDiskLruCache>();
-	private static Set<Bitmap> placeHolders = new HashSet<Bitmap>();
+	private static final ConcurrentHashMap<String, BitmapDiskLruCache> diskCaches = new ConcurrentHashMap<String, BitmapDiskLruCache>();
+	private static final Set<Bitmap> placeHolders = new HashSet<Bitmap>();
 
 	protected static void addPlaceHolder(Bitmap placeHolder) {
 		placeHolders.add(placeHolder);

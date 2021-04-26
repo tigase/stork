@@ -18,18 +18,18 @@
 package org.tigase.messenger.phone.pro.omemo;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.Switch;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import org.tigase.messenger.phone.pro.R;
 
 public class FingerprintSwitch
 		extends FingerprintView {
 
-	private Switch switcher;
+	private SwitchCompat switcher;
 
 	public FingerprintSwitch(Context context) {
 		super(context);

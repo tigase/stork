@@ -21,10 +21,10 @@ package org.tigase.messenger.phone.pro.account;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
 import org.tigase.messenger.phone.pro.R;
 
 public class NewAccountActivity
@@ -51,15 +51,15 @@ public class NewAccountActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_new_account);
 
-		tv = (TextView) findViewById(R.id.textView3);
+		tv = findViewById(R.id.textView3);
 
-		Button createNewAccountButton = (Button) findViewById(R.id.createNewAccountButton);
+		Button createNewAccountButton = findViewById(R.id.createNewAccountButton);
 		createNewAccountButton.setOnClickListener(view -> {
 			Intent intent = new Intent(NewAccountActivity.this, CreateAccountActivity.class);
 			startActivityForResult(intent, CREATE_ACCOUNT_REQUEST);
 		});
 
-		Button useExistingAccountButton = (Button) findViewById(R.id.useExistingAccountButton);
+		Button useExistingAccountButton = findViewById(R.id.useExistingAccountButton);
 		useExistingAccountButton.setOnClickListener(view -> {
 			Intent intent = new Intent(NewAccountActivity.this, LoginActivity.class);
 			startActivityForResult(intent, LOGIN_REQUEST);

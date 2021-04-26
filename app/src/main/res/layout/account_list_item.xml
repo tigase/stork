@@ -22,7 +22,7 @@
               android:padding="8dp"
               android:orientation="vertical">
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/account_name"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_width="wrap_content"

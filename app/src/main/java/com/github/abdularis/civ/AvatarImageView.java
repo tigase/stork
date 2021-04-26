@@ -3,9 +3,8 @@ package com.github.abdularis.civ;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.*;
-import android.support.annotation.*;
-import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
+import androidx.annotation.*;
 import org.tigase.messenger.phone.pro.R;
 
 import java.lang.annotation.Retention;
@@ -77,7 +76,6 @@ public class AvatarImageView
 
 		mBackgroundBounds = new RectF();
 	}
-	;
 
 	@NonNull
 	public String getInitial() {

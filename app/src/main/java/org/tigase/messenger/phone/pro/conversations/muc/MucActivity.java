@@ -23,8 +23,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
+import androidx.appcompat.widget.Toolbar;
 import org.tigase.messenger.jaxmpp.android.chat.MarkAsRead;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.AbstractConversationActivity;
@@ -67,9 +67,9 @@ public class MucActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_muc);
 
-		mContactName = (TextView) findViewById(R.id.contact_display_name);
+		mContactName = findViewById(R.id.contact_display_name);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);

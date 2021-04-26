@@ -23,8 +23,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.db.DatabaseHelper;
 
@@ -39,6 +39,7 @@ public class ChatProvider
 	public static final String FIELD_LAST_MESSAGE = "last_message";
 	public static final String FIELD_LAST_MESSAGE_STATE = "last_message_state";
 	public static final String FIELD_LAST_MESSAGE_TIMESTAMP = "last_message_timestamp";
+	public static final String FIELD_LAST_MESSAGE_TYPE = "last_message_type";
 	private static final String AUTHORITY = "org.tigase.messenger.phone.pro.Chat";
 	private static final String SCHEME = "content://";
 	public static final Uri OPEN_CHATS_URI = Uri.parse(SCHEME + AUTHORITY + "/openchat");
@@ -99,6 +100,14 @@ public class ChatProvider
 						" = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY " +
 						DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as " +
 						ChatProvider.FIELD_LAST_MESSAGE_TIMESTAMP);
+			put(ChatProvider.FIELD_LAST_MESSAGE_TYPE,
+				"(SELECT " + DatabaseContract.ChatHistory.FIELD_ITEM_TYPE + " FROM " +
+						DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " +
+						DatabaseContract.ChatHistory.FIELD_ACCOUNT + " = open_chats." +
+						DatabaseContract.OpenChats.FIELD_ACCOUNT + " AND " + DatabaseContract.ChatHistory.FIELD_JID +
+						" = open_chats." + DatabaseContract.OpenChats.FIELD_JID + " ORDER BY " +
+						DatabaseContract.ChatHistory.FIELD_TIMESTAMP + " DESC LIMIT 1) as " +
+						ChatProvider.FIELD_LAST_MESSAGE_TYPE);
 			put(DatabaseContract.OpenChats.FIELD_THREAD_ID,
 				"open_chats." + DatabaseContract.OpenChats.FIELD_THREAD_ID + " as " +
 						DatabaseContract.OpenChats.FIELD_THREAD_ID);

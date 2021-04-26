@@ -19,87 +19,91 @@
 package org.tigase.messenger.phone.pro.account;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.preference.DialogPreference;
+import android.os.Bundle;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.NumberPicker;
+import androidx.preference.DialogPreference;
+import androidx.preference.PreferenceDialogFragmentCompat;
 
-/**
- * A {@link android.preference.Preference} that displays a number picker as a dialog.
- */
 public class NumberPickerPreference
 		extends DialogPreference {
 
-	public static final int MAX_VALUE = 100;
+	public static final int MAX_VALUE = 256;
 	public static final int MIN_VALUE = 0;
-	public static final boolean WRAP_SELECTOR_WHEEL = true;
+	public static final int DEF_VALUE = 0;
+	private int value = DEF_VALUE;
 
-	private NumberPicker picker;
-	private int value;
-
-	public NumberPickerPreference(Context context, AttributeSet attrs) {
-		super(context, attrs);
+	public NumberPickerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+		super(context, attrs, defStyleAttr, defStyleRes);
 	}
 
 	public NumberPickerPreference(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 	}
 
+	public NumberPickerPreference(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	}
+
+	public NumberPickerPreference(Context context) {
+		super(context);
+	}
+
+	@Override
+	public CharSequence getSummary() {
+		return String.valueOf(value);
+	}
+
 	public int getValue() {
-		return this.value;
+		return value;
 	}
 
 	public void setValue(int value) {
 		this.value = value;
-		persistInt(this.value);
+		notifyChanged();
 	}
 
-	@Override
-	protected void onBindDialogView(View view) {
-		super.onBindDialogView(view);
-		picker.setMinValue(MIN_VALUE);
-		picker.setMaxValue(MAX_VALUE);
-		picker.setWrapSelectorWheel(WRAP_SELECTOR_WHEEL);
-		picker.setValue(getValue());
-	}
+	public static class NumberPickerPreferenceDialog
+			extends PreferenceDialogFragmentCompat {
 
-	@Override
-	protected View onCreateDialogView() {
-		FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-																			 ViewGroup.LayoutParams.WRAP_CONTENT);
-		layoutParams.gravity = Gravity.CENTER;
+		private NumberPicker numberPicker;
 
-		picker = new NumberPicker(getContext());
-		picker.setLayoutParams(layoutParams);
+		public static NumberPickerPreferenceDialog newInstance(String key) {
+			final NumberPickerPreferenceDialog fragment = new NumberPickerPreferenceDialog();
+			final Bundle bundle = new Bundle(1);
+			bundle.putString(ARG_KEY, key);
+			fragment.setArguments(bundle);
+			return fragment;
+		}
 
-		FrameLayout dialogView = new FrameLayout(getContext());
-		dialogView.addView(picker);
-
-		return dialogView;
-	}
-
-	@Override
-	protected void onDialogClosed(boolean positiveResult) {
-		if (positiveResult) {
-			picker.clearFocus();
-			int newValue = picker.getValue();
-			if (callChangeListener(newValue)) {
-				setValue(newValue);
+		@Override
+		public void onDialogClosed(boolean positiveResult) {
+			if (positiveResult) {
+				numberPicker.clearFocus();
+				int newValue = numberPicker.getValue();
+				if (getPreference().callChangeListener(newValue)) {
+					((NumberPickerPreference) getPreference()).setValue(newValue);
+					getPreference().getSummary();
+				}
 			}
+		}
+
+		@Override
+		protected void onBindDialogView(View view) {
+			super.onBindDialogView(view);
+			numberPicker.setValue(((NumberPickerPreference) getPreference()).getValue());
+		}
+
+		@Override
+		protected View onCreateDialogView(Context context) {
+			this.numberPicker = new NumberPicker(context);
+			this.numberPicker.setMinValue(MIN_VALUE);
+			this.numberPicker.setMaxValue(MAX_VALUE);
+			this.numberPicker.setWrapSelectorWheel(true);
+			return numberPicker;
 		}
 	}
 
-	@Override
-	protected Object onGetDefaultValue(TypedArray a, int index) {
-		return a.getInt(index, MIN_VALUE);
-	}
-
-	@Override
-	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
-		setValue(restorePersistedValue ? getPersistedInt(MIN_VALUE) : (Integer) defaultValue);
-	}
 }
+

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        android:layout_height="match_parent">
 
-    <android.support.v7.widget.Toolbar
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+    <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
@@ -19,13 +17,14 @@
             android:layout_width="fill_parent"
             android:layout_below="@id/toolbar"
             android:layout_height="wrap_content">
+
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
 
-            <android.support.v7.widget.CardView
+            <androidx.cardview.widget.CardView
                     android:id="@+id/card_omemo_progress"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -33,7 +32,6 @@
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
                     android:layout_marginTop="8dp"
-                    app:cardElevation="0dp"
                     android:visibility="visible">
 
                 <ProgressBar
@@ -41,8 +39,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="68dp"
                         android:id="@+id/progressBar"/>
-            </android.support.v7.widget.CardView>
-            <android.support.v7.widget.CardView
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
                     android:id="@+id/card_omemo_error"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -50,7 +49,6 @@
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
                     android:layout_marginTop="8dp"
-                    app:cardElevation="0dp"
                     android:visibility="visible">
 
                 <LinearLayout
@@ -58,13 +56,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                    <TextView
+                    <androidx.appcompat.widget.AppCompatTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAppearance="@style/TextAppearance.Stork.Title"
                             android:text="Error"
                             android:layout_marginBottom="8sp"/>
-                    <TextView
+
+                    <androidx.appcompat.widget.AppCompatTextView
                             android:layout_marginTop="8sp"
                             android:id="@+id/omemo_error_message"
                             android:layout_width="wrap_content"
@@ -72,16 +71,17 @@
                             android:textAppearance="@style/TextAppearance.Stork.Body1"
                             android:text="Cannot create OMEMO session."/>
 
-                    <Button android:id="@+id/button_close_error"
+                    <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/button_close_error"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             style="@style/Widget.AppCompat.Button"
                             android:text="Ok"
-                    />
+                            />
                 </LinearLayout>
-            </android.support.v7.widget.CardView>
+            </androidx.cardview.widget.CardView>
 
-            <android.support.v7.widget.CardView
+            <androidx.cardview.widget.CardView
                     android:id="@+id/card_omemo_fingerprint"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -89,7 +89,6 @@
                     android:layout_marginLeft="8dp"
                     android:layout_marginRight="8dp"
                     android:layout_marginTop="8dp"
-                    app:cardElevation="0dp"
                     android:visibility="visible">
 
                 <LinearLayout
@@ -97,13 +96,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                    <TextView
+                    <androidx.appcompat.widget.AppCompatTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAppearance="@style/TextAppearance.Stork.Title"
                             android:text="Fingerprint"
                             android:layout_marginBottom="8sp"/>
-                    <TextView
+
+                    <androidx.appcompat.widget.AppCompatTextView
                             android:layout_marginTop="8sp"
                             android:id="@+id/key_error_hint_mutual"
                             android:layout_width="wrap_content"
@@ -111,20 +111,22 @@
                             android:textAppearance="@style/TextAppearance.Stork.Body1"
                             android:text="Found devices OMEMO fingerprints:"/>
 
-                    <LinearLayout android:id="@+id/omemo_fingerprints_panel"
-                                  android:layout_width="match_parent"
-                                  android:layout_height="wrap_content"
-                                  android:orientation="vertical">
+                    <LinearLayout
+                            android:id="@+id/omemo_fingerprints_panel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
                     </LinearLayout>
 
-                    <Button android:id="@+id/button_ok"
+                    <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/button_ok"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             style="@style/Widget.AppCompat.Button"
                             android:text="Ok"
-                    />
+                            />
                 </LinearLayout>
-            </android.support.v7.widget.CardView>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
     </ScrollView>
 </RelativeLayout>

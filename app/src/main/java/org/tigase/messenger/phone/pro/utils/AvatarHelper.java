@@ -24,10 +24,14 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.db.DatabaseContract;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import tigase.jaxmpp.core.client.BareJID;
+
+import java.util.Objects;
 
 //import org.tigase.messenger.phone.pro.sync.SyncAdapter;
 
@@ -39,6 +43,9 @@ public class AvatarHelper
 	// private static LruCache<BareJID, Bitmap> avatarCache;
 
 	private static final String TAG = "AvatarHelper";
+	private final static int[] COLORS = {0xf44336, 0xE91E63, 0x9C27B0, 0x673AB7, 0x3F51B5, 0x2196F3, 0x03A9F4, 0x00BCD4,
+										 0x009688, 0x4CAF50, 0x8BC34A, 0xFF9800, 0xFF5722, 0x795548, 0x9E9E9E,
+										 0x607D8B};
 	public static Bitmap mPlaceHolderBitmap;
 	private static Context context;
 	private static int defaultAvatarSize = 50;
@@ -89,6 +96,41 @@ public class AvatarHelper
 		memCache.remove(jid.toString());
 	}
 
+	public static Bitmap createInitialAvatar(BareJID jid, String name) {
+		return createInitialAvatar(AvatarHelper.getInitials(jid, name), AvatarHelper.getAvatarBackgroundColor(jid));
+	}
+
+	public static Bitmap createInitialAvatar(String name, int backgroundColor) {
+		String text = extractInitial(name);
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		paint.setTextSize(90);
+		paint.setColor(Color.WHITE);
+		paint.setTextAlign(Paint.Align.CENTER);
+		float baseline = -paint.ascent(); // ascent() is negative
+		int width = (int) (paint.measureText(text) + 0.5f); // round
+		int height = (int) (baseline + paint.descent() + 0.5f);
+		Bitmap image = Bitmap.createBitmap(126, 126, Bitmap.Config.ARGB_8888);
+
+		Canvas canvas = new Canvas(image);
+
+		RectF mBackgroundBounds = new RectF();
+		mBackgroundBounds.set(0, 0, 126, 126);
+
+		Rect mTextBounds = new Rect();
+		paint.getTextBounds(text, 0, text.length(), mTextBounds);
+
+		float textBottom = mBackgroundBounds.centerY() - mTextBounds.exactCenterY();
+
+		Paint mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		mBackgroundPaint.setColor(0xFF3F51B5);
+		mBackgroundPaint.setStyle(Paint.Style.FILL);
+
+		canvas.drawOval(mBackgroundBounds, mBackgroundPaint);
+		canvas.drawText(text, mBackgroundBounds.centerX(), textBottom, paint);
+
+		return image;
+	}
+
 	public static Bitmap cropToSquare(Bitmap bitmap) {
 		if (bitmap == null) {
 			return null;
@@ -107,6 +149,14 @@ public class AvatarHelper
 		return cropImg;
 	}
 
+	@NonNull
+	private static String extractInitial(@Nullable String letter) {
+		if (letter == null || letter.trim().length() <= 0) {
+			return "?";
+		}
+		return String.valueOf(letter.charAt(0));
+	}
+
 	public static Bitmap getAvatar(BareJID jid) {
 		return getAvatar(context, jid, false);
 	}
@@ -117,6 +167,10 @@ public class AvatarHelper
 			bmp = loadAvatar(context, jid, noCache);
 		}
 		return bmp;
+	}
+
+	public static int getAvatarBackgroundColor(BareJID jid) {
+		return 0xff000000 | COLORS[Math.abs(jid.hashCode()) % COLORS.length];
 	}
 
 	protected static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
@@ -155,6 +209,13 @@ public class AvatarHelper
 //		Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
 //		return _bmp;
 		return output;
+	}
+
+	public static String getInitials(final BareJID jid, final String name) {
+		String normalizedName = name == null ? null : name.replaceAll("[^a-zA-Z0-9]", "");
+		return Objects.equals(name, normalizedName) || normalizedName.isEmpty()
+			   ? jid.toString().toUpperCase()
+			   : normalizedName.toUpperCase();
 	}
 
 	public static void initilize(Context context_) {
@@ -218,6 +279,7 @@ public class AvatarHelper
 			return null;
 		}
 		Bitmap bmp = loadAvatar(context, jid, defaultAvatarSize);
+
 		if (!noCache) {
 			if (bmp == null) {
 				memCache.put(jid.toString(), mPlaceHolderBitmap);

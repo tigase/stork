@@ -60,6 +60,7 @@
         <meta-data
                 android:name="firebase_analytics_collection_enabled"
                 android:value="true"/>
+
         <activity
                 android:name=".MainActivity"
                 android:configChanges="orientation|keyboardHidden|screenSize"
@@ -69,15 +70,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
-        <activity android:name=".serverfeatures.ServerFeaturesActivity"
-                  android:configChanges="orientation|keyboardHidden|screenSize"
-                  android:label="Server features"
-                  android:parentActivityName=".MainActivity"
-                  android:theme="@style/FullscreenTheme">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
         <activity
                 android:name=".settings.SettingsActivity"
@@ -102,15 +94,17 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".conversations.chat.OMEMOStartActivity"
-                  android:label="Encryption"
-                  android:theme="@style/ChatStyle"
-                  android:parentActivityName=".conversations.chat.ChatActivity"
-        />
+        <activity
+                android:name=".conversations.chat.OMEMOStartActivity"
+                android:label="Encryption"
+                android:theme="@style/ChatStyle"
+                android:parentActivityName=".conversations.chat.ChatActivity"
+                />
 
-        <activity android:name=".roster.contact.ContactInfoActivity"
-                  android:label="Contact Info"
-                  android:theme="@style/ChatStyle">
+        <activity
+                android:name=".roster.contact.ContactInfoActivity"
+                android:label="Contact Info"
+                android:theme="@style/ChatStyle">
         </activity>
 
         <receiver
@@ -199,10 +193,11 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
-        <activity android:name=".account.VCardEditActivity"
-                  android:label="Contact details"
-                  android:theme="@style/AppTheme"
-                  android:parentActivityName=".settings.SettingsActivity">
+        <activity
+                android:name=".account.VCardEditActivity"
+                android:label="Contact details"
+                android:theme="@style/AppTheme"
+                android:parentActivityName=".settings.SettingsActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value=".settings.SettingsActivity"/>
@@ -223,9 +218,10 @@
         </activity>
         <activity android:name=".account.CreateAccountActivity">
         </activity>
-        <activity android:name=".receiver.ReceiverContextActivity"
-                  android:label="@string/app_name"
-                  android:theme="@style/AppTheme">
+        <activity
+                android:name=".receiver.ReceiverContextActivity"
+                android:label="@string/app_name"
+                android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -241,8 +237,9 @@
         <activity android:name=".conversations.imagepreview.PreviewImageActivity">
         </activity>
 
-        <activity android:name=".video.VideoChatActivity"
-                  android:label="Video Chat">
+        <activity
+                android:name=".video.VideoChatActivity"
+                android:label="Video Chat">
         </activity>
 
     </application>

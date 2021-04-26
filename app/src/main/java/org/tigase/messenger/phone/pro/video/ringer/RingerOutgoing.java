@@ -24,8 +24,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
+import androidx.annotation.RequiresApi;
 import org.tigase.messenger.phone.pro.R;
 
 import java.io.IOException;

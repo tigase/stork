@@ -16,7 +16,8 @@
   ~ If not, see http://www.gnu.org/licenses/.
   -->
 
-<PreferenceScreen>
+<androidx.preference.PreferenceScreen
+        >
 
 
-</PreferenceScreen>
+</androidx.preference.PreferenceScreen>

@@ -18,10 +18,10 @@
 
 package org.tigase.messenger.phone.pro.conenctionStatus;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
 import org.tigase.messenger.phone.pro.R;
 
 public class ViewHolder
@@ -39,14 +39,14 @@ public class ViewHolder
 	public ViewHolder(final View itemView) {
 		super(itemView);
 
-		this.mServerName = (TextView) itemView.findViewById(R.id.server_name);
-		this.mStage = (TextView) itemView.findViewById(R.id.server_status_stage);
-		this.mConnected = (TextView) itemView.findViewById(R.id.server_status_connected);
-		this.mResumption = (TextView) itemView.findViewById(R.id.server_status_sessionresumption);
-		this.mAuthSatus = (TextView) itemView.findViewById(R.id.server_status_authsatus);
-		this.mTlsStatus = (TextView) itemView.findViewById(R.id.server_status_sslstatus);
-		this.mZlibStatus = (TextView) itemView.findViewById(R.id.server_status_zlibstatus);
-		this.mSessionBind = (TextView) itemView.findViewById(R.id.server_status_sessionbinded);
+		this.mServerName = itemView.findViewById(R.id.server_name);
+		this.mStage = itemView.findViewById(R.id.server_status_stage);
+		this.mConnected = itemView.findViewById(R.id.server_status_connected);
+		this.mResumption = itemView.findViewById(R.id.server_status_sessionresumption);
+		this.mAuthSatus = itemView.findViewById(R.id.server_status_authsatus);
+		this.mTlsStatus = itemView.findViewById(R.id.server_status_sslstatus);
+		this.mZlibStatus = itemView.findViewById(R.id.server_status_zlibstatus);
+		this.mSessionBind = itemView.findViewById(R.id.server_status_sessionbinded);
 	}
 
 	public void setContextMenu(final int menuId, final PopupMenu.OnMenuItemClickListener menuClick) {

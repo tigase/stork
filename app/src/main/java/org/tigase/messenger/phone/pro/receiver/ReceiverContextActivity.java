@@ -24,11 +24,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.R;
 import org.tigase.messenger.phone.pro.conversations.chat.ChatActivity;
@@ -43,7 +43,7 @@ public class ReceiverContextActivity
 	private DBUpdateTask dbUpdateTask;
 	private RecyclerView recyclerView;
 	private SearchActionMode searchActionMode;
-	private CursorViewAdapter adapter = new CursorViewAdapter(this, null, selectionHandler) {
+	private final CursorViewAdapter adapter = new CursorViewAdapter(this, null, selectionHandler) {
 		@Override
 		protected void onContentChanged() {
 			loadData();
@@ -58,18 +58,15 @@ public class ReceiverContextActivity
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				//NavUtils.navigateUpFromSameTask(this);
-				finish();
-				return true;
-			case R.id.ac_serach:
-				startSupportActionMode(this.searchActionMode);
-				return true;
-
-			default:
-				return super.onOptionsItemSelected(item);
+		int itemId = item.getItemId();
+		if (itemId == android.R.id.home) {//NavUtils.navigateUpFromSameTask(this);
+			finish();
+			return true;
+		} else if (itemId == R.id.ac_serach) {
+			startSupportActionMode(this.searchActionMode);
+			return true;
 		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
@@ -88,7 +85,7 @@ public class ReceiverContextActivity
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-		recyclerView = (RecyclerView) findViewById(R.id.contacts_list);
+		recyclerView = findViewById(R.id.contacts_list);
 		recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 		recyclerView.setLayoutManager(new LinearLayoutManager(this));
 

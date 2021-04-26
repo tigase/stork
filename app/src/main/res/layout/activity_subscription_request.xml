@@ -37,7 +37,7 @@
             android:visibility="gone"/>
 
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
@@ -64,16 +64,20 @@
                     android:orientation="vertical">
 
 
-                <com.github.abdularis.civ.StorkAvatarView android:layout_width="96dp" android:layout_height="96dp" android:src="@drawable/user_avatar"
-                           android:id="@+id/user_avatar"/>
+                <com.github.abdularis.civ.StorkAvatarView
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:src="@drawable/user_avatar"
+                        android:id="@+id/user_avatar"/>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:id="@+id/contact_display_name_wrap"
-                        android:layout_height="wrap_content" android:layout_alignParentTop="true"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
                         android:layout_toEndOf="@+id/user_avatar">
 
-                    <EditText
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_display_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -81,19 +85,20 @@
                             android:inputType="textPersonName"
                             android:maxLines="1"
                             android:singleLine="true"
-                            android:imeActionId="@+id/add_contact"
+                            android:imeActionId="@integer/action_add_contact"
                             android:imeActionLabel="@string/contact_add_button"
                             android:imeOptions="actionDone"
-                    />
-                </android.support.design.widget.TextInputLayout>
+                            />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/contact_xmppid_wrap"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:layout_below="@+id/contact_display_name_wrap"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/contact_display_name_wrap"
                         android:layout_alignStart="@+id/contact_display_name_wrap">
 
-                    <EditText
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_xmppid"
                             android:editable="false"
                             android:layout_width="match_parent"
@@ -102,12 +107,13 @@
                             android:inputType="textEmailAddress|none"
                             android:maxLines="1"
                             android:singleLine="true"
-                            android:imeActionId="@+id/add_contact"
+                            android:imeActionId="@integer/action_add_contact"
                             android:imeActionLabel="@string/contact_add_button"
                             android:imeOptions="actionDone"
-                    />
-                </android.support.design.widget.TextInputLayout>
+                            />
+                </com.google.android.material.textfield.TextInputLayout>
             </RelativeLayout>
+
             <LinearLayout
                     android:layout_below="@+id/user_avatar_form"
                     android:id="@+id/user_details_form"
@@ -115,66 +121,74 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                    <EditText
+
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_vcard_name"
                             android:hint="@string/contact_vcard_fullname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxLines="1"
                             android:singleLine="true"/>
-                </android.support.design.widget.TextInputLayout>
-                <android.support.design.widget.TextInputLayout
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                    <EditText
+
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_vcard_nickname"
                             android:hint="@string/contact_vcard_nickname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxLines="1"
                             android:singleLine="true"/>
-                </android.support.design.widget.TextInputLayout>
-                <android.support.design.widget.TextInputLayout
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                    <EditText
+
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_vcard_phone"
                             android:hint="@string/contact_vcard_phone"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxLines="1"
                             android:singleLine="true"/>
-                </android.support.design.widget.TextInputLayout>
-                <android.support.design.widget.TextInputLayout
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                    <EditText
+
+                    <androidx.appcompat.widget.AppCompatEditText
                             android:id="@+id/contact_vcard_work"
                             android:hint="@string/contact_vcard_work"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxLines="1"
                             android:singleLine="true"/>
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
-            <LinearLayout android:layout_below="@+id/user_details_form"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:orientation="horizontal">
+            <LinearLayout
+                    android:layout_below="@+id/user_details_form"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/contact_add_button"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/contact_allow_button"/>
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/contact_reject_button"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

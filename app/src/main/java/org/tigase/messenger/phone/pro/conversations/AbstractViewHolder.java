@@ -18,18 +18,15 @@
 
 package org.tigase.messenger.phone.pro.conversations;
 
-import android.content.Context;
-import android.database.Cursor;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.github.abdularis.civ.StorkAvatarView;
 import org.tigase.messenger.phone.pro.R;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectFragment;
-import org.tigase.messenger.phone.pro.selectionview.MultiSelectViewHolder;
+import org.tigase.messenger.phone.pro.roster.multiselect.SelectionViewHolder;
 
 public abstract class AbstractViewHolder
-		extends MultiSelectViewHolder {
+		extends SelectionViewHolder {
 
 	protected final StorkAvatarView mAvatar;
 	protected final TextView mContentView;
@@ -39,24 +36,15 @@ public abstract class AbstractViewHolder
 	protected final TextView mTimestamp;
 	protected String ownNickname;
 
-	public AbstractViewHolder(View itemView, MultiSelectFragment fragment) {
-		super(itemView, fragment);
+	public AbstractViewHolder(View itemView) {
+		super(itemView);
 		mContentView = itemView.findViewById(R.id.content);
 		mTimestamp = itemView.findViewById(R.id.chat_timestamp);
 		mDeliveryStatus = itemView.findViewById(R.id.chat_delivery_status);
 		mEncryptionStatus = itemView.findViewById(R.id.encryption_indicator);
 		mAvatar = itemView.findViewById(R.id.contact_avatar);
 		mNickname = itemView.findViewById(R.id.nickname);
-
-		addClickable(mContentView);
-		addClickable(mTimestamp);
-		addClickable(mDeliveryStatus);
-		addClickable(mEncryptionStatus);
-		addClickable(mAvatar);
-		addClickable(mNickname);
 	}
-
-	public abstract void bind(Context context, Cursor cursor);
 
 	public String getOwnNickname() {
 		return ownNickname;
