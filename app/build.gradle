@@ -11,7 +11,7 @@ android {
 
 	defaultConfig {
 		applicationId "org.tigase.messenger.phone.pro"
-		minSdkVersion 19
+		minSdkVersion 21
 		targetSdkVersion 28
 		versionCode 90
 		versionName "3.1.0"
@@ -100,8 +100,8 @@ dependencies {
 	implementation 'tigase:jaxmpp-httpfileupload:3.3.0'
 	implementation 'tigase:jaxmpp-omemo:3.3.0'
 	implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
-	implementation 'org.webrtc:google-webrtc:1.0.26131'
-	playstoreImplementation('com.google.firebase:firebase-messaging:21.1.0')
+	implementation 'org.webrtc:google-webrtc:1.0.32006'
+	playstoreImplementation('com.google.firebase:firebase-messaging:22.0.0')
 	implementation 'org.jetbrains:annotations:15.0'
 
 	implementation 'com.android.support:multidex:2.0.1'

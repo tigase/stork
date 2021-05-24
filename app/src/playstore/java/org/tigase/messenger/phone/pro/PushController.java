@@ -20,7 +20,7 @@ package org.tigase.messenger.phone.pro;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.util.Log;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import org.tigase.messenger.phone.pro.account.AccountsConstants;
 import org.tigase.messenger.phone.pro.utils.AccountHelper;
 import tigase.jaxmpp.core.client.*;
@@ -57,7 +57,7 @@ public class PushController {
 	}
 
 	public String getToken() {
-		return FirebaseInstanceId.getInstance().getToken();
+		return FirebaseMessaging.getInstance().getToken().getResult();
 	}
 
 	public void registerInPushService(final Account account) throws JaxmppException {

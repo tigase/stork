@@ -193,7 +193,9 @@ public class WebRTCClient
 		jaxmpp.getEventBus().remove(jingleTransportHandler);
 		jaxmpp.getEventBus().remove(acceptOfferHandler);
 
-		localPeer.close();
+		if (localPeer != null) {
+			localPeer.close();
+		}
 
 		try {
 			if (localVideoTrack != null) {
@@ -538,6 +540,21 @@ public class WebRTCClient
 		}
 	}
 
+	private void gotRemoteStream(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+		//we have remote video stream. add to the renderer.
+		if (mediaStreams!=null && mediaStreams.length > 0) {
+			final VideoTrack videoTrack = mediaStreams[0].videoTracks.get(0);
+
+
+			updateVideoViews(true);
+			if (remoteVideoSinkHandler != null) {
+				handler.post(() -> {
+					VideoSink sink = remoteVideoSinkHandler.getVideoSink();
+					videoTrack.addSink(sink);
+				});
+			}
+		}}
+
 	/**
 	 * Received remote peer's media stream. we will get the first video track and render it
 	 */
@@ -558,16 +575,19 @@ public class WebRTCClient
 
 	private void createPeerConnection() {
 		PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(peerIceServers);
-		// TCP candidates are only useful when connecting to a server that supports
-		// ICE-TCP.
-		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.PLAN_B;
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+
+		rtcConfig.iceTransportsType = PeerConnection.IceTransportsType.ALL;
+		rtcConfig.iceCandidatePoolSize = 2;
+		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXCOMPAT;
+		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+		rtcConfig.candidateNetworkPolicy = PeerConnection.CandidateNetworkPolicy.ALL;
+
 		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
 		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
 		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
 		rtcConfig.disableIpv6 = true;
 
-		rtcConfig.candidateNetworkPolicy = PeerConnection.CandidateNetworkPolicy.ALL;
-		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
 		// Use ECDSA encryption.
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
 		localPeer = peerConnectionFactory.createPeerConnection(rtcConfig, new CustomPeerConnectionObserver(
@@ -580,6 +600,12 @@ public class WebRTCClient
 			}
 
 			@Override
+			public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+				super.onAddTrack(rtpReceiver, mediaStreams);
+				gotRemoteStream(rtpReceiver, mediaStreams);
+			}
+
+			@Override
 			public void onAddStream(MediaStream mediaStream) {
 				super.onAddStream(mediaStream);
 				gotRemoteStream(mediaStream);
@@ -589,6 +615,8 @@ public class WebRTCClient
 
 		addStreamToLocalPeer();
 	}
+
+
 
 	private void doAnswer(final JingleSession session) {
 		Log.d(TAG, "Creating answer");
@@ -651,8 +679,12 @@ public class WebRTCClient
 		MediaStream stream = peerConnectionFactory.createLocalMediaStream("102");
 		stream.addTrack(localAudioTrack);
 		stream.addTrack(localVideoTrack);
-		boolean r = localPeer.addStream(stream);
-		Log.d(TAG, "Adding MediaStream: " + r);
+
+		localPeer.addTrack(localAudioTrack);
+		localPeer.addTrack(localVideoTrack);
+
+//		boolean r = localPeer.addStream(stream);
+//		Log.d(TAG, "Adding MediaStream: " + r);
 	}
 
 	/**

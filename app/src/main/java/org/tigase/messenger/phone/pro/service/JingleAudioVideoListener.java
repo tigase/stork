@@ -31,6 +31,8 @@ import tigase.jaxmpp.core.client.xml.Element;
 
 import java.util.List;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 public class JingleAudioVideoListener
 		implements JingleModule.JingleSessionAcceptHandler,
 				   JingleModule.JingleSessionInfoHandler,
@@ -56,7 +58,7 @@ public class JingleAudioVideoListener
 		intent.putExtra(VideoChatActivity.JID_KEY, jingleSession.getJid().toString());
 		intent.putExtra(VideoChatActivity.SID_KEY, jingleSession.getSid());
 		intent.putExtra(VideoChatActivity.INITIATOR_KEY, false);
-
+		intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
 		service.startActivity(intent);
 		return true;
 	}

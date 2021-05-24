@@ -29,7 +29,6 @@
                  android:layout_weight="1"
                  android:orientation="vertical">
 
-
         <org.webrtc.SurfaceViewRenderer
                 android:id="@+id/remote_gl_surface_view"
                 android:layout_width="match_parent"

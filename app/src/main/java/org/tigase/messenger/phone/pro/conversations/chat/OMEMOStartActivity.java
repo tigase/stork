@@ -20,6 +20,7 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -204,7 +205,7 @@ public class OMEMOStartActivity
 					Log.i(TAG, "OMEMO session is created");
 //								store.setOMEMORequired(jid, omemoEnable);
 
-//					addOwnKeys(session, store, jaxmpp);
+					addOwnKeys(session, store, jaxmpp);
 
 					showFingerprintCard(session, store, jid, ac);
 				}

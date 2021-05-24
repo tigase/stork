@@ -48,10 +48,10 @@ public class VideoChatActivity
 	public static final String JID_KEY = "jid";
 	public static final String ACCOUNT_KEY = "account";
 	private static final String TAG = "VideoChatActivity";
+	private final Handler handler = new Handler();
 	private AVComponent avComponent;
 	private WebRTCClient client;
 	private EglBase eglBase;
-	private final Handler handler = new Handler();
 	private JaxmppCore jaxmpp;
 	private boolean permissionsGranted = false;
 	private Ringer ringer;
@@ -120,6 +120,23 @@ public class VideoChatActivity
 
 	@Override
 	protected void onXMPPServiceDisconnected() {
+	}
+
+	@Override
+	protected void onDestroy() {
+		try {
+			avComponent.stop();
+		} catch (Exception ignore) {
+		}
+		try {
+			client.close();
+		} catch (Exception ignore) {
+		}
+		try {
+			eglBase.release();
+		} catch (Exception ignore) {
+		}
+		super.onDestroy();
 	}
 
 	private void initializeClient(boolean permissionsRequested) {
