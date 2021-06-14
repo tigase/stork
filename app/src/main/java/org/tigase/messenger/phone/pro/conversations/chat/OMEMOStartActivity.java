@@ -41,6 +41,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.omemo.XmppOMEMOSession;
 
 import java.util.List;
 
+@Deprecated
 public class OMEMOStartActivity
 		extends AbstractServiceActivity {
 

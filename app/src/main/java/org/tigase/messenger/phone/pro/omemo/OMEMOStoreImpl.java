@@ -135,6 +135,9 @@ public class OMEMOStoreImpl
 
 	@Override
 	public boolean saveIdentity(SignalProtocolAddress address, IdentityKey identityKey) {
+		if (address.getName().equals(account.toString()) && address.getDeviceId() == this.localRegistrationId) {
+			return false;
+		}
 		ContentValues values = new ContentValues();
 		values.put(OMEMOContract.Identities.FIELD_ACCOUNT, account.toString());
 		values.put(OMEMOContract.Identities.FIELD_JID, address.getName());
@@ -199,7 +202,8 @@ public class OMEMOStoreImpl
 				.query(OMEMOContract.Identities.TABLE_NAME, new String[]{OMEMOContract.Identities.FIELD_KEY},
 					   OMEMOContract.Identities.FIELD_ACCOUNT + "=? AND " + OMEMOContract.Identities.FIELD_JID +
 							   "=? AND " + OMEMOContract.Identities.FIELD_DEVICE_ID + "=? AND " +
-							   OMEMOContract.Identities.FIELD_ACTIVE + "=1",
+							   OMEMOContract.Identities.FIELD_ACTIVE + "=1 AND " +
+							   OMEMOContract.Identities.FIELD_HAS_KEYPAIR + "=0",
 					   new String[]{account.toString(), address.getName(), String.valueOf(address.getDeviceId())}, null,
 					   null, null)) {
 			if (c.moveToNext()) {
@@ -440,16 +444,28 @@ public class OMEMOStoreImpl
 
 	}
 
-	public void reset() {
+	public void resetAll() {
 		helper.getWritableDatabase().delete(OMEMOContract.SignedPreKeys.TABLE_NAME, null, null);
 		helper.getWritableDatabase().delete(OMEMOContract.PreKeys.TABLE_NAME, null, null);
 		helper.getWritableDatabase().delete(OMEMOContract.Identities.TABLE_NAME, null, null);
 		helper.getWritableDatabase().delete(OMEMOContract.Sessions.TABLE_NAME, null, null);
 	}
 
+	public void reset(final String accountName) {
+		int x = helper.getWritableDatabase()
+				.delete(OMEMOContract.Sessions.TABLE_NAME, OMEMOContract.Sessions.FIELD_ACCOUNT + "=?",
+						new String[]{accountName});
+		Log.i(TAG, "Removed " + x + " OMEMO sessions");
+
+		x = helper.getWritableDatabase()
+				.delete(OMEMOContract.Identities.TABLE_NAME, OMEMOContract.Identities.FIELD_ACCOUNT + "=? AND " +
+						OMEMOContract.Identities.FIELD_HAS_KEYPAIR + "=?", new String[]{accountName, "0"});
+		Log.i(TAG, "Removed " + x + " OMEMO identities");
+
+	}
+
 	public void init(int omemoRegistrationId) throws InvalidKeyException {
 		this.localRegistrationId = omemoRegistrationId;
-
 		boolean created = false;
 		try (Cursor c = helper.getReadableDatabase()
 				.query(OMEMOContract.Identities.TABLE_NAME, new String[]{OMEMOContract.Identities.FIELD_KEY},
@@ -460,15 +476,13 @@ public class OMEMOStoreImpl
 				String k = c.getString(c.getColumnIndex(OMEMOContract.Identities.FIELD_KEY));
 				this.identityKeyPair = new IdentityKeyPair(Base64.decode(k));
 			} else {
+				this.localRegistrationId = KeyHelper.generateRegistrationId(true);
 				this.identityKeyPair = KeyHelper.generateIdentityKeyPair();
 				created = true;
 			}
 		}
 		if (created) {
 			storeIdentityKeyPair();
-		}
-
-		if (created) {
 			List<PreKeyRecord> preKeys = KeyHelper.generatePreKeys(0, 128);
 			SignedPreKeyRecord signedPreKey = KeyHelper.generateSignedPreKey(identityKeyPair, 1);
 

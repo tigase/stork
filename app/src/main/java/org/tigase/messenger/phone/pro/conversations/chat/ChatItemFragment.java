@@ -20,10 +20,7 @@ package org.tigase.messenger.phone.pro.conversations.chat;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -38,6 +35,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.selection.Selection;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,11 +59,20 @@ import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 
+import static org.tigase.messenger.phone.pro.conversations.chat.OMEMOStartService.RESULT_ACTION;
+
 public class ChatItemFragment
 		extends SelectionFragment<MyChatItemRecyclerViewAdapter> {
 
 	private static final String TAG = "ChatFragment";
 	public static int START_OMEMO_REQUEST = 1000;
+	private final BroadcastReceiver bReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			handleOMEMOStartMessage(context, intent);
+		}
+	};
 	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection();
 	private DBUpdateTask dbUpdateTask;
 	private FloatingActionButton floatingActionButton;
@@ -190,15 +197,15 @@ public class ChatItemFragment
 		} else if (itemId == R.id.encrypt_chat) {
 			boolean s = !((ChatActivity) getContext()).isEncryptChat();
 
-			Intent encIntent = new Intent(getContext(), OMEMOStartActivity.class);
-			encIntent.putExtra(OMEMOStartActivity.ACCOUNT_KEY, mAccount.toString());
-			encIntent.putExtra(OMEMOStartActivity.JID_KEY, ((ChatActivity) getContext()).getJid().toString());
-			encIntent.putExtra(OMEMOStartActivity.CHAT_ID_KEY, ((ChatActivity) getContext()).getOpenChatId());
-			encIntent.putExtra(OMEMOStartActivity.STATUS_KEY, s);
-//				getContext().startService(encIntent);
-
-			((ChatActivity) getContext()).startActivityForResult(encIntent, START_OMEMO_REQUEST);
-
+			if (s) {
+				OMEMOStartService.startActionEnable(getContext(), mAccount.toString(),
+													((ChatActivity) getContext()).getJid(),
+													((ChatActivity) getContext()).getOpenChatId());
+			} else {
+				OMEMOStartService.startActionDisable(getContext(), mAccount.toString(),
+													 ((ChatActivity) getContext()).getJid(),
+													 ((ChatActivity) getContext()).getOpenChatId());
+			}
 			return true;
 		} else if (itemId == R.id.video_chat) {
 			Intent i = new Intent(getContext(), VideoChatActivity.class);
@@ -238,7 +245,15 @@ public class ChatItemFragment
 		super.onResume();
 		Log.v(TAG, "Resumed view");
 
+		LocalBroadcastManager.getInstance(getContext()).registerReceiver(bReceiver, new IntentFilter(RESULT_ACTION));
+
 		refreshChatHistory();
+	}
+
+	@Override
+	public void onPause() {
+		LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(bReceiver);
+		super.onPause();
 	}
 
 	@Override
@@ -317,6 +332,18 @@ public class ChatItemFragment
 		}
 
 		actionMode.setTitle(getContext().getResources().getQuantityString(R.plurals.message_selected, count, count));
+	}
+
+	private void handleOMEMOStartMessage(Context context, Intent intent) {
+		final int chatIt = intent.getIntExtra(OMEMOStartService.RESULT_CHAT_ID, Integer.MIN_VALUE);
+		final int result = intent.getIntExtra(OMEMOStartService.RESULT_TYPE, Integer.MIN_VALUE);
+		if (chatIt == ((ChatActivity) getContext()).getOpenChatId() &&
+				result == OMEMOStartService.RESULT_TYPE_ENABLED) {
+			((ChatActivity) getContext()).setEncryptChat(true);
+		} else if (chatIt == ((ChatActivity) getContext()).getOpenChatId() &&
+				result == OMEMOStartService.RESULT_TYPE_DISABLED) {
+			((ChatActivity) getContext()).setEncryptChat(false);
+		}
 	}
 
 	private boolean onActionItemClicked(ActionMode mode, MenuItem item) {

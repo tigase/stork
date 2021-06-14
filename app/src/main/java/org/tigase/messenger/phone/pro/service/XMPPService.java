@@ -51,6 +51,7 @@ import org.tigase.messenger.phone.pro.db.RosterProviderExt;
 import org.tigase.messenger.phone.pro.notifications.MessageNotification;
 import org.tigase.messenger.phone.pro.omemo.OMEMOStore;
 import org.tigase.messenger.phone.pro.omemo.OMEMOStoreImpl;
+import org.tigase.messenger.phone.pro.omemo.OMEMOSyncService;
 import org.tigase.messenger.phone.pro.providers.ChatProvider;
 import org.tigase.messenger.phone.pro.providers.RosterProvider;
 import org.tigase.messenger.phone.pro.roster.request.SubscriptionRequestActivity;
@@ -775,7 +776,10 @@ public class XMPPService
 								onConnectTasks.add(new RejoinToMucRooms(jaxmpp.getSessionObject()));
 								onConnectTasks.add(
 										new FetchMessageArchiveMAM(XMPPService.this, jaxmpp.getSessionObject()));
-//								onConnectTasks.add(new SubscribeOwnOMEMODevices(jaxmpp));
+								onConnectTasks.add(() -> OMEMOSyncService.startCheckOwnKey(getApplicationContext(),
+																						   jaxmpp.getSessionObject()
+																								   .getUserBareJid()
+																								   .toString()));
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
@@ -919,6 +923,8 @@ public class XMPPService
 
 		try {
 			jaxmpp.getModulesManager().register(new MessageCarbonsModule());
+			jaxmpp.getModule(MessageCarbonsModule.class)
+					.addExtension(jaxmpp.getModule(OmemoModule.class).getExtension());
 		} catch (JaxmppException ex) {
 			Log.v(TAG, "Exception creating instance of MessageCarbonsModule", ex);
 		}
@@ -1553,10 +1559,8 @@ public class XMPPService
 			String omemoId = mAccountManager.getUserData(account, AccountsConstants.FIELD_OMEMO_REGISTRATION_ID);
 			OMEMOStore omemoStore = createOMEMOStore(omemoId, accountJid);
 			OmemoModule.setSignalProtocolStore(jaxmpp.getSessionObject(), omemoStore);
-			if (omemoId == null) {
-				mAccountManager.setUserData(account, AccountsConstants.FIELD_OMEMO_REGISTRATION_ID,
-											String.valueOf(omemoStore.getLocalRegistrationId()));
-			}
+			mAccountManager.setUserData(account, AccountsConstants.FIELD_OMEMO_REGISTRATION_ID,
+										String.valueOf(omemoStore.getLocalRegistrationId()));
 
 			boolean disabled = !Boolean.parseBoolean(
 					mAccountManager.getUserData(account, AccountsConstants.FIELD_ACTIVE));

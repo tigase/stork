@@ -36,6 +36,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.tigase.messenger.phone.pro.DividerItemDecoration;
 import org.tigase.messenger.phone.pro.MainActivity;
 import org.tigase.messenger.phone.pro.R;
+import org.tigase.messenger.phone.pro.omemo.OMEMOSyncService;
 import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
@@ -133,19 +134,20 @@ public class ConnectionStatusesFragment
 
 		@Override
 		public void onRepublishOMEMO(String jid) {
-			(new AsyncTask<Void, Void, Void>() {
-				@Override
-				protected Void doInBackground(Void... params) {
-					try {
-						Jaxmpp j = mConnection.getService().getJaxmpp(jid);
-						j.getModule(OmemoModule.class).publishDeviceList();
-					} catch (Exception e) {
-						Log.w("ConnectionStatus", "Cannot publish", e);
-						showInfo("Publish errior: " + e.getMessage());
-					}
-					return null;
-				}
-			}).execute();
+			OMEMOSyncService.startOMEMOClean(getContext(), jid);
+//			(new AsyncTask<Void, Void, Void>() {
+//				@Override
+//				protected Void doInBackground(Void... params) {
+//					try {
+//						Jaxmpp j = mConnection.getService().getJaxmpp(jid);
+//						j.getModule(OmemoModule.class).publishDeviceList();
+//					} catch (Exception e) {
+//						Log.w("ConnectionStatus", "Cannot publish", e);
+//						showInfo("Publish errior: " + e.getMessage());
+//					}
+//					return null;
+//				}
+//			}).execute();
 
 		}
 	};
