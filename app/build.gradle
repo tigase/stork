@@ -11,7 +11,7 @@ android {
 
 	defaultConfig {
 		applicationId "org.tigase.messenger.phone.pro"
-		minSdkVersion 21
+		minSdkVersion 29
 		targetSdkVersion 29
 		versionCode 91
 		versionName "3.2.0"
