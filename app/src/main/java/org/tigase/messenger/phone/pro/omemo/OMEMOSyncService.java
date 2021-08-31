@@ -17,14 +17,7 @@
  */
 package org.tigase.messenger.phone.pro.omemo;
 
-import android.app.IntentService;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.util.Log;
-import org.tigase.messenger.phone.pro.service.XMPPService;
 import tigase.jaxmpp.android.Jaxmpp;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -47,186 +40,107 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class OMEMOSyncService
-		extends IntentService
-		implements ServiceConnection {
-
-	public static final String ACTION_CLEAN = "OMEMOSyncService.CLEAN_ALL";
-	public static final String ACTION_CHECK_OWN_KEY = "OMEMOSyncService.ACTION_CHECK_OWN_KEY";
-	public static final String EXTRA_ACCOUNT = "OMEMOSyncService.EXTRA_ACCOUNT";
+public class OMEMOSyncService {
 
 	private static final String TAG = "OMEMOSyncService";
+
 	private final static String prefix = "eu.siacs.conversations.axolotl.bundles:";
-	private final Object lock = new Object();
-	private XMPPService mService;
 
-	public static void startCheckOwnKey(Context context, String accountName) {
-		Intent intent = new Intent(context, OMEMOSyncService.class);
-		intent.setAction(ACTION_CHECK_OWN_KEY);
-		intent.putExtra(EXTRA_ACCOUNT, accountName);
-		context.startService(intent);
-	}
-
-	public static void startOMEMOClean(Context context, String accountName) {
-		Intent intent = new Intent(context, OMEMOSyncService.class);
-		intent.setAction(ACTION_CLEAN);
-		intent.putExtra(EXTRA_ACCOUNT, accountName);
-		context.startService(intent);
-	}
-
-	public OMEMOSyncService() {
-		super("OMEMOSyncService");
-	}
-
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		bindService(new Intent(this, XMPPService.class), this, 0);
-	}
-
-	@Override
-	public void onDestroy() {
-		unbindService(this);
-		super.onDestroy();
-	}
-
-	@Override
-	public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-		XMPPService.LocalBinder binder = (XMPPService.LocalBinder) iBinder;
-		this.mService = binder.getService();
-		Log.w(TAG, "CONNECTED");
-		synchronized (lock) {
-			lock.notify();
-		}
-	}
-
-	@Override
-	public void onServiceDisconnected(ComponentName componentName) {
-		this.mService = null;
-	}
-
-	@Override
-	protected void onHandleIntent(Intent intent) {
+	public void checkOwnKeyPublished(final Jaxmpp jaxmpp) {
 		try {
-			synchronized (lock) {
-				while (mService == null) {
-					lock.wait();
-				}
-			}
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		if (intent != null) {
-			final String action = intent.getAction();
-			if (ACTION_CHECK_OWN_KEY.equals(action)) {
-				final String accountName = intent.getStringExtra(EXTRA_ACCOUNT);
-				final Jaxmpp jaxmpp = mService.getJaxmpp(accountName);
-				try {
-					checkOwnKeyPublished(jaxmpp);
-				} catch (Exception e) {
-					Log.e(TAG, "Cannot cleanup OMEMO keys", e);
-				}
-			} else if (ACTION_CLEAN.equals(action)) {
-				final String accountName = intent.getStringExtra(EXTRA_ACCOUNT);
-				final Jaxmpp jaxmpp = mService.getJaxmpp(accountName);
-				try {
-					cleanOMEMO(jaxmpp);
-				} catch (Exception e) {
-					Log.e(TAG, "Cannot cleanup OMEMO keys", e);
-				}
-			}
-		}
-	}
+			final BareJID jid = jaxmpp.getSessionObject().getUserBareJid();
+			final OmemoModule omemo = jaxmpp.getModule(OmemoModule.class);
+			final OMEMOStoreImpl store = (OMEMOStoreImpl) OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
+			final int localKeyId = store.getLocalRegistrationId();
 
-	private void checkOwnKeyPublished(final Jaxmpp jaxmpp) throws JaxmppException {
-		final BareJID jid = jaxmpp.getSessionObject().getUserBareJid();
-		final OmemoModule omemo = jaxmpp.getModule(OmemoModule.class);
-		final OMEMOStoreImpl store = (OMEMOStoreImpl) OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
-		final int localKeyId = store.getLocalRegistrationId();
-
-		final DiscoveryModule discovery = jaxmpp.getModule(DiscoveryModule.class);
-		Log.i(TAG, "Checking own key published.");
-		discovery.getItems(JID.jidInstance(jid), "eu.siacs.conversations.axolotl.bundles:" + localKeyId,
-						   new DiscoveryModule.DiscoItemsAsyncCallback() {
-							   @Override
-							   public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
-									   throws XMLException {
-								   Log.d(TAG, "Received Bundle information");
-								   boolean found = false;
-								   for (DiscoveryModule.Item item : items) {
-									   found = found | (item.getName().equals("current") &&
-											   item.getJid().getBareJid().equals(jid));
-								   }
-								   if (!found) {
-									   Log.i(TAG, "Bundle has invalid structure?");
-									   try {
+			final DiscoveryModule discovery = jaxmpp.getModule(DiscoveryModule.class);
+			Log.i(TAG, "Checking own key published.");
+			discovery.getItems(JID.jidInstance(jid), "eu.siacs.conversations.axolotl.bundles:" + localKeyId,
+							   new DiscoveryModule.DiscoItemsAsyncCallback() {
+								   @Override
+								   public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+										   throws JaxmppException {
+									   Log.d(TAG, "Received Bundle error: " + error);
+									   if (error == XMPPException.ErrorCondition.item_not_found) {
+										   Log.i(TAG, "Local key is not published.");
 										   omemo.publishDeviceList();
-									   } catch (JaxmppException ignore) {
 									   }
 								   }
-							   }
 
-							   @Override
-							   public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-									   throws JaxmppException {
-								   Log.d(TAG, "Received Bundle error: " + error);
-								   if (error == XMPPException.ErrorCondition.item_not_found) {
-									   Log.i(TAG, "Local key is not published.");
-									   omemo.publishDeviceList();
+								   @Override
+								   public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
+										   throws XMLException {
+									   Log.d(TAG, "Received Bundle information");
+									   boolean found = false;
+									   for (DiscoveryModule.Item item : items) {
+										   found = found | (item.getName().equals("current") &&
+												   item.getJid().getBareJid().equals(jid));
+									   }
+									   if (!found) {
+										   Log.i(TAG, "Bundle has invalid structure?");
+										   try {
+											   omemo.publishDeviceList();
+										   } catch (JaxmppException ignore) {
+										   }
+									   }
 								   }
-							   }
 
-							   @Override
-							   public void onTimeout() throws JaxmppException {
-							   }
+								   @Override
+								   public void onTimeout() throws JaxmppException {
+								   }
 
-						   });
-
+							   });
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot check own OMEMO keys", e);
+		}
 	}
 
-	private void cleanOMEMO(final Jaxmpp jaxmpp) throws JaxmppException {
-		final BareJID jid = jaxmpp.getSessionObject().getUserBareJid();
+	public void cleanOMEMO(final Jaxmpp jaxmpp) {
+		try {
+			final BareJID jid = jaxmpp.getSessionObject().getUserBareJid();
 
-		final OMEMOStoreImpl store = (OMEMOStoreImpl) OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
-		final OmemoModule omemo = jaxmpp.getModule(OmemoModule.class);
-		final PubSubModule pubsub = jaxmpp.getModule(PubSubModule.class);
+			final OMEMOStoreImpl store = (OMEMOStoreImpl) OmemoModule.getSignalProtocolStore(jaxmpp.getSessionObject());
+			final OmemoModule omemo = jaxmpp.getModule(OmemoModule.class);
+			final PubSubModule pubsub = jaxmpp.getModule(PubSubModule.class);
 
-		store.reset(jid.toString());
+			store.reset(jid.toString());
 
-		pubsub.retrieveItem(jid, OmemoModule.DEVICELIST_NODE, new PubSubModule.RetrieveItemsAsyncCallback() {
-			@Override
-			public void onTimeout() throws JaxmppException {
-				Log.w(TAG, "Device list retrieve timeout");
-			}
-
-			@Override
-			protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
-								  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
-				if (errorCondition == XMPPException.ErrorCondition.item_not_found) {
-					retrievePublishedBoundles(jaxmpp, new ArrayList<>());
-				} else {
-					Log.w(TAG, "Device list retrieve error: " + errorCondition);
+			pubsub.retrieveItem(jid, OmemoModule.DEVICELIST_NODE, new PubSubModule.RetrieveItemsAsyncCallback() {
+				@Override
+				public void onTimeout() throws JaxmppException {
+					Log.w(TAG, "Device list retrieve timeout");
 				}
-			}
 
-			@Override
-			protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
-				try {
-					for (Item item : items) {
-						if (item.getId().equals("current")) {
-							final ArrayList<Integer> ids = new ArrayList<>();
-							for (Element dev : item.getPayload().getChildren("device")) {
-								ids.add(Integer.valueOf(dev.getAttribute("id")));
-							}
-							retrievePublishedBoundles(jaxmpp, ids);
-						}
+				@Override
+				protected void onEror(IQ response, XMPPException.ErrorCondition errorCondition,
+									  PubSubErrorCondition pubSubErrorCondition) throws JaxmppException {
+					if (errorCondition == XMPPException.ErrorCondition.item_not_found) {
+						retrievePublishedBoundles(jaxmpp, new ArrayList<>());
+					} else {
+						Log.w(TAG, "Device list retrieve error: " + errorCondition);
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
-			}
-		});
 
+				@Override
+				protected void onRetrieve(IQ responseStanza, String nodeName, Collection<Item> items) {
+					try {
+						for (Item item : items) {
+							if (item.getId().equals("current")) {
+								final ArrayList<Integer> ids = new ArrayList<>();
+								for (Element dev : item.getPayload().getChildren("device")) {
+									ids.add(Integer.valueOf(dev.getAttribute("id")));
+								}
+								retrievePublishedBoundles(jaxmpp, ids);
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot clean OMEMO keys", e);
+		}
 	}
 
 	private void retrievePublishedBoundles(final Jaxmpp jaxmpp, ArrayList<Integer> publishedDeviceList)
@@ -234,6 +148,12 @@ public class OMEMOSyncService
 		final DiscoveryModule disco = jaxmpp.getModule(DiscoveryModule.class);
 		disco.getItems(JID.jidInstance(jaxmpp.getSessionObject().getUserBareJid()),
 					   new DiscoveryModule.DiscoItemsAsyncCallback() {
+						   @Override
+						   public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
+								   throws JaxmppException {
+							   Log.w(TAG, "Boundles list retrieve error: " + error);
+						   }
+
 						   @Override
 						   public void onInfoReceived(String attribute, ArrayList<DiscoveryModule.Item> items)
 								   throws XMLException {
@@ -249,12 +169,6 @@ public class OMEMOSyncService
 							   } catch (Exception e) {
 								   e.printStackTrace();
 							   }
-						   }
-
-						   @Override
-						   public void onError(Stanza responseStanza, XMPPException.ErrorCondition error)
-								   throws JaxmppException {
-							   Log.w(TAG, "Boundles list retrieve error: " + error);
 						   }
 
 						   @Override

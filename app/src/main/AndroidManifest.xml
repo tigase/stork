@@ -27,10 +27,6 @@
             android:supportsRtl="true"
             android:theme="@style/myActivityTheme">
         <service
-                android:name=".omemo.OMEMOSyncService"
-                android:exported="false">
-        </service>
-        <service
                 android:name=".conversations.chat.OMEMOStartService"
                 android:exported="false">
         </service>

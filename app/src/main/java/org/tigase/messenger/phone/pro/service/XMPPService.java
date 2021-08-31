@@ -776,10 +776,7 @@ public class XMPPService
 								onConnectTasks.add(new RejoinToMucRooms(jaxmpp.getSessionObject()));
 								onConnectTasks.add(
 										new FetchMessageArchiveMAM(XMPPService.this, jaxmpp.getSessionObject()));
-								onConnectTasks.add(() -> OMEMOSyncService.startCheckOwnKey(getApplicationContext(),
-																						   jaxmpp.getSessionObject()
-																								   .getUserBareJid()
-																								   .toString()));
+								onConnectTasks.add(() -> (new OMEMOSyncService()).checkOwnKeyPublished(jaxmpp));
 
 								jaxmpp.getSessionObject().setProperty("messenger#error", null);
 								setDisconnectionProblemDescription(jaxmpp.getSessionObject(), null);
@@ -932,6 +929,17 @@ public class XMPPService
 		return jaxmpp;
 	}
 
+	private OMEMOStore createOMEMOStore(final String omemoId, BareJID accountJid) {
+		final int id;
+		if (omemoId == null) {
+			id = KeyHelper.generateRegistrationId(true);
+		} else {
+			id = Integer.valueOf(omemoId);
+		}
+		return OMEMOStoreImpl.create(this, dbHelper, accountJid, id);
+//		return InMemoryOMEMOStoreImpl.create(this, dbHelper, accountJid, id);
+	}
+
 	private void disconnectAllJaxmpp(final boolean cleaning) {
 		setUsedNetworkType(-1);
 		// if (geolocationFeature != null) {
@@ -1031,18 +1039,6 @@ public class XMPPService
 				locked.remove(sessionObject);
 			}
 		}
-	}
-
-	private void updateLastAccountActivity(final String accountName) {
-		final long t = System.currentTimeMillis();
-
-		Jaxmpp jaxmpp = getJaxmpp(accountName);
-		if (jaxmpp == null || !jaxmpp.isConnected()) {
-			return;
-		}
-
-		Account account = AccountHelper.getAccount(mAccountManager, accountName);
-		mAccountManager.setUserData(account, AccountsConstants.FIELD_LAST_ACTIVITY, "" + t);
 	}
 
 	private void onNetworkChange(final NetworkInfo netInfo) {
@@ -1461,25 +1457,6 @@ public class XMPPService
 		return true;
 	}
 
-	private boolean updateMessageAsError(SessionObject sessionObject, Message message, ErrorElement error)
-			throws XMLException {
-		final Uri chatHistoryUri = Uri.parse(
-				ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
-						message.getFrom().getBareJid());
-		final String msgId = message.getId();
-
-		ContentValues values = new ContentValues();
-		values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT);
-
-		int r = getContentResolver().update(chatHistoryUri, values, DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=?",
-											new String[]{msgId});
-		if (r > 0) {
-			Log.d(TAG, "Msg marked as not sent id=" + msgId);
-			getApplicationContext().getContentResolver().notifyChange(chatHistoryUri, null);
-		}
-		return r != 0;
-	}
-
 	private void storeMucSysMsg(SessionObject sessionObject, Room room, String body) {
 		try {
 			if (body == null || body == null || room == null) {
@@ -1605,15 +1582,35 @@ public class XMPPService
 		dataRemover.removeUnusedData(this);
 	}
 
-	private OMEMOStore createOMEMOStore(final String omemoId, BareJID accountJid) {
-		final int id;
-		if (omemoId == null) {
-			id = KeyHelper.generateRegistrationId(true);
-		} else {
-			id = Integer.valueOf(omemoId);
+	private void updateLastAccountActivity(final String accountName) {
+		final long t = System.currentTimeMillis();
+
+		Jaxmpp jaxmpp = getJaxmpp(accountName);
+		if (jaxmpp == null || !jaxmpp.isConnected()) {
+			return;
 		}
-		return OMEMOStoreImpl.create(this, dbHelper, accountJid, id);
-//		return InMemoryOMEMOStoreImpl.create(this, dbHelper, accountJid, id);
+
+		Account account = AccountHelper.getAccount(mAccountManager, accountName);
+		mAccountManager.setUserData(account, AccountsConstants.FIELD_LAST_ACTIVITY, "" + t);
+	}
+
+	private boolean updateMessageAsError(SessionObject sessionObject, Message message, ErrorElement error)
+			throws XMLException {
+		final Uri chatHistoryUri = Uri.parse(
+				ChatProvider.CHAT_HISTORY_URI + "/" + sessionObject.getUserBareJid() + "/" +
+						message.getFrom().getBareJid());
+		final String msgId = message.getId();
+
+		ContentValues values = new ContentValues();
+		values.put(DatabaseContract.ChatHistory.FIELD_STATE, DatabaseContract.ChatHistory.STATE_OUT_NOT_SENT);
+
+		int r = getContentResolver().update(chatHistoryUri, values, DatabaseContract.ChatHistory.FIELD_STANZA_ID + "=?",
+											new String[]{msgId});
+		if (r > 0) {
+			Log.d(TAG, "Msg marked as not sent id=" + msgId);
+			getApplicationContext().getContentResolver().notifyChange(chatHistoryUri, null);
+		}
+		return r != 0;
 	}
 
 //	private void uploadFileAndSend(final String account, final Uri content, int chatId) {

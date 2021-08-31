@@ -47,14 +47,73 @@ import tigase.jaxmpp.core.client.eventbus.EventHandler;
 import tigase.jaxmpp.core.client.eventbus.EventListener;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.xmpp.modules.PingModule;
-import tigase.jaxmpp.core.client.xmpp.modules.omemo.OmemoModule;
 import tigase.jaxmpp.core.client.xmpp.modules.streammng.StreamManagementModule;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Stanza;
 
 public class ConnectionStatusesFragment
 		extends Fragment {
 
+	RecyclerView recyclerView;
+	private StatusesRecyclerViewAdapter adapter;
+	private final Runnable refreshRun = new Runnable() {
+		@Override
+		public void run() {
+			adapter.notifyDataSetChanged();
+		}
+	};
+	private final EventListener listener = new EventListener() {
+		@Override
+		public void onEvent(Event<? extends EventHandler> event) {
+			refresh();
+		}
+	};
+	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			super.onServiceConnected(name, service);
+			adapter.setMultiJaxmpp(getService().getMultiJaxmpp());
+			getService().getMultiJaxmpp().addListener(listener);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			getService().getMultiJaxmpp().remove(listener);
+			super.onServiceDisconnected(name);
+			adapter.setMultiJaxmpp(null);
+		}
+	};
 	private final OnListFragmentInteractionListener mListener = new OnListFragmentInteractionListener() {
+		@Override
+		public void onAckServer(String accountJID) {
+			Log.d("Status", "Ping " + accountJID);
+			if (mConnection == null) {
+				showInfo("Service is not started");
+				return;
+			}
+			final BareJID jid = BareJID.bareJIDInstance(accountJID);
+			Jaxmpp j = mConnection.getService().getJaxmpp(jid);
+			if (j == null) {
+				showInfo("Not connected with " + jid.getDomain());
+				return;
+			}
+
+			final StreamManagementModule pm = j.getModule(StreamManagementModule.class);
+			(new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					try {
+						pm.request(true);
+						pm.sendAck(true);
+						showInfo("ACK sent");
+					} catch (JaxmppException e) {
+						showInfo("Ping error: " + e.getMessage());
+					}
+					return null;
+				}
+			}).execute();
+
+		}
+
 		@Override
 		public void onPingServer(String accountJID) {
 			Log.d("Status", "Ping " + accountJID);
@@ -102,82 +161,15 @@ public class ConnectionStatusesFragment
 		}
 
 		@Override
-		public void onAckServer(String accountJID) {
-			Log.d("Status", "Ping " + accountJID);
-			if (mConnection == null) {
-				showInfo("Service is not started");
-				return;
-			}
-			final BareJID jid = BareJID.bareJIDInstance(accountJID);
-			Jaxmpp j = mConnection.getService().getJaxmpp(jid);
-			if (j == null) {
-				showInfo("Not connected with " + jid.getDomain());
-				return;
-			}
-
-			final StreamManagementModule pm = j.getModule(StreamManagementModule.class);
+		public void onRepublishOMEMO(String jid) {
 			(new AsyncTask<Void, Void, Void>() {
 				@Override
 				protected Void doInBackground(Void... params) {
-					try {
-						pm.request(true);
-						pm.sendAck(true);
-						showInfo("ACK sent");
-					} catch (JaxmppException e) {
-						showInfo("Ping error: " + e.getMessage());
-					}
+					final Jaxmpp j = mConnection.getService().getJaxmpp(jid);
+					(new OMEMOSyncService()).cleanOMEMO(j);
 					return null;
 				}
 			}).execute();
-
-		}
-
-		@Override
-		public void onRepublishOMEMO(String jid) {
-			OMEMOSyncService.startOMEMOClean(getContext(), jid);
-//			(new AsyncTask<Void, Void, Void>() {
-//				@Override
-//				protected Void doInBackground(Void... params) {
-//					try {
-//						Jaxmpp j = mConnection.getService().getJaxmpp(jid);
-//						j.getModule(OmemoModule.class).publishDeviceList();
-//					} catch (Exception e) {
-//						Log.w("ConnectionStatus", "Cannot publish", e);
-//						showInfo("Publish errior: " + e.getMessage());
-//					}
-//					return null;
-//				}
-//			}).execute();
-
-		}
-	};
-	RecyclerView recyclerView;
-	private StatusesRecyclerViewAdapter adapter;
-	private final MainActivity.XMPPServiceConnection mConnection = new MainActivity.XMPPServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			super.onServiceConnected(name, service);
-			adapter.setMultiJaxmpp(getService().getMultiJaxmpp());
-			getService().getMultiJaxmpp().addListener(listener);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			getService().getMultiJaxmpp().remove(listener);
-			super.onServiceDisconnected(name);
-			adapter.setMultiJaxmpp(null);
-		}
-	};
-	private final Runnable refreshRun = new Runnable() {
-		@Override
-		public void run() {
-			adapter.notifyDataSetChanged();
-		}
-	};
-	private final EventListener listener = new EventListener() {
-		@Override
-		public void onEvent(Event<? extends EventHandler> event) {
-			refresh();
 		}
 	};
 
@@ -255,9 +247,9 @@ public class ConnectionStatusesFragment
 
 	public interface OnListFragmentInteractionListener {
 
-		void onPingServer(String accountJID);
-
 		void onAckServer(String toString);
+
+		void onPingServer(String accountJID);
 
 		void onRepublishOMEMO(String accoutJID);
 	}
