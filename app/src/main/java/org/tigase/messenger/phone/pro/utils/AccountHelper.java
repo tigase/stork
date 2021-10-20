@@ -20,11 +20,12 @@ package org.tigase.messenger.phone.pro.utils;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import org.tigase.messenger.phone.pro.account.Authenticator;
 
 public class AccountHelper {
 
 	public static Account getAccount(AccountManager mAccountManager, String name) {
-		for (Account account : mAccountManager.getAccounts()) {
+		for (Account account : mAccountManager.getAccountsByType(Authenticator.ACCOUNT_TYPE)) {
 			if (account.name.equals(name)) {
 				return account;
 			}
