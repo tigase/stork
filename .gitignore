@@ -13,3 +13,6 @@
 /captures
 docs
 /app/release
+/app/google-services.json
+/app/free/
+/app/playstore/
