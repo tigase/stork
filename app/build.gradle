@@ -1,3 +1,6 @@
+repositories {
+	mavenCentral()
+}
 apply plugin: 'com.android.application'
 
 configurations {
@@ -6,15 +9,15 @@ configurations {
 }
 
 android {
-	compileSdkVersion 29
+	compileSdkVersion 31
 //	buildToolsVersion "27.0.3"
 
 	defaultConfig {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 29
-		targetSdkVersion 29
-		versionCode 93
-		versionName "3.2.2"
+		targetSdkVersion 30
+		versionCode 94
+		versionName "3.2.3"
 		multiDexEnabled true
 
 //		jackOptions {
@@ -80,25 +83,27 @@ android {
 dependencies {
 	implementation fileTree(include: ['*.jar'], dir: 'libs')
 	testImplementation 'junit:junit:4.13.2'
-	implementation 'tigase:jaxmpp-android:3.4.0'
-	implementation 'tigase:jaxmpp-muc:3.4.0'
-	implementation 'tigase:jaxmpp-chat:3.4.0'
-	implementation 'tigase:jaxmpp-deliveryreceipts:3.4.0'
-	implementation 'tigase:jaxmpp-presence:3.4.0'
-	implementation 'tigase:jaxmpp-roster:3.4.0'
-	implementation 'tigase:jaxmpp-registration:3.4.0'
-	implementation 'tigase:jaxmpp-vcard:3.4.0'
-	implementation 'tigase:jaxmpp-filetransfer:3.4.0'
-	implementation 'tigase:jaxmpp-socks5:3.4.0'
-	implementation 'tigase:jaxmpp-pubsub:3.4.0'
-	implementation 'tigase:jaxmpp-im:3.4.0'
-	implementation 'tigase:jaxmpp-core:3.4.0'
-	implementation 'tigase:jaxmpp-adhoc:3.4.0'
-	implementation 'tigase:jaxmpp-push:3.4.0'
-	implementation 'tigase:jaxmpp-xep0136:3.4.0'
-	implementation 'tigase:jaxmpp-mam:3.4.0'
-	implementation 'tigase:jaxmpp-httpfileupload:3.4.0'
-	implementation 'tigase:jaxmpp-omemo:3.4.0'
+	implementation "tigase:jaxmpp-android:$jaxmppVersion"
+	implementation "tigase:jaxmpp-j2se:$jaxmppVersion"
+	implementation 'tigase:tigase-xmltools:4.0.1'
+	implementation "tigase:jaxmpp-muc:$jaxmppVersion"
+	implementation "tigase:jaxmpp-chat:$jaxmppVersion"
+	implementation "tigase:jaxmpp-deliveryreceipts:$jaxmppVersion"
+	implementation "tigase:jaxmpp-presence:$jaxmppVersion"
+	implementation "tigase:jaxmpp-roster:$jaxmppVersion"
+	implementation "tigase:jaxmpp-registration:$jaxmppVersion"
+	implementation "tigase:jaxmpp-vcard:$jaxmppVersion"
+	implementation "tigase:jaxmpp-filetransfer:$jaxmppVersion"
+	implementation "tigase:jaxmpp-socks5:$jaxmppVersion"
+	implementation "tigase:jaxmpp-pubsub:$jaxmppVersion"
+	implementation "tigase:jaxmpp-im:$jaxmppVersion"
+	implementation "tigase:jaxmpp-core:$jaxmppVersion"
+	implementation "tigase:jaxmpp-adhoc:$jaxmppVersion"
+	implementation "tigase:jaxmpp-push:$jaxmppVersion"
+	implementation "tigase:jaxmpp-xep0136:$jaxmppVersion"
+	implementation "tigase:jaxmpp-mam:$jaxmppVersion"
+	implementation "tigase:jaxmpp-httpfileupload:$jaxmppVersion"
+	implementation "tigase:jaxmpp-omemo:$jaxmppVersion"
 	implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
 	implementation 'org.webrtc:google-webrtc:1.0.32006'
 	playstoreImplementation('com.google.firebase:firebase-messaging:22.0.0')
