@@ -16,3 +16,5 @@ docs
 /app/google-services.json
 /app/free/
 /app/playstore/
+documentation/src/restructured/_build
+documentation/src/restructured/locale/*/LC_MESSAGES/*.mo
