@@ -1,7 +1,7 @@
- .. _accountManagement:
+.. _accountManagement:
 
- Account Management 
- ===================
+Account Management 
+===================
 
 Welcome to the Account Management section of the Tigase Messenger for Android documentation. All features in this section are accessible through the accounts section of Tigase Messenger for Android, or through Android’s Account Management in Settings.
 
