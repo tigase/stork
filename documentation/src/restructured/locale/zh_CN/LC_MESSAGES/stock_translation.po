@@ -5,20 +5,24 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: TigaseDoc\n"
+"Project-Id-Version:  TigaseDoc\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-11-07 11:32-0800\n"
 "PO-Revision-Date: 2022-11-10 22:49+0000\n"
 "Last-Translator: Qian Luo <qian.luo@tigase.net>\n"
-"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects/"
-"tigase-stork/tigase-stork/zh_Hans/>\n"
 "Language: zh_CN\n"
+"Language-Team: Chinese (Simplified) <http://translate.tigase.net/projects"
+"/tigase-stork/tigase-stork/zh_Hans/>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.11.2\n"
 "Generated-By: Babel 2.10.3\n"
+
+#: ../../Account_Management.rst:4
+#, fuzzy
+msgid "Account Management"
+msgstr "**多账户管理**"
 
 #: ../../Account_Management.rst:6
 msgid ""
@@ -27,9 +31,8 @@ msgid ""
 "through the accounts section of Tigase Messenger for Android, or through "
 "Android’s Account Management in Settings."
 msgstr ""
-"欢迎来到 Tigase Messenger for Android 文档的帐户管理部分。"
-"此部分中的所有功能都可以通过 Tigase Messenger for Android 的帐户部分或通过 "
-"Android 设置中的帐户管理访问。"
+"欢迎来到 Tigase Messenger for Android 文档的帐户管理部分。此部分中的所有功能都可以通过 Tigase "
+"Messenger for Android 的帐户部分或通过 Android 设置中的帐户管理访问。"
 
 #: ../../Account_Management.rst:8
 msgid ""
@@ -41,7 +44,7 @@ msgstr "看到帐户屏幕后，点击您要配置的帐户。到达那里后，
 msgid "|AccountProperties|"
 msgstr "|AccountProperties|"
 
-#: ../../Account_Management.rst:96
+#: ../../Account_Management.rst:99
 msgid "AccountProperties"
 msgstr "AccountProperties"
 
@@ -56,85 +59,90 @@ msgid ""
 msgstr "**帐户属性** 列出您正在调整设置的帐户。"
 
 #: ../../Account_Management.rst:16
+#, fuzzy
 msgid ""
 "Tapping the user icon will allow you to set vCard data which will allow "
 "you to fill in some personal information as well as set a user photo. "
 "|vCard|"
-msgstr "点击用户图标将允许您设置 vCard "
-"数据，这将允许您填写一些个人信息以及设置用户照片。 |vCard|"
+msgstr ""
+"点击用户图标将允许您设置 vCard 数据，这将允许您填写一些个人信息以及设置用户照片。\n"
+"|vCard|"
 
-#: ../../Account_Management.rst:97
+#: ../../Account_Management.rst:18
+#, fuzzy
+msgid "|vCard|"
+msgstr "vCard"
+
+#: ../../Account_Management.rst:100
 msgid "vCard"
 msgstr "vCard"
 
-#: ../../Account_Management.rst:19
+#: ../../Account_Management.rst:22
 msgid "Enabled"
 msgstr "启用"
 
-#: ../../Account_Management.rst:21
+#: ../../Account_Management.rst:24
 msgid ""
 "This enables or disables the account you are adjusting. If an account is "
 "disabled, it will not update presence information, receive messages, or "
 "receive push notifications."
-msgstr "这将启用或禁用您正在调整的帐户。如果帐户被禁用，它将不会更新状态信息、接收消"
-"息或接收推送通知。"
+msgstr "这将启用或禁用您正在调整的帐户。如果帐户被禁用，它将不会更新状态信息、接收消息或接收推送通知。"
 
-#: ../../Account_Management.rst:25
+#: ../../Account_Management.rst:28
 msgid "Change Account settings"
 msgstr "更改帐户设置"
 
-#: ../../Account_Management.rst:27
+#: ../../Account_Management.rst:30
 msgid "This allows you to change some settings for the account:"
 msgstr "这允许您更改帐户的一些设置："
 
-#: ../../Account_Management.rst:30
+#: ../../Account_Management.rst:33
 msgid "Password"
 msgstr "密码"
 
-#: ../../Account_Management.rst:32
+#: ../../Account_Management.rst:35
 msgid ""
 "Allows you to change the password on the device. This is only if you need"
 " to change the password, it will not change the password to your XMPP "
 "account."
-msgstr "允许您更改设备上的密码。这仅当您需要更改密码时，它不会更改您的 XMPP "
-"帐户的密码。"
+msgstr "允许您更改设备上的密码。这仅当您需要更改密码时，它不会更改您的 XMPP 帐户的密码。"
 
-#: ../../Account_Management.rst:35
+#: ../../Account_Management.rst:38
 msgid "Hostname"
 msgstr "主机名"
 
-#: ../../Account_Management.rst:37
+#: ../../Account_Management.rst:40
 msgid ""
 "By default the hostname will be the root of your username (server.com of "
 "user@server.com). However, you can specify a FQDN or an IP address if you"
 " wish to connect directly."
 msgstr ""
-"默认情况下，主机名将是您用户名的根目录（user@server.com 的 server."
-"com）。但是，如果您希望直接连接，可以指定 FQDN 或 IP 地址。"
+"默认情况下，主机名将是您用户名的根目录（user@server.com 的 server.com）。但是，如果您希望直接连接，可以指定 FQDN "
+"或 IP 地址。"
 
-#: ../../Account_Management.rst:41
+#: ../../Account_Management.rst:44
 msgid "Resource"
 msgstr "资源"
 
-#: ../../Account_Management.rst:43
+#: ../../Account_Management.rst:46
 msgid ""
 "This will change the resource name of your JID. The resource is the part "
 "after a slash that can denote different devices of the same account. So "
 "user@server.com/stork shows TigaseMessenger is the resource (which is set"
 " by default)."
 msgstr ""
-"这将更改 JID 的资源名称。资源是斜线后面的部分，可以表示同一帐户的不同设备。"
-"所以 user@server.com/stork 显示 TigaseMessenger 是资源（默认设置）。"
+"这将更改 JID 的资源名称。资源是斜线后面的部分，可以表示同一帐户的不同设备。所以 user@server.com/stork 显示 "
+"TigaseMessenger 是资源（默认设置）。"
 
-#: ../../Account_Management.rst:46
+#: ../../Account_Management.rst:49
 msgid "Resource priority"
 msgstr "资源优先级"
 
-#: ../../Account_Management.rst:49
+#: ../../Account_Management.rst:52
 msgid "Automatic Priorities"
 msgstr "自动优先级"
 
-#: ../../Account_Management.rst:51
+#: ../../Account_Management.rst:54
 msgid ""
 "By default this is enabled, which lets Tigase Messenger for Android set "
 "appropriate levels the different statuses. Priorities will dictate which "
@@ -143,42 +151,39 @@ msgid ""
 "of a lower priority. For most users, we recommend to keep this function "
 "enabled."
 msgstr ""
-"默认情况下，这是启用的，这让 Tigase Messenger for Android 可以为不同的状态设"
-"置适当的级别。优先级将决定在将消息发送给没有资源的用户时哪个资源会收到消息。"
-"具有较高优先级的设备将在较低优先级的设备之前先收到消息。对于大多数用户，我们"
-"建议保持启用此功能。"
+"默认情况下，这是启用的，这让 Tigase Messenger for Android "
+"可以为不同的状态设置适当的级别。优先级将决定在将消息发送给没有资源的用户时哪个资源会收到消息。具有较高优先级的设备将在较低优先级的设备之前先收到消息。对于大多数用户，我们建议保持启用此功能。"
 
-#: ../../Account_Management.rst:55
+#: ../../Account_Management.rst:58
 msgid "Custom Resource Priorities"
 msgstr "自定义资源优先级"
 
-#: ../../Account_Management.rst:57
+#: ../../Account_Management.rst:60
 msgid ""
 "If you wish to set your own priority for each status you may tap this "
 "section."
 msgstr "如果您希望为每个状态设置自己的优先级，您可以点击此部分。"
 
-#: ../../Account_Management.rst:59
+#: ../../Account_Management.rst:62
 msgid "|CustomPriorities|"
 msgstr "|CustomPriorities|"
 
-#: ../../Account_Management.rst:98
+#: ../../Account_Management.rst:101
 msgid "CustomPriorities"
 msgstr "CustomPriorities"
 
-#: ../../Account_Management.rst:63
+#: ../../Account_Management.rst:66
 msgid ""
 "You should only set your own priorities if you wish to change normal "
 "message delivery behavior. Improper priority settings could drastically "
 "affect how the application behaves!"
-msgstr "如果您希望更改通常的消息传递行为，您应该只设置自己的优先级。不正确的优先级设"
-"置可能会极大地影响应用程序的行为！"
+msgstr "如果您希望更改通常的消息传递行为，您应该只设置自己的优先级。不正确的优先级设置可能会极大地影响应用程序的行为！"
 
-#: ../../Account_Management.rst:66
+#: ../../Account_Management.rst:69
 msgid "Push Notifications"
 msgstr "推送通知"
 
-#: ../../Account_Management.rst:68
+#: ../../Account_Management.rst:71
 msgid ""
 "Whether to enable or disable push notifications to the device. :ref:`Push"
 " Notifications<tmPush>` are described in a separate section of this "
@@ -186,15 +191,14 @@ msgid ""
 "has an active & online account. Disabled or offline accounts will not "
 "receive push notifications."
 msgstr ""
-"是否启用或禁用向设备推送通知。 :ref:`Push Notifications<tmPush>` 在本指南的单"
-"独部分中进行了描述。注意：推送通知只会发送到具有活动和在线帐户的设备。禁用或"
-"离线帐户将不会收到推送通知。"
+"是否启用或禁用向设备推送通知。 :ref:`Push Notifications<tmPush>` "
+"在本指南的单独部分中进行了描述。注意：推送通知只会发送到具有活动和在线帐户的设备。禁用或离线帐户将不会收到推送通知。"
 
-#: ../../Account_Management.rst:72
+#: ../../Account_Management.rst:75
 msgid "Message Archiving"
 msgstr "消息归档"
 
-#: ../../Account_Management.rst:74
+#: ../../Account_Management.rst:77
 msgid ""
 "If the connected server supports it, you may use the Message Archive "
 "functionality to retrieve sent and received messages to the configured "
@@ -202,40 +206,38 @@ msgid ""
 "Contacts (only contacts in your roster) or all conversations to your "
 "resource. Disabled will rely on the local storage when available."
 msgstr ""
-"如果连接的服务器支持它，您可以使用消息存档功能将发送和接收的消息检索到配置的"
-"资源。启用后，您可以从名册联系人（仅限名册中的联系人）下载消息，也可以将所有"
-"对话下载到您的资源。 Disabled 将在可用时依赖本地存储。"
+"如果连接的服务器支持它，您可以使用消息存档功能将发送和接收的消息检索到配置的资源。启用后，您可以从名册联系人（仅限名册中的联系人）下载消息，也可以将所有对话下载到您的资源。"
+" Disabled 将在可用时依赖本地存储。"
 
-#: ../../Account_Management.rst:78
+#: ../../Account_Management.rst:81
 msgid "Automatic synchronization"
 msgstr "自动同步"
 
-#: ../../Account_Management.rst:80
+#: ../../Account_Management.rst:83
 msgid "This will turn on fetching messages from message archive on the server."
 msgstr "这将打开服务器上消息存档的消息。"
 
-#: ../../Account_Management.rst:84
+#: ../../Account_Management.rst:87
 msgid "Synchronization"
 msgstr "同步"
 
-#: ../../Account_Management.rst:86
+#: ../../Account_Management.rst:89
 msgid "How far back will the application retrieve messages from message archive."
 msgstr "应用程序将从消息存档中检索消息的时间。"
 
-#: ../../Account_Management.rst:89
+#: ../../Account_Management.rst:92
 msgid "Others"
 msgstr "其他"
 
-#: ../../Account_Management.rst:92
+#: ../../Account_Management.rst:95
 msgid "Nickname"
 msgstr "昵称"
 
-#: ../../Account_Management.rst:94
+#: ../../Account_Management.rst:97
 msgid ""
 "Changing this will change your displayed nickname to other users, for "
 "those without a custom name, this name will appear on their contact list."
-msgstr "更改此设置会将您显示的昵称更改为其他用户，对于那些没有自定义名称的用户，此名"
-"称将出现在他们的联系人列表中。"
+msgstr "更改此设置会将您显示的昵称更改为其他用户，对于那些没有自定义名称的用户，此名称将出现在他们的联系人列表中。"
 
 #: ../../Advanced_Settings.rst:4
 msgid "Tigase Messenger Push Notifications"
@@ -246,8 +248,7 @@ msgid ""
 "This section contains information about advanced settings and options "
 "that are available to the application, but may not be typically "
 "considered for users."
-msgstr "本节包含有关应用程序可用的高级设置和选项的信息，但用户通常不会考虑这些设置和"
-"选项。"
+msgstr "本节包含有关应用程序可用的高级设置和选项的信息，但用户通常不会考虑这些设置和选项。"
 
 #: ../../Advanced_Settings.rst:9
 msgid "Push Component Support"
@@ -260,9 +261,8 @@ msgid ""
 "notifications even when the program is closed from inactivity or memory "
 "management."
 msgstr ""
-"Tigase Messenger for Android 支持 `XEP-0357 Push Notifications <https://xmpp."
-"org/extensions/xep-0357."
-"html>`__，即使程序因不活动或内存管理而关闭，它也会收到通知。"
+"Tigase Messenger for Android 支持 `XEP-0357 Push Notifications "
+"<https://xmpp.org/extensions/xep-0357.html>`__，即使程序因不活动或内存管理而关闭，它也会收到通知。"
 
 #: ../../Advanced_Settings.rst:15
 msgid "Push notifications will not work if the user is offline."
@@ -273,8 +273,7 @@ msgid ""
 "Servers will be checked for Push support in the accounts management "
 "section of the application. If it is supported, you will be able to "
 "enable push notifications."
-msgstr "将在应用程序的帐户管理部分检查服务器是否支持推送。如果支持，您将能够启用推送"
-"通知。"
+msgstr "将在应用程序的帐户管理部分检查服务器是否支持推送。如果支持，您将能够启用推送通知。"
 
 #: ../../Advanced_Settings.rst:19
 msgid ""
@@ -288,8 +287,8 @@ msgid ""
 "section. Tigase push component has a specific ad-hoc command known as "
 "``register-device`` for this purpose."
 msgstr ""
-"这可以通过激活帐户管理部分中的推送支持来完成。 Tigase "
-"推送组件有一个特定的临时命令，称为 ``register-device`` 用于此目的。"
+"这可以通过激活帐户管理部分中的推送支持来完成。 Tigase 推送组件有一个特定的临时命令，称为 ``register-device`` "
+"用于此目的。"
 
 #: ../../Advanced_Settings.rst:23
 msgid ""
@@ -297,8 +296,8 @@ msgid ""
 "command, using the ``unregister-device`` command on the Tigase push "
 "component. To send this, disable push notifications on your device."
 msgstr ""
-"设备的注销可以通过类似的 ad-hoc 命令完成，使用 Tigase 推送组件上的 "
-"``unregister-device`` 命令。要发送此信息，请在您的设备上禁用推送通知。"
+"设备的注销可以通过类似的 ad-hoc 命令完成，使用 Tigase 推送组件上的 ``unregister-device`` "
+"命令。要发送此信息，请在您的设备上禁用推送通知。"
 
 #: ../../Advanced_Settings.rst:25
 msgid ""
@@ -306,15 +305,14 @@ msgid ""
 "`push component documentation <http://docs.tigase.org/tigase-"
 "push/snapshot/Tigase_Push_Notifications_Guide/html/>`__."
 msgstr ""
-"有关推送组件及其功能的更多信息，请访问 `推送组件文档 <http://docs.tigase.org/"
-"tigase-push/snapshot/Tigase_Push_Notifications_Guide/html/>`__。"
+"有关推送组件及其功能的更多信息，请访问 `推送组件文档 <http://docs.tigase.org/tigase-"
+"push/snapshot/Tigase_Push_Notifications_Guide/html/>`__。"
 
 #: ../../Advanced_Settings.rst:29
 msgid ""
 "Push functionality is ONLY available on Tigase services, or servers "
 "running a probably configured Tigase Push component."
-msgstr "推送功能 **仅** 在 Tigase 服务或运行可能配置的 Tigase "
-"推送组件的服务器上可用。"
+msgstr "推送功能 **仅** 在 Tigase 服务或运行可能配置的 Tigase 推送组件的服务器上可用。"
 
 #: ../../Advanced_Settings.rst:33
 msgid "Links"
@@ -325,8 +323,8 @@ msgid ""
 "Drop by our `forum <https://projects.tigase.org/projects/tigase-"
 "mobilemessenger/boards>`__ to discuss **Tigase Messenger**."
 msgstr ""
-"访问我们的 `论坛 <https://projects.tigase.org/projects/"
-"tigase-mobilemessenger/boards>`__ 讨论 **Tigase Messenger**。"
+"访问我们的 `论坛 <https://projects.tigase.org/projects/tigase-"
+"mobilemessenger/boards>`__ 讨论 **Tigase Messenger**。"
 
 #: ../../Advanced_Settings.rst:37
 msgid "Our other `projects <https://projects.tigase.org/>`__."
@@ -346,12 +344,10 @@ msgid ""
 "you can use Tigase Messenger for Android to register a new account on "
 "sure.im, Tigase.im, or jabber.today for free and get chatting!"
 msgstr ""
-"**Tigase Messenger for Android** 是一个与 XMPP "
-"服务和服务器一起使用的移动聊天客户端。完全改版的 v3.0 现在具有新的功能、"
-"更好的设计并和 Google 集成。 Tigase Messenger for Android 支持任何 XMPP "
-"服务器，从sure.im 或 Tigase.im 等免费服务到您可以自己托管的服务器。"
-"如果您没有 XMPP 帐户，您可以使用 Android 版 Tigase Messenger 在sure.im、"
-"Tigase.im 或 jabber.today 上免费注册一个新帐户并开始聊天！"
+"**Tigase Messenger for Android** 是一个与 XMPP 服务和服务器一起使用的移动聊天客户端。完全改版的 v3.0 "
+"现在具有新的功能、更好的设计并和 Google 集成。 Tigase Messenger for Android 支持任何 XMPP "
+"服务器，从sure.im 或 Tigase.im 等免费服务到您可以自己托管的服务器。如果您没有 XMPP 帐户，您可以使用 Android 版 "
+"Tigase Messenger 在sure.im、Tigase.im 或 jabber.today 上免费注册一个新帐户并开始聊天！"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:8
 msgid "Features"
@@ -368,10 +364,7 @@ msgid ""
 " battery and data use when you are idle. If you are traveling through an "
 "area of poor reception, you will only reconnect when you take out your "
 "phone."
-msgstr ""
-"在您使用（或不使用）手机时自动设置您的状态。当您的手机空闲时，您的设备将无法"
-"获取在线信息，从而在您空闲时降低电池和数据使用量。如果您在接收信号不佳的地区"
-"旅行，您只有在拿出手机后才能重新连接。"
+msgstr "在您使用（或不使用）手机时自动设置您的状态。当您的手机空闲时，您的设备将无法获取在线信息，从而在您空闲时降低电池和数据使用量。如果您在接收信号不佳的地区旅行，您只有在拿出手机后才能重新连接。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst
 msgid "**Push Message Support**"
@@ -437,7 +430,7 @@ msgstr "打开 Play 商店并搜索 Tigase。"
 msgid "|Search|"
 msgstr "|Search|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:256
+#: ../../Tigase_Android_Message_User_Guide.rst:257
 msgid "Search"
 msgstr "Search"
 
@@ -449,7 +442,7 @@ msgstr "选择 Tigase Messenger。"
 msgid "|Install|"
 msgstr "|Install|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:257
+#: ../../Tigase_Android_Message_User_Guide.rst:258
 msgid "Install"
 msgstr "Install"
 
@@ -475,14 +468,13 @@ msgstr "创建帐户"
 msgid ""
 "When you first load Tigase Messenger, you will be presented with our logo"
 " and a button asking if you have an XMPP account, or to create a new one."
-msgstr "当您第一次加载 Tigase Messenger 时，您会看到我们的徽标和一个按钮，"
-"询问您是否有 XMPP 帐户，或者创建一个新帐户。"
+msgstr "当您第一次加载 Tigase Messenger 时，您会看到我们的徽标和一个按钮，询问您是否有 XMPP 帐户，或者创建一个新帐户。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:54
 msgid "|Welcome|"
 msgstr "|Welcome|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:258
+#: ../../Tigase_Android_Message_User_Guide.rst:259
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -494,7 +486,7 @@ msgstr "如果您选择创建帐户，您将被带到下一个屏幕。"
 msgid "|Register|"
 msgstr "|Register|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:259
+#: ../../Tigase_Android_Message_User_Guide.rst:260
 msgid "Register"
 msgstr "Register"
 
@@ -517,7 +509,7 @@ msgstr "在继续下一步之前，应用程序将检查自定义域或其他列
 msgid "|Register2|"
 msgstr "|Register2|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:260
+#: ../../Tigase_Android_Message_User_Guide.rst:261
 msgid "Register2"
 msgstr "Register2"
 
@@ -528,16 +520,14 @@ msgid ""
 "``exampleuser`` at the tigase.im domain, the full username for your XMPP "
 "account will be ``exampleuser@tigase.im``."
 msgstr ""
-"输入您希望使用的用户名和密码。请注意，用户名将附加@domain.com 后缀，"
-"因此如果您在 tigase.im 域中输入 ``exampleuser`` ，则您的 XMPP "
-"帐户的完整用户名将是 ``exampleuser@tigase.im``。"
+"输入您希望使用的用户名和密码。请注意，用户名将附加@domain.com 后缀，因此如果您在 tigase.im 域中输入 "
+"``exampleuser`` ，则您的 XMPP 帐户的完整用户名将是 ``exampleuser@tigase.im``。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:68
 msgid ""
 "Also be sure to include a valid E-mail so server administrators, or "
 "password reset functionality can reach you outside XMPP."
-msgstr "还要确保包含有效的电子邮件，以便服务器管理员或密码重置功能可以在 XMPP "
-"之外与您联系。"
+msgstr "还要确保包含有效的电子邮件，以便服务器管理员或密码重置功能可以在 XMPP 之外与您联系。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:70
 msgid ""
@@ -557,9 +547,8 @@ msgid ""
 "information is saved, you will be returned to the roster screen. You will"
 " need to set your status to online to have the application login."
 msgstr ""
-"如果您在 XMPP 服务上有一个现有帐户，请点击 **I have an XMPP account** 并输入"
-"您的凭据信息。该应用程序将在将凭据保存到设备之前对其进行测试。信息保存后，您"
-"将返回到花名册屏幕。您需要将您的状态设置为在线才能让应用程序登录。"
+"如果您在 XMPP 服务上有一个现有帐户，请点击 **I have an XMPP account** "
+"并输入您的凭据信息。该应用程序将在将凭据保存到设备之前对其进行测试。信息保存后，您将返回到花名册屏幕。您需要将您的状态设置为在线才能让应用程序登录。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:77
 msgid ""
@@ -584,48 +573,51 @@ msgid ""
 "The first section allows you to select your status to let other contacts "
 "know if you are online, away, busy etc.. To change status, tap the "
 "current status and select one from the pop up list."
-msgstr "第一部分允许您选择您的状态，让其他联系人知道您是否在线、离开、忙碌等。要更改"
-"状态，请点击当前状态并从弹出列表中选择一个。"
+msgstr "第一部分允许您选择您的状态，让其他联系人知道您是否在线、离开、忙碌等。要更改状态，请点击当前状态并从弹出列表中选择一个。"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:89
 msgid "|Status|"
 msgstr "|Status|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:186
-#: ../../Tigase_Android_Message_User_Guide.rst:261
+#: ../../Tigase_Android_Message_User_Guide.rst:187
+#: ../../Tigase_Android_Message_User_Guide.rst:262
 msgid "Status"
 msgstr "Status"
 
 #: ../../Tigase_Android_Message_User_Guide.rst:91
+#, fuzzy
 msgid ""
 "Note that if you are offline, other users will be unable to send you "
-"messages, and you will receive no notifications. Chat View ^^^^^^^^^^"
-msgstr "请注意，如果您处于离线状态，其他用户将无法向您发送消息，您也不会收到任何通知"
-"。"
+"messages, and you will receive no notifications."
+msgstr "请注意，如果您处于离线状态，其他用户将无法向您发送消息，您也不会收到任何通知。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:95
+#: ../../Tigase_Android_Message_User_Guide.rst:94
+#, fuzzy
+msgid "Chat View"
+msgstr "群聊视图"
+
+#: ../../Tigase_Android_Message_User_Guide.rst:96
 msgid ""
 "This view will show all your recent chats. All active chats, chats that "
 "have not been archived, and any groupchats you are a part of will be "
 "listed here."
-msgstr "此视图将显示您最近的所有聊天记录。所有活动聊天、尚未存档的聊天以及您参与的任"
-"何群聊都将在此处列出。"
+msgstr "此视图将显示您最近的所有聊天记录。所有活动聊天、尚未存档的聊天以及您参与的任何群聊都将在此处列出。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:97
+#: ../../Tigase_Android_Message_User_Guide.rst:98
 msgid ""
 "To close any chat, long-press the chat you wish to remove, and you will "
 "have the following shown:"
 msgstr "要关闭任何聊天，请长按您要删除的聊天，您将看到以下内容："
 
-#: ../../Tigase_Android_Message_User_Guide.rst:99
+#: ../../Tigase_Android_Message_User_Guide.rst:100
 msgid "|LongPressChat|"
 msgstr "|LongPressChat|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:262
+#: ../../Tigase_Android_Message_User_Guide.rst:263
 msgid "LongPressChat"
 msgstr "LongPressChat"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:101
+#: ../../Tigase_Android_Message_User_Guide.rst:102
 msgid ""
 "You have two options to select, you may archive the chat by tapping "
 "|Archive| This will close the chat from this menu, but the chat will be "
@@ -633,97 +625,93 @@ msgid ""
 "local storage - handy if message archiving is not enabled on the server "
 "you are connected too."
 msgstr ""
-"您有两个选项可供选择，您可以通过点击 |Archive| "
-"存档聊天。这将从此菜单关闭聊天，但下次您从本地存储中的名单中打开聊天窗口时，"
-"聊天将被保留 - 如果您连接的服务器上也未启用消息存档，则很方便。"
+"您有两个选项可供选择，您可以通过点击 |Archive| 存档聊天。这将从此菜单关闭聊天，但下次您从本地存储中的名单中打开聊天窗口时，聊天将被保留"
+" - 如果您连接的服务器上也未启用消息存档，则很方便。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:263
+#: ../../Tigase_Android_Message_User_Guide.rst:264
 msgid "Archive"
 msgstr "存档"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:103
+#: ../../Tigase_Android_Message_User_Guide.rst:104
 msgid ""
 "If you just want to remove the chat, and not save it locally, tap "
 "|DeleteChat| and it will be removed from the device."
-msgstr "如果您只想删除聊天，而不是将其保存在本地，请点击 |DeleteChat| "
-"它将从设备中删除。"
+msgstr "如果您只想删除聊天，而不是将其保存在本地，请点击 |DeleteChat| 它将从设备中删除。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:264
+#: ../../Tigase_Android_Message_User_Guide.rst:265
 msgid "DeleteChat"
 msgstr "DeleteChat"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:105
+#: ../../Tigase_Android_Message_User_Guide.rst:106
 msgid ""
 "For groupchats, long pressing on the chatroom will provide you for the "
 "ability to leave the room after tapping the …​ icon in the top right."
 msgstr "对于群聊，长按聊天室将使您能够在点击右上角的…​ 图标后离开房间。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:107
+#: ../../Tigase_Android_Message_User_Guide.rst:108
 msgid "|LeaveRoom|"
 msgstr "|LeaveRoom|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:265
+#: ../../Tigase_Android_Message_User_Guide.rst:266
 msgid "LeaveRoom"
 msgstr "LeaveRoom"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:109
+#: ../../Tigase_Android_Message_User_Guide.rst:110
 msgid ""
 "For a new chat, tapping the compose icon will show you the roster view, "
 "from which you can select a user to begin a conversation."
 msgstr "对于新的聊天，点击撰写图标将显示花名册视图，您可以从中选择一个用户开始对话。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:112
+#: ../../Tigase_Android_Message_User_Guide.rst:113
 msgid "Groupchat View"
 msgstr "群聊视图"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:114
+#: ../../Tigase_Android_Message_User_Guide.rst:115
 msgid ""
 "The groupchat view will display the current conversation, you may scroll "
 "and look back on the chat if the server supports it. You may also tap the"
 " …​ icon to send a file to all participants if the server supports it. "
 "(If it does not, you will not be able to send a file.)"
 msgstr ""
-"群聊视图将显示当前对话，如果服务器支持，您可以滚动并回顾聊天。如果服务器支持"
-"，您也可以点击 ...​ 图标将文件发送给所有参与者。 "
+"群聊视图将显示当前对话，如果服务器支持，您可以滚动并回顾聊天。如果服务器支持，您也可以点击 ...​ 图标将文件发送给所有参与者。 "
 "（如果没有，您将无法发送文件。）"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:116
+#: ../../Tigase_Android_Message_User_Guide.rst:117
 msgid "|MUC|"
 msgstr "|MUC|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:266
+#: ../../Tigase_Android_Message_User_Guide.rst:267
 msgid "MUC"
 msgstr "MUC"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:120
+#: ../../Tigase_Android_Message_User_Guide.rst:121
 msgid "You will only be able to leave the room from the Chats view."
 msgstr "您只能从聊天视图离开房间。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:123
+#: ../../Tigase_Android_Message_User_Guide.rst:124
 msgid "Contacts view"
 msgstr "联系人视图"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:125
+#: ../../Tigase_Android_Message_User_Guide.rst:126
 msgid "|Roster|"
 msgstr "|Roster|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:267
+#: ../../Tigase_Android_Message_User_Guide.rst:268
 msgid "Roster"
 msgstr "Roster"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:127
+#: ../../Tigase_Android_Message_User_Guide.rst:128
 msgid ""
 "The roster will show all contacts in your roster retrieved from the "
 "server you login from. You will have a combined roster if you have "
 "multiple accounts logged in at the same time."
-msgstr "名册将显示从您登录的服务器检索到的名册中的所有联系人。如果您有多个帐户同时登"
-"录，您将拥有一个组合名册。"
+msgstr "名册将显示从您登录的服务器检索到的名册中的所有联系人。如果您有多个帐户同时登录，您将拥有一个组合名册。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:129
+#: ../../Tigase_Android_Message_User_Guide.rst:130
 msgid "To initiate a chat with a contact, simply tap their contact name."
 msgstr "要启动与联系人的聊天，只需点击他们的联系人姓名。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:131
+#: ../../Tigase_Android_Message_User_Guide.rst:132
 msgid ""
 "To add a contact to your roster, tap the \"+\" button at the bottom right"
 " and fill out the appropriate forms. They will be added to your roster "
@@ -732,278 +720,269 @@ msgid ""
 "accept the add request when it shows up in your notifications window. "
 "Once that happens, their status will be shown in your roster."
 msgstr ""
-"要将联系人添加到您的名册，请点击右下角的\"+\" 按钮并填写相应的表格。他们将被"
-"添加到您的名册中，并且将向他们发送出席信息订阅请求。如果用户接受您的请求，他"
-"们可能会将您添加回来。发生这种情况时，请在通知窗口中显示添加请求时接受它。一"
-"旦发生这种情况，他们的状态将显示在您的名册中。"
+"要将联系人添加到您的名册，请点击右下角的\"+\" "
+"按钮并填写相应的表格。他们将被添加到您的名册中，并且将向他们发送出席信息订阅请求。如果用户接受您的请求，他们可能会将您添加回来。发生这种情况时，请在通知窗口中显示添加请求时接受它。一旦发生这种情况，他们的状态将显示在您的名册中。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:133
+#: ../../Tigase_Android_Message_User_Guide.rst:134
 msgid ""
 "vCard data will be obtained from the server, and images displayed on the "
 "icons if any is available."
 msgstr "将从服务器获取 vCard 数据，如果有可用的图标，将显示图像。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:136
+#: ../../Tigase_Android_Message_User_Guide.rst:137
 msgid "Status indicators"
 msgstr "状态指示灯"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:138
+#: ../../Tigase_Android_Message_User_Guide.rst:139
 msgid ""
 "In your roster, users will display a colored circle indicting their "
 "status. See the table below to see what each color means."
-msgstr "在您的名册中，用户将显示一个彩色圆圈来指示他们的状态。请参阅下表以了解每种颜"
-"色的含义。"
+msgstr "在您的名册中，用户将显示一个彩色圆圈来指示他们的状态。请参阅下表以了解每种颜色的含义。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:140
+#: ../../Tigase_Android_Message_User_Guide.rst:141
 msgid "Status Table"
 msgstr "状态表"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:143
+#: ../../Tigase_Android_Message_User_Guide.rst:144
 msgid "Icon"
 msgstr "图标"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:143
+#: ../../Tigase_Android_Message_User_Guide.rst:144
 msgid "Meaning"
 msgstr "含义"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:145
+#: ../../Tigase_Android_Message_User_Guide.rst:146
 msgid "Bright green"
 msgstr "亮绿色"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:145
+#: ../../Tigase_Android_Message_User_Guide.rst:146
 msgid "Free for Chat"
 msgstr "空闲可聊天"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:147
+#: ../../Tigase_Android_Message_User_Guide.rst:148
 msgid "Green"
 msgstr "绿色"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:147
+#: ../../Tigase_Android_Message_User_Guide.rst:148
 msgid "Online"
 msgstr "在线"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:149
+#: ../../Tigase_Android_Message_User_Guide.rst:150
 msgid "Orange w/clock"
 msgstr "橙色带时钟"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:149
+#: ../../Tigase_Android_Message_User_Guide.rst:150
 msgid "Away"
 msgstr "离开"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:151
+#: ../../Tigase_Android_Message_User_Guide.rst:152
 msgid "Orange w/dots"
 msgstr "橙色带点"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:151
+#: ../../Tigase_Android_Message_User_Guide.rst:152
 msgid "Not Available"
 msgstr "不在"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:153
+#: ../../Tigase_Android_Message_User_Guide.rst:154
 msgid "Red w/line"
 msgstr "红色带线"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:153
+#: ../../Tigase_Android_Message_User_Guide.rst:154
 msgid "Do Not Disturb"
 msgstr "请勿打扰"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:157
+#: ../../Tigase_Android_Message_User_Guide.rst:158
 msgid "Contacts Options"
 msgstr "联系人选项"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:159
+#: ../../Tigase_Android_Message_User_Guide.rst:160
 msgid ""
 "Tapping the …​ on the top right or pressing the menu button on the phone "
 "will reveal two options for the contacts screen:"
 msgstr "点击右上角的…或按手机上的菜单按钮将显示联系人屏幕的两个选项："
 
-#: ../../Tigase_Android_Message_User_Guide.rst:161
+#: ../../Tigase_Android_Message_User_Guide.rst:162
 msgid ""
 "**Sort by which allows you to sort the contact list by presence or name. "
 "Presences will be organized in the same order as the status table "
 "above..**"
-msgstr "**排序方式允许您按状态或姓名对联系人列表进行排序。存在将按照与上述状态表相同"
-"的顺序进行组织..**"
+msgstr "**排序方式允许您按状态或姓名对联系人列表进行排序。存在将按照与上述状态表相同的顺序进行组织..**"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:163
+#: ../../Tigase_Android_Message_User_Guide.rst:164
 msgid ""
 "To add a new contact, tap the '+' icon to do so and fill out the "
 "username. You may optionally specify a nickname for the new contact, this"
 " will be shared on the account so all devices can see it."
-msgstr "要添加新联系人，请点击 '+'图标并填写用户名。您可以选择为新联系人指定昵称，这"
-"将在帐户上共享，以便所有设备都可以看到。"
+msgstr "要添加新联系人，请点击 '+'图标并填写用户名。您可以选择为新联系人指定昵称，这将在帐户上共享，以便所有设备都可以看到。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:166
+#: ../../Tigase_Android_Message_User_Guide.rst:167
 msgid "Join Chat Room"
 msgstr "加入聊天室"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:168
+#: ../../Tigase_Android_Message_User_Guide.rst:169
 msgid ""
 "This section allows you to join a chatroom, or setup a new one if the "
 "server supports it."
 msgstr "此部分允许您加入聊天室，或在服务器支持的情况下设置新聊天室。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:170
+#: ../../Tigase_Android_Message_User_Guide.rst:171
 msgid "|Joinchat|"
 msgstr "|Joinchat|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:268
+#: ../../Tigase_Android_Message_User_Guide.rst:269
 msgid "Joinchat"
 msgstr "Joinchat"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:172
+#: ../../Tigase_Android_Message_User_Guide.rst:173
 msgid ""
 "The chatroom should have a following format when joining: "
 "roomname@muc.server.com where muc.server.com is the multi-user chat "
 "component of the server."
-msgstr "加入时聊天室应具有以下格式： roomname@muc.server.com 其中 muc.server.com "
-"是服务器的多用户聊天组件。"
+msgstr "加入时聊天室应具有以下格式： roomname@muc.server.com 其中 muc.server.com 是服务器的多用户聊天组件。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:176
+#: ../../Tigase_Android_Message_User_Guide.rst:177
 msgid ""
 "You must fill out the Nickname field in order to join a chatroom. MUC "
 "requires that you have a nickname that is separate from your Jabber ID "
 "(your user name)."
-msgstr "您必须填写昵称字段才能加入聊天室。 MUC 要求您有一个与您的 Jabber "
-"ID（您的用户名）不同的昵称。"
+msgstr "您必须填写昵称字段才能加入聊天室。 MUC 要求您有一个与您的 Jabber ID（您的用户名）不同的昵称。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:179
+#: ../../Tigase_Android_Message_User_Guide.rst:180
 msgid "Settings Menu"
 msgstr "设置菜单"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:181
+#: ../../Tigase_Android_Message_User_Guide.rst:182
 msgid ""
 "The settings menu can be found by tapping the menu icon on the top left "
 "and tapping Settings."
 msgstr "可以通过点击左上角的菜单图标并点击设置来找到设置菜单。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:183
+#: ../../Tigase_Android_Message_User_Guide.rst:184
 msgid "|Options|"
 msgstr "|Options|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:269
+#: ../../Tigase_Android_Message_User_Guide.rst:270
 msgid "Options"
 msgstr "Options"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:188
+#: ../../Tigase_Android_Message_User_Guide.rst:189
 msgid ""
 "These menu options determine whether and how automatic presence "
 "management will operate."
 msgstr "这些菜单选项决定了自动状态管理是否以及如何运行。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:191
+#: ../../Tigase_Android_Message_User_Guide.rst:192
 msgid "Auto Away presence delay"
 msgstr "自动离开存在延迟"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:193
+#: ../../Tigase_Android_Message_User_Guide.rst:194
 msgid ""
 "How long in seconds should the application wait after last activity to "
 "display an 'Away' status."
 msgstr "应用程序应在最后一个活动后等待多长时间以显示 'Away'状态。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:196
+#: ../../Tigase_Android_Message_User_Guide.rst:197
 msgid "Auto Extended Away delay (after Away)"
 msgstr "自动延长离开延迟（离开后）"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:198
+#: ../../Tigase_Android_Message_User_Guide.rst:199
 msgid ""
 "How long in seconds should the application wait after Auto Away has been "
 "set to change the status to 'Extended Away' or XA status."
-msgstr "在将自动离开设置为将状态更改为'Extended Away'或 XA "
-"状态后，应用程序应等待多长时间（以秒为单位）。"
+msgstr "在将自动离开设置为将状态更改为'Extended Away'或 XA 状态后，应用程序应等待多长时间（以秒为单位）。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:201
-#: ../../Tigase_Android_Message_User_Guide.rst:270
+#: ../../Tigase_Android_Message_User_Guide.rst:202
+#: ../../Tigase_Android_Message_User_Guide.rst:271
 msgid "Notifications"
 msgstr "通知"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:203
+#: ../../Tigase_Android_Message_User_Guide.rst:204
 msgid "Contains settings on phone notifications and status updates."
 msgstr "包含电话通知和状态更新的设置。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:205
+#: ../../Tigase_Android_Message_User_Guide.rst:206
 msgid "|Notifications|"
 msgstr "|Notifications|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:207
+#: ../../Tigase_Android_Message_User_Guide.rst:208
 msgid "**Chats**"
 msgstr "**聊天**"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:210
+#: ../../Tigase_Android_Message_User_Guide.rst:211
 msgid "New Message Notifications"
 msgstr "新消息通知"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:212
+#: ../../Tigase_Android_Message_User_Guide.rst:213
 msgid ""
 "Whether or not to trigger the phone’s notification mechanism when new "
 "chat messages are received."
 msgstr "是否在收到新的聊天消息时触发手机的通知机制。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:215
-#: ../../Tigase_Android_Message_User_Guide.rst:233
+#: ../../Tigase_Android_Message_User_Guide.rst:216
+#: ../../Tigase_Android_Message_User_Guide.rst:234
 msgid "Ringtone"
 msgstr "铃声"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:217
-#: ../../Tigase_Android_Message_User_Guide.rst:235
+#: ../../Tigase_Android_Message_User_Guide.rst:218
+#: ../../Tigase_Android_Message_User_Guide.rst:236
 msgid ""
 "Here you may set an application-specific sound to play when an XMPP chat "
 "notification is triggered."
 msgstr "在这里，您可以设置在触发 XMPP 聊天通知时播放特定于应用程序的声音。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:220
-#: ../../Tigase_Android_Message_User_Guide.rst:238
+#: ../../Tigase_Android_Message_User_Guide.rst:221
+#: ../../Tigase_Android_Message_User_Guide.rst:239
 msgid "Vibrate"
 msgstr "震动"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:222
-#: ../../Tigase_Android_Message_User_Guide.rst:240
+#: ../../Tigase_Android_Message_User_Guide.rst:223
+#: ../../Tigase_Android_Message_User_Guide.rst:241
 msgid "Whether or not to vibrate the phone when a new chat message is received."
 msgstr "收到新的聊天消息时是否振动手机。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:224
+#: ../../Tigase_Android_Message_User_Guide.rst:225
 msgid "**Groupchats**"
 msgstr "**群聊**"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:228
+#: ../../Tigase_Android_Message_User_Guide.rst:229
 msgid "New message Notifications"
 msgstr "新消息通知"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:230
+#: ../../Tigase_Android_Message_User_Guide.rst:231
 msgid ""
 "Whether or not to trigger the phone’s notification mechanism when new "
 "groupchat messages are received."
 msgstr "是否在收到新的群聊消息时触发手机的通知机制。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:243
-#: ../../Tigase_Android_Message_User_Guide.rst:271
+#: ../../Tigase_Android_Message_User_Guide.rst:244
+#: ../../Tigase_Android_Message_User_Guide.rst:272
 msgid "Accounts"
 msgstr "账户"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:245
+#: ../../Tigase_Android_Message_User_Guide.rst:246
 msgid "|Accounts|"
 msgstr "|Accounts|"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:247
+#: ../../Tigase_Android_Message_User_Guide.rst:248
 msgid ""
 "This display will show all currently setup accounts as well as provide a "
 "method to add new accounts to the messenger. You may also bring up this "
 "menu from the accounts section of your phone’s settings menu."
-msgstr "此处将显示所有当前设置的帐户，并提供一种将新帐户添加到 Messenger "
-"的方法。您也可以从手机设置菜单的帐户部分调出此菜单。"
+msgstr "此处将显示所有当前设置的帐户，并提供一种将新帐户添加到 Messenger 的方法。您也可以从手机设置菜单的帐户部分调出此菜单。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:249
+#: ../../Tigase_Android_Message_User_Guide.rst:250
 msgid ""
 "For More details about account management, see the :ref:`Account "
 "Management<accountManagement>` section of documentation for more details."
 msgstr ""
-"有关帐户管理的更多详细信息，请参阅文档的 :ref:`Account "
-"Management<accountManagement>` 部分以获取更多详细信息。"
+"有关帐户管理的更多详细信息，请参阅文档的 :ref:`Account Management<accountManagement>` "
+"部分以获取更多详细信息。"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:252
+#: ../../Tigase_Android_Message_User_Guide.rst:253
 msgid "About"
 msgstr "关于"
 
-#: ../../Tigase_Android_Message_User_Guide.rst:254
+#: ../../Tigase_Android_Message_User_Guide.rst:255
 msgid ""
 "Will display our logo along with the version of Tigase Messenger you are "
 "using."
@@ -1012,3 +991,4 @@ msgstr "将显示我们的徽标以及您使用的 Tigase Messenger 版本。"
 #: ../../index.rst:4
 msgid "Tigase Messenger User Guide (For Android)"
 msgstr "Tigase Messenger 用户指南（适用于 Android）"
+
