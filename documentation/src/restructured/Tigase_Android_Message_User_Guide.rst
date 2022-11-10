@@ -89,6 +89,7 @@ The first section allows you to select your status to let other contacts know if
 |Status|
 
 Note that if you are offline, other users will be unable to send you messages, and you will receive no notifications.
+
 Chat View
 ^^^^^^^^^^
 
