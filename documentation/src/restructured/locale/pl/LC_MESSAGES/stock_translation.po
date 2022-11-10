@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TigaseDoc \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-07 11:32-0800\n"
+"POT-Creation-Date: 2022-11-10 14:53-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,10 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
+
+#: ../../Account_Management.rst:4
+msgid "Account Management"
+msgstr ""
 
 #: ../../Account_Management.rst:6
 msgid ""
@@ -35,7 +39,7 @@ msgstr ""
 msgid "|AccountProperties|"
 msgstr ""
 
-#: ../../Account_Management.rst:96
+#: ../../Account_Management.rst:99
 msgid "AccountProperties"
 msgstr ""
 
@@ -52,60 +56,63 @@ msgstr ""
 #: ../../Account_Management.rst:16
 msgid ""
 "Tapping the user icon will allow you to set vCard data which will allow "
-"you to fill in some personal information as well as set a user photo. "
-"|vCard|"
+"you to fill in some personal information as well as set a user photo."
 msgstr ""
 
-#: ../../Account_Management.rst:97
+#: ../../Account_Management.rst:18
+msgid "|vCard|"
+msgstr ""
+
+#: ../../Account_Management.rst:100
 msgid "vCard"
 msgstr ""
 
-#: ../../Account_Management.rst:19
+#: ../../Account_Management.rst:22
 msgid "Enabled"
 msgstr ""
 
-#: ../../Account_Management.rst:21
+#: ../../Account_Management.rst:24
 msgid ""
 "This enables or disables the account you are adjusting. If an account is "
 "disabled, it will not update presence information, receive messages, or "
 "receive push notifications."
 msgstr ""
 
-#: ../../Account_Management.rst:25
+#: ../../Account_Management.rst:28
 msgid "Change Account settings"
 msgstr ""
 
-#: ../../Account_Management.rst:27
+#: ../../Account_Management.rst:30
 msgid "This allows you to change some settings for the account:"
 msgstr ""
 
-#: ../../Account_Management.rst:30
+#: ../../Account_Management.rst:33
 msgid "Password"
 msgstr ""
 
-#: ../../Account_Management.rst:32
+#: ../../Account_Management.rst:35
 msgid ""
 "Allows you to change the password on the device. This is only if you need"
 " to change the password, it will not change the password to your XMPP "
 "account."
 msgstr ""
 
-#: ../../Account_Management.rst:35
+#: ../../Account_Management.rst:38
 msgid "Hostname"
 msgstr ""
 
-#: ../../Account_Management.rst:37
+#: ../../Account_Management.rst:40
 msgid ""
 "By default the hostname will be the root of your username (server.com of "
 "user@server.com). However, you can specify a FQDN or an IP address if you"
 " wish to connect directly."
 msgstr ""
 
-#: ../../Account_Management.rst:41
+#: ../../Account_Management.rst:44
 msgid "Resource"
 msgstr ""
 
-#: ../../Account_Management.rst:43
+#: ../../Account_Management.rst:46
 msgid ""
 "This will change the resource name of your JID. The resource is the part "
 "after a slash that can denote different devices of the same account. So "
@@ -113,15 +120,15 @@ msgid ""
 " by default)."
 msgstr ""
 
-#: ../../Account_Management.rst:46
+#: ../../Account_Management.rst:49
 msgid "Resource priority"
 msgstr ""
 
-#: ../../Account_Management.rst:49
+#: ../../Account_Management.rst:52
 msgid "Automatic Priorities"
 msgstr ""
 
-#: ../../Account_Management.rst:51
+#: ../../Account_Management.rst:54
 msgid ""
 "By default this is enabled, which lets Tigase Messenger for Android set "
 "appropriate levels the different statuses. Priorities will dictate which "
@@ -131,36 +138,36 @@ msgid ""
 "enabled."
 msgstr ""
 
-#: ../../Account_Management.rst:55
+#: ../../Account_Management.rst:58
 msgid "Custom Resource Priorities"
 msgstr ""
 
-#: ../../Account_Management.rst:57
+#: ../../Account_Management.rst:60
 msgid ""
 "If you wish to set your own priority for each status you may tap this "
 "section."
 msgstr ""
 
-#: ../../Account_Management.rst:59
+#: ../../Account_Management.rst:62
 msgid "|CustomPriorities|"
 msgstr ""
 
-#: ../../Account_Management.rst:98
+#: ../../Account_Management.rst:101
 msgid "CustomPriorities"
 msgstr ""
 
-#: ../../Account_Management.rst:63
+#: ../../Account_Management.rst:66
 msgid ""
 "You should only set your own priorities if you wish to change normal "
 "message delivery behavior. Improper priority settings could drastically "
 "affect how the application behaves!"
 msgstr ""
 
-#: ../../Account_Management.rst:66
+#: ../../Account_Management.rst:69
 msgid "Push Notifications"
 msgstr ""
 
-#: ../../Account_Management.rst:68
+#: ../../Account_Management.rst:71
 msgid ""
 "Whether to enable or disable push notifications to the device. :ref:`Push"
 " Notifications<tmPush>` are described in a separate section of this "
@@ -169,11 +176,11 @@ msgid ""
 "receive push notifications."
 msgstr ""
 
-#: ../../Account_Management.rst:72
+#: ../../Account_Management.rst:75
 msgid "Message Archiving"
 msgstr ""
 
-#: ../../Account_Management.rst:74
+#: ../../Account_Management.rst:77
 msgid ""
 "If the connected server supports it, you may use the Message Archive "
 "functionality to retrieve sent and received messages to the configured "
@@ -182,31 +189,31 @@ msgid ""
 "resource. Disabled will rely on the local storage when available."
 msgstr ""
 
-#: ../../Account_Management.rst:78
+#: ../../Account_Management.rst:81
 msgid "Automatic synchronization"
 msgstr ""
 
-#: ../../Account_Management.rst:80
+#: ../../Account_Management.rst:83
 msgid "This will turn on fetching messages from message archive on the server."
 msgstr ""
 
-#: ../../Account_Management.rst:84
+#: ../../Account_Management.rst:87
 msgid "Synchronization"
 msgstr ""
 
-#: ../../Account_Management.rst:86
+#: ../../Account_Management.rst:89
 msgid "How far back will the application retrieve messages from message archive."
 msgstr ""
 
-#: ../../Account_Management.rst:89
+#: ../../Account_Management.rst:92
 msgid "Others"
 msgstr ""
 
-#: ../../Account_Management.rst:92
+#: ../../Account_Management.rst:95
 msgid "Nickname"
 msgstr ""
 
-#: ../../Account_Management.rst:94
+#: ../../Account_Management.rst:97
 msgid ""
 "Changing this will change your displayed nickname to other users, for "
 "those without a custom name, this name will appear on their contact list."
@@ -389,7 +396,7 @@ msgstr ""
 msgid "|Search|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:256
+#: ../../Tigase_Android_Message_User_Guide.rst:257
 msgid "Search"
 msgstr ""
 
@@ -401,7 +408,7 @@ msgstr ""
 msgid "|Install|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:257
+#: ../../Tigase_Android_Message_User_Guide.rst:258
 msgid "Install"
 msgstr ""
 
@@ -433,7 +440,7 @@ msgstr ""
 msgid "|Welcome|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:258
+#: ../../Tigase_Android_Message_User_Guide.rst:259
 msgid "Welcome"
 msgstr ""
 
@@ -445,7 +452,7 @@ msgstr ""
 msgid "|Register|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:259
+#: ../../Tigase_Android_Message_User_Guide.rst:260
 msgid "Register"
 msgstr ""
 
@@ -466,7 +473,7 @@ msgstr ""
 msgid "|Register2|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:260
+#: ../../Tigase_Android_Message_User_Guide.rst:261
 msgid "Register2"
 msgstr ""
 
@@ -532,39 +539,43 @@ msgstr ""
 msgid "|Status|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:186
-#: ../../Tigase_Android_Message_User_Guide.rst:261
+#: ../../Tigase_Android_Message_User_Guide.rst:187
+#: ../../Tigase_Android_Message_User_Guide.rst:262
 msgid "Status"
 msgstr ""
 
 #: ../../Tigase_Android_Message_User_Guide.rst:91
 msgid ""
 "Note that if you are offline, other users will be unable to send you "
-"messages, and you will receive no notifications. Chat View ^^^^^^^^^^"
+"messages, and you will receive no notifications."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:95
+#: ../../Tigase_Android_Message_User_Guide.rst:94
+msgid "Chat View"
+msgstr ""
+
+#: ../../Tigase_Android_Message_User_Guide.rst:96
 msgid ""
 "This view will show all your recent chats. All active chats, chats that "
 "have not been archived, and any groupchats you are a part of will be "
 "listed here."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:97
+#: ../../Tigase_Android_Message_User_Guide.rst:98
 msgid ""
 "To close any chat, long-press the chat you wish to remove, and you will "
 "have the following shown:"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:99
+#: ../../Tigase_Android_Message_User_Guide.rst:100
 msgid "|LongPressChat|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:262
+#: ../../Tigase_Android_Message_User_Guide.rst:263
 msgid "LongPressChat"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:101
+#: ../../Tigase_Android_Message_User_Guide.rst:102
 msgid ""
 "You have two options to select, you may archive the chat by tapping "
 "|Archive| This will close the chat from this menu, but the chat will be "
@@ -573,45 +584,45 @@ msgid ""
 "you are connected too."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:263
+#: ../../Tigase_Android_Message_User_Guide.rst:264
 msgid "Archive"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:103
+#: ../../Tigase_Android_Message_User_Guide.rst:104
 msgid ""
 "If you just want to remove the chat, and not save it locally, tap "
 "|DeleteChat| and it will be removed from the device."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:264
+#: ../../Tigase_Android_Message_User_Guide.rst:265
 msgid "DeleteChat"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:105
+#: ../../Tigase_Android_Message_User_Guide.rst:106
 msgid ""
 "For groupchats, long pressing on the chatroom will provide you for the "
 "ability to leave the room after tapping the …​ icon in the top right."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:107
+#: ../../Tigase_Android_Message_User_Guide.rst:108
 msgid "|LeaveRoom|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:265
+#: ../../Tigase_Android_Message_User_Guide.rst:266
 msgid "LeaveRoom"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:109
+#: ../../Tigase_Android_Message_User_Guide.rst:110
 msgid ""
 "For a new chat, tapping the compose icon will show you the roster view, "
 "from which you can select a user to begin a conversation."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:112
+#: ../../Tigase_Android_Message_User_Guide.rst:113
 msgid "Groupchat View"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:114
+#: ../../Tigase_Android_Message_User_Guide.rst:115
 msgid ""
 "The groupchat view will display the current conversation, you may scroll "
 "and look back on the chat if the server supports it. You may also tap the"
@@ -619,42 +630,42 @@ msgid ""
 "(If it does not, you will not be able to send a file.)"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:116
+#: ../../Tigase_Android_Message_User_Guide.rst:117
 msgid "|MUC|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:266
+#: ../../Tigase_Android_Message_User_Guide.rst:267
 msgid "MUC"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:120
+#: ../../Tigase_Android_Message_User_Guide.rst:121
 msgid "You will only be able to leave the room from the Chats view."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:123
+#: ../../Tigase_Android_Message_User_Guide.rst:124
 msgid "Contacts view"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:125
+#: ../../Tigase_Android_Message_User_Guide.rst:126
 msgid "|Roster|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:267
+#: ../../Tigase_Android_Message_User_Guide.rst:268
 msgid "Roster"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:127
+#: ../../Tigase_Android_Message_User_Guide.rst:128
 msgid ""
 "The roster will show all contacts in your roster retrieved from the "
 "server you login from. You will have a combined roster if you have "
 "multiple accounts logged in at the same time."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:129
+#: ../../Tigase_Android_Message_User_Guide.rst:130
 msgid "To initiate a chat with a contact, simply tap their contact name."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:131
+#: ../../Tigase_Android_Message_User_Guide.rst:132
 msgid ""
 "To add a contact to your roster, tap the \"+\" button at the bottom right"
 " and fill out the appropriate forms. They will be added to your roster "
@@ -664,264 +675,264 @@ msgid ""
 "Once that happens, their status will be shown in your roster."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:133
+#: ../../Tigase_Android_Message_User_Guide.rst:134
 msgid ""
 "vCard data will be obtained from the server, and images displayed on the "
 "icons if any is available."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:136
+#: ../../Tigase_Android_Message_User_Guide.rst:137
 msgid "Status indicators"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:138
+#: ../../Tigase_Android_Message_User_Guide.rst:139
 msgid ""
 "In your roster, users will display a colored circle indicting their "
 "status. See the table below to see what each color means."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:140
+#: ../../Tigase_Android_Message_User_Guide.rst:141
 msgid "Status Table"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:143
+#: ../../Tigase_Android_Message_User_Guide.rst:144
 msgid "Icon"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:143
+#: ../../Tigase_Android_Message_User_Guide.rst:144
 msgid "Meaning"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:145
+#: ../../Tigase_Android_Message_User_Guide.rst:146
 msgid "Bright green"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:145
+#: ../../Tigase_Android_Message_User_Guide.rst:146
 msgid "Free for Chat"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:147
+#: ../../Tigase_Android_Message_User_Guide.rst:148
 msgid "Green"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:147
+#: ../../Tigase_Android_Message_User_Guide.rst:148
 msgid "Online"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:149
+#: ../../Tigase_Android_Message_User_Guide.rst:150
 msgid "Orange w/clock"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:149
+#: ../../Tigase_Android_Message_User_Guide.rst:150
 msgid "Away"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:151
+#: ../../Tigase_Android_Message_User_Guide.rst:152
 msgid "Orange w/dots"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:151
+#: ../../Tigase_Android_Message_User_Guide.rst:152
 msgid "Not Available"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:153
+#: ../../Tigase_Android_Message_User_Guide.rst:154
 msgid "Red w/line"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:153
+#: ../../Tigase_Android_Message_User_Guide.rst:154
 msgid "Do Not Disturb"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:157
+#: ../../Tigase_Android_Message_User_Guide.rst:158
 msgid "Contacts Options"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:159
+#: ../../Tigase_Android_Message_User_Guide.rst:160
 msgid ""
 "Tapping the …​ on the top right or pressing the menu button on the phone "
 "will reveal two options for the contacts screen:"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:161
+#: ../../Tigase_Android_Message_User_Guide.rst:162
 msgid ""
 "**Sort by which allows you to sort the contact list by presence or name. "
 "Presences will be organized in the same order as the status table "
 "above..**"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:163
+#: ../../Tigase_Android_Message_User_Guide.rst:164
 msgid ""
 "To add a new contact, tap the '+' icon to do so and fill out the "
 "username. You may optionally specify a nickname for the new contact, this"
 " will be shared on the account so all devices can see it."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:166
+#: ../../Tigase_Android_Message_User_Guide.rst:167
 msgid "Join Chat Room"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:168
+#: ../../Tigase_Android_Message_User_Guide.rst:169
 msgid ""
 "This section allows you to join a chatroom, or setup a new one if the "
 "server supports it."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:170
+#: ../../Tigase_Android_Message_User_Guide.rst:171
 msgid "|Joinchat|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:268
+#: ../../Tigase_Android_Message_User_Guide.rst:269
 msgid "Joinchat"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:172
+#: ../../Tigase_Android_Message_User_Guide.rst:173
 msgid ""
 "The chatroom should have a following format when joining: "
 "roomname@muc.server.com where muc.server.com is the multi-user chat "
 "component of the server."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:176
+#: ../../Tigase_Android_Message_User_Guide.rst:177
 msgid ""
 "You must fill out the Nickname field in order to join a chatroom. MUC "
 "requires that you have a nickname that is separate from your Jabber ID "
 "(your user name)."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:179
+#: ../../Tigase_Android_Message_User_Guide.rst:180
 msgid "Settings Menu"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:181
+#: ../../Tigase_Android_Message_User_Guide.rst:182
 msgid ""
 "The settings menu can be found by tapping the menu icon on the top left "
 "and tapping Settings."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:183
+#: ../../Tigase_Android_Message_User_Guide.rst:184
 msgid "|Options|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:269
+#: ../../Tigase_Android_Message_User_Guide.rst:270
 msgid "Options"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:188
+#: ../../Tigase_Android_Message_User_Guide.rst:189
 msgid ""
 "These menu options determine whether and how automatic presence "
 "management will operate."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:191
+#: ../../Tigase_Android_Message_User_Guide.rst:192
 msgid "Auto Away presence delay"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:193
+#: ../../Tigase_Android_Message_User_Guide.rst:194
 msgid ""
 "How long in seconds should the application wait after last activity to "
 "display an 'Away' status."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:196
+#: ../../Tigase_Android_Message_User_Guide.rst:197
 msgid "Auto Extended Away delay (after Away)"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:198
+#: ../../Tigase_Android_Message_User_Guide.rst:199
 msgid ""
 "How long in seconds should the application wait after Auto Away has been "
 "set to change the status to 'Extended Away' or XA status."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:201
-#: ../../Tigase_Android_Message_User_Guide.rst:270
+#: ../../Tigase_Android_Message_User_Guide.rst:202
+#: ../../Tigase_Android_Message_User_Guide.rst:271
 msgid "Notifications"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:203
+#: ../../Tigase_Android_Message_User_Guide.rst:204
 msgid "Contains settings on phone notifications and status updates."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:205
+#: ../../Tigase_Android_Message_User_Guide.rst:206
 msgid "|Notifications|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:207
+#: ../../Tigase_Android_Message_User_Guide.rst:208
 msgid "**Chats**"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:210
+#: ../../Tigase_Android_Message_User_Guide.rst:211
 msgid "New Message Notifications"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:212
+#: ../../Tigase_Android_Message_User_Guide.rst:213
 msgid ""
 "Whether or not to trigger the phone’s notification mechanism when new "
 "chat messages are received."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:215
-#: ../../Tigase_Android_Message_User_Guide.rst:233
+#: ../../Tigase_Android_Message_User_Guide.rst:216
+#: ../../Tigase_Android_Message_User_Guide.rst:234
 msgid "Ringtone"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:217
-#: ../../Tigase_Android_Message_User_Guide.rst:235
+#: ../../Tigase_Android_Message_User_Guide.rst:218
+#: ../../Tigase_Android_Message_User_Guide.rst:236
 msgid ""
 "Here you may set an application-specific sound to play when an XMPP chat "
 "notification is triggered."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:220
-#: ../../Tigase_Android_Message_User_Guide.rst:238
+#: ../../Tigase_Android_Message_User_Guide.rst:221
+#: ../../Tigase_Android_Message_User_Guide.rst:239
 msgid "Vibrate"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:222
-#: ../../Tigase_Android_Message_User_Guide.rst:240
+#: ../../Tigase_Android_Message_User_Guide.rst:223
+#: ../../Tigase_Android_Message_User_Guide.rst:241
 msgid "Whether or not to vibrate the phone when a new chat message is received."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:224
+#: ../../Tigase_Android_Message_User_Guide.rst:225
 msgid "**Groupchats**"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:228
+#: ../../Tigase_Android_Message_User_Guide.rst:229
 msgid "New message Notifications"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:230
+#: ../../Tigase_Android_Message_User_Guide.rst:231
 msgid ""
 "Whether or not to trigger the phone’s notification mechanism when new "
 "groupchat messages are received."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:243
-#: ../../Tigase_Android_Message_User_Guide.rst:271
+#: ../../Tigase_Android_Message_User_Guide.rst:244
+#: ../../Tigase_Android_Message_User_Guide.rst:272
 msgid "Accounts"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:245
+#: ../../Tigase_Android_Message_User_Guide.rst:246
 msgid "|Accounts|"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:247
+#: ../../Tigase_Android_Message_User_Guide.rst:248
 msgid ""
 "This display will show all currently setup accounts as well as provide a "
 "method to add new accounts to the messenger. You may also bring up this "
 "menu from the accounts section of your phone’s settings menu."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:249
+#: ../../Tigase_Android_Message_User_Guide.rst:250
 msgid ""
 "For More details about account management, see the :ref:`Account "
 "Management<accountManagement>` section of documentation for more details."
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:252
+#: ../../Tigase_Android_Message_User_Guide.rst:253
 msgid "About"
 msgstr ""
 
-#: ../../Tigase_Android_Message_User_Guide.rst:254
+#: ../../Tigase_Android_Message_User_Guide.rst:255
 msgid ""
 "Will display our logo along with the version of Tigase Messenger you are "
 "using."
@@ -930,4 +941,19 @@ msgstr ""
 #: ../../index.rst:4
 msgid "Tigase Messenger User Guide (For Android)"
 msgstr ""
+
+#~ msgid ""
+#~ "Tapping the user icon will allow "
+#~ "you to set vCard data which will"
+#~ " allow you to fill in some "
+#~ "personal information as well as set "
+#~ "a user photo. |vCard|"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Note that if you are offline, "
+#~ "other users will be unable to send"
+#~ " you messages, and you will receive"
+#~ " no notifications. Chat View ^^^^^^^^^^"
+#~ msgstr ""
 
