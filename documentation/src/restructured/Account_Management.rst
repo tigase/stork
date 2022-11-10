@@ -13,7 +13,9 @@ Below is a description of the settings.
 
 **Account Properties** Lists the account for which you are adjusting settings.
 
-Tapping the user icon will allow you to set vCard data which will allow you to fill in some personal information as well as set a user photo. |vCard|
+Tapping the user icon will allow you to set vCard data which will allow you to fill in some personal information as well as set a user photo. 
+
+|vCard|
 
 Enabled
 --------
