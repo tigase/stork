@@ -15,9 +15,10 @@ android {
 	defaultConfig {
 		applicationId "org.tigase.messenger.phone.pro"
 		minSdkVersion 29
-		targetSdkVersion 30
-		versionCode 95
-		versionName "3.2.4"
+		targetSdkVersion 31
+		targetSdkVersion 31
+		versionCode 96
+		versionName "3.2.5"
 		multiDexEnabled true
 
 //		jackOptions {
