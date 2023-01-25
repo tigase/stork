@@ -23,7 +23,7 @@
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
+            android:roundIcon="@mipmap/ic_launcher"
             android:supportsRtl="true"
             android:theme="@style/myActivityTheme">
         <service
@@ -49,6 +49,7 @@
                 android:value="true"/>
 
         <activity
+                android:exported="true"
                 android:name=".MainActivity"
                 android:configChanges="orientation|keyboardHidden|screenSize"
                 android:label="@string/app_name">
@@ -62,6 +63,7 @@
                 android:name=".settings.SettingsActivity"
                 android:label="@string/title_activity_settings"
                 android:parentActivityName=".MainActivity"
+                android:exported="false"
                 android:theme="@style/mySettingsTheme">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -70,11 +72,13 @@
         <activity
                 android:name=".account.AccountProperties"
                 android:label="Account properties"
+                android:exported="false"
                 android:theme="@style/mySettingsTheme">
         </activity>
         <activity
                 android:name=".account.LoginActivity"
                 android:label="@string/title_activity_login"
+                android:exported="false"
                 android:screenOrientation="locked">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -84,10 +88,12 @@
                 android:name=".conversations.chat.OMEMOStartActivity"
                 android:label="Encryption"
                 android:parentActivityName=".conversations.chat.ChatActivity"
+                android:exported="false"
                 android:theme="@style/ChatStyle"/>
         <activity
                 android:name=".roster.contact.ContactInfoActivity"
                 android:label="Contact Info"
+                android:exported="false"
                 android:theme="@style/ChatStyle">
         </activity>
 
@@ -117,6 +123,7 @@
                 android:configChanges="orientation|keyboardHidden|screenSize"
                 android:label="@string/about_activity_title"
                 android:parentActivityName=".MainActivity"
+                android:exported="false"
                 android:theme="@style/FullscreenTheme">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -144,7 +151,10 @@
                 android:enabled="true"
                 android:exported="false"/>
 
-        <activity android:name=".roster.contact.EditContactActivity">
+        <activity
+                android:name=".roster.contact.EditContactActivity"
+                android:exported="false"
+                >
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
@@ -161,17 +171,22 @@
                 android:name=".conversations.chat.ChatActivity"
                 android:label="@string/title_activity_chat"
                 android:parentActivityName=".MainActivity"
+                android:exported="false"
                 android:theme="@style/ChatStyle">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
-        <activity android:name=".roster.request.SubscriptionRequestActivity">
+        <activity
+                android:name=".roster.request.SubscriptionRequestActivity"
+                android:exported="false"
+                >
         </activity>
         <activity
                 android:name=".conversations.muc.MucActivity"
                 android:label="@string/title_activity_muc"
                 android:parentActivityName=".MainActivity"
+                android:exported="false"
                 android:theme="@style/ChatStyle">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -181,6 +196,7 @@
                 android:name=".account.VCardEditActivity"
                 android:label="Contact details"
                 android:parentActivityName=".settings.SettingsActivity"
+                android:exported="false"
                 android:theme="@style/AppTheme">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -190,21 +206,29 @@
                 android:name=".conversations.muc.JoinMucActivity"
                 android:label="@string/title_activity_join_muc"
                 android:parentActivityName=".MainActivity"
+                android:exported="false"
                 android:theme="@style/AppTheme">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
-        <activity android:name=".account.NewAccountActivity">
+        <activity
+                android:name=".account.NewAccountActivity"
+                android:exported="false"
+                >
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="org.tigase.messenger.phone.pro.MainActivity"/>
         </activity>
-        <activity android:name=".account.CreateAccountActivity">
+        <activity
+                android:name=".account.CreateAccountActivity"
+                android:exported="false"
+                >
         </activity>
         <activity
                 android:name=".receiver.ReceiverContextActivity"
                 android:label="@string/app_name"
+                android:exported="true"
                 android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>
@@ -221,10 +245,14 @@
                 <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
-        <activity android:name=".conversations.imagepreview.PreviewImageActivity">
+        <activity
+                android:name=".conversations.imagepreview.PreviewImageActivity"
+                android:exported="false"
+                >
         </activity>
         <activity
                 android:name=".video.VideoChatActivity"
+                android:exported="false"
                 android:label="Video Chat">
         </activity>
     </application>
