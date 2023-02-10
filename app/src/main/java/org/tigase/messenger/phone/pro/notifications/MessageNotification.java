@@ -18,6 +18,7 @@
 
 package org.tigase.messenger.phone.pro.notifications;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -62,21 +63,17 @@ public class MessageNotification {
 
 	private static int countUnreadMessages(Context context) {
 		DatabaseHelper dbHelper = DatabaseHelper.getInstance(context);
-		final StringBuilder sql = new StringBuilder();
 
-		sql.append("SELECT count(*) FROM ")
+		String sql = "SELECT count(*) FROM " +
 //		sql.append("SELECT count(")
 //				.append("DISTINCT(")
 //				.append(DatabaseContract.ChatHistory.FIELD_JID)
 //				.append(")")
 //				.append(") " + "FROM ")
-				.append(DatabaseContract.ChatHistory.TABLE_NAME)
-				.append(" WHERE ")
-				.append(DatabaseContract.ChatHistory.FIELD_STATE)
-				.append("=?");
+				DatabaseContract.ChatHistory.TABLE_NAME + " WHERE " + DatabaseContract.ChatHistory.FIELD_STATE + "=?";
 
 		try (Cursor c = dbHelper.getReadableDatabase()
-				.rawQuery(sql.toString(), new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD})) {
+				.rawQuery(sql, new String[]{"" + DatabaseContract.ChatHistory.STATE_INCOMING_UNREAD})) {
 			c.moveToFirst();
 			return c.getInt(0);
 		}
@@ -131,7 +128,8 @@ public class MessageNotification {
 		resultIntent.putExtra(ChatActivity.JID_KEY, chat.getJid().getBareJid().toString());
 		resultIntent.putExtra(ChatActivity.ACCOUNT_KEY, account);
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent,
-																	  PendingIntent.FLAG_UPDATE_CURRENT);
+																	  PendingIntent.FLAG_UPDATE_CURRENT |
+																			  PendingIntent.FLAG_IMMUTABLE);
 
 		String senderName = chatJid;
 		Cursor chatHistoryCursor = context.getContentResolver()
@@ -141,7 +139,7 @@ public class MessageNotification {
 		if (chatHistoryCursor != null) {
 			try {
 				if (chatHistoryCursor.moveToNext()) {
-					String name = chatHistoryCursor.getString(
+					@SuppressLint("Range") String name = chatHistoryCursor.getString(
 							chatHistoryCursor.getColumnIndex(DatabaseContract.RosterItemsCache.FIELD_NAME));
 					if (name != null && !name.isEmpty()) {
 						senderName = name;
@@ -204,7 +202,8 @@ public class MessageNotification {
 		resultIntent.putExtra("jid", room.getRoomJid().toString());
 		resultIntent.putExtra("account", account);
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent,
-																	  PendingIntent.FLAG_UPDATE_CURRENT);
+																	  PendingIntent.FLAG_UPDATE_CURRENT |
+																			  PendingIntent.FLAG_IMMUTABLE);
 
 		String sound = sharedPref.getString("notifications_new_groupmessage_ringtone", null);
 		boolean vibrate = sharedPref.getBoolean("notifications_new_groupmessage_vibrate", true);
@@ -254,9 +253,9 @@ public class MessageNotification {
 			int unread = chatHistoryCursor.getCount();
 			int c = 0;
 			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
-				String txt = chatHistoryCursor.getString(
+				@SuppressLint("Range") String txt = chatHistoryCursor.getString(
 						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
-				String author = chatHistoryCursor.getString(
+				@SuppressLint("Range") String author = chatHistoryCursor.getString(
 						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_AUTHOR_NICKNAME));
 				style.addLine(" " + author + ": " + txt);
 			}
@@ -280,7 +279,7 @@ public class MessageNotification {
 			int unread = chatHistoryCursor.getCount();
 			int c = 0;
 			while (chatHistoryCursor.moveToNext() && (++c) <= 5) {
-				String t = chatHistoryCursor.getString(
+				@SuppressLint("Range") String t = chatHistoryCursor.getString(
 						chatHistoryCursor.getColumnIndex(DatabaseContract.ChatHistory.FIELD_BODY));
 				style.addLine("  " + t);
 			}
@@ -291,7 +290,7 @@ public class MessageNotification {
 	private NotificationCompat.Builder createNotificationBuilder(Context context, Uri soundUri, long[] vibrationPattern,
 																 PendingIntent resultPendingIntent) {
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(
-				R.drawable.stork_logo)
+						R.drawable.stork_logo)
 				.setAutoCancel(true)
 				.setGroup(GROUP_KEY_MESSAGES)
 				.setCategory(Notification.CATEGORY_MESSAGE);

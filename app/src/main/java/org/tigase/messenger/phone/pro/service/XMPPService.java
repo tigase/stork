@@ -119,6 +119,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+
 public class XMPPService
 		extends Service {
 
@@ -1085,7 +1087,7 @@ public class XMPPService
 		// Adds the Intent that starts the Activity to the top of the stack
 		stackBuilder.addNextIntent(resultIntent);
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0,
-																					  PendingIntent.FLAG_UPDATE_CURRENT);
+																					  PendingIntent.FLAG_UPDATE_CURRENT|FLAG_IMMUTABLE);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
 				// .setSmallIcon(R.drawable.ic_messenger_icon)
@@ -1131,7 +1133,7 @@ public class XMPPService
 		// Adds the Intent that starts the Activity to the top of the stack
 		stackBuilder.addNextIntent(resultIntent);
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0,
-																					  PendingIntent.FLAG_UPDATE_CURRENT);
+																					  PendingIntent.FLAG_UPDATE_CURRENT|FLAG_IMMUTABLE);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
 				// .setSmallIcon(R.drawable.ic_messenger_icon)
@@ -1172,7 +1174,7 @@ public class XMPPService
 		// Adds the Intent that starts the Activity to the top of the stack
 		stackBuilder.addNextIntent(resultIntent);
 		PendingIntent editServerSettingsPendingIntent = stackBuilder.getPendingIntent(0,
-																					  PendingIntent.FLAG_UPDATE_CURRENT);
+																					  PendingIntent.FLAG_UPDATE_CURRENT|FLAG_IMMUTABLE);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
 				// .setSmallIcon(R.drawable.ic_messenger_icon)
@@ -1292,7 +1294,7 @@ public class XMPPService
 		Intent i = new Intent();
 		i.setClass(this, XMPPService.class);
 		i.setAction(KEEPALIVE_ACTION);
-		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+		PendingIntent pi = PendingIntent.getService(this, 0, i, FLAG_IMMUTABLE);
 
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
 		alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + keepaliveInterval,
@@ -1303,7 +1305,7 @@ public class XMPPService
 		Intent i = new Intent();
 		i.setClass(this, XMPPService.class);
 		i.setAction(KEEPALIVE_ACTION);
-		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+		PendingIntent pi = PendingIntent.getService(this, 0, i, FLAG_IMMUTABLE);
 		AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
 		alarmMgr.cancel(pi);
 	}
