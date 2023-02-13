@@ -181,8 +181,10 @@ public class MessageSender {
 					itemType = DatabaseContract.ChatHistory.ITEM_TYPE_FILE;
 				}
 			} else if (jaxmpp.isConnected()) {
-					msg = new OMEMOEncryptableMessage(msg);
-				((OMEMOEncryptableMessage)msg).setEncryption(encryption? OMEMOEncryptableMessage.Encryption.Required: OMEMOEncryptableMessage.Encryption.Disabled);
+				msg = new OMEMOEncryptableMessage(msg);
+				((OMEMOEncryptableMessage) msg).setEncryption(encryption
+															  ? OMEMOEncryptableMessage.Encryption.Required
+															  : OMEMOEncryptableMessage.Encryption.Disabled);
 				msg = m.sendMessage(msg);
 				state = DatabaseContract.ChatHistory.STATE_OUT_SENT;
 				itemType = DatabaseContract.ChatHistory.ITEM_TYPE_MESSAGE;
@@ -308,9 +310,6 @@ public class MessageSender {
 		Uri x = context.getContentResolver().insert(uri, values);
 		if (x != null) {
 			context.getContentResolver().notifyChange(x, null);
-		}
-
-		if (localContentUri != null) {
 			SendUnsentGroupMessages sum = new SendUnsentGroupMessages(context, jaxmpp, room);
 			sum.run(x);
 		}
